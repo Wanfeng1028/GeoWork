@@ -13,27 +13,8 @@ echo.
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
-:: Method 1: Kill processes by window title (most reliable for start.bat launched windows)
-echo [1/3] Stopping GeoWork windows by title...
-echo.
-
-:: Kill all windows with "GeoWork-" in the title
-for /f "tokens=2 delims=:," %%a in ('wmic process where "name='cmd.exe' and command line like '%%GeoWork-%%'" get ProcessId /format:list ^| findstr "ProcessId"') do (
-    set "pid=%%a"
-    for /f "tokens=* delims= " %%p in ("!pid!") do (
-        echo Stopping GeoWork process PID: !pid!...
-        taskkill /PID !pid! /F >nul 2>&1
-    )
-)
-
-:: Give processes time to stop
-timeout /t 2 >nul
-echo [OK] GeoWork windows stopped
-echo.
-
-:: Method 2: Stop by port if processes still running
-:port_mode
-echo [2/3] Checking ports and stopping remaining processes...
+:: Method: Kill processes by port (most reliable)
+echo [1/2] Stopping GeoWork processes by port...
 echo.
 
 :: Stop Go Core Runtime (port 8765)
@@ -73,9 +54,12 @@ if exist "%PID_FILE%" del "%PID_FILE%"
 echo [OK] PID file cleaned
 echo.
 
+:: Give processes time to stop
+timeout /t 2 >nul
+
 :: Verify all stopped
 :check_ports
-echo [3/3] Verifying all processes stopped...
+echo [2/2] Verifying all processes stopped...
 echo.
 
 set "all_clear=true"

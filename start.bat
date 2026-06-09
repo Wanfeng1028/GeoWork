@@ -11,7 +11,6 @@ echo.
 :: Get script directory
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
-set "STARTUP_TIME=%DATE% %TIME%"
 
 :: Check dependencies
 echo [1/6] Checking dependencies...
@@ -96,10 +95,10 @@ if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
 :: Start Go Core Runtime
 echo [4/6] Starting Go Core Runtime (port 8765)...
-start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /k "echo Starting GeoWork Go Core... && go run ^./cmd/geowork-runtime --port 8765 ^> ^"%ROOT_DIR%logs\go-core.log^" 2^>^&1 && echo Go Core stopped. Press any key to close this window. && pause >nul"
+start "GeoWork-Go-Core" /D "%ROOT_DIR%core" /B cmd /c "go run ./cmd/geowork-runtime --port 8765 >> "%ROOT_DIR%logs\go-core.log" 2>&1 || (echo Go Core stopped. Press any key to close... & pause >nul)"
 
 :: Wait for startup
-timeout /t 3 >nul
+timeout /t 4 >nul
 
 :: Get Go Core process PID
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do set "GO_PID=%%a"
@@ -113,10 +112,10 @@ echo.
 
 :: Start Python Geo Worker
 echo [5/6] Starting Python Geo Worker (port 8766)...
-start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /k "echo Starting GeoWork Python Worker... && python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 ^> ^"%ROOT_DIR%logs\python-worker.log^" 2^>^&1 && echo Python Worker stopped. Press any key to close this window. && pause >nul"
+start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" /B cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 >> "%ROOT_DIR%logs\python-worker.log" 2>&1 || (echo Python Worker stopped. Press any key to close... & pause >nul)"
 
 :: Wait for startup
-timeout /t 3 >nul
+timeout /t 4 >nul
 
 :: Get Python Worker process PID
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do set "PY_PID=%%a"
@@ -130,7 +129,8 @@ echo.
 
 :: Start Electron Desktop
 echo [6/6] Starting Electron Desktop...
-start "GeoWork-Desktop" cmd /k "cd /d \"%ROOT_DIR%\" && node \"%ROOT_DIR%node_modules\electron-vite\dist\cli.mjs\" dev apps\desktop ^> \"%ROOT_DIR%logs\desktop.log\" 2^>^&1 && echo Desktop stopped. Press any key to close this window. && pause >nul"
+set "ELECTRON_PATH=%ROOT_DIR%node_modules\electron\dist\electron.exe"
+start "GeoWork-Desktop" /D "%ROOT_DIR%" /B cmd /c "set ELECTRON_EXEC_PATH=%ELECTRON_PATH% && node node_modules\electron-vite\dist\cli.mjs dev apps\desktop >> "%ROOT_DIR%logs\desktop.log" 2>&1 || (echo Desktop stopped. Press any key to close... & pause >nul)"
 
 :: Wait for Electron to start
 timeout /t 8 >nul
