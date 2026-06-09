@@ -4,7 +4,12 @@ from typing import Any
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from app.api.ndvi import router as ndvi_router
+
 app = FastAPI(title="GeoWork Geo Python Worker", version="1.0.0-dev")
+
+# Include NDVI API router
+app.include_router(ndvi_router)
 
 
 class ToolRequest(BaseModel):
@@ -56,6 +61,7 @@ def health():
         "service": "geo-python-worker",
         "capabilities": [
             "gee-ndvi-script",
+            "ndvi-analysis",
             "office-report",
             "pdf-parse",
             "gdal-inspect",

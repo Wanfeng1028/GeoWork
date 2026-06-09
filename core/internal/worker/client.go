@@ -24,18 +24,6 @@ func (c *Client) Health(ctx context.Context) (map[string]any, error) {
 	return out, err
 }
 
-func (c *Client) GenerateNDVI(ctx context.Context, payload map[string]any) (map[string]any, error) {
-	var out map[string]any
-	err := c.post(ctx, "/tools/gee/generate-ndvi-script", payload, &out)
-	return out, err
-}
-
-func (c *Client) WriteReport(ctx context.Context, payload map[string]any) (map[string]any, error) {
-	var out map[string]any
-	err := c.post(ctx, "/tools/office/write-report", payload, &out)
-	return out, err
-}
-
 func (c *Client) InspectDataset(ctx context.Context, payload map[string]any) (map[string]any, error) {
 	var out map[string]any
 	err := c.post(ctx, "/tools/gdal/inspect-dataset", payload, &out)
@@ -63,6 +51,27 @@ func (c *Client) IndexKnowledge(ctx context.Context, payload map[string]any) (ma
 func (c *Client) CheckQGIS(ctx context.Context, payload map[string]any) (map[string]any, error) {
 	var out map[string]any
 	err := c.post(ctx, "/tools/qgis/check", payload, &out)
+	return out, err
+}
+
+// GenerateNDVI forwards an NDVI analysis request to the Python worker.
+func (c *Client) GenerateNDVI(ctx context.Context, payload map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/ndvi/analyze", payload, &out)
+	return out, err
+}
+
+// WriteReport forwards a report generation request to the Python worker.
+func (c *Client) WriteReport(ctx context.Context, payload map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/tools/office/write-report", payload, &out)
+	return out, err
+}
+
+// GetNdvHistory retrieves NDVI analysis history from the Python worker.
+func (c *Client) GetNdvHistory(ctx context.Context, payload map[string]any) (map[string]any, error) {
+	var out map[string]any
+	err := c.post(ctx, "/ndvi/history", payload, &out)
 	return out, err
 }
 

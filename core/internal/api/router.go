@@ -50,6 +50,13 @@ var PublicRoutes = []string{
 	"/api/tools",
 	"/api/eino/schema",
 	"/api/mcp",
+	"/api/v1/files/{id}",
+	"/api/v1/files/{id}/folder",
+	"/api/v1/files/{id}/upload",
+	"/api/v1/files/{id}/{node_id}",
+	"/api/v1/files/{id}/{node_id}/rename",
+	"/api/v1/ndvi/analyze",
+	"/api/v1/ndvi/history/{id}",
 }
 
 func NewRouter(deps RouterDeps) http.Handler {
@@ -71,7 +78,10 @@ func NewRouter(deps RouterDeps) http.Handler {
 		case req.Method == http.MethodGet && path == "api/projects":
 			writeJSON(w, app.Projects())
 		case req.Method == http.MethodPost && path == "api/projects":
-			var in struct{Name string `json:"name"`; Mode string `json:"mode"`}
+			var in struct {
+				Name string `json:"name"`
+				Mode string `json:"mode"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			project, err := app.CreateProject(in.Name, in.Mode)
 			writeResult(w, project, err)
@@ -88,7 +98,11 @@ func NewRouter(deps RouterDeps) http.Handler {
 		case req.Method == http.MethodGet && path == "api/tasks":
 			writeJSON(w, app.Tasks())
 		case req.Method == http.MethodPost && path == "api/tasks":
-			var in struct{ProjectID string `json:"projectId"`; Prompt string `json:"prompt"`; Mode string `json:"mode"`}
+			var in struct {
+				ProjectID string `json:"projectId"`
+				Prompt    string `json:"prompt"`
+				Mode      string `json:"mode"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			task, err := app.CreateTask(in.ProjectID, in.Prompt, in.Mode)
 			writeResult(w, task, err)
@@ -122,7 +136,9 @@ func NewRouter(deps RouterDeps) http.Handler {
 		case req.Method == http.MethodGet && path == "api/plugins":
 			writeJSON(w, app.Plugins())
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "plugins" && parts[3] == "enable":
-			var in struct{Enabled bool `json:"enabled"`}
+			var in struct {
+				Enabled bool `json:"enabled"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			plugins, err := app.EnablePlugin(parts[2], in.Enabled)
 			writeResult(w, plugins, err)
@@ -153,14 +169,22 @@ func NewRouter(deps RouterDeps) http.Handler {
 		case req.Method == http.MethodGet && path == "api/datasets":
 			writeJSON(w, app.Datasets())
 		case req.Method == http.MethodPost && path == "api/datasets":
-			var in struct{ProjectID string `json:"projectId"`; Name string `json:"name"`; Type string `json:"type"`; Path string `json:"path"`}
+			var in struct {
+				ProjectID string `json:"projectId"`
+				Name      string `json:"name"`
+				Type      string `json:"type"`
+				Path      string `json:"path"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			dataset, err := app.RegisterDataset(in.ProjectID, in.Name, in.Type, in.Path)
 			writeResult(w, dataset, err)
 		case req.Method == http.MethodGet && path == "api/map/layers":
 			writeJSON(w, app.Layers())
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "map" && parts[2] == "layers":
-			var in struct{Visible bool `json:"visible"`; Opacity float64 `json:"opacity"`}
+			var in struct {
+				Visible bool    `json:"visible"`
+				Opacity float64 `json:"opacity"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			layer, err := app.UpdateLayer(parts[3], in.Visible, in.Opacity)
 			writeResult(w, layer, err)
@@ -182,13 +206,20 @@ func NewRouter(deps RouterDeps) http.Handler {
 		case req.Method == http.MethodGet && path == "api/knowledge":
 			writeJSON(w, app.Knowledge())
 		case req.Method == http.MethodPost && path == "api/knowledge":
-			var in struct{Title string `json:"title"`; Type string `json:"type"`; Path string `json:"path"`}
+			var in struct {
+				Title string `json:"title"`
+				Type  string `json:"type"`
+				Path  string `json:"path"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			writeJSON(w, app.IndexKnowledge(in.Title, in.Type, in.Path))
 		case req.Method == http.MethodGet && path == "api/security/decisions":
 			writeJSON(w, app.SecurityDecisions())
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "security" && parts[2] == "decisions":
-			var in struct{Decision string `json:"decision"`; Reason string `json:"reason"`}
+			var in struct {
+				Decision string `json:"decision"`
+				Reason   string `json:"reason"`
+			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			decision, err := app.ResolveSecurityDecision(parts[3], in.Decision, in.Reason)
 			writeResult(w, decision, err)
@@ -198,6 +229,58 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, app.EinoSchema())
 		case req.Method == http.MethodGet && path == "api/mcp":
 			writeJSON(w, app.MCPConnectors())
+		// NDVI analysis routes
+		case req.Method == http.MethodPost && path == "api/v1/ndvi/analyze":
+			var in struct {
+				ProjectID  string `json:"projectId"`
+				DataSource string `json:"dataSource"`
+				Bands      struct {
+					Red string `json:"red"`
+					NIR string `json:"nir"`
+				} `json:"bands"`
+				Thresholds struct {
+					Min float64 `json:"min"`
+					Max float64 `json:"max"`
+				} `json:"thresholds"`
+				Workspace string `json:"workspace"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			workerPayload := map[string]any{
+				"project_id":  in.ProjectID,
+				"data_source": in.DataSource,
+				"red_band":    in.Bands.Red,
+				"nir_band":    in.Bands.NIR,
+				"min_value":   in.Thresholds.Min,
+				"max_value":   in.Thresholds.Max,
+				"workspace":   in.Workspace,
+			}
+			result, err := app.WorkerClient().GenerateNDVI(req.Context(), workerPayload)
+			writeResult(w, result, err)
+		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "ndvi" && parts[4] == "history":
+			projectID := parts[5]
+			if projectID == "" {
+				http.Error(w, `{"error":"project_id is required"}`, http.StatusBadRequest)
+				return
+			}
+			workerURL := app.WorkerClient().BaseURL + "/ndvi/history/" + projectID
+			workerReq, err := http.NewRequestWithContext(req.Context(), http.MethodGet, workerURL, nil)
+			if err != nil {
+				http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+				return
+			}
+			workerResp, err := app.WorkerClient().HTTP.Do(workerReq)
+			if err != nil {
+				http.Error(w, `{"error":"NDVI history failed: `+err.Error()+`"}`, http.StatusInternalServerError)
+				return
+			}
+			defer workerResp.Body.Close()
+			if workerResp.StatusCode >= 400 {
+				http.Error(w, `{"error":"NDVI history worker error"}`, http.StatusInternalServerError)
+				return
+			}
+			var workerResult map[string]any
+			_ = json.NewDecoder(workerResp.Body).Decode(&workerResult)
+			writeJSON(w, workerResult)
 		default:
 			http.NotFound(w, req)
 		}

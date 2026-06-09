@@ -1,0 +1,175 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 0;
+}
+
+// Welcome section
+.welcome {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 50%, #f6ffed 100%);
+  border-radius: 12px;
+  border: 1px solid #d9e1e7;
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1677ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      font-size: 28px;
+      color: #ffffff;
+    }
+  }
+
+  .welcomeText {
+    flex: 1;
+    min-width: 0;
+
+    .greeting {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2a32;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: #60717f;
+    }
+  }
+}
+
+// Statistic cards
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  :global(.ant-statistic) {
+    text-align: center;
+
+    :global(.ant-statistic-title) {
+      font-size: 13px;
+      color: #60717f;
+      margin-bottom: 4px;
+    }
+
+    :global(.ant-statistic-content) {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1f2a32;
+    }
+  }
+}
+
+// Section titles
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2a32;
+
+  .viewAll {
+    font-size: 13px;
+    color: #1677ff;
+    cursor: pointer;
+    font-weight: 400;
+  }
+}
+
+// Content layout
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+// Quick links
+.quickLinks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  .linkCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 16px;
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+
+    &:hover {
+      border-color: #1677ff;
+      box-shadow: 0 2px 8px rgba(22, 119, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .linkIcon {
+      font-size: 28px;
+      color: #1677ff;
+    }
+
+    .linkLabel {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1f2a32;
+    }
+
+    .linkDesc {
+      font-size: 12px;
+      color: #60717f;
+    }
+  }
+}
+
+// Timeline section
+.timelineSection {
+  :global(.ant-timeline-item-content) {
+    padding-bottom: 20px;
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quickLinks {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome {
+    flex-direction: column;
+    text-align: center;
+  }
+}

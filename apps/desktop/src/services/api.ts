@@ -56,5 +56,14 @@ export const api = {
   tools: () => request<any[]>('/api/tools'),
   einoSchema: () => request<Record<string, unknown>>('/api/eino/schema'),
   mcp: () => request<any[]>('/api/mcp'),
-  worker: () => request<Record<string, unknown>>('/api/worker/geo/check')
+  worker: () => request<Record<string, unknown>>('/api/worker/geo/check'),
+
+  // File management APIs
+  getProjectFiles: (projectId: string) => request<any[]>(`/api/v1/files/${projectId}`),
+  createFolder: (projectId: string, body: { parentId: string; name: string }) =>
+    request<any[]>(`/api/v1/files/${projectId}/folder`, { method: 'POST', body: JSON.stringify(body) }),
+  deleteFileNode: (projectId: string, nodeId: string) =>
+    request<any[]>(`/api/v1/files/${projectId}/${nodeId}`, { method: 'DELETE' }),
+  renameFileNode: (projectId: string, nodeId: string, name: string) =>
+    request<any[]>(`/api/v1/files/${projectId}/${nodeId}/rename`, { method: 'PUT', body: JSON.stringify({ name }) })
 }

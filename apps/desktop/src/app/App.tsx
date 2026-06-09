@@ -27,12 +27,15 @@ import { Terminal } from '../components/common/Terminal'
 import NDVIChart from '../components/common/NDVIChart'
 import UsageChart from '../components/common/UsageChart'
 import PlotlyChart from '../components/common/PlotlyChart'
+import { ProjectFiles } from '../pages/ProjectFiles/ProjectFiles'
+import NdvAnalysis from '../pages/NdvAnalysis/NdvAnalysis'
 import styles from './App.module.scss'
 
 const navItems = [
   ['workbench', '工作台', <RobotOutlined />],
   ['projects', '项目文件', <FolderOpenOutlined />],
   ['map', '地图与图层', <GlobalOutlined />],
+  ['ndvi', 'NDVI 分析', <ExperimentOutlined />],
   ['papers', '论文搜索', <FileSearchOutlined />],
   ['knowledge', '知识库', <BookOutlined />],
   ['data', '数据中心', <DatabaseOutlined />],
@@ -53,7 +56,6 @@ export function App() {
   const [active, setActive] = useState('workbench')
   const [health, setHealth] = useState<Record<string, unknown>>({})
   const [projects, setProjects] = useState<Project[]>([])
-  const [projectFiles, setProjectFiles] = useState<any[]>([])
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [deliveries, setDeliveries] = useState<any[]>([])
   const [datasets, setDatasets] = useState<any[]>([])
@@ -127,11 +129,6 @@ export function App() {
     setTools(toolRes)
     setEinoSchema(einoRes)
     setMcp(mcpRes)
-    if (projectsRes[0]) {
-      setProjectFiles(await api.projectFiles(projectsRes[0].id).catch(() => []))
-    } else {
-      setProjectFiles([])
-    }
   }
 
   useEffect(() => {
@@ -195,11 +192,14 @@ export function App() {
     if (active === 'map') {
       return <MapPanel artifacts={currentTask?.artifacts ?? []} layers={layers} onToggle={(layer) => api.updateLayer(layer.id, { visible: !layer.visible, opacity: layer.opacity }).then(refresh)} />
     }
+    if (active === 'ndvi') {
+      return <NdvAnalysis />
+    }
     if (active === 'projects') {
-      return <ProjectPanel projects={projects} files={projectFiles} artifacts={artifacts} deliveries={deliveries} onCreate={() => api.createProject({ name: 'GeoWork Research Project', mode: 'Research' }).then(refresh)} onDelivery={(id) => api.createDelivery(id).then(refresh)} />
+      return <ProjectFiles />
     }
     return <SecurityPanel mcp={mcp} tools={tools} einoSchema={einoSchema} decisions={securityDecisions} onResolve={(id) => api.resolveSecurityDecision(id, { decision: 'approved', reason: 'User approved in desktop UI' }).then(refresh)} />
-  }, [active, artifacts, automations, automationRuns, currentTask, datasets, deliveries, einoSchema, environmentChecks, events, experts, form, knowledge, layers, mcp, models, papers, plugins, projectFiles, projects, securityDecisions, settings, skills, tasks, tools, usage, usageRecords])
+  }, [active, artifacts, automations, automationRuns, currentTask, datasets, einoSchema, environmentChecks, events, experts, form, knowledge, layers, mcp, models, papers, plugins, projects, securityDecisions, settings, skills, tasks, tools, usage, usageRecords])
 
   return (
     <div className={styles.shell}>
@@ -367,42 +367,6 @@ function AutomationPanel({ automations, runs, onCreate, onTrigger }: { automatio
           { title: 'Task', dataIndex: 'taskId' },
           { title: 'Status', dataIndex: 'status' },
           { title: 'Message', dataIndex: 'message' }
-        ]} />
-      </Card>
-    </div>
-  )
-}
-
-function ProjectPanel({ projects, files, artifacts, deliveries, onCreate, onDelivery }: { projects: Project[]; files: any[]; artifacts: Artifact[]; deliveries: any[]; onCreate: () => void; onDelivery: (id: string) => void }) {
-  return (
-    <div className={styles.stack}>
-      <Card title="项目" extra={<Button onClick={onCreate}>新建项目</Button>}>
-        <Table rowKey="id" dataSource={projects} pagination={false} columns={[
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Mode', dataIndex: 'mode', width: 120 },
-          { title: 'Path', dataIndex: 'path' },
-          { title: 'Delivery', width: 120, render: (_, row) => <Button size="small" onClick={() => onDelivery(row.id)}>生成清单</Button> }
-        ]} />
-      </Card>
-      <Card title="项目目录结构">
-        <Table rowKey="path" dataSource={files} pagination={{ pageSize: 8 }} columns={[
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Type', dataIndex: 'type', width: 100 },
-          { title: 'Size', dataIndex: 'size', width: 100 }
-        ]} />
-      </Card>
-      <Card title="成果文件">
-        <Table rowKey="id" dataSource={artifacts} pagination={{ pageSize: 8 }} columns={[
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Type', dataIndex: 'type', width: 130 },
-          { title: 'Path', dataIndex: 'path' }
-        ]} />
-      </Card>
-      <Card title="交付包">
-        <Table rowKey="id" dataSource={deliveries} pagination={false} columns={[
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Formats', dataIndex: 'formats', render: (formats: string[]) => <Space wrap>{(formats ?? []).slice(0, 8).map((format) => <Tag key={format}>{format}</Tag>)}</Space> },
-          { title: 'Path', dataIndex: 'path' }
         ]} />
       </Card>
     </div>

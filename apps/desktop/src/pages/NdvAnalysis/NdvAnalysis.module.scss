@@ -1,0 +1,172 @@
+.analysisLayout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+
+// --- Left Panel: Project & Data Source ---
+.leftPanel {
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2a32;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e8eef1;
+}
+
+// --- Center Panel: Map Preview ---
+.centerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.mapContainer {
+  flex: 1;
+  min-height: 360px;
+  border: 1px solid #c9d8d3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #eef6f3;
+}
+
+.mapPlaceholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8a9ba6;
+  font-size: 14px;
+  gap: 8px;
+
+  svg {
+    opacity: 0.4;
+  }
+}
+
+// --- Right Panel: Parameters ---
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// --- Bottom Panel: Results ---
+.bottomPanel {
+  grid-column: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultsCard {
+  border-radius: 8px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: #f8fafb;
+  border: 1px solid #e8eef1;
+
+  .statLabel {
+    font-size: 11px;
+    color: #60717f;
+    margin-bottom: 4px;
+  }
+
+  .statValue {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f6b57;
+  }
+
+  .statUnit {
+    font-size: 11px;
+    color: #8a9ba6;
+    margin-top: 2px;
+  }
+}
+
+.chartContainer {
+  margin-top: 8px;
+}
+
+// --- Form Controls ---
+.bandSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.thresholdRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+// --- Analysis Button ---
+.analysisActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+// --- Results Table ---
+.resultsTable {
+  margin-top: 8px;
+}
+
+// --- Responsive ---
+@media (max-width: 1180px) {
+  .analysisLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+
+    .leftPanel {
+      grid-row: auto;
+    }
+
+    .bottomPanel {
+      grid-column: 1;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .bandSelector {
+    grid-template-columns: 1fr;
+  }
+
+  .thresholdRow {
+    grid-template-columns: 1fr;
+  }
+}

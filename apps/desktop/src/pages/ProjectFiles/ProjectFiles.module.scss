@@ -1,0 +1,161 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.breadcrumb {
+  padding: 8px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  background: #f5f5f5;
+}
+
+.leftPanel {
+  width: 320px;
+  min-width: 240px;
+  border-right: 1px solid #f0f0f0;
+  background: #ffffff;
+  overflow: auto;
+  padding: 8px;
+}
+
+.rightPanel {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+
+.treeCard,
+.previewCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.treeCard .ant-card-body,
+.previewCard .ant-card-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px !important;
+}
+
+.treeNode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.treeNode:hover {
+  background: #f5f5f5;
+}
+
+.treeIcon {
+  font-size: 16px;
+}
+
+// Drag overlay
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 144, 255, 0.08);
+  border: 2px dashed #1890ff;
+  color: #1890ff;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.dragOverlay p {
+  margin: 12px 0 0;
+  font-weight: 500;
+}
+
+// Context menu
+.contextMenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 160px;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+  padding: 4px 0;
+}
+
+.contextMenuItem {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #262626;
+  transition: background 0.2s;
+}
+
+.contextMenuItem:hover {
+  background: #f5f5f5;
+}
+
+.contextMenuDelete:hover {
+  color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.contextMenuDivider {
+  height: 1px;
+  margin: 4px 0;
+  background: #f0f0f0;
+}
+
+// Error banner
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #fff2f0;
+  border-top: 1px solid #ffccc7;
+  color: #cf1322;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .leftPanel {
+    width: 100%;
+    height: 240px;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+}

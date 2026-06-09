@@ -111,11 +111,11 @@ type EnvironmentCheck struct {
 }
 
 type UsageSummary struct {
-	Tasks       int            `json:"tasks"`
-	Artifacts   int            `json:"artifacts"`
-	EstimatedTokens int        `json:"estimatedTokens"`
-	CostCNY     float64        `json:"costCny"`
-	ByMode      map[string]int `json:"byMode"`
+	Tasks           int            `json:"tasks"`
+	Artifacts       int            `json:"artifacts"`
+	EstimatedTokens int            `json:"estimatedTokens"`
+	CostCNY         float64        `json:"costCny"`
+	ByMode          map[string]int `json:"byMode"`
 }
 
 type UsageRecord struct {
@@ -129,29 +129,29 @@ type UsageRecord struct {
 }
 
 type App struct {
-	mu          sync.Mutex
-	workspace   string
-	statePath   string
-	planner     agent.Planner
-	worker      *worker.Client
-	registry    *tools.Registry
-	projects    map[string]Project
-	tasks       map[string]*Task
-	events      map[string][]Event
-	skills      []Skill
-	plugins     []Plugin
-	models      []ModelConfig
-	automations []Automation
-	settings    SettingsState
-	experts     []Expert
-	papers      []Paper
-	knowledge   []KnowledgeItem
-	datasets    []Dataset
-	layers      []MapLayer
-	deliveries  []DeliveryPackage
-	mcp         []MCPConnector
-	runs        []AutomationRun
-	decisions   []SecurityDecision
+	mu           sync.Mutex
+	workspace    string
+	statePath    string
+	planner      agent.Planner
+	worker       *worker.Client
+	registry     *tools.Registry
+	projects     map[string]Project
+	tasks        map[string]*Task
+	events       map[string][]Event
+	skills       []Skill
+	plugins      []Plugin
+	models       []ModelConfig
+	automations  []Automation
+	settings     SettingsState
+	experts      []Expert
+	papers       []Paper
+	knowledge    []KnowledgeItem
+	datasets     []Dataset
+	layers       []MapLayer
+	deliveries   []DeliveryPackage
+	mcp          []MCPConnector
+	runs         []AutomationRun
+	decisions    []SecurityDecision
 	usageRecords []UsageRecord
 }
 
@@ -173,16 +173,16 @@ func New(workspace string, workerBaseURL string) *App {
 		plugins:   LoadPlugins(filepath.Join(repoRoot, "plugins"), defaultPlugins()),
 		models:    defaultModels(),
 		settings: SettingsState{
-			Theme: "light",
-			Workspace: workspace,
-			Security: map[string]any{"workspaceWhitelist": []string{workspace}, "approvalForRisk": []string{"medium", "high"}, "apiKeysEncrypted": true},
-			QGIS: map[string]any{"bundled": false, "strategy": "detect-local-installation"},
+			Theme:       "light",
+			Workspace:   workspace,
+			Security:    map[string]any{"workspaceWhitelist": []string{workspace}, "approvalForRisk": []string{"medium", "high"}, "apiKeysEncrypted": true},
+			QGIS:        map[string]any{"bundled": false, "strategy": "detect-local-installation"},
 			Environment: map[string]any{"go": "required", "python": "required", "node": "required"},
 		},
 		experts:   defaultExperts(),
 		papers:    defaultPapers(),
 		knowledge: defaultKnowledge(workspace),
-		mcp: LoadMCPConnectors(filepath.Join(repoRoot, "mcp")),
+		mcp:       LoadMCPConnectors(filepath.Join(repoRoot, "mcp")),
 		automations: []Automation{
 			{ID: "auto_literature_watch", Name: "论文更新监控", Trigger: "cron:0 9 * * 1", Target: "Research", Enabled: true},
 			{ID: "auto_data_drop", Name: "数据目录变化触发质量检查", Trigger: "fsnotify:data/", Target: "Data", Enabled: true},
@@ -195,6 +195,9 @@ func New(workspace string, workerBaseURL string) *App {
 
 func (a *App) Workspace() string { return a.workspace }
 
+// WorkerClient returns the underlying Python worker client.
+func (a *App) WorkerClient() *worker.Client { return a.worker }
+
 func (a *App) Health(ctx context.Context) map[string]any {
 	workerHealth, err := a.worker.Health(ctx)
 	status := "ok"
@@ -203,13 +206,13 @@ func (a *App) Health(ctx context.Context) map[string]any {
 		workerHealth = map[string]any{"status": "unavailable", "error": err.Error()}
 	}
 	return map[string]any{
-		"status": status,
-		"service": "geowork-core",
-		"version": "1.0.0-dev",
+		"status":    status,
+		"service":   "geowork-core",
+		"version":   "1.0.0-dev",
 		"workspace": a.workspace,
-		"worker": workerHealth,
-		"modules": []string{"Research", "Data", "GeoCode", "Analysis", "Write", "Skills", "Plugins", "MCP", "Automation"},
-		"tools": a.ToolCatalog(),
+		"worker":    workerHealth,
+		"modules":   []string{"Research", "Data", "GeoCode", "Analysis", "Write", "Skills", "Plugins", "MCP", "Automation"},
+		"tools":     a.ToolCatalog(),
 	}
 }
 
@@ -378,19 +381,21 @@ func (a *App) StreamEvents(w http.ResponseWriter, r *http.Request, taskID string
 	}
 }
 
-func (a *App) Skills() []Skill { return append([]Skill{}, a.skills...) }
-func (a *App) Plugins() []Plugin { return append([]Plugin{}, a.plugins...) }
-func (a *App) Models() []ModelConfig { return append([]ModelConfig{}, a.models...) }
-func (a *App) Automations() []Automation { return append([]Automation{}, a.automations...) }
-func (a *App) Experts() []Expert { return append([]Expert{}, a.experts...) }
-func (a *App) Papers() []Paper { return append([]Paper{}, a.papers...) }
-func (a *App) Knowledge() []KnowledgeItem { return append([]KnowledgeItem{}, a.knowledge...) }
-func (a *App) Datasets() []Dataset { return append([]Dataset{}, a.datasets...) }
-func (a *App) Layers() []MapLayer { return append([]MapLayer{}, a.layers...) }
-func (a *App) Deliveries() []DeliveryPackage { return append([]DeliveryPackage{}, a.deliveries...) }
-func (a *App) MCPConnectors() []MCPConnector { return append([]MCPConnector{}, a.mcp...) }
+func (a *App) Skills() []Skill                 { return append([]Skill{}, a.skills...) }
+func (a *App) Plugins() []Plugin               { return append([]Plugin{}, a.plugins...) }
+func (a *App) Models() []ModelConfig           { return append([]ModelConfig{}, a.models...) }
+func (a *App) Automations() []Automation       { return append([]Automation{}, a.automations...) }
+func (a *App) Experts() []Expert               { return append([]Expert{}, a.experts...) }
+func (a *App) Papers() []Paper                 { return append([]Paper{}, a.papers...) }
+func (a *App) Knowledge() []KnowledgeItem      { return append([]KnowledgeItem{}, a.knowledge...) }
+func (a *App) Datasets() []Dataset             { return append([]Dataset{}, a.datasets...) }
+func (a *App) Layers() []MapLayer              { return append([]MapLayer{}, a.layers...) }
+func (a *App) Deliveries() []DeliveryPackage   { return append([]DeliveryPackage{}, a.deliveries...) }
+func (a *App) MCPConnectors() []MCPConnector   { return append([]MCPConnector{}, a.mcp...) }
 func (a *App) AutomationRuns() []AutomationRun { return append([]AutomationRun{}, a.runs...) }
-func (a *App) SecurityDecisions() []SecurityDecision { return append([]SecurityDecision{}, a.decisions...) }
+func (a *App) SecurityDecisions() []SecurityDecision {
+	return append([]SecurityDecision{}, a.decisions...)
+}
 func (a *App) UsageRecords() []UsageRecord { return append([]UsageRecord{}, a.usageRecords...) }
 
 func (a *App) ToolCatalog() []map[string]any {
@@ -465,7 +470,7 @@ func (a *App) RegisterDataset(projectID, name, typ, path string) (Dataset, error
 	}
 	dataset := Dataset{
 		ID: newID("data"), ProjectID: projectID, Name: name, Type: typ, Path: path, CRS: "EPSG:4326", Status: "registered",
-		Quality: map[string]any{"geometry": "valid", "metadata": "complete", "recommendations": []string{"Run GDAL/QGIS checks before final delivery."}},
+		Quality:   map[string]any{"geometry": "valid", "metadata": "complete", "recommendations": []string{"Run GDAL/QGIS checks before final delivery."}},
 		CreatedAt: time.Now(),
 	}
 	layer := MapLayer{ID: newID("layer"), ProjectID: projectID, Name: name, Kind: typ, Source: path, Visible: true, Opacity: 0.82, Style: map[string]any{"palette": "viridis", "stroke": "#18745f"}, CreatedAt: time.Now()}

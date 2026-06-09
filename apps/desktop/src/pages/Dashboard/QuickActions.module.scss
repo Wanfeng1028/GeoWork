@@ -1,0 +1,104 @@
+.container {
+  margin-bottom: 24px;
+
+  .header {
+    margin-bottom: 16px;
+
+    .title {
+      margin: 0 0 4px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2a32;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #60717f;
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .actionCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+
+    &:hover {
+      border-color: #1677ff;
+      box-shadow: 0 2px 8px rgba(22, 119, 255, 0.12);
+      transform: translateY(-1px);
+    }
+  }
+
+  .iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .iconColorblue {
+    background: #e6f4ff;
+    color: #1677ff;
+  }
+
+  .iconColorgreen {
+    background: #e6fffb;
+    color: #10b981;
+  }
+
+  .iconColororange {
+    background: #fff7e6;
+    color: #fa8c16;
+  }
+
+  .iconColorpurple {
+    background: #f9f0ff;
+    color: #722ed1;
+  }
+
+  .actionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .actionLabel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2a32;
+  }
+
+  .actionDesc {
+    font-size: 12px;
+    color: #60717f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .modalContent {
+    p {
+      margin-bottom: 16px;
+      color: #47606d;
+    }
+  }
+}
