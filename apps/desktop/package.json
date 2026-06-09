@@ -2,6 +2,7 @@
   "name": "@geowork/desktop",
   "private": true,
   "type": "module",
+  "main": "electron/main.ts",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
