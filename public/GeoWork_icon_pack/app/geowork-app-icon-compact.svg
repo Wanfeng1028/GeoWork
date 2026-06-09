@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="GeoWork compact app icon">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="900" y2="950" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#071225"/><stop offset="0.55" stop-color="#0A3842"/><stop offset="1" stop-color="#04060D"/>
+    </linearGradient>
+    <linearGradient id="g" x1="260" y1="230" x2="780" y2="760" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#89FFE4"/><stop offset="0.56" stop-color="#46D9FF"/><stop offset="1" stop-color="#F4D77E"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="28" stdDeviation="26" flood-color="#000" flood-opacity="0.42"/></filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="11" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="56" y="56" width="912" height="912" rx="214" fill="url(#bg)" filter="url(#shadow)"/>
+  <g opacity="0.14" stroke="#A7FFF0" stroke-width="2"><path d="M140 240H884M140 360H884M140 480H884M140 600H884M140 720H884"/><path d="M220 140V884M340 140V884M460 140V884M580 140V884M700 140V884M820 140V884"/></g>
+  <g fill="none" opacity="0.18" stroke-linecap="round"><path d="M76 335C206 290 291 330 407 292C528 253 617 214 764 247C850 267 916 245 997 198" stroke="#65F0DA" stroke-width="4"/><path d="M80 716C205 654 328 709 456 672C604 629 675 653 781 705C862 745 923 711 1006 656" stroke="#F4D77E" stroke-width="3"/></g>
+  <g filter="url(#glow)">
+    <circle cx="512" cy="462" r="276" fill="#0B2233" stroke="url(#g)" stroke-width="16"/>
+    <ellipse cx="512" cy="462" rx="276" ry="88" fill="none" stroke="#A4FFEB" stroke-width="7" opacity="0.65"/>
+    <ellipse cx="512" cy="462" rx="88" ry="276" fill="none" stroke="#A4FFEB" stroke-width="7" opacity="0.42"/>
+    <path d="M322 553C394 493 462 493 503 422C548 346 633 318 720 354" stroke="#55F1D4" stroke-width="30" opacity="0.32" stroke-linecap="round"/>
+    <path d="M236 550C389 348 636 271 807 342" stroke="url(#g)" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="236" cy="550" r="24" fill="#89FFE4"/><circle cx="807" cy="342" r="25" fill="#F4D77E"/>
+  </g>
+  <text x="512" y="598" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="306" font-weight="900" fill="#F2FFFC" letter-spacing="-18">GW</text>
+  <text x="512" y="803" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="94" font-weight="850" fill="#EFFFFB" letter-spacing="-4">GeoWork</text>
+</svg>

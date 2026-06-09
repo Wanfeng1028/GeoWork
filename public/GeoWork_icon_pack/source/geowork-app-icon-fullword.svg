@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="GeoWork app icon">
+  <defs>
+    <linearGradient id="bg" x1="112" y1="72" x2="910" y2="948" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#091427"/>
+      <stop offset="0.42" stop-color="#0B3446"/>
+      <stop offset="0.72" stop-color="#083A3A"/>
+      <stop offset="1" stop-color="#05070F"/>
+    </linearGradient>
+    <radialGradient id="globeFill" cx="42%" cy="24%" r="76%">
+      <stop offset="0" stop-color="#D6FFF6" stop-opacity="0.32"/>
+      <stop offset="0.44" stop-color="#23D5C1" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#0B1728" stop-opacity="0.18"/>
+    </radialGradient>
+    <linearGradient id="lineGrad" x1="306" y1="242" x2="748" y2="646" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8FFFE3"/>
+      <stop offset="0.54" stop-color="#39D9FF"/>
+      <stop offset="1" stop-color="#F2D680"/>
+    </linearGradient>
+    <linearGradient id="geoText" x1="250" y1="718" x2="768" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8BFFE2"/>
+      <stop offset="0.48" stop-color="#E7FFFA"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="26" stdDeviation="28" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="round">
+      <rect x="56" y="56" width="912" height="912" rx="214"/>
+    </clipPath>
+  </defs>
+
+  <rect x="56" y="56" width="912" height="912" rx="214" fill="url(#bg)" filter="url(#shadow)"/>
+  <g clip-path="url(#round)">
+    <rect x="56" y="56" width="912" height="912" fill="url(#bg)"/>
+    <path d="M88 202C238 94 414 66 614 91C757 109 884 169 968 276V56H56v235c8-27 18-57 32-89z" fill="#B9FFF1" opacity="0.08"/>
+    <path d="M72 884C190 782 356 742 564 773C724 797 859 756 968 658v310H56v-76c5-3 10-6 16-8z" fill="#40E9C7" opacity="0.08"/>
+
+    <!-- Subtle workbench grid -->
+    <g opacity="0.17" stroke="#A7FFF0" stroke-width="1.3">
+      <path d="M130 184H896M130 270H896M130 356H896M130 442H896M130 528H896M130 614H896M130 700H896"/>
+      <path d="M170 132V892M256 132V892M342 132V892M428 132V892M514 132V892M600 132V892M686 132V892M772 132V892M858 132V892"/>
+    </g>
+
+    <!-- Topographic contour / remote-sensing curves -->
+    <g fill="none" stroke-linecap="round" opacity="0.28">
+      <path d="M-40 268C105 214 187 251 291 236C412 219 481 148 621 170C737 188 779 251 873 245C946 240 1016 200 1088 169" stroke="#53F2D0" stroke-width="3" opacity="0.25"/>
+      <path d="M-34 320C92 273 192 313 300 292C424 267 479 207 613 225C725 240 787 301 890 285C961 274 1021 245 1082 224" stroke="#A1FFEC" stroke-width="2" opacity="0.18"/>
+      <path d="M-18 638C114 590 211 620 317 606C442 589 510 511 643 532C751 550 809 618 899 604C974 592 1028 544 1086 514" stroke="#F3D783" stroke-width="2.3" opacity="0.18"/>
+      <path d="M-20 704C104 666 198 686 312 680C427 674 496 613 620 638C741 662 785 727 903 709C973 699 1031 667 1087 640" stroke="#53F2D0" stroke-width="2" opacity="0.14"/>
+    </g>
+  </g>
+
+  <!-- Globe + AI route mark -->
+  <g filter="url(#softGlow)">
+    <circle cx="512" cy="402" r="222" fill="url(#globeFill)" stroke="url(#lineGrad)" stroke-width="7"/>
+    <ellipse cx="512" cy="402" rx="222" ry="74" fill="none" stroke="#9FFFE9" stroke-width="3.5" opacity="0.72"/>
+    <ellipse cx="512" cy="402" rx="74" ry="222" fill="none" stroke="#9FFFE9" stroke-width="3.5" opacity="0.50"/>
+    <path d="M304 402H720" stroke="#9FFFE9" stroke-width="3.2" opacity="0.40"/>
+    <path d="M512 180V624" stroke="#9FFFE9" stroke-width="3" opacity="0.38"/>
+    <path d="M332 522C403 462 458 471 502 398C539 338 599 300 684 318" fill="none" stroke="#5CF1D5" stroke-width="16" opacity="0.42" stroke-linecap="round"/>
+    <path d="M357 306C425 342 476 332 540 286C591 249 640 251 690 281C682 322 653 363 602 377C544 394 506 373 465 406C423 440 388 448 342 427C319 383 325 339 357 306z" fill="#58F2C9" opacity="0.34"/>
+    <path d="M386 496C427 480 468 492 498 535C529 579 576 588 626 568C625 610 596 642 545 654C486 667 427 636 394 586C373 553 370 520 386 496z" fill="#F2D680" opacity="0.26"/>
+    <path d="M252 470C374 309 620 235 797 285" fill="none" stroke="url(#lineGrad)" stroke-width="9" stroke-linecap="round" opacity="0.92"/>
+    <circle cx="252" cy="470" r="13" fill="#8BFFE2"/>
+    <circle cx="797" cy="285" r="14" fill="#F2D680"/>
+  </g>
+
+  <!-- Workbench / automation nodes -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M391 585H633M432 548v75M512 548v75M592 548v75" stroke="#E8FFF8" stroke-width="8" opacity="0.74"/>
+    <rect x="361" y="542" width="62" height="62" rx="18" fill="#0C2433" stroke="#8BFFE2" stroke-width="6"/>
+    <rect x="481" y="522" width="62" height="62" rx="18" fill="#102D3A" stroke="#E9F7FF" stroke-width="6"/>
+    <rect x="601" y="542" width="62" height="62" rx="18" fill="#0C2433" stroke="#F2D680" stroke-width="6"/>
+    <circle cx="512" cy="553" r="11" fill="#8BFFE2"/>
+  </g>
+
+  <!-- Product name included as requested -->
+  <g>
+    <text x="512" y="784" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="113" font-weight="850" letter-spacing="-4" fill="url(#geoText)">GeoWork</text>
+    <text x="512" y="837" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="7" fill="#9FFFE9" opacity="0.82">GIS AI WORKBENCH</text>
+  </g>
+
+  <rect x="57.5" y="57.5" width="909" height="909" rx="212" fill="none" stroke="#D6FFF6" stroke-opacity="0.22" stroke-width="3"/>
+</svg>
