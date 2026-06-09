@@ -1,225 +1,182 @@
 @echo off
 setlocal EnableDelayedExpansion
-chcp 65001 >nul
-title GeoWork 启动脚本
+chcp 437 >nul
+title GeoWork Startup Script
 
 echo ========================================
-echo        GeoWork 一键启动脚本
+echo        GeoWork Startup Script
 echo ========================================
 echo.
 
-:: 获取脚本所在目录
+:: Get script directory
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
-:: 定义端口常量
-set "GO_PORT=8765"
-set "PY_PORT=8766"
-
-:: 检查依赖
-echo [1/7] 检查依赖...
+:: Check dependencies
+echo [1/6] Checking dependencies...
 where node >nul 2>&1
 if !errorlevel! neq 0 (
-    echo [错误] 未找到 Node.js，请先安装 Node.js
+    echo [ERROR] Node.js not found, please install Node.js first
     pause
     exit /b 1
 )
 
 where go >nul 2>&1
 if !errorlevel! neq 0 (
-    echo [错误] 未找到 Go，请先安装 Go
+    echo [ERROR] Go not found, please install Go first
     pause
     exit /b 1
 )
 
 where python >nul 2>&1
 if !errorlevel! neq 0 (
-    echo [错误] 未找到 Python，请先安装 Python
+    echo [ERROR] Python not found, please install Python first
     pause
     exit /b 1
 )
-echo [√] 基础依赖检查通过
+echo [OK] Basic dependencies checked
 echo.
 
-:: 检查 Go 依赖
-echo [2/7] 检查 Go 依赖...
-if not exist "%ROOT_DIR%core\go.sum" (
-    echo [提示] 首次运行，需要下载 Go 依赖...
-    cd /d "%ROOT_DIR%core"
-    call go mod download
-    if !errorlevel! neq 0 (
-        echo [错误] Go 依赖下载失败
-        pause
-        exit /b 1
-    )
-)
-echo [√] Go 依赖检查通过
-echo.
-
-:: 检查 Python 依赖
-echo [3/7] 检查 Python 依赖...
-if not exist "%ROOT_DIR%workers\geo-python\requirements.txt" (
-    echo [警告] 未找到 requirements.txt，跳过 Python 依赖检查
-) else (
-    echo [提示] 检查 Python 依赖...
-    cd /d "%ROOT_DIR%workers\geo-python"
-    pip show uvicorn >nul 2>&1
-    if !errorlevel! neq 0 (
-        echo [提示] 安装 Python 依赖...
-        pip install -r requirements.txt
-        if !errorlevel! neq 0 (
-            echo [警告] Python 依赖安装失败，可能需要手动安装
-        )
-    )
-)
-echo [√] Python 依赖检查通过
-echo.
-
-:: 检查 Electron 依赖
-echo [4/7] 检查 Electron 依赖...
+:: Check Electron dependencies
+echo [2/6] Checking Electron dependencies...
 if not exist "%ROOT_DIR%apps\desktop\node_modules\.package-lock.json" (
-    echo [提示] 首次运行，需要安装前端依赖...
+    echo [INFO] First run, installing frontend dependencies...
     cd /d "%ROOT_DIR%apps\desktop"
     call npm install
     if !errorlevel! neq 0 (
-        echo [错误] 前端依赖安装失败
+        echo [ERROR] Frontend dependency installation failed
         pause
         exit /b 1
     )
 )
-echo [√] Electron 依赖检查通过
+echo [OK] Electron dependencies checked
 echo.
 
-:: 检查端口是否被占用
-echo [5/7] 检查端口占用...
+:: Check port availability
+echo [3/6] Checking port availability...
 set "port_clear=true"
 
-netstat -aon | findstr :!GO_PORT! | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 !GO_PORT! 已被占用
+    echo [WARNING] Port 8765 is already in use
     set "port_clear=false"
 ) else (
-    echo [√] 端口 !GO_PORT! 可用
+    echo [OK] Port 8765 is available
 )
 
-netstat -aon | findstr :!PY_PORT! | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :8766 | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 !PY_PORT! 已被占用
+    echo [WARNING] Port 8766 is already in use
     set "port_clear=false"
 ) else (
-    echo [√] 端口 !PY_PORT! 可用
+    echo [OK] Port 8766 is available
 )
 
 if "!port_clear!"=="false" (
     echo.
-    echo [警告] 部分端口已被占用，是否继续？
-    echo [提示] 如果这些是 GeoWork 旧进程，建议先运行 stop.bat
+    echo [WARNING] Some ports are already in use
+    echo [HINT] If these are old GeoWork processes, run stop.bat first
     echo.
-    choice /c YN /m "继续启动？(Y/N)"
+    choice /c YN /m "Continue startup? (Y/N)"
     if !errorlevel! equ 2 (
-        echo 已取消启动
+        echo Startup cancelled
         pause
         exit /b 0
     )
 )
 echo.
 
-:: 清理旧的 PID 文件
+:: Clean old PID file
 if exist "%PID_FILE%" del "%PID_FILE%"
 
-:: 创建日志目录
+:: Create log directory
 if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
-:: 启动 Go Core Runtime
-echo [6/7] 启动 Go Core Runtime (端口 !GO_PORT!)...
-start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ./cmd/geowork-runtime --port !GO_PORT! > "%ROOT_DIR%logs\go-core.log" 2>&1"
+:: Start Go Core Runtime
+echo [4/6] Starting Go Core Runtime (port 8765)...
+start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ^./cmd/geowork-runtime --port 8765 ^> ^"%ROOT_DIR%logs\go-core.log^" 2^>^&1"
 
-:: 等待启动
+:: Wait for startup
 timeout /t 3 >nul
 
-:: 获取 Go Core 进程 PID（单行设置变量避免 for 循环作用域问题）
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!GO_PORT! ^| findstr LISTENING') do set "GO_PID=%%a"
+:: Get Go Core process PID (single-line set to avoid for loop scope issue)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do set "GO_PID=%%a"
 if defined GO_PID (
     echo Go-Core: !GO_PID! >> "%PID_FILE%"
-    echo [√] Go Core Runtime 已启动 (PID: !GO_PID!)
+    echo [OK] Go Core Runtime started (PID: !GO_PID!)
 ) else (
-    echo [!] Go Core Runtime 启动中，请稍候...
-    echo [提示] 如果启动失败，请检查日志: %ROOT_DIR%logs\go-core.log
+    echo [INFO] Go Core Runtime is starting, please wait...
 )
 echo.
 
-:: 启动 Python Geo Worker
-echo [7/7] 启动 Python Geo Worker (端口 !PY_PORT!)...
-start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port !PY_PORT! > "%ROOT_DIR%logs\python-worker.log" 2>&1"
+:: Start Python Geo Worker
+echo [5/6] Starting Python Geo Worker (port 8766)...
+start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 ^> ^"%ROOT_DIR%logs\python-worker.log^" 2^>^&1"
 
-:: 等待启动
+:: Wait for startup
 timeout /t 3 >nul
 
-:: 获取 Python Worker 进程 PID（单行设置变量避免 for 循环作用域问题）
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!PY_PORT! ^| findstr LISTENING') do set "PY_PID=%%a"
+:: Get Python Worker process PID (single-line set to avoid for loop scope issue)
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do set "PY_PID=%%a"
 if defined PY_PID (
     echo Python-Worker: !PY_PID! >> "%PID_FILE%"
-    echo [√] Python Geo Worker 已启动 (PID: !PY_PID!)
+    echo [OK] Python Geo Worker started (PID: !PY_PID!)
 ) else (
-    echo [!] Python Geo Worker 启动中，请稍候...
-    echo [提示] 如果启动失败，请检查日志: %ROOT_DIR%logs\python-worker.log
+    echo [INFO] Python Geo Worker is starting, please wait...
 )
 echo.
 
-:: 启动 Electron 桌面端
-echo 启动 Electron 桌面端...
-start "GeoWork-Desktop" /D "%ROOT_DIR%apps\desktop" cmd /c "npm run dev > "%ROOT_DIR%logs\desktop.log" 2>&1"
+:: Start Electron Desktop
+echo [6/6] Starting Electron Desktop...
+start "GeoWork-Desktop" /D "%ROOT_DIR%apps\desktop" cmd /c "npm run dev ^> ^"%ROOT_DIR%logs\desktop.log^" 2^>^&1"
 
-:: 等待 Electron 启动
+:: Wait for Electron to start
 timeout /t 5 >nul
 
-echo [√] Electron 桌面端已启动
-echo [提示] 如果桌面端未自动打开，请手动访问 http://localhost:3000
+echo [OK] Electron Desktop started
 echo.
 
-:: 检查服务状态
-echo 检查服务状态...
+:: Check service status
+echo Checking service status...
 timeout /t 2 >nul
 
-curl -s http://127.0.0.1:!GO_PORT!/api/health >nul 2>&1
+curl -s http://127.0.0.1:8765/api/health >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [√] Go Core Runtime 运行正常
+    echo [OK] Go Core Runtime is running normally
 ) else (
-    echo [!] Go Core Runtime 可能未正常启动，请检查日志
-    echo [提示] 日志位置: %ROOT_DIR%logs\go-core.log
+    echo [WARNING] Go Core Runtime may not have started correctly, check logs
 )
 
-curl -s http://127.0.0.1:!PY_PORT!/health >nul 2>&1
+curl -s http://127.0.0.1:8766/health >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [√] Python Geo Worker 运行正常
+    echo [OK] Python Geo Worker is running normally
 ) else (
-    echo [!] Python Geo Worker 可能未正常启动，请检查日志
-    echo [提示] 日志位置: %ROOT_DIR%logs\python-worker.log
+    echo [WARNING] Python Geo Worker may not have started correctly, check logs
 )
 
-:: 显示 PID 文件内容
+:: Show PID file content
 if exist "%PID_FILE%" (
     echo.
-    echo 已记录进程 PID：
+    echo Recorded process PIDs:
     type "%PID_FILE%"
 )
 
 echo.
 echo ========================================
-echo        GeoWork 启动完成！
+echo        GeoWork Startup Complete!
 echo ========================================
 echo.
-echo 服务地址：
-echo   - Go Core Runtime: http://127.0.0.1:!GO_PORT!
-echo   - Python Geo Worker: http://127.0.0.1:!PY_PORT!
+echo Service addresses:
+echo   - Go Core Runtime: http://127.0.0.1:8765
+echo   - Python Geo Worker: http://127.0.0.1:8766
 echo.
-echo 日志文件：
+echo Log files:
 echo   - %ROOT_DIR%logs\go-core.log
 echo   - %ROOT_DIR%logs\python-worker.log
 echo   - %ROOT_DIR%logs\desktop.log
 echo.
-echo PID 文件：
+echo PID file:
 echo   - %PID_FILE%
 echo.
-echo 按任意键退出此窗口...
+echo Press any key to exit this window...
 pause >nul

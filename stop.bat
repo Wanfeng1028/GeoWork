@@ -1,145 +1,141 @@
 @echo off
 setlocal EnableDelayedExpansion
-chcp 65001 >nul
-title GeoWork 停止脚本
+chcp 437 >nul
+title GeoWork Stop Script
 
 echo ========================================
-echo        GeoWork 一键停止脚本
+echo        GeoWork Stop Script
 echo ========================================
 echo.
 
-:: 获取脚本所在目录
+:: Get script directory
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
-:: 定义端口常量
-set "GO_PORT=8765"
-set "PY_PORT=8766"
-
-:: 检查 PID 文件
+:: Check PID file
 if not exist "%PID_FILE%" (
-    echo [警告] 未找到 PID 文件，将使用端口检测模式
-    echo [提示] 下次使用 start.bat 启动会更精确
+    echo [WARNING] PID file not found, using port detection mode
+    echo [HINT] Using start.bat next time will be more precise
     echo.
     goto :port_mode
 )
 
-echo [信息] 通过 PID 文件精确停止进程...
+echo [INFO] Stopping processes precisely via PID file...
 echo.
 
-:: 读取 PID 文件并停止进程
+:: Read PID file and stop processes
 set "stopped_count=0"
 for /f "usebackq tokens=1,2 delims=:" %%a in ("%PID_FILE%") do (
     set "process_name=%%a"
     set "process_pid=%%b"
-
-    :: 去除前导空格
+    
+    :: Remove leading spaces
     for /f "tokens=* delims= " %%c in ("!process_name!") do set "process_name=%%c"
     for /f "tokens=* delims= " %%c in ("!process_pid!") do set "process_pid=%%c"
-
-    :: 检查进程是否存在
+    
+    :: Check if process exists
     tasklist /FI "PID eq !process_pid!" /NH 2>nul | findstr /I "!process_pid!" >nul
     if !errorlevel! equ 0 (
-        echo 停止 !process_name! ^(PID: !process_pid!^)...
+        echo Stopping !process_name! (PID: !process_pid!)...
         taskkill /PID !process_pid! /F >nul 2>&1
         if !errorlevel! equ 0 (
-            echo [√] !process_name! 已停止
+            echo [OK] !process_name! stopped
             set /a stopped_count+=1
         ) else (
-            echo [!] !process_name! 停止失败
+            echo [FAILED] !process_name! stop failed
         )
     ) else (
-        echo [√] !process_name! ^(PID: !process_pid!^) 已经停止
+        echo [OK] !process_name! (PID: !process_pid!) already stopped
     )
 )
 
-:: 删除 PID 文件
+:: Delete PID file
 if exist "%PID_FILE%" del "%PID_FILE%"
 echo.
-echo 共停止 !stopped_count! 个进程
+echo Total stopped: !stopped_count! processes
 goto :check_ports
 
 :port_mode
-echo [信息] 通过端口检测停止进程...
-echo [警告] 此模式只停止监听指定端口的进程，不会误杀其他应用
+echo [INFO] Stopping processes via port detection...
+echo [WARNING] This mode only stops processes listening on specified ports
 echo.
 
-:: 停止 Go Core Runtime (端口 !GO_PORT!)
-echo [1/2] 停止 Go Core Runtime (端口 !GO_PORT!)...
+:: Stop Go Core Runtime (port 8765)
+echo [1/2] Stopping Go Core Runtime (port 8765)...
 set "go_stopped=false"
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!GO_PORT! ^| findstr LISTENING') do (
-    echo 找到进程 PID: %%a
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do (
+    echo Found process PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
-        echo [√] Go Core Runtime 已停止
+        echo [OK] Go Core Runtime stopped
         set "go_stopped=true"
     ) else (
-        echo [!] Go Core Runtime 停止失败
+        echo [FAILED] Go Core Runtime stop failed
     )
 )
 if "!go_stopped!"=="false" (
-    echo [√] Go Core Runtime 未运行或已停止
+    echo [OK] Go Core Runtime not running or already stopped
 )
 echo.
 
-:: 停止 Python Geo Worker (端口 !PY_PORT!)
-echo [2/2] 停止 Python Geo Worker (端口 !PY_PORT!)...
+:: Stop Python Geo Worker (port 8766)
+echo [2/2] Stopping Python Geo Worker (port 8766)...
 set "py_stopped=false"
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!PY_PORT! ^| findstr LISTENING') do (
-    echo 找到进程 PID: %%a
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
+    echo Found process PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
-        echo [√] Python Geo Worker 已停止
+        echo [OK] Python Geo Worker stopped
         set "py_stopped=true"
     ) else (
-        echo [!] Python Geo Worker 停止失败
+        echo [FAILED] Python Geo Worker stop failed
     )
 )
 if "!py_stopped!"=="false" (
-    echo [√] Python Geo Worker 未运行或已停止
+    echo [OK] Python Geo Worker not running or already stopped
 )
 echo.
 
-:: 提示用户手动关闭 Electron 窗口
-echo [提示] Electron 桌面端窗口需要手动关闭
-echo [提示] 请关闭 GeoWork 桌面窗口（如果已打开）
+:: Prompt user to close Electron window manually
+echo [HINT] Electron Desktop window needs to be closed manually
+echo [HINT] Please close GeoWork Desktop window (if open)
 
 :check_ports
 echo.
 echo ========================================
-echo        检查端口释放状态
+echo        Checking port release status
 echo ========================================
 echo.
 
-:: 检查端口是否释放
+:: Check if ports are released
 set "all_clear=true"
 
-netstat -aon | findstr :!GO_PORT! | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 !GO_PORT! 仍被占用
+    echo [WARNING] Port 8765 still in use
     set "all_clear=false"
 ) else (
-    echo [√] 端口 !GO_PORT! 已释放
+    echo [OK] Port 8765 released
 )
 
-netstat -aon | findstr :!PY_PORT! | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :8766 | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 !PY_PORT! 仍被占用
+    echo [WARNING] Port 8766 still in use
     set "all_clear=false"
 ) else (
-    echo [√] 端口 !PY_PORT! 已释放
+    echo [OK] Port 8766 released
 )
 
 if "!all_clear!"=="true" (
     echo.
     echo ========================================
-    echo        GeoWork 已完全停止！
+    echo        GeoWork Stopped Completely!
     echo ========================================
 ) else (
     echo.
-    echo [警告] 部分端口仍被占用
-    echo [提示] 可以手动检查：netstat -aon ^| findstr "!GO_PORT! !PY_PORT!"
-    echo [提示] 或者运行 status.bat 查看详细状态
+    echo [WARNING] Some ports still in use
+    echo [HINT] Check manually: netstat -aon ^| findstr "8765 8766"
+    echo [HINT] Or run status.bat for detailed status
 )
 
 echo.
