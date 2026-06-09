@@ -1,0 +1,1 @@
+{"id":"zotero","name":"Zotero Connector","version":"1.0.0","author":"GeoWork","description":"Connect local or web Zotero libraries for citation and paper ingestion workflows.","permissions":{"network":true,"local_app":true,"file_write":false,"shell":false}}

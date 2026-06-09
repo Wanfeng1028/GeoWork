@@ -1,0 +1,51 @@
+[
+  {
+    "id": "zotero",
+    "name": "Zotero",
+    "category": "research",
+    "status": "configured",
+    "permissions": ["network", "local_app"]
+  },
+  {
+    "id": "postgis",
+    "name": "PostGIS",
+    "category": "data",
+    "status": "available",
+    "permissions": ["network", "database"]
+  },
+  {
+    "id": "qgis",
+    "name": "QGIS",
+    "category": "gis",
+    "status": "detect-local",
+    "permissions": ["process", "file_read", "file_write"]
+  },
+  {
+    "id": "filesystem",
+    "name": "Guarded File System",
+    "category": "workspace",
+    "status": "guarded",
+    "permissions": ["file_read", "file_write"]
+  },
+  {
+    "id": "papers",
+    "name": "Paper Search",
+    "category": "research",
+    "status": "available",
+    "permissions": ["network"]
+  },
+  {
+    "id": "data-sources",
+    "name": "Remote Sensing Data Sources",
+    "category": "data",
+    "status": "available",
+    "permissions": ["network"]
+  },
+  {
+    "id": "model-providers",
+    "name": "Model Providers",
+    "category": "model",
+    "status": "user-configured",
+    "permissions": ["network", "secret"]
+  }
+]

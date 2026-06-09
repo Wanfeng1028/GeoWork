@@ -1,0 +1,1 @@
+{"id":"undergraduate-experiment-report","name":"本科实验报告","version":"1.0.0","description":"课程实验报告、原理解释和成果导出。","required_tools":["geo.gee.generate_ndvi_script","geo.office.write_report"],"permissions":{"network":true,"file_write":true,"shell":false}}

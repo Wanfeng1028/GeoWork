@@ -1,0 +1,1 @@
+{"id":"graduate-thesis-outline","name":"研究生论文大纲","version":"1.0.0","description":"研究方向、论文综述和论文大纲生成。","required_tools":["research.openalex.search","geo.office.write_report"],"permissions":{"network":true,"file_write":true,"shell":false}}

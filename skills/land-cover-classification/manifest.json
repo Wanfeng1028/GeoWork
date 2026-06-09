@@ -1,0 +1,1 @@
+{"id":"land-cover-classification","name":"土地覆盖分类","version":"1.0.0","description":"遥感分类流程、精度评估和成果报告。","required_tools":["geo.gdal.inspect_dataset","geo.office.write_report"],"permissions":{"network":false,"file_write":true,"shell":false}}

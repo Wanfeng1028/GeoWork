@@ -1,0 +1,14 @@
+[
+  "ndvi-timeseries-analysis",
+  "gee-sentinel2-cloudfree-composite",
+  "landsat-lst-retrieval",
+  "land-cover-classification",
+  "urban-expansion-analysis",
+  "water-extraction-ndwi",
+  "dem-terrain-analysis",
+  "paper-reading-geography",
+  "literature-review-remote-sensing",
+  "undergraduate-experiment-report",
+  "graduate-thesis-outline",
+  "map-layout-export"
+]

@@ -1,0 +1,1 @@
+{"id":"landsat-lst-retrieval","name":"Landsat LST 反演","version":"1.0.0","description":"生成 Landsat 地表温度反演流程和报告。","required_tools":["geo.gee.generate_ndvi_script","geo.office.write_report"],"permissions":{"network":true,"file_write":true,"shell":false}}

@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "id": "openalex",
+      "name": "OpenAlex Literature Search",
+      "version": "1.0.0",
+      "category": "research",
+      "permissions": ["network"]
+    },
+    {
+      "id": "qgis",
+      "name": "QGIS Bridge",
+      "version": "1.0.0",
+      "category": "gis",
+      "permissions": ["process", "file_read", "file_write"]
+    },
+    {
+      "id": "zotero",
+      "name": "Zotero Connector",
+      "version": "1.0.0",
+      "category": "research",
+      "permissions": ["network", "local_app"]
+    }
+  ]
+}

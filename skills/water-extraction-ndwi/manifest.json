@@ -1,0 +1,1 @@
+{"id":"water-extraction-ndwi","name":"NDWI 水体提取","version":"1.0.0","description":"基于 NDWI/MNDWI 的水体提取流程。","required_tools":["geo.gee.generate_ndvi_script","geo.office.write_report"],"permissions":{"network":true,"file_write":true,"shell":false}}

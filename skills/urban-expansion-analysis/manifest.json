@@ -1,0 +1,1 @@
+{"id":"urban-expansion-analysis","name":"城市扩张分析","version":"1.0.0","description":"多时相城市扩张分析和变化报告。","required_tools":["geo.gdal.inspect_dataset","geo.office.write_report"],"permissions":{"network":false,"file_write":true,"shell":false}}

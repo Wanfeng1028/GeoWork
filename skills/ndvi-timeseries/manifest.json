@@ -1,0 +1,15 @@
+{
+  "id": "ndvi-timeseries-analysis",
+  "name": "NDVI 时序分析",
+  "version": "1.0.0",
+  "description": "基于 GEE 或本地影像计算 NDVI 并生成报告",
+  "required_tools": [
+    "geo.gee.generate_ndvi_script",
+    "geo.office.write_report"
+  ],
+  "permissions": {
+    "network": true,
+    "file_write": true,
+    "shell": false
+  }
+}

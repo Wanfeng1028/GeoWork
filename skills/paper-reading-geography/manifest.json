@@ -1,0 +1,1 @@
+{"id":"paper-reading-geography","name":"地理学论文精读","version":"1.0.0","description":"解析论文、生成方法卡片和可复现性清单。","required_tools":["papers.parse_pdf","geo.office.write_report"],"permissions":{"network":false,"file_write":true,"shell":false}}

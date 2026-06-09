@@ -1,0 +1,1 @@
+{"id":"literature-review-remote-sensing","name":"遥感文献综述","version":"1.0.0","description":"OpenAlex 搜索、综述矩阵和研究空白分析。","required_tools":["research.openalex.search","geo.office.write_report"],"permissions":{"network":true,"file_write":true,"shell":false}}

@@ -1,0 +1,1 @@
+{"id":"qgis","name":"QGIS Bridge","version":"1.0.0","author":"GeoWork","description":"Detect local QGIS installation and route Processing tasks through guarded runtime calls.","permissions":{"process":true,"file_read":true,"file_write":true,"shell":false}}

@@ -1,0 +1,23 @@
+{
+  "name": "geowork",
+  "private": true,
+  "workspaces": [
+    "apps/desktop"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm:dev:core\" \"npm:dev:worker\" \"npm:dev:desktop\"",
+    "dev:desktop": "npm --workspace apps/desktop run dev",
+    "dev:core": "cd core && go run ./cmd/geowork-runtime",
+    "dev:worker": "cd workers/geo-python && python -m uvicorn app.main:app --host 127.0.0.1 --port 8766",
+    "build": "npm --workspace apps/desktop run build",
+    "test": "npm --workspace apps/desktop test",
+    "test:core": "cd core && go test ./...",
+    "test:worker": "cd workers/geo-python && python -m pytest",
+    "verify:static": "py scripts/verify_v1_static.py",
+    "verify:flows": "py scripts/verify_v1_flows.py",
+    "check:available": "py scripts/check_all.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,0 +1,1 @@
+{"id":"postgis","name":"PostGIS Connector","version":"1.0.0","author":"GeoWork","description":"Connect PostGIS data sources for GIS engineering workflows.","permissions":{"network":true,"database":true,"file_write":false,"shell":false}}

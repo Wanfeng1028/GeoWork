@@ -1,0 +1,1 @@
+{"id":"dem-terrain-analysis","name":"DEM 地形分析","version":"1.0.0","description":"坡度、坡向、阴影和地形统计。","required_tools":["geo.gdal.inspect_dataset","geo.office.write_report"],"permissions":{"network":false,"file_write":true,"shell":false}}

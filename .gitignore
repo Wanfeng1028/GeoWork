@@ -1,8 +1,15 @@
 node_modules/
 dist/
+out/
+.tools/
 .env
+docx/
+.qwen/
 .env.local
 *.log
+*.egg-info/
+__pycache__/
+.pytest_cache/
 .DS_Store
 .idea/
 .vscode/

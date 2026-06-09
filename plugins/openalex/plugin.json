@@ -1,0 +1,12 @@
+{
+  "id": "openalex",
+  "name": "OpenAlex Literature Search",
+  "version": "1.0.0",
+  "author": "GeoWork",
+  "description": "Search OpenAlex metadata for paper discovery, literature matrices, and knowledge-base ingestion.",
+  "permissions": {
+    "network": true,
+    "file_write": false,
+    "shell": false
+  }
+}

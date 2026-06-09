@@ -1,0 +1,1 @@
+{"id":"map-layout-export","name":"专题地图制图导出","version":"1.0.0","description":"地图版式、图例、比例尺和成果导出。","required_tools":["geo.gdal.inspect_dataset","geo.office.write_report"],"permissions":{"network":false,"file_write":true,"shell":false}}
