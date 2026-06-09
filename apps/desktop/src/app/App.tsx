@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, Form, Input, List, Select, Space, Statistic, Table, Tag, Typography, message } from 'antd'
 import {
   ApiOutlined,
@@ -22,6 +22,11 @@ import {
   ToolOutlined
 } from '@ant-design/icons'
 import { api, Artifact, Project, RuntimeEvent, Task } from '../services/api'
+import { MonacoEditor } from '../components/common/MonacoEditor'
+import { Terminal } from '../components/common/Terminal'
+import NDVIChart from '../components/common/NDVIChart'
+import UsageChart from '../components/common/UsageChart'
+import PlotlyChart from '../components/common/PlotlyChart'
 import styles from './App.module.scss'
 
 const navItems = [
@@ -223,6 +228,26 @@ export function App() {
 }
 
 function Workbench({ form, task, events, onRun }: { form: any; task?: Task; events: RuntimeEvent[]; onRun: (values: any) => Promise<void> }) {
+  const [showEditor, setShowEditor] = useState(false)
+  const [editorContent, setEditorContent] = useState<string | undefined>(undefined)
+  const [editorLanguage, setEditorLanguage] = useState<'python' | 'javascript' | 'json' | 'markdown'>('python')
+  const [editorFilename, setEditorFilename] = useState('script.py')
+
+  const handleViewScript = useCallback(() => {
+    setEditorContent(undefined)
+    setEditorLanguage('python')
+    setEditorFilename('script.py')
+    setShowEditor(true)
+  }, [])
+
+  const handleEditorChange = useCallback((value: string) => {
+    setEditorContent(value)
+  }, [])
+
+  const handleCommand = useCallback((cmd: string) => {
+    // Command handled by Terminal component
+  }, [])
+
   return (
     <div className={styles.workbench}>
       <Card title="项目上下文" size="small">
@@ -232,17 +257,58 @@ function Workbench({ form, task, events, onRun }: { form: any; task?: Task; even
         <Form form={form} layout="vertical" initialValues={{ mode: 'Analysis', prompt: '运行 NDVI 实验报告 Skill，生成 GEE 脚本、地图预览和 Word 报告' }} onFinish={onRun}>
           <Form.Item name="mode" label="工作模式"><Select options={modes.map((mode) => ({ label: mode, value: mode }))} /></Form.Item>
           <Form.Item name="prompt" label="任务"><Input.TextArea rows={4} /></Form.Item>
-          <Button type="primary" htmlType="submit" icon={<PlayCircleOutlined />}>创建并执行任务</Button>
+          <Space>
+            <Button type="primary" htmlType="submit" icon={<PlayCircleOutlined />}>创建并执行任务</Button>
+            <Button icon={<CodeOutlined />} onClick={handleViewScript}>查看脚本</Button>
+          </Space>
         </Form>
         <div className={styles.plan}>
           {(task?.plan ?? []).map((step) => <div key={step.id} className={styles.step}><Tag>{step.status}</Tag><strong>{step.title}</strong><span>{step.toolName}</span></div>)}
         </div>
       </Card>
       <Card title="上下文面板" size="small">
-        <div className={styles.mapPreview}>NDVI / GIS Map Preview</div>
+        <NDVIChart />
         <List size="small" header="成果" dataSource={task?.artifacts ?? []} renderItem={(item) => <List.Item><Typography.Text>{item.name}</Typography.Text><Tag>{item.type}</Tag></List.Item>} />
         <List size="small" header="最新事件" dataSource={events.slice(-5)} renderItem={(item) => <List.Item>{item.message}</List.Item>} />
       </Card>
+
+      {/* Monaco Editor overlay */}
+      {showEditor && (
+        <div className={styles.editorOverlay}>
+          <div className={styles.editorHeader}>
+            <span>GEE 脚本编辑器</span>
+            <Space>
+              <Select
+                value={editorLanguage}
+                onChange={(v) => setEditorLanguage(v)}
+                options={[
+                  { label: 'Python', value: 'python' },
+                  { label: 'JavaScript', value: 'javascript' },
+                  { label: 'JSON', value: 'json' },
+                  { label: 'Markdown', value: 'markdown' }
+                ]}
+                style={{ width: 120 }}
+                size="small"
+              />
+              <Input
+                value={editorFilename}
+                onChange={(e) => setEditorFilename(e.target.value)}
+                style={{ width: 160 }}
+                size="small"
+              />
+              <Button size="small" onClick={() => setShowEditor(false)}>关闭</Button>
+            </Space>
+          </div>
+          <div className={styles.editorBody}>
+            <MonacoEditor
+              value={editorContent}
+              language={editorLanguage}
+              filename={editorFilename}
+              onChange={handleEditorChange}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -250,8 +316,7 @@ function Workbench({ form, task, events, onRun }: { form: any; task?: Task; even
 function BottomPanel({ events, task }: { events: RuntimeEvent[]; task?: Task }) {
   return (
     <footer className={styles.bottom}>
-      <div><strong>任务日志</strong><span>{task?.status ?? 'idle'}</span></div>
-      <div className={styles.eventStream}>{events.map((event) => <span key={event.id}>{event.type}: {event.message}</span>)}</div>
+      <Terminal title={`任务终端 — ${task?.status ?? 'idle'}`} />
     </footer>
   )
 }
@@ -357,6 +422,7 @@ function Usage({ usage, records }: { usage: Record<string, unknown>; records: an
         <Card><Statistic title="估算 Tokens" value={Number(usage.estimatedTokens ?? 0)} /></Card>
         <Card><Statistic title="成本 CNY" value={Number(usage.costCny ?? 0)} precision={2} /></Card>
       </Space>
+      <UsageChart />
       <Card title="用量记录">
         <Table rowKey="id" dataSource={records} pagination={{ pageSize: 8 }} columns={[
           { title: 'Kind', dataIndex: 'kind' },
@@ -424,5 +490,5 @@ function DataPanel({ datasets, onRegister }: { datasets: any[]; onRegister: () =
 }
 
 function MapPanel({ artifacts, layers, onToggle }: { artifacts: Artifact[]; layers: any[]; onToggle: (layer: any) => void }) {
-  return <Card title="地图与图层"><div className={styles.bigMap}>MapLibre / GDAL / QGIS Preview Surface</div><Table rowKey="id" dataSource={layers} pagination={false} columns={[{ title: 'Layer', dataIndex: 'name' }, { title: 'Kind', dataIndex: 'kind' }, { title: 'Visible', dataIndex: 'visible', render: (value, row) => <Button size="small" onClick={() => onToggle(row)}>{value ? '隐藏' : '显示'}</Button> }, { title: 'Opacity', dataIndex: 'opacity' }]} /><List dataSource={artifacts} renderItem={(item) => <List.Item>{item.name}<Tag>{item.mimeType}</Tag></List.Item>} /></Card>
+  return <Card title="地图与图层"><PlotlyChart chartType="terrain" title="DEM 地形可视化" height={300} /><Table rowKey="id" dataSource={layers} pagination={false} columns={[{ title: 'Layer', dataIndex: 'name' }, { title: 'Kind', dataIndex: 'kind' }, { title: 'Visible', dataIndex: 'visible', render: (value, row) => <Button size="small" onClick={() => onToggle(row)}>{value ? '隐藏' : '显示'}</Button> }, { title: 'Opacity', dataIndex: 'opacity' }]} /><List dataSource={artifacts} renderItem={(item) => <List.Item>{item.name}<Tag>{item.mimeType}</Tag></List.Item>} /></Card>
 }

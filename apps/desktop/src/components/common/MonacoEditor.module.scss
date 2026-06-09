@@ -1,0 +1,82 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #d9e1e7;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3e3e42;
+  min-height: 36px;
+}
+
+.filename {
+  font-size: 13px;
+  color: #cccccc;
+  font-family: Consolas, 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filename::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #61dafb;
+  opacity: 0.7;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  background: #333333;
+  color: #cccccc;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 28px;
+  height: 26px;
+}
+
+.toolbarBtn:hover {
+  background: #3e3e42;
+  border-color: #555555;
+}
+
+.toolbarBtn.saveBtn {
+  background: #0e6b57;
+  border-color: #0f6b57;
+  color: #ffffff;
+  padding: 3px 12px;
+  min-width: auto;
+}
+
+.toolbarBtn.saveBtn:hover {
+  background: #118068;
+}
+
+.editorWrap {
+  flex: 1;
+  min-height: 0;
+}

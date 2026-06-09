@@ -124,6 +124,8 @@
   background: #ffffff;
   padding: 10px 14px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .bottom > div:first-child {
@@ -141,6 +143,38 @@
   font-family: Consolas, monospace;
   font-size: 12px;
   color: #41515c;
+}
+
+// Monaco Editor overlay
+.editorOverlay {
+  position: fixed;
+  top: var(--topbar-height);
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: var(--bottom-height);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3e3e42;
+  color: #cccccc;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.editorBody {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .json {
