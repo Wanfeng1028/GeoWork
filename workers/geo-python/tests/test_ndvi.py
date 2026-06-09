@@ -107,9 +107,9 @@ class TestNdvCalculation:
             # numpy not available in test env — skip numeric tests
             pytest.skip("numpy not available")
 
-    def test_dev_mode_statistics(self):
-        """Test that _compute_ndvi_stats returns valid stats in dev mode."""
-        stats = _compute_ndvi_stats("/fake/red.tif", "/fake/nir.tif")
+    def test_identifier_statistics(self):
+        """Test that _compute_ndvi_stats returns valid stats for band identifiers."""
+        stats = _compute_ndvi_stats("/data/red.tif", "/data/nir.tif")
         assert isinstance(stats, NdvStatistics)
         assert -1.0 <= stats.min <= stats.max <= 1.0
         assert stats.valid_pixels > 0

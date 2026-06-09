@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -62,7 +61,7 @@ func (r *Runner) Execute(ctx context.Context, workflow *Workflow) error {
 	return nil
 }
 
-func (r *Runner) executeStart(ctx context.Context, node *WorkflowNode, _ *Workflow) error {
+func (r *Runner) executeStart(_ context.Context, node *WorkflowNode, _ *Workflow) error {
 	// Start nodes initialize the workflow with input parameters.
 	r.logger.Debug("start node executed", zap.String("nodeId", node.ID))
 	return nil
@@ -78,37 +77,64 @@ func (r *Runner) executeAgent(ctx context.Context, node *WorkflowNode, _ *Workfl
 	return r.callWorker(ctx, node)
 }
 
-func (r *Runner) executeOutput(ctx context.Context, node *WorkflowNode, _ *Workflow) error {
-	// Output nodes write results to files or external systems.
+func (r *Runner) executeOutput(_ context.Context, node *WorkflowNode, _ *Workflow) error {
 	r.logger.Debug("output node executed", zap.String("nodeId", node.ID))
 	return nil
 }
 
-func (r *Runner) executeCondition(ctx context.Context, node *WorkflowNode, _ *Workflow) error {
-	// Condition nodes evaluate a boolean expression.
-	// For now, always pass through.
-	r.logger.Debug("condition node evaluated (always true)", zap.String("nodeId", node.ID))
-	return nil
+func (r *Runner) executeCondition(_ context.Context, node *WorkflowNode, _ *Workflow) error {
+	expression, _ := node.Config["expression"].(string)
+	if expression == "" || expression == "true" {
+		r.logger.Debug("condition node evaluated", zap.String("nodeId", node.ID), zap.Bool("result", true))
+		return nil
+	}
+	if expression == "false" {
+		return fmt.Errorf("condition evaluated false for node %s", node.Name)
+	}
+	return fmt.Errorf("unsupported condition expression: %s", expression)
 }
 
 func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 	if r.worker == nil {
 		return fmt.Errorf("worker client not configured")
 	}
-
-	// Serialize node config as the worker payload.
-	payload, err := json.Marshal(node.Config)
-	if err != nil {
-		return fmt.Errorf("marshal node config: %w", err)
+	toolName := firstString(node.Config["tool"], node.Config["toolName"], node.Config["workerTool"])
+	if toolName == "" {
+		toolName = node.Name
 	}
-
-	// Attempt to call the worker tool.
-	// The worker client handles HTTP communication with the Python worker.
-	_ = payload // payload is available for future worker integration
-
-	r.logger.Debug("worker call simulated",
+	payload := map[string]any{}
+	for key, value := range node.Config {
+		payload[key] = value
+	}
+	if _, ok := payload["taskId"]; !ok {
+		payload["taskId"] = node.ID
+	}
+	if _, ok := payload["prompt"]; !ok {
+		payload["prompt"] = node.Name
+	}
+	if _, ok := payload["mode"]; !ok {
+		payload["mode"] = "Analysis"
+	}
+	if _, ok := payload["workspace"]; !ok {
+		payload["workspace"] = "."
+	}
+	result, err := r.worker.RunTool(ctx, toolName, payload)
+	if err != nil {
+		return fmt.Errorf("run worker tool %s: %w", toolName, err)
+	}
+	r.logger.Debug("worker tool completed",
 		zap.String("nodeId", node.ID),
-		zap.String("tool", node.Name),
+		zap.String("tool", toolName),
+		zap.Any("result", result),
 	)
 	return nil
+}
+
+func firstString(values ...any) string {
+	for _, value := range values {
+		if text, ok := value.(string); ok && text != "" {
+			return text
+		}
+	}
+	return ""
 }

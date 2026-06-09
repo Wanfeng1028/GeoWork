@@ -91,6 +91,83 @@ def test_qgis_check(tmp_path: Path):
     assert (tmp_path / "artifacts" / "task_7_qgis_status.json").exists()
 
 
+def test_gee_dataset_and_auth_tools(tmp_path: Path):
+    dataset = client.post(
+        "/tools/gee/search-dataset",
+        json={"workspace": str(tmp_path), "taskId": "task_gee_search", "prompt": "Sentinel NDVI"},
+    )
+    assert dataset.status_code == 200
+    assert dataset.json()["ok"] is True
+    assert (tmp_path / "artifacts" / "task_gee_search_gee_datasets.json").exists()
+
+    auth = client.post(
+        "/tools/gee/check-auth",
+        json={"workspace": str(tmp_path), "taskId": "task_gee_auth"},
+    )
+    assert auth.status_code == 200
+    assert auth.json()["ok"] is True
+    assert (tmp_path / "artifacts" / "task_gee_auth_gee_auth.json").exists()
+
+
+def test_office_deliverables(tmp_path: Path):
+    ppt = client.post(
+        "/tools/office/write-ppt",
+        json={"workspace": str(tmp_path), "taskId": "task_ppt", "prompt": "presentation"},
+    )
+    assert ppt.status_code == 200
+    assert (tmp_path / "reports" / "task_ppt_presentation.pptx").exists()
+
+    excel = client.post(
+        "/tools/office/write-excel",
+        json={"workspace": str(tmp_path), "taskId": "task_excel", "prompt": "statistics"},
+    )
+    assert excel.status_code == 200
+    assert (tmp_path / "reports" / "task_excel_statistics.xlsx").exists()
+
+    notebook = client.post(
+        "/tools/office/write-notebook",
+        json={"workspace": str(tmp_path), "taskId": "task_notebook", "prompt": "workflow"},
+    )
+    assert notebook.status_code == 200
+    assert (tmp_path / "artifacts" / "task_notebook_workflow.ipynb").exists()
+
+
+def test_raster_vector_and_map_tools(tmp_path: Path):
+    endpoints = [
+        ("/tools/raster/metadata", "task_raster_meta", "task_raster_meta_raster_metadata.json"),
+        ("/tools/raster/clip", "task_raster_clip", "task_raster_clip_raster_clip.tif"),
+        ("/tools/raster/reproject", "task_raster_reproject", "task_raster_reproject_raster_reprojected.tif"),
+        ("/tools/raster/write-cog", "task_cog", "task_cog.cog.tif"),
+        ("/tools/vector/metadata", "task_vector_meta", "task_vector_meta_vector_metadata.json"),
+        ("/tools/vector/buffer", "task_vector_buffer", "task_vector_buffer_buffer.geojson"),
+        ("/tools/vector/clip", "task_vector_clip", "task_vector_clip_vector_clip.geojson"),
+        ("/tools/vector/reproject", "task_vector_reproject", "task_vector_reproject_vector_reprojected.geojson"),
+        ("/tools/map/layout-export", "task_map", "task_map_map_layout.html"),
+    ]
+    for endpoint, task_id, file_name in endpoints:
+        res = client.post(endpoint, json={"workspace": str(tmp_path), "taskId": task_id, "params": {"distance": 100}})
+        assert res.status_code == 200
+        assert res.json()["ok"] is True
+        assert (tmp_path / "artifacts" / file_name).exists()
+
+
+def test_qgis_processing_tools(tmp_path: Path):
+    check_env = client.post(
+        "/tools/qgis/check-env",
+        json={"workspace": str(tmp_path), "taskId": "task_qgis_env"},
+    )
+    assert check_env.status_code == 200
+    assert (tmp_path / "artifacts" / "task_qgis_env_qgis_status.json").exists()
+
+    processing = client.post(
+        "/tools/qgis/run-processing",
+        json={"workspace": str(tmp_path), "taskId": "task_qgis_processing", "params": {"algorithm": "native:buffer"}},
+    )
+    assert processing.status_code == 200
+    assert processing.json()["ok"] is True
+    assert (tmp_path / "artifacts" / "task_qgis_processing_qgis_processing.json").exists()
+
+
 def test_workspace_isolation(tmp_path: Path):
     """验证工作区隔离"""
     res = client.post(

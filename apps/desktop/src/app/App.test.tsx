@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { antdTheme } from '../styles/antd-theme'
 
-vi.stubGlobal('fetch', vi.fn((url: string) => {
+globalThis.fetch = vi.fn((url: string) => {
   const data: Record<string, unknown> = url.includes('/api/health') ? { status: 'ok' } :
     url.includes('/api/projects/') && url.includes('/files') ? [] :
     url.includes('/api/projects') ? [] :
@@ -28,7 +28,7 @@ vi.stubGlobal('fetch', vi.fn((url: string) => {
     url.includes('/api/mcp') ? [] :
     {}
   return Promise.resolve({ ok: true, json: () => Promise.resolve(data) })
-}) as any)
+}) as any
 
 describe('App', () => {
   it('renders GeoWork workbench navigation', async () => {

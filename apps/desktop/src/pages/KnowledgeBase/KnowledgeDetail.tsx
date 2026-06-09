@@ -18,7 +18,7 @@ interface KnowledgeDetailProps {
 }
 
 export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
-  const { selectedEntry, deleteEntry, loadEntryDetail, isLoading } = useKnowledgeBaseStore()
+  const { selectedEntry, deleteEntry, updateEntry, isLoading } = useKnowledgeBaseStore()
   const [searchText, setSearchText] = useState('')
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState('')
@@ -61,11 +61,16 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
     setEditing(true)
   }, [selectedEntry])
 
-  const handleSaveEdit = useCallback(() => {
-    // TODO: Implement save edit via API
-    setEditing(false)
-    message.success('保存成功')
-  }, [])
+  const handleSaveEdit = useCallback(async () => {
+    if (!selectedEntry) return
+    try {
+      await updateEntry(selectedEntry.id, { content: editContent })
+      setEditing(false)
+      message.success('保存成功')
+    } catch {
+      message.error('保存失败')
+    }
+  }, [editContent, selectedEntry, updateEntry])
 
   const handleCiteInPaper = useCallback(() => {
     if (!selectedEntry) return

@@ -13,7 +13,8 @@ import {
   Spin,
   Alert,
   Space,
-  Badge
+  Badge,
+  Button
 } from 'antd'
 import {
   RobotOutlined,
@@ -26,7 +27,8 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   SyncOutlined,
-  WarningOutlined
+  WarningOutlined,
+  PlusOutlined
 } from '@ant-design/icons'
 import UsageChart from '../../components/common/UsageChart'
 import QuickActions from './QuickActions'
@@ -176,7 +178,7 @@ export default function Dashboard({
   }, [])
 
   const handleProjectClick = useCallback(
-    (project: DashboardItem) => {
+    (project: DashboardProject) => {
       if (onProjectClick) {
         onProjectClick(project)
       }

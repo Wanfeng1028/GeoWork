@@ -316,6 +316,41 @@ func (m *KnowledgeManager) DeleteEntry(id string) error {
 	return nil
 }
 
+// UpdateEntry updates editable fields for a knowledge entry.
+func (m *KnowledgeManager) UpdateEntry(id, title, content, category string, tags []string) (*Entry, error) {
+	current, err := m.GetEntryByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if title == "" {
+		title = current.Title
+	}
+	if content == "" {
+		content = current.Content
+	}
+	if category == "" {
+		category = current.Category
+	}
+	if tags == nil {
+		tags = current.Tags
+	}
+	tagsJSON, _ := jsonEncode(tags)
+	now := time.Now()
+	result, err := m.db.Exec(
+		`UPDATE knowledge_entries SET title = ?, content = ?, category = ?, tags = ?, updated_at = ? WHERE id = ?`,
+		title, content, category, tagsJSON, now, id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("update entry: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return nil, fmt.Errorf("entry not found: %s", id)
+	}
+	m.logger.Info("entry updated", zap.String("id", id), zap.String("title", title))
+	return m.GetEntryByID(id)
+}
+
 // Search performs a full-text search across all knowledge entries.
 func (m *KnowledgeManager) Search(query string) ([]Entry, error) {
 	return m.GetEntries("", query)

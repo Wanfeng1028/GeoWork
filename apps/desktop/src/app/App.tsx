@@ -26,9 +26,12 @@ import { MonacoEditor } from '../components/common/MonacoEditor'
 import { Terminal } from '../components/common/Terminal'
 import NDVIChart from '../components/common/NDVIChart'
 import UsageChart from '../components/common/UsageChart'
-import PlotlyChart from '../components/common/PlotlyChart'
 import { ProjectFiles } from '../pages/ProjectFiles/ProjectFiles'
 import NdvAnalysis from '../pages/NdvAnalysis/NdvAnalysis'
+import { PaperSearch } from '../pages/PaperSearch/PaperSearch'
+import { KnowledgeBase } from '../pages/KnowledgeBase/KnowledgeBase'
+import { MapAndLayers } from '../pages/MapAndLayers/MapAndLayers'
+import { Automation } from '../pages/Automation/Automation'
 import styles from './App.module.scss'
 
 const navItems = [
@@ -59,7 +62,6 @@ export function App() {
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [deliveries, setDeliveries] = useState<any[]>([])
   const [datasets, setDatasets] = useState<any[]>([])
-  const [layers, setLayers] = useState<any[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [events, setEvents] = useState<RuntimeEvent[]>([])
   const [skills, setSkills] = useState<any[]>([])
@@ -74,21 +76,19 @@ export function App() {
   const [mcp, setMcp] = useState<any[]>([])
   const [experts, setExperts] = useState<any[]>([])
   const [papers, setPapers] = useState<any[]>([])
-  const [knowledge, setKnowledge] = useState<any[]>([])
   const [securityDecisions, setSecurityDecisions] = useState<any[]>([])
   const [tools, setTools] = useState<any[]>([])
   const [einoSchema, setEinoSchema] = useState<Record<string, unknown>>({})
   const [form] = Form.useForm()
 
   async function refresh() {
-    const [healthRes, projectsRes, tasksRes, artifactRes, deliveryRes, datasetRes, layerRes, skillsRes, pluginsRes, modelsRes, usageRes, usageRecordRes, settingsRes, envRes, autoRes, runRes, expertRes, paperRes, knowledgeRes, securityRes, toolRes, einoRes, mcpRes] = await Promise.all([
+    const [healthRes, projectsRes, tasksRes, artifactRes, deliveryRes, datasetRes, skillsRes, pluginsRes, modelsRes, usageRes, usageRecordRes, settingsRes, envRes, autoRes, runRes, expertRes, paperRes, securityRes, toolRes, einoRes, mcpRes] = await Promise.all([
       api.health(),
       api.projects(),
       api.tasks(),
       api.artifacts(),
       api.deliveries(),
       api.datasets(),
-      api.layers(),
       api.skills(),
       api.plugins(),
       api.models(),
@@ -100,7 +100,6 @@ export function App() {
       api.automationRuns(),
       api.experts(),
       api.papers(),
-      api.knowledge(),
       api.securityDecisions(),
       api.tools(),
       api.einoSchema(),
@@ -112,7 +111,6 @@ export function App() {
     setArtifacts(artifactRes)
     setDeliveries(deliveryRes)
     setDatasets(datasetRes)
-    setLayers(layerRes)
     setSkills(skillsRes)
     setPlugins(pluginsRes)
     setModels(modelsRes)
@@ -124,7 +122,6 @@ export function App() {
     setAutomationRuns(runRes)
     setExperts(expertRes)
     setPapers(paperRes)
-    setKnowledge(knowledgeRes)
     setSecurityDecisions(securityRes)
     setTools(toolRes)
     setEinoSchema(einoRes)
@@ -178,10 +175,10 @@ export function App() {
       return <AutomationPanel automations={automations} runs={automationRuns} onCreate={() => api.createAutomation({ name: '每日知识库索引', trigger: 'cron:0 21 * * *', target: 'Research', enabled: true }).then(refresh)} onTrigger={(id) => api.triggerAutomation(id).then(refresh)} />
     }
     if (active === 'papers') {
-      return <ResearchPanel papers={papers} onSearch={(query) => api.papers(query).then(setPapers)} />
+      return <PaperSearch />
     }
     if (active === 'knowledge') {
-      return <KnowledgePanel knowledge={knowledge} onIndex={() => api.indexKnowledge({ title: 'Imported research notes', type: 'markdown', path: 'workspace/knowledge/imported.md' }).then(refresh)} />
+      return <div className={styles.stack}><Card title="知识库操作" extra={<Button onClick={() => api.indexKnowledge({ title: 'NDVI 方法笔记', type: 'markdown', path: 'knowledge/ndvi_notes.md' }).then(refresh)}>索引样例知识</Button>}><KnowledgeBase /></Card></div>
     }
     if (active === 'data') {
       return <DataPanel datasets={datasets} onRegister={() => api.registerDataset({ projectId: projects[0]?.id, name: 'Sentinel-2 NDVI Sample', type: 'GeoTIFF' }).then(refresh)} />
@@ -190,16 +187,16 @@ export function App() {
       return <Catalog title="专家团队" data={experts} />
     }
     if (active === 'map') {
-      return <MapPanel artifacts={currentTask?.artifacts ?? []} layers={layers} onToggle={(layer) => api.updateLayer(layer.id, { visible: !layer.visible, opacity: layer.opacity }).then(refresh)} />
+      return <MapAndLayers />
     }
     if (active === 'ndvi') {
       return <NdvAnalysis />
     }
     if (active === 'projects') {
-      return <ProjectFiles />
+      return <ProjectPanel projects={projects} onCreateDelivery={(id) => api.createDelivery(id).then(refresh)} />
     }
     return <SecurityPanel mcp={mcp} tools={tools} einoSchema={einoSchema} decisions={securityDecisions} onResolve={(id) => api.resolveSecurityDecision(id, { decision: 'approved', reason: 'User approved in desktop UI' }).then(refresh)} />
-  }, [active, artifacts, automations, automationRuns, currentTask, datasets, einoSchema, environmentChecks, events, experts, form, knowledge, layers, mcp, models, papers, plugins, projects, securityDecisions, settings, skills, tasks, tools, usage, usageRecords])
+  }, [active, artifacts, automations, automationRuns, currentTask, datasets, einoSchema, environmentChecks, events, experts, form, mcp, models, plugins, projects, securityDecisions, settings, skills, tasks, tools, usage, usageRecords])
 
   return (
     <div className={styles.shell}>
@@ -325,36 +322,6 @@ function Catalog({ title, data, action }: { title: string; data: any[]; action?:
   return <Card title={title}><List grid={{ gutter: 12, column: 3 }} dataSource={data} renderItem={(item) => <List.Item><Card size="small" title={item.name ?? item.id} extra={action?.(item)}><p>{item.description ?? item.path ?? item.trigger}</p><Space wrap>{Object.keys(item.permissions ?? {}).map((p) => <Tag key={p}>{p}</Tag>)}{item.enabled !== undefined && <Tag color={item.enabled ? 'green' : 'default'}>{item.enabled ? 'enabled' : 'disabled'}</Tag>}</Space></Card></List.Item>} /></Card>
 }
 
-function ResearchPanel({ papers, onSearch }: { papers: any[]; onSearch: (query: string) => void }) {
-  const [query, setQuery] = useState('NDVI remote sensing')
-  return (
-    <Card title="论文搜索与精读">
-      <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} />
-        <Button type="primary" onClick={() => onSearch(query)}>OpenAlex 搜索</Button>
-      </Space.Compact>
-      <Table rowKey="id" dataSource={papers} pagination={false} columns={[
-        { title: 'Title', dataIndex: 'title' },
-        { title: 'Year', dataIndex: 'year', width: 90 },
-        { title: 'Source', dataIndex: 'source', width: 150 },
-        { title: 'Tags', dataIndex: 'tags', render: (tags: string[]) => <Space wrap>{(tags ?? []).map((tag) => <Tag key={tag}>{tag}</Tag>)}</Space> }
-      ]} />
-    </Card>
-  )
-}
-
-function KnowledgePanel({ knowledge, onIndex }: { knowledge: any[]; onIndex: () => void }) {
-  return (
-    <Card title="知识库索引" extra={<Button onClick={onIndex}>索引示例资料</Button>}>
-      <Table rowKey="id" dataSource={knowledge} pagination={false} columns={[
-        { title: 'Title', dataIndex: 'title' },
-        { title: 'Type', dataIndex: 'type', width: 120 },
-        { title: 'Summary', dataIndex: 'summary' }
-      ]} />
-    </Card>
-  )
-}
-
 function AutomationPanel({ automations, runs, onCreate, onTrigger }: { automations: any[]; runs: any[]; onCreate: () => void; onTrigger: (id: string) => void }) {
   return (
     <div className={styles.stack}>
@@ -453,6 +420,13 @@ function DataPanel({ datasets, onRegister }: { datasets: any[]; onRegister: () =
   )
 }
 
-function MapPanel({ artifacts, layers, onToggle }: { artifacts: Artifact[]; layers: any[]; onToggle: (layer: any) => void }) {
-  return <Card title="地图与图层"><PlotlyChart chartType="terrain" title="DEM 地形可视化" height={300} /><Table rowKey="id" dataSource={layers} pagination={false} columns={[{ title: 'Layer', dataIndex: 'name' }, { title: 'Kind', dataIndex: 'kind' }, { title: 'Visible', dataIndex: 'visible', render: (value, row) => <Button size="small" onClick={() => onToggle(row)}>{value ? '隐藏' : '显示'}</Button> }, { title: 'Opacity', dataIndex: 'opacity' }]} /><List dataSource={artifacts} renderItem={(item) => <List.Item>{item.name}<Tag>{item.mimeType}</Tag></List.Item>} /></Card>
+function ProjectPanel({ projects, onCreateDelivery }: { projects: Project[]; onCreateDelivery: (id: string) => void }) {
+  const projectId = projects[0]?.id
+  return (
+    <div className={styles.stack}>
+      <Card title="项目文件与成果交付" extra={<Button disabled={!projectId} onClick={() => projectId && onCreateDelivery(projectId)}>生成交付清单</Button>}>
+        <ProjectFiles />
+      </Card>
+    </div>
+  )
 }

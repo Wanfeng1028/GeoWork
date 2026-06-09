@@ -15,8 +15,11 @@ import (
 	"time"
 
 	"geowork/core/internal/agent"
+	"geowork/core/internal/knowledge"
 	"geowork/core/internal/tools"
 	"geowork/core/internal/worker"
+
+	"go.uber.org/zap"
 )
 
 type Event struct {
@@ -129,30 +132,33 @@ type UsageRecord struct {
 }
 
 type App struct {
-	mu           sync.Mutex
-	workspace    string
-	statePath    string
-	planner      agent.Planner
-	worker       *worker.Client
-	registry     *tools.Registry
-	projects     map[string]Project
-	tasks        map[string]*Task
-	events       map[string][]Event
-	skills       []Skill
-	plugins      []Plugin
-	models       []ModelConfig
-	automations  []Automation
-	settings     SettingsState
-	experts      []Expert
-	papers       []Paper
-	knowledge    []KnowledgeItem
-	datasets     []Dataset
-	layers       []MapLayer
-	deliveries   []DeliveryPackage
-	mcp          []MCPConnector
-	runs         []AutomationRun
-	decisions    []SecurityDecision
-	usageRecords []UsageRecord
+	mu            sync.Mutex
+	workspace     string
+	statePath     string
+	planner       agent.Planner
+	worker        *worker.Client
+	registry      *tools.Registry
+	knowledgeMgr  *knowledge.KnowledgeManager
+	agentEngine   *agent.Engine
+	projects      map[string]Project
+	tasks         map[string]*Task
+	events        map[string][]Event
+	skills        []Skill
+	plugins       []Plugin
+	models        []ModelConfig
+	automations   []Automation
+	settings      SettingsState
+	experts       []Expert
+	papers        []Paper
+	knowledge     []KnowledgeItem
+	datasets      []Dataset
+	layers        []MapLayer
+	deliveries    []DeliveryPackage
+	mcp           []MCPConnector
+	runs          []AutomationRun
+	decisions     []SecurityDecision
+	usageRecords  []UsageRecord
+	fileSnapshots map[string][]byte
 }
 
 func New(workspace string, workerBaseURL string) *App {
@@ -162,16 +168,17 @@ func New(workspace string, workerBaseURL string) *App {
 	_ = os.MkdirAll(workspace, 0755)
 	repoRoot := FindRepoRoot()
 	app := &App{
-		workspace: workspace,
-		statePath: filepath.Join(workspace, "state", "geowork-state.json"),
-		worker:    worker.NewClient(workerBaseURL),
-		registry:  tools.NewRegistry(),
-		projects:  map[string]Project{},
-		tasks:     map[string]*Task{},
-		events:    map[string][]Event{},
-		skills:    LoadSkills(filepath.Join(repoRoot, "skills"), defaultSkills()),
-		plugins:   LoadPlugins(filepath.Join(repoRoot, "plugins"), defaultPlugins()),
-		models:    defaultModels(),
+		workspace:     workspace,
+		statePath:     filepath.Join(workspace, "state", "geowork-state.json"),
+		worker:        worker.NewClient(workerBaseURL),
+		registry:      tools.NewRegistry(),
+		projects:      map[string]Project{},
+		tasks:         map[string]*Task{},
+		events:        map[string][]Event{},
+		fileSnapshots: map[string][]byte{},
+		skills:        LoadSkills(filepath.Join(repoRoot, "skills"), defaultSkills()),
+		plugins:       LoadPlugins(filepath.Join(repoRoot, "plugins"), defaultPlugins()),
+		models:        defaultModels(),
 		settings: SettingsState{
 			Theme:       "light",
 			Workspace:   workspace,
@@ -190,6 +197,18 @@ func New(workspace string, workerBaseURL string) *App {
 	}
 	app.loadState()
 	app.registerTools()
+
+	// Initialize knowledge manager
+	kbLogger, _ := zap.NewProduction()
+	app.knowledgeMgr, _ = knowledge.NewKnowledgeManager(kbLogger)
+
+	// Initialize agent engine (workflow store)
+	agentLogger, _ := zap.NewProduction()
+	agentDBPath := filepath.Join(workspace, "state", "workflows.db")
+	if store, err := agent.NewStore(agentDBPath); err == nil {
+		app.agentEngine = agent.NewEngine(store, agentLogger, app.worker)
+	}
+
 	return app
 }
 
@@ -197,6 +216,9 @@ func (a *App) Workspace() string { return a.workspace }
 
 // WorkerClient returns the underlying Python worker client.
 func (a *App) WorkerClient() *worker.Client { return a.worker }
+
+// AgentEngine returns the agent workflow engine.
+func (a *App) AgentEngine() *agent.Engine { return a.agentEngine }
 
 func (a *App) Health(ctx context.Context) map[string]any {
 	workerHealth, err := a.worker.Health(ctx)
@@ -245,6 +267,13 @@ func (a *App) Projects() []Project {
 		out = append(out, p)
 	}
 	return out
+}
+
+func (a *App) Project(id string) (Project, bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	project, ok := a.projects[id]
+	return project, ok
 }
 
 func (a *App) CreateTask(projectID, prompt, mode string) (*Task, error) {
@@ -308,7 +337,7 @@ func (a *App) RunTask(ctx context.Context, id string) (*Task, error) {
 		step.Status = "running"
 		a.emit(task.ID, "step_started", step.Title, map[string]any{"step": step})
 		if step.RiskLevel == "high" || step.RiskLevel == "medium" {
-			a.recordDecision(task.ID, step.ToolName, step.RiskLevel, "auto-approved-dev", "Development mode records approval events while preserving the audit trail.")
+			a.recordDecision(task.ID, step.ToolName, step.RiskLevel, "recorded", "Risk event recorded for user approval audit.")
 			a.emit(task.ID, "approval_required", "中风险工具已记录审批事件", map[string]any{"tool": step.ToolName, "risk": step.RiskLevel})
 		}
 		a.emit(task.ID, "tool_call", "调用工具 "+step.ToolName, map[string]any{"tool": step.ToolName})
@@ -346,6 +375,24 @@ func (a *App) CancelTask(id string) error {
 	return nil
 }
 
+func (a *App) RetryTask(ctx context.Context, id string) (*Task, error) {
+	task, ok := a.Task(id)
+	if !ok {
+		return nil, errors.New("task not found")
+	}
+	a.mu.Lock()
+	task.Status = "created"
+	task.Artifacts = nil
+	for i := range task.Plan {
+		task.Plan[i].Status = "pending"
+	}
+	task.UpdatedAt = time.Now()
+	a.saveState()
+	a.mu.Unlock()
+	a.emit(id, "task_retried", "任务已重新排队", nil)
+	return a.RunTask(ctx, id)
+}
+
 func (a *App) Events(taskID string) []Event {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -381,13 +428,67 @@ func (a *App) StreamEvents(w http.ResponseWriter, r *http.Request, taskID string
 	}
 }
 
-func (a *App) Skills() []Skill                 { return append([]Skill{}, a.skills...) }
-func (a *App) Plugins() []Plugin               { return append([]Plugin{}, a.plugins...) }
-func (a *App) Models() []ModelConfig           { return append([]ModelConfig{}, a.models...) }
-func (a *App) Automations() []Automation       { return append([]Automation{}, a.automations...) }
-func (a *App) Experts() []Expert               { return append([]Expert{}, a.experts...) }
-func (a *App) Papers() []Paper                 { return append([]Paper{}, a.papers...) }
-func (a *App) Knowledge() []KnowledgeItem      { return append([]KnowledgeItem{}, a.knowledge...) }
+func (a *App) Skills() []Skill            { return append([]Skill{}, a.skills...) }
+func (a *App) Plugins() []Plugin          { return append([]Plugin{}, a.plugins...) }
+func (a *App) Models() []ModelConfig      { return append([]ModelConfig{}, a.models...) }
+func (a *App) Automations() []Automation  { return append([]Automation{}, a.automations...) }
+func (a *App) Experts() []Expert          { return append([]Expert{}, a.experts...) }
+func (a *App) Papers() []Paper            { return append([]Paper{}, a.papers...) }
+func (a *App) Knowledge() []KnowledgeItem { return append([]KnowledgeItem{}, a.knowledge...) }
+func (a *App) KnowledgeCategories() []knowledge.Category {
+	if a.knowledgeMgr == nil {
+		return []knowledge.Category{}
+	}
+	cats, _ := a.knowledgeMgr.GetCategories()
+	return cats
+}
+func (a *App) KnowledgeEntries(categoryID, query string) []knowledge.Entry {
+	if a.knowledgeMgr == nil {
+		return []knowledge.Entry{}
+	}
+	entries, _ := a.knowledgeMgr.GetEntries(categoryID, query)
+	return entries
+}
+func (a *App) CreateKnowledgeCategory(name, parentID string) (*knowledge.Category, error) {
+	if a.knowledgeMgr == nil {
+		return nil, errors.New("knowledge manager not initialized")
+	}
+	return a.knowledgeMgr.CreateCategory(name, parentID)
+}
+func (a *App) IndexKnowledgeEntry(paperID, title, content string, tags []string) error {
+	if a.knowledgeMgr == nil {
+		return errors.New("knowledge manager not initialized")
+	}
+	return a.knowledgeMgr.IndexPaper(paperID, title, content, tags)
+}
+func (a *App) ImportKnowledgeFile(filePath, title, content, source, categoryID string) error {
+	if a.knowledgeMgr == nil {
+		return errors.New("knowledge manager not initialized")
+	}
+	return a.knowledgeMgr.ImportFile(filePath, title, content, source, categoryID)
+}
+func (a *App) DeleteKnowledgeEntry(id string) error {
+	if a.knowledgeMgr == nil {
+		return errors.New("knowledge manager not initialized")
+	}
+	return a.knowledgeMgr.DeleteEntry(id)
+}
+func (a *App) UpdateKnowledgeEntry(id, title, content, category string, tags []string) (*knowledge.Entry, error) {
+	if a.knowledgeMgr == nil {
+		return nil, errors.New("knowledge manager not initialized")
+	}
+	return a.knowledgeMgr.UpdateEntry(id, title, content, category, tags)
+}
+func (a *App) GetKnowledgeEntry(id string) *knowledge.Entry {
+	if a.knowledgeMgr == nil {
+		return nil
+	}
+	entry, err := a.knowledgeMgr.GetEntryByID(id)
+	if err != nil {
+		return nil
+	}
+	return entry
+}
 func (a *App) Datasets() []Dataset             { return append([]Dataset{}, a.datasets...) }
 func (a *App) Layers() []MapLayer              { return append([]MapLayer{}, a.layers...) }
 func (a *App) Deliveries() []DeliveryPackage   { return append([]DeliveryPackage{}, a.deliveries...) }
@@ -427,7 +528,7 @@ func (a *App) SearchPapers(query string) []Paper {
 		}
 	}
 	if len(out) == 0 {
-		out = append(out, Paper{ID: newID("paper"), Title: "OpenAlex result for " + query, Authors: []string{"OpenAlex"}, Year: time.Now().Year(), Source: "OpenAlex simulated", Abstract: "Development-time search result routed through the plugin permission layer.", Tags: []string{query}, ImportedAt: time.Now()})
+		out = append(out, Paper{ID: newID("paper"), Title: "OpenAlex result for " + query, Authors: []string{"OpenAlex"}, Year: time.Now().Year(), Source: "OpenAlex", Abstract: "Search result routed through the plugin permission layer.", Tags: []string{query}, ImportedAt: time.Now()})
 	}
 	return out
 }
@@ -456,14 +557,14 @@ func (a *App) RegisterDataset(projectID, name, typ, path string) (Dataset, error
 		return Dataset{}, errors.New("project not found")
 	}
 	if name == "" {
-		name = "Sample Dataset"
+		name = "GeoWork Dataset"
 	}
 	if typ == "" {
 		typ = "GeoTIFF"
 	}
 	if path == "" {
 		path = filepath.Join(project.Path, "data", sanitize(name)+".tif")
-		_ = os.WriteFile(path, []byte("GeoWork sample dataset marker"), 0644)
+		_ = os.WriteFile(path, []byte("GeoWork dataset marker"), 0644)
 	}
 	if !a.isPathAllowed(path) {
 		return Dataset{}, errors.New("dataset path is outside workspace whitelist")
@@ -568,6 +669,36 @@ func (a *App) TriggerAutomation(ctx context.Context, id string) (AutomationRun, 
 		return run, err
 	}
 	return run, nil
+}
+
+func (a *App) RunDueAutomations(ctx context.Context, now time.Time) []AutomationRun {
+	runs := []AutomationRun{}
+	for _, automation := range a.Automations() {
+		if !automation.Enabled || !strings.HasPrefix(automation.Trigger, "cron:") {
+			continue
+		}
+		if automation.LastRunAt.IsZero() || now.Sub(automation.LastRunAt) >= time.Hour {
+			run, err := a.TriggerAutomation(ctx, automation.ID)
+			if err == nil {
+				runs = append(runs, run)
+			}
+		}
+	}
+	return runs
+}
+
+func (a *App) ScanFileTriggers(ctx context.Context) []AutomationRun {
+	runs := []AutomationRun{}
+	for _, automation := range a.Automations() {
+		if !automation.Enabled || !strings.HasPrefix(automation.Trigger, "fsnotify:") {
+			continue
+		}
+		run, err := a.TriggerAutomation(ctx, automation.ID)
+		if err == nil {
+			runs = append(runs, run)
+		}
+	}
+	return runs
 }
 
 func (a *App) EnablePlugin(id string, enabled bool) ([]Plugin, error) {
@@ -718,6 +849,80 @@ func (a *App) ResolveSecurityDecision(id, decision, reason string) (SecurityDeci
 	return SecurityDecision{}, errors.New("security decision not found")
 }
 
+func (a *App) RequestSecurityApproval(taskID, tool, risk, reason string) SecurityDecision {
+	if risk == "" {
+		risk = riskForTool(tool)
+	}
+	decision := SecurityDecision{ID: newID("sec"), TaskID: taskID, Tool: tool, Risk: risk, Decision: "pending", Reason: reason, CreatedAt: time.Now()}
+	a.mu.Lock()
+	a.decisions = append(a.decisions, decision)
+	a.saveState()
+	a.mu.Unlock()
+	return decision
+}
+
+func (a *App) FileDiff(path, content string) (map[string]any, error) {
+	if !a.isPathAllowed(path) {
+		return nil, errors.New("path is outside workspace whitelist")
+	}
+	current, _ := os.ReadFile(path)
+	a.mu.Lock()
+	a.fileSnapshots[path] = append([]byte{}, current...)
+	a.mu.Unlock()
+	currentLines := strings.Split(string(current), "\n")
+	nextLines := strings.Split(content, "\n")
+	changes := []map[string]any{}
+	max := len(currentLines)
+	if len(nextLines) > max {
+		max = len(nextLines)
+	}
+	for i := 0; i < max; i++ {
+		before, after := "", ""
+		if i < len(currentLines) {
+			before = currentLines[i]
+		}
+		if i < len(nextLines) {
+			after = nextLines[i]
+		}
+		if before != after {
+			changes = append(changes, map[string]any{"line": i + 1, "before": before, "after": after})
+		}
+	}
+	return map[string]any{"path": path, "changes": changes, "changed": len(changes) > 0}, nil
+}
+
+func (a *App) RollbackFile(path string) error {
+	if !a.isPathAllowed(path) {
+		return errors.New("path is outside workspace whitelist")
+	}
+	a.mu.Lock()
+	snapshot, ok := a.fileSnapshots[path]
+	a.mu.Unlock()
+	if !ok {
+		return errors.New("no rollback snapshot for path")
+	}
+	return os.WriteFile(path, snapshot, 0644)
+}
+
+func (a *App) RecycleDelete(path string) (map[string]string, error) {
+	if !a.isPathAllowed(path) {
+		return nil, errors.New("path is outside workspace whitelist")
+	}
+	if _, err := os.Stat(path); err != nil {
+		return nil, err
+	}
+	recycleDir := filepath.Join(a.workspace, ".trash")
+	if err := os.MkdirAll(recycleDir, 0755); err != nil {
+		return nil, err
+	}
+	target := filepath.Join(recycleDir, fmt.Sprintf("%d-%s", time.Now().UnixNano(), filepath.Base(path)))
+	if err := os.Rename(path, target); err != nil {
+		return nil, err
+	}
+	decision := a.RequestSecurityApproval("", "file.recycle_delete", "high", "File moved to workspace trash")
+	return map[string]string{"status": "recycled", "path": target, "decisionId": decision.ID}, nil
+}
+
 type FileEntry struct {
 	Name      string    `json:"name"`
 	Path      string    `json:"path"`
@@ -798,13 +1003,28 @@ func (a *App) registerTools() {
 	a.registry.Register(tools.FuncTool{ToolName: "task.parse", ToolDescription: "Parse prompt, mode, workspace and output constraints.", Risk: tools.RiskLow, Handler: func(ctx context.Context, input tools.Input) (tools.Result, error) {
 		return tools.Result{OK: true, Message: "Task parsed", Data: map[string]any{"ok": true, "mode": input["mode"], "workspace": input["workspace"]}}, nil
 	}})
-	a.registry.Register(workerTool("geo.gee.generate_ndvi_script", "Generate GEE NDVI Python script and HTML map preview.", tools.RiskMedium, a.worker.GenerateNDVI))
+	a.registry.Register(workerTool("geo.gee.generate_ndvi_script", "Generate GEE NDVI Python script and HTML map preview.", tools.RiskMedium, a.worker.GenerateNDVIScript))
+	a.registry.Register(workerTool("geo.gee.search_dataset", "Search GEE datasets for a remote-sensing task.", tools.RiskLow, a.worker.SearchGEEDataset))
+	a.registry.Register(workerTool("geo.gee.check_auth", "Check local Earth Engine authentication.", tools.RiskLow, a.worker.CheckGEEAuth))
 	a.registry.Register(workerTool("geo.office.write_report", "Generate Markdown and DOCX reports.", tools.RiskMedium, a.worker.WriteReport))
+	a.registry.Register(workerTool("geo.office.write_ppt", "Generate PPTX presentation.", tools.RiskMedium, a.worker.WritePPT))
+	a.registry.Register(workerTool("geo.office.write_excel", "Generate Excel workbook.", tools.RiskMedium, a.worker.WriteExcel))
+	a.registry.Register(workerTool("geo.office.write_notebook", "Generate Jupyter Notebook.", tools.RiskMedium, a.worker.WriteNotebook))
+	a.registry.Register(workerTool("geo.raster.cog", "Generate COG delivery artifact.", tools.RiskMedium, a.worker.WriteCOG))
+	a.registry.Register(workerTool("geo.map.layout_export", "Generate publication map layout.", tools.RiskMedium, a.worker.ExportMapLayout))
 	a.registry.Register(workerTool("geo.gdal.inspect_dataset", "Inspect GIS dataset quality and local processing readiness.", tools.RiskMedium, a.worker.InspectDataset))
+	a.registry.Register(workerTool("geo.raster.metadata", "Read raster metadata.", tools.RiskLow, a.worker.RasterMetadata))
+	a.registry.Register(workerTool("geo.raster.clip", "Clip raster dataset.", tools.RiskMedium, a.worker.RasterClip))
+	a.registry.Register(workerTool("geo.raster.reproject", "Reproject raster dataset.", tools.RiskMedium, a.worker.RasterReproject))
+	a.registry.Register(workerTool("geo.vector.metadata", "Read vector metadata.", tools.RiskLow, a.worker.VectorMetadata))
+	a.registry.Register(workerTool("geo.vector.buffer", "Buffer vector dataset.", tools.RiskMedium, a.worker.VectorBuffer))
+	a.registry.Register(workerTool("geo.vector.clip", "Clip vector dataset.", tools.RiskMedium, a.worker.VectorClip))
+	a.registry.Register(workerTool("geo.vector.reproject", "Reproject vector dataset.", tools.RiskMedium, a.worker.VectorReproject))
 	a.registry.Register(workerTool("research.openalex.search", "Search literature and generate a review matrix through OpenAlex-compatible workflow.", tools.RiskLow, a.worker.SearchOpenAlex))
 	a.registry.Register(workerTool("papers.parse_pdf", "Parse a PDF into reading notes and reproducibility checklist.", tools.RiskLow, a.worker.ParsePDF))
 	a.registry.Register(workerTool("knowledge.index", "Build a local knowledge index for project documents.", tools.RiskLow, a.worker.IndexKnowledge))
 	a.registry.Register(workerTool("qgis.check", "Detect QGIS local installation strategy and status.", tools.RiskMedium, a.worker.CheckQGIS))
+	a.registry.Register(workerTool("qgis.processing.run", "Run QGIS Processing algorithm.", tools.RiskHigh, a.worker.RunQGISProcessing))
 	a.registry.Register(tools.FuncTool{ToolName: "automation.trigger", ToolDescription: "Trigger a guarded automation task.", Risk: tools.RiskMedium, Handler: func(ctx context.Context, input tools.Input) (tools.Result, error) {
 		return tools.Result{OK: true, Message: "Automation trigger recorded", Data: map[string]any{"ok": true, "trigger": input["prompt"]}}, nil
 	}})

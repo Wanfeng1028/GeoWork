@@ -1,0 +1,54 @@
+.drawer {
+  :global(.ant-drawer-body) {
+    padding: 16px;
+  }
+}
+
+.tabs {
+  :global(.ant-tabs-nav) {
+    margin-bottom: 16px;
+  }
+}
+
+.descriptions {
+  :global(.ant-descriptions-item-label) {
+    width: 100px;
+    background: #fafafa;
+  }
+}
+
+.metadataSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  margin: 8px 0 4px;
+  font-size: 14px;
+  color: #1f2a32;
+}
+
+.thumbnailPlaceholder {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9e1e7;
+  border-radius: 6px;
+  background: #f8fafb;
+  gap: 8px;
+  color: #bfbfbf;
+}
+
+.jsonPreview {
+  max-height: 400px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #d9e1e7;
+  border-radius: 6px;
+  background: #f8fafb;
+  font-size: 12px;
+  margin: 0;
+}

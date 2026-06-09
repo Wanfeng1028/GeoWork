@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"geowork/core/internal/agent"
 	gruntime "geowork/core/internal/runtime"
@@ -18,6 +19,7 @@ type RouterDeps struct {
 var PublicRoutes = []string{
 	"/api/health",
 	"/api/projects",
+	"/api/projects/{id}",
 	"/api/projects/{id}/files",
 	"/api/projects/{id}/delivery",
 	"/api/deliveries",
@@ -28,10 +30,12 @@ var PublicRoutes = []string{
 	"/api/tasks/{id}/run",
 	"/api/tasks/{id}/pause",
 	"/api/tasks/{id}/cancel",
+	"/api/tasks/{id}/retry",
 	"/api/skills",
 	"/api/skills/{id}/run",
 	"/api/plugins",
 	"/api/plugins/{id}/enable",
+	"/api/plugins/{id}/disable",
 	"/api/models",
 	"/api/models/test",
 	"/api/usage/summary",
@@ -50,6 +54,10 @@ var PublicRoutes = []string{
 	"/api/knowledge",
 	"/api/security/decisions",
 	"/api/security/decisions/{id}",
+	"/api/security/diff",
+	"/api/security/rollback",
+	"/api/security/recycle-delete",
+	"/api/security/approvals",
 	"/api/tools",
 	"/api/eino/schema",
 	"/api/mcp",
@@ -73,6 +81,8 @@ var PublicRoutes = []string{
 	"/api/v1/runs/{id}",
 	"/api/v1/runs/{id}/logs",
 	"/api/v1/runs/{id}/logs/stream",
+	"/api/v1/cron/due",
+	"/api/v1/files/watch/scan",
 }
 
 func NewRouter(deps RouterDeps) http.Handler {
@@ -93,6 +103,13 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, app.Health(req.Context()))
 		case req.Method == http.MethodGet && path == "api/projects":
 			writeJSON(w, app.Projects())
+		case req.Method == http.MethodGet && len(parts) == 3 && parts[1] == "projects":
+			project, ok := app.Project(parts[2])
+			if !ok {
+				http.NotFound(w, req)
+				return
+			}
+			writeJSON(w, project)
 		case req.Method == http.MethodPost && path == "api/projects":
 			var in struct {
 				Name string `json:"name"`
@@ -141,6 +158,9 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeResult(w, map[string]string{"status": "paused"}, app.PauseTask(parts[2]))
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "tasks" && parts[3] == "cancel":
 			writeResult(w, map[string]string{"status": "cancelled"}, app.CancelTask(parts[2]))
+		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "tasks" && parts[3] == "retry":
+			task, err := app.RetryTask(req.Context(), parts[2])
+			writeResult(w, task, err)
 		case req.Method == http.MethodGet && path == "api/skills":
 			writeJSON(w, app.Skills())
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "skills" && parts[3] == "run":
@@ -157,6 +177,9 @@ func NewRouter(deps RouterDeps) http.Handler {
 			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			plugins, err := app.EnablePlugin(parts[2], in.Enabled)
+			writeResult(w, plugins, err)
+		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "plugins" && parts[3] == "disable":
+			plugins, err := app.EnablePlugin(parts[2], false)
 			writeResult(w, plugins, err)
 		case req.Method == http.MethodGet && path == "api/models":
 			writeJSON(w, app.Models())
@@ -254,8 +277,8 @@ func NewRouter(deps RouterDeps) http.Handler {
 			}
 			result, err := app.WorkerClient().SearchOpenAlex(req.Context(), workerPayload)
 			writeResult(w, result, err)
-		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "papers" && parts[4] == "index":
-			paperID := parts[4]
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "papers" && parts[4] == "index":
+			paperID := parts[3]
 			if paperID == "" {
 				http.Error(w, `{"error":"paper_id is required"}`, http.StatusBadRequest)
 				return
@@ -275,6 +298,35 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, app.IndexKnowledge(in.Title, in.Type, in.Path))
 		case req.Method == http.MethodGet && path == "api/security/decisions":
 			writeJSON(w, app.SecurityDecisions())
+		case req.Method == http.MethodPost && path == "api/security/diff":
+			var in struct {
+				Path    string `json:"path"`
+				Content string `json:"content"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			diff, err := app.FileDiff(in.Path, in.Content)
+			writeResult(w, diff, err)
+		case req.Method == http.MethodPost && path == "api/security/rollback":
+			var in struct {
+				Path string `json:"path"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			writeResult(w, map[string]string{"status": "rolled_back"}, app.RollbackFile(in.Path))
+		case req.Method == http.MethodPost && path == "api/security/recycle-delete":
+			var in struct {
+				Path string `json:"path"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			target, err := app.RecycleDelete(in.Path)
+			writeResult(w, target, err)
+		case req.Method == http.MethodPost && path == "api/security/approvals":
+			var in struct {
+				Tool   string `json:"tool"`
+				Risk   string `json:"risk"`
+				Reason string `json:"reason"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			writeJSON(w, app.RequestSecurityApproval("", in.Tool, in.Risk, in.Reason))
 		case req.Method == http.MethodPost && len(parts) == 4 && parts[1] == "security" && parts[2] == "decisions":
 			var in struct {
 				Decision string `json:"decision"`
@@ -323,10 +375,20 @@ func NewRouter(deps RouterDeps) http.Handler {
 			}
 			_ = json.NewDecoder(req.Body).Decode(&in)
 			writeResult(w, nil, app.ImportKnowledgeFile(in.FilePath, in.Title, in.Content, in.Source, in.CategoryID))
-		case req.Method == http.MethodDelete && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "knowledge" && parts[4] == "entries":
-			writeResult(w, nil, app.DeleteKnowledgeEntry(parts[5]))
-		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "knowledge" && parts[4] == "entries":
-			writeJSON(w, app.GetKnowledgeEntry(parts[5]))
+		case req.Method == http.MethodDelete && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "knowledge" && parts[3] == "entries":
+			writeResult(w, map[string]string{"status": "deleted"}, app.DeleteKnowledgeEntry(parts[4]))
+		case req.Method == http.MethodPut && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "knowledge" && parts[3] == "entries":
+			var in struct {
+				Title    string   `json:"title"`
+				Content  string   `json:"content"`
+				Category string   `json:"category"`
+				Tags     []string `json:"tags"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			entry, err := app.UpdateKnowledgeEntry(parts[4], in.Title, in.Content, in.Category, in.Tags)
+			writeResult(w, entry, err)
+		case req.Method == http.MethodGet && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "knowledge" && parts[3] == "entries":
+			writeJSON(w, app.GetKnowledgeEntry(parts[4]))
 		// NDVI analysis routes
 		case req.Method == http.MethodPost && path == "api/v1/ndvi/analyze":
 			var in struct {
@@ -354,8 +416,8 @@ func NewRouter(deps RouterDeps) http.Handler {
 			}
 			result, err := app.WorkerClient().GenerateNDVI(req.Context(), workerPayload)
 			writeResult(w, result, err)
-		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "ndvi" && parts[4] == "history":
-			projectID := parts[5]
+		case req.Method == http.MethodGet && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "ndvi" && parts[3] == "history":
+			projectID := parts[4]
 			if projectID == "" {
 				http.Error(w, `{"error":"project_id is required"}`, http.StatusBadRequest)
 				return
@@ -401,7 +463,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodGet && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+		case req.Method == http.MethodGet && len(parts) == 4 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "workflows":
 			engine := app.AgentEngine()
 			if engine != nil {
 				wf, err := engine.GetWorkflow(parts[3])
@@ -409,7 +471,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodPut && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+		case req.Method == http.MethodPut && len(parts) == 4 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "workflows":
 			var wf agent.Workflow
 			_ = json.NewDecoder(req.Body).Decode(&wf)
 			wf.ID = parts[3]
@@ -419,14 +481,14 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodDelete && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+		case req.Method == http.MethodDelete && len(parts) == 4 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "workflows":
 			engine := app.AgentEngine()
 			if engine != nil {
 				writeResult(w, map[string]string{"status": "deleted"}, engine.DeleteWorkflow(parts[3]))
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows" && parts[4] == "run":
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "workflows" && parts[4] == "run":
 			engine := app.AgentEngine()
 			if engine != nil {
 				run, err := engine.StartRun(req.Context(), parts[3])
@@ -434,7 +496,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows" && parts[4] == "stop":
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "workflows" && parts[4] == "stop":
 			engine := app.AgentEngine()
 			if engine != nil {
 				writeResult(w, map[string]string{"status": "stopped"}, engine.StopRun(parts[3]))
@@ -450,7 +512,11 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				writeJSON(w, []agent.Run{})
 			}
-		case req.Method == http.MethodGet && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs":
+		case req.Method == http.MethodPost && path == "api/v1/cron/due":
+			writeJSON(w, app.RunDueAutomations(req.Context(), time.Now()))
+		case req.Method == http.MethodPost && path == "api/v1/files/watch/scan":
+			writeJSON(w, app.ScanFileTriggers(req.Context()))
+		case req.Method == http.MethodGet && len(parts) == 4 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "runs":
 			runID := parts[3]
 			engine := app.AgentEngine()
 			if engine != nil {
@@ -459,7 +525,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodGet && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs" && parts[4] == "logs":
+		case req.Method == http.MethodGet && len(parts) == 5 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "runs" && parts[4] == "logs":
 			runID := parts[3]
 			engine := app.AgentEngine()
 			if engine != nil {
@@ -468,7 +534,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 			} else {
 				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 			}
-		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs" && parts[4] == "logs" && parts[5] == "stream":
+		case req.Method == http.MethodGet && len(parts) == 6 && parts[0] == "api" && parts[1] == "v1" && parts[2] == "runs" && parts[4] == "logs" && parts[5] == "stream":
 			runID := parts[3]
 			engine := app.AgentEngine()
 			if engine != nil {

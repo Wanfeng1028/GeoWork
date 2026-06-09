@@ -16,7 +16,7 @@ interface LogEntry {
   type: 'info' | 'success' | 'error' | 'command' | 'system'
 }
 
-const SYSTEM_PROMPT = 'GeoWork Terminal v1.0 — 输入命令执行任务 (模拟模式)'
+const SYSTEM_PROMPT = 'GeoWork Terminal v1.0 — 输入命令执行任务'
 const PROMPT_PREFIX = 'geowork > '
 
 export function Terminal({
@@ -123,15 +123,12 @@ export function Terminal({
       addLog('  help              — 显示帮助', 'system')
     } else {
       addLog(`执行: ${trimmed}`, 'info')
-      addLog(`[模拟] 命令 "${trimmed}" 已提交到任务队列`, 'info')
-      addLog(`[模拟] 等待执行结果...`, 'system')
-      setTimeout(() => {
-        addLog(`[模拟] 命令执行完成 (模拟模式)`, 'success')
-      }, 800)
+      addLog(`命令 "${trimmed}" 已提交到任务队列`, 'info')
+      addLog('等待执行结果...', 'system')
+      Promise.resolve(onCommand?.(trimmed))
+        .then(() => addLog('命令执行完成', 'success'))
+        .catch((error) => addLog(`命令执行失败: ${error instanceof Error ? error.message : String(error)}`, 'error'))
     }
-
-    // Notify parent
-    onCommand?.(trimmed)
 
     setCommand('')
   }, [command, onCommand, addLog])

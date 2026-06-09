@@ -1,0 +1,47 @@
+.container {
+  display: grid;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.searchInput {
+  width: 280px;
+}
+
+.statusTag {
+  min-width: 60px;
+  text-align: center;
+}
+
+.runTag {
+  min-width: 60px;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #8c8c8c;
+  text-align: center;
+}
+
+.emptyState p {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.runsPanel {
+  margin-top: 4px;
+}

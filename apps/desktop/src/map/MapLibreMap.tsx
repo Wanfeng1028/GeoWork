@@ -1,11 +1,11 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Slider, Switch, Tooltip } from 'antd'
 import {
-  CollapseOutlined,
-  ExpandOutlined,
+  AimOutlined,
+  GlobalOutlined,
   LineChartOutlined,
-  MapOutlined,
-  RadarOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   ZoomInOutlined,
   ZoomOutOutlined
 } from '@ant-design/icons'
@@ -174,7 +174,7 @@ const MapLibreMap = memo(function MapLibreMap({
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? '展开图层面板' : '折叠图层面板'}
       >
-        {collapsed ? <ExpandOutlined /> : <CollapseOutlined />}
+        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </button>
 
       {/* Layer panel */}
@@ -199,7 +199,7 @@ const MapLibreMap = memo(function MapLibreMap({
                   onClick={() => onLayerToggle?.(layer.id)}
                   title={layer.visible ? '隐藏图层' : '显示图层'}
                 >
-                  {layer.visible ? <MapOutlined /> : <RadarOutlined />}
+                  {layer.visible ? <GlobalOutlined /> : <AimOutlined />}
                 </button>
                 <span className={styles.layerName} title={layer.name}>
                   {layer.name}

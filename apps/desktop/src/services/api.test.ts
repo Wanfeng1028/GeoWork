@@ -4,10 +4,10 @@ import { api } from './api'
 describe('api client', () => {
   it('calls V1 endpoint paths', async () => {
     const calls: string[] = []
-    vi.stubGlobal('fetch', vi.fn((url: string) => {
+    globalThis.fetch = vi.fn((url: string) => {
       calls.push(url)
       return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
-    }) as any)
+    }) as any
 
     await api.experts()
     await api.tools()

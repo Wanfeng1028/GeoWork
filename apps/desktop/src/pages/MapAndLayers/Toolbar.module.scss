@@ -1,0 +1,46 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--geowork-border, #d9dee8);
+  background: var(--geowork-panel, #ffffff);
+}
+
+.label {
+  flex: 0 0 auto;
+  color: var(--geowork-muted, #64748b);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tools {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activeLayer {
+  flex: 0 1 auto;
+  max-width: 320px;
+  overflow: hidden;
+  color: var(--geowork-text, #1f2937);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .activeLayer {
+    max-width: 100%;
+  }
+}

@@ -8,7 +8,8 @@ import {
   deleteKnowledgeEntry as deleteKnowledgeEntryAPI,
   searchKnowledge,
   getKnowledgeEntry,
-} from '../services/knowledgeService'
+  updateKnowledgeEntry,
+} from '../../services/knowledgeService'
 
 export interface KnowledgeEntry {
   id: string
@@ -50,6 +51,7 @@ interface KnowledgeBaseState {
   loadCategories: () => Promise<void>
   loadEntries: (categoryId?: string, query?: string) => Promise<void>
   loadEntryDetail: (id: string) => Promise<void>
+  updateEntry: (id: string, body: Partial<Pick<KnowledgeEntry, 'title' | 'content' | 'category' | 'tags'>>) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -168,6 +170,20 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
       set({ selectedEntry: entry, isLoading: false })
     } catch (err: any) {
       set({ error: err.message || 'Failed to load entry detail', isLoading: false })
+    }
+  },
+
+  updateEntry: async (id, body) => {
+    try {
+      set({ isLoading: true, error: null })
+      const updated = await updateKnowledgeEntry(id, body)
+      set((state) => ({
+        entries: state.entries.map((entry) => entry.id === id ? updated : entry),
+        selectedEntry: state.selectedEntry?.id === id ? updated : state.selectedEntry,
+        isLoading: false,
+      }))
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to update entry', isLoading: false })
     }
   },
 

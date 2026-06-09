@@ -69,7 +69,7 @@ _indexer = KnowledgeIndexer()
 def _extract_text_from_pdf(file_path: str) -> str:
     """Attempt to extract text from a PDF file.
 
-    Falls back to a placeholder if no PDF library is available.
+    Returns file metadata text when no PDF parser is available.
     """
     try:
         import PyPDF2  # type: ignore

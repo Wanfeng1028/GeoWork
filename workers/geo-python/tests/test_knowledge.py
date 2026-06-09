@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -168,6 +166,5 @@ class TestKnowledgeImport:
         }
         response = client.post("/api/knowledge/import", json=payload)
         assert response.status_code == 200
-        # Should still succeed but with a placeholder content
         data = response.json()
         assert data["status"] == "imported"

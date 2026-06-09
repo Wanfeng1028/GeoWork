@@ -1,7 +1,8 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
-import { DeckGL, PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@deck.gl/aggregation-layers'
 import { DeckGL as DeckGLCore } from '@deck.gl/react'
-import type { Layer } from '@deck.gl/core'
+import { Layer } from '@deck.gl/core'
+import { LineLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers'
+import { HeatmapLayer } from '@deck.gl/aggregation-layers'
 import type MapLibreGL from 'maplibre-gl'
 import type { DeckGeoJsonFeature, MapLayerItem } from './layers'
 
@@ -46,12 +47,12 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
       switch (deckType) {
         case 'PointLayer':
           result.push(
-            new PointLayer({
+            new ScatterplotLayer({
               id: `deck-${item.id}`,
               data: (layer.props?.data ?? []) as DeckGeoJsonFeature[],
-              getFillColor: props.getFillColor ?? (() => [22, 119, 255, 180]),
-              getStrokeColor: props.getStrokeColor ?? (() => [0, 0, 0, 64]),
-              getRadius: props.getRadius ?? (() => 10),
+              getFillColor: (props.getFillColor ?? (() => [22, 119, 255, 180])) as any,
+              getLineColor: (props.getStrokeColor ?? (() => [0, 0, 0, 64])) as any,
+              getRadius: (props.getRadius ?? (() => 10)) as any,
               radiusMinPixels: props.radiusMinPixels ?? 2,
               radiusMaxPixels: props.radiusMaxPixels ?? 50,
               lineWidthScale: props.lineWidthScale ?? 1,
@@ -109,7 +110,7 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
 
         default:
           // Fallback: try to use the layer as-is if it's already a Deck.gl Layer instance
-          if (layer instanceof require('@deck.gl/core').Layer) {
+          if (layer instanceof Layer) {
             result.push(layer)
           }
           break

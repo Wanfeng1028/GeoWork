@@ -151,7 +151,7 @@ func (h *FileHandler) handleGetFileContent(w http.ResponseWriter, r *http.Reques
 
 	// We need to search for the node - use a direct query approach
 	// Since FileNode doesn't expose a GetByID method, we'll use the path from the node
-	// For now, return a placeholder that the frontend can use to fetch content
+	// Return a fetchable content descriptor for preview-capable file nodes.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "ok",

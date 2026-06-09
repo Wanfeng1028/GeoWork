@@ -7,7 +7,7 @@
  */
 
 import { create } from 'zustand'
-import { downloadFile } from '../services/paperService'
+import { downloadFile } from '../../services/paperService'
 
 export interface PaperResult {
   id: string

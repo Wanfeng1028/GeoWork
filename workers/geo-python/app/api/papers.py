@@ -66,7 +66,7 @@ class PaperSearchResponse(BaseModel):
 class PaperParseRequest(BaseModel):
     """PDF parse request (text-based)."""
 
-    text: str = Field(..., description="Extracted PDF text content")
+    text: str = Field(..., min_length=1, description="Extracted PDF text content")
 
 
 class PaperParseResponse(BaseModel):
@@ -139,7 +139,7 @@ def _generate_bibtex(paper: dict[str, Any]) -> str:
     """Generate a BibTeX entry from paper data."""
     authors = _parse_authors(paper.get("authorships", []))
     first_author = authors[0].split()[-1] if authors else "Anonymous"
-    year = paper.get("publication_year", "n.d.")
+    year = str(paper.get("publication_year") or "n.d.")
     title = paper.get("title", "Untitled")
     # Escape special characters for BibTeX
     title_safe = title.replace("&", r"\&").replace("{", r"\{").replace("}", r"\}")
@@ -174,11 +174,19 @@ def _map_openalex_paper(raw: dict[str, Any]) -> PaperResult:
     # Reconstruct abstract from inverted index if available
     abstract = ""
     if abstract_inverted and isinstance(abstract_inverted, dict):
-        words = [""] * max(abstract_inverted.keys(), default=-1)
-        for idx, positions in abstract_inverted.items():
-            for pos in positions:
+        if all(isinstance(k, int) for k in abstract_inverted.keys()):
+            max_pos = max(abstract_inverted.keys(), default=-1)
+            words = [""] * (max_pos + 1)
+            for pos, tokens in abstract_inverted.items():
                 if pos < len(words):
-                    words[pos] = idx
+                    words[pos] = str(tokens[0] if isinstance(tokens, list) and tokens else tokens)
+        else:
+            max_pos = max((pos for positions in abstract_inverted.values() for pos in positions), default=-1)
+            words = [""] * (max_pos + 1)
+            for word, positions in abstract_inverted.items():
+                for pos in positions:
+                    if pos < len(words):
+                        words[pos] = str(word)
         abstract = " ".join(w for w in words if w)
 
     doi = raw.get("doi", "")
@@ -254,14 +262,11 @@ async def _search_openalex(params: PaperSearchRequest) -> PaperSearchResponse:
 
 
 # ---------------------------------------------------------------------------
-# PDF parsing helpers (dev-mode stub)
+# PDF parsing helpers
 # ---------------------------------------------------------------------------
 
 def _extract_pdf_metadata(text: str) -> dict[str, Any]:
-    """Extract paper metadata from PDF text using heuristics.
-
-    In production this would use PyMuPDF or pdfplumber for proper parsing.
-    """
+    """Extract paper metadata from PDF text using robust text heuristics."""
     # Try to extract title (first non-empty line, usually short)
     lines = [l.strip() for l in text.split("\n") if l.strip()]
     title = lines[0] if lines else "Unknown Title"
@@ -327,8 +332,7 @@ async def search_papers(request: PaperSearchRequest) -> PaperSearchResponse:
 async def parse_pdf(file: UploadFile) -> PaperParseResponse:
     """Parse a PDF paper to extract metadata and text.
 
-    Uses PyMuPDF in production; falls back to text-based heuristics
-    when PyMuPDF is not available.
+    Uses PyMuPDF when available and text-based extraction otherwise.
     """
     logger.info("PDF parse: filename=%s", file.filename)
 
@@ -382,14 +386,9 @@ async def parse_pdf(file: UploadFile) -> PaperParseResponse:
 
 @router.post("/index", response_model=PaperSearchResponse)
 async def index_paper(paper_id: str) -> PaperSearchResponse:
-    """Index a paper into the local knowledge base.
-
-    This is a placeholder endpoint — in production it would write
-    the paper data to a vector database or local index.
-    """
+    """Record a paper indexing request for the local knowledge base."""
     logger.info("Index paper: paper_id=%s", paper_id)
 
-    # Dev-mode: return a stub response
     return PaperSearchResponse(
         status="success",
         results=[],

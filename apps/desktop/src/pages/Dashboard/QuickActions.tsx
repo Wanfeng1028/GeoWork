@@ -6,6 +6,7 @@ import {
   ExperimentOutlined,
   FileTextOutlined
 } from '@ant-design/icons'
+import { api } from '../../services/api'
 import styles from './QuickActions.module.scss'
 
 export interface QuickAction {
@@ -14,7 +15,7 @@ export interface QuickAction {
   icon: React.ReactNode
   color: string
   description: string
-  action: () => void
+  action: (values?: Record<string, any>) => Promise<void> | void
 }
 
 export interface QuickActionsProps {
@@ -29,7 +30,10 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     icon: <PlusOutlined />,
     color: 'blue',
     description: '创建一个新的 GeoWork 项目',
-    action: () => message.info('新建项目功能待实现')
+    action: async (values) => {
+      await api.createProject({ name: values?.prompt || 'GeoWork 新项目', mode: 'Research' })
+      message.success('项目已创建')
+    }
   },
   {
     key: 'import-data',
@@ -37,7 +41,14 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     icon: <ImportOutlined />,
     color: 'green',
     description: '导入遥感数据或本地文件',
-    action: () => message.info('导入数据功能待实现')
+    action: async (values) => {
+      await api.registerDataset({
+        name: values?.prompt || '本地遥感数据',
+        type: 'GeoTIFF',
+        path: values?.prompt || 'data/imported-dataset.tif',
+      })
+      message.success('数据已登记')
+    }
   },
   {
     key: 'ndvi-analysis',
@@ -45,7 +56,14 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     icon: <ExperimentOutlined />,
     color: 'orange',
     description: '使用 GEE 运行 NDVI 植被指数分析',
-    action: () => message.info('NDVI 分析功能待实现')
+    action: async (values) => {
+      const task = await api.createTask({
+        prompt: values?.prompt || '运行 NDVI 分析并生成 GEE 脚本、地图预览和实验报告',
+        mode: 'Analysis',
+      })
+      await api.runTask(task.id)
+      message.success('NDVI 任务已启动')
+    }
   },
   {
     key: 'view-report',
@@ -53,7 +71,11 @@ const DEFAULT_ACTIONS: QuickAction[] = [
     icon: <FileTextOutlined />,
     color: 'purple',
     description: '查看已生成的实验报告',
-    action: () => message.info('查看报告功能待实现')
+    action: async () => {
+      const artifacts = await api.artifacts()
+      const reports = artifacts.filter((item) => item.type === 'report')
+      message.info(reports.length ? `找到 ${reports.length} 个报告成果` : '暂无报告成果')
+    }
   }
 ]
 
@@ -74,9 +96,10 @@ export default function QuickActions({
     }
   }
 
-  const handleModalConfirm = () => {
+  const handleModalConfirm = async () => {
     if (selectedAction) {
-      selectedAction.action()
+      const values = await form.validateFields()
+      await selectedAction.action(values)
       setModalOpen(false)
       form.resetFields()
     }

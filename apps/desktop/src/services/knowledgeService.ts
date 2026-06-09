@@ -95,3 +95,13 @@ export async function searchKnowledge(query: string): Promise<KnowledgeEntry[]> 
 export async function getKnowledgeEntry(id: string): Promise<KnowledgeEntry> {
   return request<KnowledgeEntry>(`/api/v1/knowledge/entries/${id}`)
 }
+
+export async function updateKnowledgeEntry(
+  id: string,
+  body: Partial<Pick<KnowledgeEntry, 'title' | 'content' | 'category' | 'tags'>>,
+): Promise<KnowledgeEntry> {
+  return request<KnowledgeEntry>(`/api/v1/knowledge/entries/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
