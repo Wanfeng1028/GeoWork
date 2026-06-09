@@ -3,7 +3,9 @@ dist/
 out/
 .tools/
 .env
+.venv/
 docx/
+docs/
 .qwen/
 .env.local
 *.log
