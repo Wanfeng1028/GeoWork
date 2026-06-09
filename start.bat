@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title GeoWork 启动脚本
 
@@ -12,48 +13,77 @@ set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
 :: 检查依赖
-echo [1/6] 检查依赖...
+echo [1/7] 检查依赖...
 where node >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo [错误] 未找到 Node.js，请先安装 Node.js
     pause
     exit /b 1
 )
 
 where go >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo [错误] 未找到 Go，请先安装 Go
     pause
     exit /b 1
 )
 
 where python >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo [错误] 未找到 Python，请先安装 Python
     pause
     exit /b 1
-)
-
-where uvicorn >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [警告] 未找到 uvicorn，将使用 python -m uvicorn 启动
 )
 echo [√] 基础依赖检查通过
 echo.
 
 :: 检查 Electron 依赖
-echo [2/6] 检查 Electron 依赖...
+echo [2/7] 检查 Electron 依赖...
 if not exist "%ROOT_DIR%apps\desktop\node_modules\.package-lock.json" (
     echo [提示] 首次运行，需要安装前端依赖...
     cd /d "%ROOT_DIR%apps\desktop"
     call npm install
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo [错误] 前端依赖安装失败
         pause
         exit /b 1
     )
 )
 echo [√] Electron 依赖检查通过
+echo.
+
+:: 检查端口是否被占用
+echo [3/7] 检查端口占用...
+set "port_clear=true"
+
+netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [!] 端口 8765 已被占用
+    set "port_clear=false"
+) else (
+    echo [√] 端口 8765 可用
+)
+
+netstat -aon | findstr :8766 | findstr LISTENING >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [!] 端口 8766 已被占用
+    set "port_clear=false"
+) else (
+    echo [√] 端口 8766 可用
+)
+
+if "!port_clear!"=="false" (
+    echo.
+    echo [警告] 部分端口已被占用，是否继续？
+    echo [提示] 如果这些是 GeoWork 旧进程，建议先运行 stop.bat
+    echo.
+    choice /c YN /m "继续启动？(Y/N)"
+    if !errorlevel! equ 2 (
+        echo 已取消启动
+        pause
+        exit /b 0
+    )
+)
 echo.
 
 :: 清理旧的 PID 文件
@@ -63,71 +93,75 @@ if exist "%PID_FILE%" del "%PID_FILE%"
 if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
 :: 启动 Go Core Runtime
-echo [3/6] 启动 Go Core Runtime (端口 8765)...
+echo [4/7] 启动 Go Core Runtime (端口 8765)...
 start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ./cmd/geowork-runtime --port 8765 > "%ROOT_DIR%logs\go-core.log" 2>&1"
 
-:: 等待并获取 Go Core 进程 PID
-timeout /t 2 >nul
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do (
-    set "GO_PID=%%a"
-)
+:: 等待启动
+timeout /t 3 >nul
+
+:: 获取 Go Core 进程 PID（单行设置变量避免 for 循环作用域问题）
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do set "GO_PID=%%a"
 if defined GO_PID (
-    echo Go-Core: %GO_PID% >> "%PID_FILE%"
-    echo [√] Go Core Runtime 已启动 (PID: %GO_PID%)
+    echo Go-Core: !GO_PID! >> "%PID_FILE%"
+    echo [√] Go Core Runtime 已启动 (PID: !GO_PID!)
 ) else (
     echo [!] Go Core Runtime 启动中，请稍候...
 )
 echo.
 
 :: 启动 Python Geo Worker
-echo [4/6] 启动 Python Geo Worker (端口 8766)...
+echo [5/7] 启动 Python Geo Worker (端口 8766)...
 start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 > "%ROOT_DIR%logs\python-worker.log" 2>&1"
 
-:: 等待并获取 Python Worker 进程 PID
-timeout /t 2 >nul
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
-    set "PY_PID=%%a"
-)
+:: 等待启动
+timeout /t 3 >nul
+
+:: 获取 Python Worker 进程 PID（单行设置变量避免 for 循环作用域问题）
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do set "PY_PID=%%a"
 if defined PY_PID (
-    echo Python-Worker: %PY_PID% >> "%PID_FILE%"
-    echo [√] Python Geo Worker 已启动 (PID: %PY_PID%)
+    echo Python-Worker: !PY_PID! >> "%PID_FILE%"
+    echo [√] Python Geo Worker 已启动 (PID: !PY_PID!)
 ) else (
     echo [!] Python Geo Worker 启动中，请稍候...
 )
 echo.
 
 :: 启动 Electron 桌面端
-echo [5/6] 启动 Electron 桌面端...
+echo [6/7] 启动 Electron 桌面端...
 start "GeoWork-Desktop" /D "%ROOT_DIR%apps\desktop" cmd /c "npm run dev > "%ROOT_DIR%logs\desktop.log" 2>&1"
 
 :: 等待 Electron 启动
-timeout /t 3 >nul
+timeout /t 5 >nul
 
 :: 获取 Electron 相关进程 PID
-for /f "tokens=2" %%a in ('tasklist /FI "WINDOWTITLE eq GeoWork-Desktop*" /NH 2^>nul ^| findstr /I "cmd.exe"') do (
+:: 通过窗口标题获取 CMD 进程 PID
+for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq cmd.exe" /FI "STATUS eq Running" /NH 2^>nul ^| findstr /I "cmd.exe"') do (
     set "ELECTRON_CMD_PID=%%a"
 )
+
+:: 也可以通过端口或进程树查找 Electron
+:: 这里我们记录 CMD 窗口的 PID
 if defined ELECTRON_CMD_PID (
-    echo Electron-CMD: %ELECTRON_CMD_PID% >> "%PID_FILE%"
-    echo [√] Electron 桌面端已启动 (CMD PID: %ELECTRON_CMD_PID%)
+    echo Electron-CMD: !ELECTRON_CMD_PID! >> "%PID_FILE%"
+    echo [√] Electron 桌面端已启动
 ) else (
     echo [!] Electron 桌面端启动中，请稍候...
 )
 echo.
 
 :: 检查服务状态
-echo [6/6] 检查服务状态...
-timeout /t 2 >nul
+echo [7/7] 检查服务状态...
+timeout /t 3 >nul
 
 curl -s http://127.0.0.1:8765/api/health >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     echo [√] Go Core Runtime 运行正常
 ) else (
     echo [!] Go Core Runtime 可能未正常启动，请检查日志
 )
 
 curl -s http://127.0.0.1:8766/health >nul 2>&1
-if %errorlevel% equ 0 (
+if !errorlevel! equ 0 (
     echo [√] Python Geo Worker 运行正常
 ) else (
     echo [!] Python Geo Worker 可能未正常启动，请检查日志
