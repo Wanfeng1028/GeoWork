@@ -2,10 +2,10 @@
   <img src="./assets/geowork-readme-hero.svg" width="700" alt="GeoWork" />
 </p>
 
-<p align="center"><strong>A local-first desktop AI Agent workbench for GIS, remote sensing, and geospatial workflows</strong></p>
+<p align="center"><strong>面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台</strong></p>
 
 <p align="center">
-  <a href="README.md">English</a> &nbsp;·&nbsp; <a href="README.zh-CN.md">简体中文</a>
+  <a href="README.en.md">English</a> &nbsp;·&nbsp; <strong>简体中文</strong>
 </p>
 
 <p align="center">
@@ -21,139 +21,139 @@
 
 ---
 
-## What GeoWork Can Do
+## GeoWork 能做什么
 
-Tackle complex geospatial and scientific workflows through conversation — empowering anyone to analyze the planet 🌏, produce professional maps, and automate research pipelines.
+通过对话处理复杂的地理空间和科学工作流——赋能任何人分析地球 🌏、生成专业地图、自动化研究流程。
 
-| Capability | Scope | Examples |
+| 能力 | 范围 | 示例 |
 |---|---|---|
-| 🗺️ **QGIS** | **All hundreds of algorithms** in QGIS Processing | Spatial analysis, vector/raster batch processing, format conversion, accessibility analysis... |
-| 🛰️ **Google Earth Engine** | **Full GEE Python API** — any remote sensing task you can express | Temporal compositing, classification, change detection, land surface temperature, image download... |
-| 🐍 **Python** | Run **arbitrary Python scripts** in an isolated env, full scientific computing stack | Geospatial processing, thematic mapping, deep learning, data science... |
-| 📄 **Paper Reading** | AI-powered literature analysis and research summarization | Extract insights, summarize papers, manage research references... |
-| 📝 **Report Writing** | Generate professional Office documents with maps and charts | Automated report generation, formatted tables, publication-ready figures... |
-| ⚡ **Automation** | Workflow automation and task scheduling | Chain tools together, automate repetitive geospatial pipelines, cron-based workflows... |
-| 🤖 **Model Routing** | Flexible AI model configuration and management | Switch between models, configure API keys, optimize costs and performance... |
+| 🗺️ **QGIS** | **QGIS 处理中的数百种算法** | 空间分析、矢量/栅格批处理、格式转换、可达性分析... |
+| 🛰️ **Google Earth Engine** | **完整的 GEE Python API** — 任何你能表达的遥感任务 | 时序合成、分类、变化检测、地表温度、影像下载... |
+| 🐍 **Python** | 在隔离环境中运行**任意 Python 脚本**，完整的科学计算栈 | 地理空间处理、专题制图、深度学习、数据科学... |
+| 📄 **论文阅读** | AI 驱动的文稿分析和研究总结 | 提取见解、总结论文、管理参考文献... |
+| 📝 **报告撰写** | 生成包含地图和图表的专业 Office 文档 | 自动化报告生成、格式化表格、出版级图表... |
+| ⚡ **自动化** | 工作流自动化和任务调度 | 串联工具、自动化重复地理空间流程、基于 cron 的工作流... |
+| 🤖 **模型路由** | 灵活的 AI 模型配置和管理 | 切换模型、配置 API 密钥、优化成本和性能... |
 
-## How to Use
+## 如何使用
 
-### 1. What environment do you need?
+### 1. 需要哪些环境？
 
-No complex setup required. Before running GeoWork, ensure the following are on your machine:
+无需复杂设置。在运行 GeoWork 之前，确保你的机器上已安装以下内容：
 
-- **[QGIS](https://qgis.org/download/)** — desktop GIS app, GeoWork calls its algorithms
-- **A Python environment manager** (recommend [Miniconda](https://docs.anaconda.com/miniconda/)) — isolates Python dependencies so workflows don't interfere with each other
+- **[QGIS](https://qgis.org/download/)** — 桌面 GIS 应用，GeoWork 调用其算法
+- **Python 环境管理器**（推荐 [Miniconda](https://docs.anaconda.com/miniconda/)）— 隔离 Python 依赖，使工作流之间互不干扰
 
 > [!TIP]
-> Give GeoWork a **dedicated Python environment** (create a fresh one with Conda / Mamba). The agent will install, uninstall, and upgrade Python packages on its own as it works — a dedicated env keeps your other projects clean and helps the agent run more reliably.
+> 为 GeoWork 创建一个**专用的 Python 环境**（用 Conda / Mamba 创建一个全新的环境）。Agent 会在运行过程中自行安装、卸载和升级 Python 包——专用环境保持其他项目干净，帮助 Agent 更可靠地运行。
 
-### 2. Installation
+### 2. 安装
 
 ```bash
 npm install
 npm run dev
 ```
 
-**Individual checks:**
+**单独测试：**
 
 ```bash
-npm run test:core      # Run Go core tests
-npm run test:worker    # Run Python worker tests
-npm test               # Run desktop tests
-npm run build          # Build desktop app
+npm run test:core      # 运行 Go 核心测试
+npm run test:worker    # 运行 Python worker 测试
+npm test               # 运行桌面应用测试
+npm run build          # 构建桌面应用
 ```
 
-### 3. Plugin Marketplace
+### 3. 插件市场
 
-GeoWork ships a local plugin marketplace for extended functionality. Browse, install, and manage plugins directly from the app — no manual file shuffling required.
+GeoWork 附带本地插件市场以扩展功能。直接在应用中浏览、安装和管理插件——无需手动整理文件。
 
-**Available plugins:**
+**可用插件：**
 
-| Plugin | Category | Description |
+| 插件 | 类别 | 描述 |
 |---|---|---|
-| 🔗 **QGIS Bridge** | GIS | Bridge to QGIS Processing algorithms for spatial analysis |
-| 📚 **OpenAlex Literature Search** | Research | Search academic papers and citations via OpenAlex API |
-| 📑 **Zotero Connector** | Research | Integrate with Zotero for reference management |
+| 🔗 **QGIS Bridge** | GIS | 连接到 QGIS 处理算法进行空间分析 |
+| 📚 **OpenAlex 文献搜索** | 研究 | 通过 OpenAlex API 搜索学术论文和引用 |
+| 📑 **Zotero 连接器** | 研究 | 与 Zotero 集成进行文献管理 |
 
 > [!TIP]
-> Plugin permissions are transparent — each plugin declares its required permissions (network, file_read, file_write, process, local_app) so you know exactly what it can access.
+> 插件权限透明可见——每个插件声明其所需权限（network、file_read、file_write、process、local_app），让你清楚了解它能访问什么。
 
-## Architecture
+## 架构
 
-GeoWork follows a modular three-layer architecture:
+GeoWork 采用模块化三层架构：
 
-| Layer | Technology | Responsibility |
+| 层级 | 技术栈 | 职责 |
 |---|---|---|
-| **Desktop** | Electron + React + TypeScript + Ant Design v5 | UI layer, state management, map rendering (MapLibre + DeckGL), charting (ECharts, Plotly, Monaco Editor) |
-| **Core** | Go runtime with HTTP APIs, SSE events | Tool orchestration, skill registry, MCP connectors, security checks, model routing, automation engine |
-| **Geo Worker** | Python FastAPI | GEE workflows, GDAL/QGIS-adjacent processing, paper parsing, Office report generation, NDVI analysis |
+| **桌面端** | Electron + React + TypeScript + Ant Design v5 | UI 层、状态管理、地图渲染（MapLibre + DeckGL）、图表（ECharts、Plotly、Monaco Editor） |
+| **核心** | Go runtime + HTTP API + SSE 事件 | 工具编排、技能注册表、MCP 连接器、安全检查、模型路由、自动化引擎 |
+| **地理空间 Worker** | Python FastAPI | GEE 工作流、GDAL/QGIS 相关处理、论文解析、Office 报告生成、NDVI 分析 |
 
-## Skills Showcase
+## 技能展示
 
-GeoWork ships with **12 built-in Skills** covering remote sensing, GIS analysis, academic writing, and research workflows. Skills are on-demand capability packs that let GeoWork grow as you need — pull community-built packs anytime, build the geospatial AI ecosystem together.
+GeoWork 附带**12 个内置技能**，涵盖遥感、GIS 分析、学术写作和研究工作流。技能是按需能力包，让 GeoWork 按需成长——随时获取社区构建的技能包，共建地理空间 AI 生态系统。
 
-| Skill | Category | Description |
+| 技能 | 类别 | 描述 |
 |---|---|---|
-| 🌿 **NDVI Time Series Analysis** | Remote Sensing | Extract and analyze NDVI time series from Sentinel-2 or Landsat |
-| ☁️ **Sentinel-2 Cloud-free Composite** | Remote Sensing | Create cloud-free composites using GEE temporal compositing |
-| 🌡️ **Landsat LST Retrieval** | Remote Sensing | Retrieve land surface temperature from Landsat thermal bands |
-| 🗺️ **Land Cover Classification** | Remote Sensing | Supervised classification of land cover using spectral signatures |
-| 🏙️ **Urban Expansion Analysis** | GIS | Detect and quantify urban sprawl using multi-temporal imagery |
-| 💧 **Water Extraction (NDWI)** | Remote Sensing | Extract water bodies using Normalized Difference Water Index |
-| ⛰️ **DEM Terrain Analysis** | GIS | Slope, aspect, hillshade, and watershed analysis from DEM data |
-| 📰 **Paper Reading (Geography)** | Research | Guided reading and analysis of geography and GIS papers |
-| 📚 **Literature Review (Remote Sensing)** | Research | Structure and write literature reviews for remote sensing topics |
-| 🎓 **Undergraduate Experiment Report** | Academic Writing | Generate formatted experiment reports with figures and analysis |
-| 🎓 **Graduate Thesis Outline** | Academic Writing | Structure and outline graduate theses with chapter planning |
-| 🗺️ **Map Layout & Export** | GIS | Professional cartographic layout design and high-quality export |
+| 🌿 **NDVI 时间序列分析** | 遥感 | 从 Sentinel-2 或 Landsat 提取和分析 NDVI 时间序列 |
+| ☁️ **Sentinel-2 无云合成** | 遥感 | 使用 GEE 时序合成创建无云合成影像 |
+| 🌡️ **Landsat 地表温度反演** | 遥感 | 从 Landsat 热波段反演地表温度 |
+| 🗺️ **土地覆盖分类** | 遥感 | 使用光谱特征对土地覆盖进行监督分类 |
+| 🏙️ **城市扩展分析** | GIS | 使用多时相影像检测并量化城市扩张 |
+| 💧 **水体提取 (NDWI)** | 遥感 | 使用归一化差异水体指数提取水体 |
+| ⛰️ **DEM 地形分析** | GIS | 从 DEM 数据进行坡度、坡向、阴影和流域分析 |
+| 📰 **论文阅读 (地理学)** | 研究 | 地理学和 GIS 论文的结构化阅读和分析 |
+| 📚 **文献综述 (遥感)** | 研究 | 构建和撰写遥感主题的文献综述 |
+| 🎓 **本科实验报告** | 学术写作 | 生成包含图表和分析的格式化实验报告 |
+| 🎓 **研究生论文大纲** | 学术写作 | 构建和规划研究生论文的章节大纲 |
+| 🗺️ **地图布局与导出** | GIS | 专业地图设计和高品质导出 |
 
 > [!TIP]
-> Each skill includes a `SKILL.md` prompt, `manifest.json` metadata, and optional reference materials. Skills are loaded into the agent's prompt and directly affect its behavior.
+> 每个技能包含 `SKILL.md` 提示、`manifest.json` 元数据和可选参考资料。技能加载到 Agent 的提示中，直接影响其行为。
 
-### How to write your own Skill
+### 如何编写你自己的技能
 
-All GeoWork Skills live under [`skills/`](skills/) — anyone can add a new one. The standard layout of a Skill package:
+所有 GeoWork 技能位于 [`skills/`](skills/) 目录下——任何人都可以添加新技能。技能包的标准结构：
 
 ```
 skills/<your-skill-id>/
 ├── manifest/
-│   ├── README.md       # Human-facing description of the Skill
-│   └── meta.json       # Metadata: version / description / author / tags ...
+│   ├── README.md       # 面向人类的技能描述
+│   └── meta.json       # 元数据：版本 / 描述 / 作者 / 标签...
 └── skill/
-    ├── SKILL.md        # Required, the core prompt (LLM-facing, with frontmatter)
-    └── <dir>/          # Optional, any name and any nesting — references, templates, scripts, etc.
+    ├── SKILL.md        # 必需，核心提示（LLM 导向，含 frontmatter）
+    └── <dir>/          # 可选，任何名称和嵌套——参考资料、模板、脚本等
 ```
 
-Submission flow:
+提交流程：
 
-1. Create your Skill directory under `skills/`
-2. Fill in `manifest/` and `skill/` following the layout above
-3. Add your skill ID to `skills/official-skills.json`
-4. Test with `npm run dev` — the agent will load your skill automatically
+1. 在 `skills/` 下创建你的技能目录
+2. 按上述结构填写 `manifest/` 和 `skill/`
+3. 将你的技能 ID 添加到 `skills/official-skills.json`
+4. 使用 `npm run dev` 测试——Agent 会自动加载你的技能
 
 > [!TIP]
-> Skills are loaded into the agent's prompt and directly affect its behavior. Follow the frontmatter convention in `SKILL.md` to declare version, description, author, and tags.
+> 技能加载到 Agent 的提示中，直接影响其行为。遵循 `SKILL.md` 中的 frontmatter 约定来声明版本、描述、作者和标签。
 
-## V1.0 Scope
+## V1.0 范围
 
-The implementation follows the `/docx/v0.1.0` Markdown specification and targets the V1.0 development-complete boundary: Research/Data/GeoCode/Analysis/Write modes, 15 navigation modules, 12 official Skills, local Plugin marketplace, MCP management framework, model/API configuration, usage statistics, safety guardrails, automation and full artifact delivery paths.
+实现遵循 `/docx/v0.1.0` Markdown 规范，目标 V1.0 开发完成边界：Research/Data/GeoCode/Analysis/Write 模式、15 个导航模块、12 个官方技能、本地插件市场、MCP 管理框架、模型/API 配置、使用统计、安全护栏、自动化和完整交付路径。
 
-## Icon Design
+## 图标设计
 
-GeoWork features a professional visual identity designed for geospatial AI software:
+GeoWork 拥有专为地理空间 AI 软件设计的专业视觉识别系统：
 
-- **Globe + orbital route** — geography, Earth observation and remote-sensing workflow
-- **Workbench node blocks** — AI Agent tool orchestration, Skills, Plugins and MCP connectors
-- **Topographic/grid background** — GIS analysis, raster/vector processing and spatial computation
-- **Full GeoWork wordmark** — stronger product recognition for desktop launcher and README
+- **地球 + 轨道路线** — 地理学、地球观测和遥感工作流
+- **工作台节点块** — AI Agent 工具编排、技能和插件连接器
+- **等高线/网格背景** — GIS 分析、栅格/矢量处理和空间计算
+- **完整 GeoWork 文字标识** — 增强桌面启动器和 README 中的产品识别度
 
-> **Palette**: Deep Navy `#071225` · Geo Cyan `#8BFFE2` · Signal Blue `#3AD9FF` · Sand Gold `#F4D77E`
+> **配色方案**：深海军蓝 `#071225` · 地理青 `#8BFFE2` · 信号蓝 `#3AD9FF` · 沙金 `#F4D77E`
 
-## License
+## 许可
 
-GeoWork is source-available under the [PolyForm Noncommercial License 1.0.0](licenses/LICENSE). 
+GeoWork 基于 [PolyForm Noncommercial License 1.0.0](licenses/LICENSE) 提供源代码。
 
-- ✅ **Allowed**: Non-commercial evaluation, learning, research, and personal use
-- ❌ **Requires Commercial License**: Commercial use, resale, hosted service operation, paid plugin distribution, enterprise deployment, or embedding into commercial products
+- ✅ **允许**：非商业评估、学习、研究和个人使用
+- ❌ **需商业许可**：商业用途、转售、托管服务运营、付费插件分发、企业部署或嵌入商业产品
 
-See [LICENSE](licenses/LICENSE) and [NOTICE](licenses/NOTICE) for details.
+详见 [LICENSE](licenses/LICENSE) 和 [NOTICE](licenses/NOTICE)。
