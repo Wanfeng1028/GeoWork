@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"strings"
 
+	"geowork/core/internal/agent"
 	gruntime "geowork/core/internal/runtime"
+
+	"go.uber.org/zap"
 )
 
 type RouterDeps struct {
@@ -62,6 +65,14 @@ var PublicRoutes = []string{
 	"/api/v1/knowledge/categories",
 	"/api/v1/knowledge/entries",
 	"/api/v1/knowledge/entries/{id}",
+	"/api/v1/workflows",
+	"/api/v1/workflows/{id}",
+	"/api/v1/workflows/{id}/run",
+	"/api/v1/workflows/{id}/stop",
+	"/api/v1/runs",
+	"/api/v1/runs/{id}",
+	"/api/v1/runs/{id}/logs",
+	"/api/v1/runs/{id}/logs/stream",
 }
 
 func NewRouter(deps RouterDeps) http.Handler {
@@ -368,6 +379,104 @@ func NewRouter(deps RouterDeps) http.Handler {
 			var workerResult map[string]any
 			_ = json.NewDecoder(workerResp.Body).Decode(&workerResult)
 			writeJSON(w, workerResult)
+		// Agent Studio routes
+		case req.Method == http.MethodGet && path == "api/v1/workflows":
+			engine := app.AgentEngine()
+			if engine != nil {
+				workflows, err := engine.ListWorkflows()
+				writeResult(w, workflows, err)
+			} else {
+				writeJSON(w, []agent.Workflow{})
+			}
+		case req.Method == http.MethodPost && path == "api/v1/workflows":
+			var in struct {
+				Name        string `json:"name"`
+				Description string `json:"description"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			engine := app.AgentEngine()
+			if engine != nil {
+				wf, err := engine.CreateWorkflow(in.Name, in.Description)
+				writeResult(w, wf, err)
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodGet && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+			engine := app.AgentEngine()
+			if engine != nil {
+				wf, err := engine.GetWorkflow(parts[3])
+				writeResult(w, wf, err)
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodPut && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+			var wf agent.Workflow
+			_ = json.NewDecoder(req.Body).Decode(&wf)
+			wf.ID = parts[3]
+			engine := app.AgentEngine()
+			if engine != nil {
+				writeResult(w, nil, engine.SaveWorkflow(&wf))
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodDelete && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows":
+			engine := app.AgentEngine()
+			if engine != nil {
+				writeResult(w, map[string]string{"status": "deleted"}, engine.DeleteWorkflow(parts[3]))
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows" && parts[4] == "run":
+			engine := app.AgentEngine()
+			if engine != nil {
+				run, err := engine.StartRun(req.Context(), parts[3])
+				writeResult(w, run, err)
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "workflows" && parts[4] == "stop":
+			engine := app.AgentEngine()
+			if engine != nil {
+				writeResult(w, map[string]string{"status": "stopped"}, engine.StopRun(parts[3]))
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodGet && path == "api/v1/runs":
+			workflowID := req.URL.Query().Get("workflowId")
+			engine := app.AgentEngine()
+			if engine != nil {
+				runs, err := engine.ListRuns(workflowID)
+				writeResult(w, runs, err)
+			} else {
+				writeJSON(w, []agent.Run{})
+			}
+		case req.Method == http.MethodGet && len(parts) == 4 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs":
+			runID := parts[3]
+			engine := app.AgentEngine()
+			if engine != nil {
+				run, err := engine.GetRun(runID)
+				writeResult(w, run, err)
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodGet && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs" && parts[4] == "logs":
+			runID := parts[3]
+			engine := app.AgentEngine()
+			if engine != nil {
+				logs, err := engine.GetLogs(runID)
+				writeResult(w, logs, err)
+			} else {
+				http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+			}
+		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "runs" && parts[4] == "logs" && parts[5] == "stream":
+			runID := parts[3]
+			engine := app.AgentEngine()
+			if engine != nil {
+				h := NewAgentHandler(engine, zap.NewNop())
+				h.StreamLogs(w, req, runID)
+				return
+			}
+			http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
 		default:
 			http.NotFound(w, req)
 		}
