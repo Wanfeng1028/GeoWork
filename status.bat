@@ -3,6 +3,7 @@ setlocal EnableDelayedExpansion
 chcp 437 >nul
 title GeoWork Status Check
 
+:top
 echo ========================================
 echo        GeoWork Service Status Check
 echo ========================================
@@ -41,29 +42,34 @@ if !errorlevel! equ 0 (
 
 echo.
 
+:: Check GeoWork windows
+echo [GeoWork Windows]
+echo.
+
+:: Check for GeoWork windows
+wmic process where "name='cmd.exe' and command line like '%%GeoWork-%%'" get ProcessId,CommandLine /format:list >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [OK] GeoWork windows found:
+    for /f "tokens=2 delims=:," %%a in ('wmic process where "name='cmd.exe' and command line like '%%GeoWork-%%'" get ProcessId /format:list ^| findstr "ProcessId"') do (
+        set "pid=%%a"
+        for /f "tokens=* delims= " %%p in ("!pid!") do (
+            echo   - PID: !pid!
+        )
+    )
+) else (
+    echo [MISSING] No GeoWork windows running
+)
+
+echo.
+
 :: Check PID file
 echo [PID File]
 echo.
 
 if exist "%PID_FILE%" (
-    echo PID file exists: %PID_FILE%
+    echo [OK] PID file exists: %PID_FILE%
     echo.
-    for /f "usebackq tokens=1,2 delims=:" %%a in ("%PID_FILE%") do (
-        set "process_name=%%a"
-        set "process_pid=%%b"
-        
-        :: Remove leading spaces
-        for /f "tokens=* delims= " %%c in ("!process_name!") do set "process_name=%%c"
-        for /f "tokens=* delims= " %%c in ("!process_pid!") do set "process_pid=%%c"
-        
-        :: Check if process exists
-        tasklist /FI "PID eq !process_pid!" /NH 2>nul | findstr /I "!process_pid!" >nul
-        if !errorlevel! equ 0 (
-            echo [OK] !process_name! (PID: !process_pid!) running
-        ) else (
-            echo [MISSING] !process_name! (PID: !process_pid!) stopped
-        )
-    )
+    type "%PID_FILE%"
 ) else (
     echo [MISSING] PID file does not exist
 )
@@ -153,4 +159,8 @@ if "!go_running!"=="true" if "!py_running!"=="true" (
 )
 
 echo.
-pause
+echo ========================================
+echo        Press any key to check again...
+echo ========================================
+pause >nul
+goto :top

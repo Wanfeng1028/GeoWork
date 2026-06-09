@@ -11,6 +11,7 @@ echo.
 :: Get script directory
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
+set "STARTUP_TIME=%DATE% %TIME%"
 
 :: Check dependencies
 echo [1/6] Checking dependencies...
@@ -48,6 +49,7 @@ if not exist "%ROOT_DIR%apps\desktop\node_modules\.package-lock.json" (
         pause
         exit /b 1
     )
+    cd /d "%ROOT_DIR%"
 )
 echo [OK] Electron dependencies checked
 echo.
@@ -94,12 +96,12 @@ if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
 :: Start Go Core Runtime
 echo [4/6] Starting Go Core Runtime (port 8765)...
-start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ^./cmd/geowork-runtime --port 8765 ^> ^"%ROOT_DIR%logs\go-core.log^" 2^>^&1"
+start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /k "echo Starting GeoWork Go Core... && go run ^./cmd/geowork-runtime --port 8765 ^> ^"%ROOT_DIR%logs\go-core.log^" 2^>^&1 && echo Go Core stopped. Press any key to close this window. && pause >nul"
 
 :: Wait for startup
 timeout /t 3 >nul
 
-:: Get Go Core process PID (single-line set to avoid for loop scope issue)
+:: Get Go Core process PID
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do set "GO_PID=%%a"
 if defined GO_PID (
     echo Go-Core: !GO_PID! >> "%PID_FILE%"
@@ -111,12 +113,12 @@ echo.
 
 :: Start Python Geo Worker
 echo [5/6] Starting Python Geo Worker (port 8766)...
-start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 ^> ^"%ROOT_DIR%logs\python-worker.log^" 2^>^&1"
+start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /k "echo Starting GeoWork Python Worker... && python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 ^> ^"%ROOT_DIR%logs\python-worker.log^" 2^>^&1 && echo Python Worker stopped. Press any key to close this window. && pause >nul"
 
 :: Wait for startup
 timeout /t 3 >nul
 
-:: Get Python Worker process PID (single-line set to avoid for loop scope issue)
+:: Get Python Worker process PID
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do set "PY_PID=%%a"
 if defined PY_PID (
     echo Python-Worker: !PY_PID! >> "%PID_FILE%"
@@ -128,10 +130,10 @@ echo.
 
 :: Start Electron Desktop
 echo [6/6] Starting Electron Desktop...
-start "GeoWork-Desktop" /D "%ROOT_DIR%apps\desktop" cmd /c "npm run dev ^> ^"%ROOT_DIR%logs\desktop.log^" 2^>^&1"
+start "GeoWork-Desktop" cmd /k "cd /d \"%ROOT_DIR%\" && node \"%ROOT_DIR%node_modules\electron-vite\dist\cli.mjs\" dev apps\desktop ^> \"%ROOT_DIR%logs\desktop.log\" 2^>^&1 && echo Desktop stopped. Press any key to close this window. && pause >nul"
 
 :: Wait for Electron to start
-timeout /t 5 >nul
+timeout /t 8 >nul
 
 echo [OK] Electron Desktop started
 echo.
@@ -178,5 +180,7 @@ echo.
 echo PID file:
 echo   - %PID_FILE%
 echo.
+echo ========================================
 echo Press any key to exit this window...
 pause >nul
+exit /b 0

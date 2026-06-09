@@ -3,6 +3,7 @@ setlocal EnableDelayedExpansion
 chcp 437 >nul
 title GeoWork Stop Script
 
+:top
 echo ========================================
 echo        GeoWork Stop Script
 echo ========================================
@@ -12,102 +13,71 @@ echo.
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
-:: Check PID file
-if not exist "%PID_FILE%" (
-    echo [WARNING] PID file not found, using port detection mode
-    echo [HINT] Using start.bat next time will be more precise
-    echo.
-    goto :port_mode
-)
-
-echo [INFO] Stopping processes precisely via PID file...
+:: Method 1: Kill processes by window title (most reliable for start.bat launched windows)
+echo [1/3] Stopping GeoWork windows by title...
 echo.
 
-:: Read PID file and stop processes
-set "stopped_count=0"
-for /f "usebackq tokens=1,2 delims=:" %%a in ("%PID_FILE%") do (
-    set "process_name=%%a"
-    set "process_pid=%%b"
-    
-    :: Remove leading spaces
-    for /f "tokens=* delims= " %%c in ("!process_name!") do set "process_name=%%c"
-    for /f "tokens=* delims= " %%c in ("!process_pid!") do set "process_pid=%%c"
-    
-    :: Check if process exists
-    tasklist /FI "PID eq !process_pid!" /NH 2>nul | findstr /I "!process_pid!" >nul
-    if !errorlevel! equ 0 (
-        echo Stopping !process_name! (PID: !process_pid!)...
-        taskkill /PID !process_pid! /F >nul 2>&1
-        if !errorlevel! equ 0 (
-            echo [OK] !process_name! stopped
-            set /a stopped_count+=1
-        ) else (
-            echo [FAILED] !process_name! stop failed
-        )
-    ) else (
-        echo [OK] !process_name! (PID: !process_pid!) already stopped
+:: Kill all windows with "GeoWork-" in the title
+for /f "tokens=2 delims=:," %%a in ('wmic process where "name='cmd.exe' and command line like '%%GeoWork-%%'" get ProcessId /format:list ^| findstr "ProcessId"') do (
+    set "pid=%%a"
+    for /f "tokens=* delims= " %%p in ("!pid!") do (
+        echo Stopping GeoWork process PID: !pid!...
+        taskkill /PID !pid! /F >nul 2>&1
     )
 )
 
-:: Delete PID file
-if exist "%PID_FILE%" del "%PID_FILE%"
+:: Give processes time to stop
+timeout /t 2 >nul
+echo [OK] GeoWork windows stopped
 echo.
-echo Total stopped: !stopped_count! processes
-goto :check_ports
 
+:: Method 2: Stop by port if processes still running
 :port_mode
-echo [INFO] Stopping processes via port detection...
-echo [WARNING] This mode only stops processes listening on specified ports
+echo [2/3] Checking ports and stopping remaining processes...
 echo.
 
 :: Stop Go Core Runtime (port 8765)
-echo [1/2] Stopping Go Core Runtime (port 8765)...
+echo [1/2] Checking port 8765 (Go Core)...
 set "go_stopped=false"
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do (
     echo Found process PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
-        echo [OK] Go Core Runtime stopped
+        echo [OK] Process stopped
         set "go_stopped=true"
-    ) else (
-        echo [FAILED] Go Core Runtime stop failed
     )
 )
 if "!go_stopped!"=="false" (
-    echo [OK] Go Core Runtime not running or already stopped
+    echo [OK] Port 8765 is free
 )
 echo.
 
 :: Stop Python Geo Worker (port 8766)
-echo [2/2] Stopping Python Geo Worker (port 8766)...
+echo [2/2] Checking port 8766 (Python Worker)...
 set "py_stopped=false"
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
     echo Found process PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
-        echo [OK] Python Geo Worker stopped
+        echo [OK] Process stopped
         set "py_stopped=true"
-    ) else (
-        echo [FAILED] Python Geo Worker stop failed
     )
 )
 if "!py_stopped!"=="false" (
-    echo [OK] Python Geo Worker not running or already stopped
+    echo [OK] Port 8766 is free
 )
 echo.
 
-:: Prompt user to close Electron window manually
-echo [HINT] Electron Desktop window needs to be closed manually
-echo [HINT] Please close GeoWork Desktop window (if open)
+:: Clean PID file
+if exist "%PID_FILE%" del "%PID_FILE%"
+echo [OK] PID file cleaned
+echo.
 
+:: Verify all stopped
 :check_ports
-echo.
-echo ========================================
-echo        Checking port release status
-echo ========================================
+echo [3/3] Verifying all processes stopped...
 echo.
 
-:: Check if ports are released
 set "all_clear=true"
 
 netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
@@ -126,17 +96,20 @@ if !errorlevel! equ 0 (
     echo [OK] Port 8766 released
 )
 
+echo.
 if "!all_clear!"=="true" (
-    echo.
     echo ========================================
     echo        GeoWork Stopped Completely!
     echo ========================================
 ) else (
-    echo.
     echo [WARNING] Some ports still in use
-    echo [HINT] Check manually: netstat -aon ^| findstr "8765 8766"
-    echo [HINT] Or run status.bat for detailed status
+    echo [HINT] Try running stop.bat again
+    echo [HINT] Or check manually: netstat -aon ^| findstr "8765 8766"
 )
 
 echo.
-pause
+echo ========================================
+echo        Press any key to exit...
+echo ========================================
+pause >nul
+goto :top
