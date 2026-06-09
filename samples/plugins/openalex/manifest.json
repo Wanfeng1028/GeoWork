@@ -1,0 +1,70 @@
+{
+  "id": "openalex",
+  "name": "OpenAlex 论文搜索",
+  "version": "1.0.0",
+  "description": "OpenAlex 学术论文搜索和文献管理插件",
+  "author": "GeoWork Team",
+  "license": "MIT",
+  "category": "论文搜索",
+  "tags": ["paper", "search", "openalex", "academic"],
+  "permissions": {
+    "network": true,
+    "file_read": true,
+    "file_write": true
+  },
+  "endpoints": [
+    {
+      "path": "/tools/papers/search",
+      "method": "POST",
+      "description": "搜索论文"
+    },
+    {
+      "path": "/tools/papers/parse-pdf",
+      "method": "POST",
+      "description": "解析 PDF 论文"
+    },
+    {
+      "path": "/tools/papers/index",
+      "method": "POST",
+      "description": "索引论文到知识库"
+    }
+  ],
+  "configuration": {
+    "api_key": {
+      "type": "string",
+      "required": false,
+      "description": "OpenAlex API Key（可选，提高请求限制）"
+    },
+    "max_results": {
+      "type": "number",
+      "default": 20,
+      "description": "最大返回结果数"
+    },
+    "sort_by": {
+      "type": "string",
+      "default": "relevance_score",
+      "description": "排序方式"
+    }
+  },
+  "examples": [
+    {
+      "name": "搜索遥感论文",
+      "input": {
+        "query": "Sentinel-2 NDVI urban green space",
+        "filters": {
+          "from_publication_date": "2019-01-01",
+          "to_publication_date": "2024-12-31"
+        }
+      }
+    },
+    {
+      "name": "搜索特定作者论文",
+      "input": {
+        "query": "remote sensing",
+        "filters": {
+          "author": "John Smith"
+        }
+      }
+    }
+  ]
+}
