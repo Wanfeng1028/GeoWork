@@ -57,6 +57,11 @@ var PublicRoutes = []string{
 	"/api/v1/files/{id}/{node_id}/rename",
 	"/api/v1/ndvi/analyze",
 	"/api/v1/ndvi/history/{id}",
+	"/api/v1/papers/search",
+	"/api/v1/papers/{id}/index",
+	"/api/v1/knowledge/categories",
+	"/api/v1/knowledge/entries",
+	"/api/v1/knowledge/entries/{id}",
 }
 
 func NewRouter(deps RouterDeps) http.Handler {
@@ -203,6 +208,50 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, app.Experts())
 		case req.Method == http.MethodGet && path == "api/papers":
 			writeJSON(w, app.SearchPapers(req.URL.Query().Get("q")))
+		// Paper search v1 routes (full-featured with advanced filters)
+		case req.Method == http.MethodPost && path == "api/v1/papers/search":
+			var in struct {
+				Query    string `json:"query"`
+				Author   string `json:"author,omitempty"`
+				YearFrom *int   `json:"yearFrom,omitempty"`
+				YearTo   *int   `json:"yearTo,omitempty"`
+				Topic    string `json:"topic,omitempty"`
+				Page     int    `json:"page"`
+				PageSize int    `json:"pageSize"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			if in.Page <= 0 {
+				in.Page = 1
+			}
+			if in.PageSize <= 0 {
+				in.PageSize = 20
+			}
+			workerPayload := map[string]any{
+				"query":     in.Query,
+				"author":    in.Author,
+				"page":      in.Page,
+				"page_size": in.PageSize,
+			}
+			if in.YearFrom != nil {
+				workerPayload["year_from"] = *in.YearFrom
+			}
+			if in.YearTo != nil {
+				workerPayload["year_to"] = *in.YearTo
+			}
+			if in.Topic != "" {
+				workerPayload["topic"] = in.Topic
+			}
+			result, err := app.WorkerClient().SearchOpenAlex(req.Context(), workerPayload)
+			writeResult(w, result, err)
+		case req.Method == http.MethodPost && len(parts) == 5 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "papers" && parts[4] == "index":
+			paperID := parts[4]
+			if paperID == "" {
+				http.Error(w, `{"error":"paper_id is required"}`, http.StatusBadRequest)
+				return
+			}
+			workerPayload := map[string]any{"paper_id": paperID}
+			result, err := app.WorkerClient().IndexKnowledge(req.Context(), workerPayload)
+			writeResult(w, result, err)
 		case req.Method == http.MethodGet && path == "api/knowledge":
 			writeJSON(w, app.Knowledge())
 		case req.Method == http.MethodPost && path == "api/knowledge":
@@ -229,6 +278,44 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, app.EinoSchema())
 		case req.Method == http.MethodGet && path == "api/mcp":
 			writeJSON(w, app.MCPConnectors())
+		// Knowledge base routes (v1)
+		case req.Method == http.MethodGet && path == "api/v1/knowledge/categories":
+			writeJSON(w, app.KnowledgeCategories())
+		case req.Method == http.MethodGet && path == "api/v1/knowledge/entries":
+			categoryID := req.URL.Query().Get("categoryId")
+			query := req.URL.Query().Get("q")
+			writeJSON(w, app.KnowledgeEntries(categoryID, query))
+		case req.Method == http.MethodPost && path == "api/v1/knowledge/categories":
+			var in struct {
+				Name     string `json:"name"`
+				ParentID string `json:"parentId,omitempty"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			cat, err := app.CreateKnowledgeCategory(in.Name, in.ParentID)
+			writeResult(w, cat, err)
+		case req.Method == http.MethodPost && path == "api/v1/knowledge/index":
+			var in struct {
+				PaperID string   `json:"paperId"`
+				Title   string   `json:"title"`
+				Content string   `json:"content"`
+				Tags    []string `json:"tags"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			writeResult(w, nil, app.IndexKnowledgeEntry(in.PaperID, in.Title, in.Content, in.Tags))
+		case req.Method == http.MethodPost && path == "api/v1/knowledge/import":
+			var in struct {
+				FilePath   string `json:"filePath"`
+				Title      string `json:"title"`
+				Content    string `json:"content"`
+				Source     string `json:"source"`
+				CategoryID string `json:"categoryId,omitempty"`
+			}
+			_ = json.NewDecoder(req.Body).Decode(&in)
+			writeResult(w, nil, app.ImportKnowledgeFile(in.FilePath, in.Title, in.Content, in.Source, in.CategoryID))
+		case req.Method == http.MethodDelete && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "knowledge" && parts[4] == "entries":
+			writeResult(w, nil, app.DeleteKnowledgeEntry(parts[5]))
+		case req.Method == http.MethodGet && len(parts) == 6 && parts[1] == "api" && parts[2] == "v1" && parts[3] == "knowledge" && parts[4] == "entries":
+			writeJSON(w, app.GetKnowledgeEntry(parts[5]))
 		// NDVI analysis routes
 		case req.Method == http.MethodPost && path == "api/v1/ndvi/analyze":
 			var in struct {

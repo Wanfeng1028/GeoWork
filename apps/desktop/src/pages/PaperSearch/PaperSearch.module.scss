@@ -1,0 +1,194 @@
+.paperSearchLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--ant-color-bg-layout);
+}
+
+/* Search Bar */
+.searchBar {
+  flex-shrink: 0;
+}
+
+.searchCard {
+  .ant-card-body {
+    padding: 16px;
+  }
+}
+
+.advancedActive {
+  color: var(--ant-primary-color);
+  border-color: var(--ant-primary-color);
+}
+
+/* Advanced Search Panel */
+.advancedPanel {
+  margin-top: 12px;
+  padding: 16px;
+  background-color: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-border-color);
+  border-radius: 6px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.advancedForm {
+  .ant-form-item {
+    margin-bottom: 12px;
+  }
+}
+
+.advancedRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.advancedField {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0 !important;
+}
+
+/* Results Area */
+.resultsArea {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.loadingContainer,
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ant-border-color);
+  margin-bottom: 8px;
+}
+
+/* Table */
+.clickableRow {
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--ant-primary-1) !important;
+  }
+}
+
+.selectedRow {
+  background-color: var(--ant-primary-2) !important;
+}
+
+/* Card Grid */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 8px;
+}
+
+/* Pagination */
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+/* Detail Modal */
+.detailModal {
+  .ant-modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+.detailPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ant-border-color);
+
+  h5 {
+    flex: 1;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.detailMeta {
+  padding: 8px 0;
+}
+
+.detailKeywords {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detailAbstract {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    font-size: 13px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ant-text-color-secondary);
+  }
+}
+
+.detailBibtex {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    font-size: 13px;
+  }
+}
+
+.bibtexCode {
+  background-color: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-border-color);
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ant-text-color);
+  overflow-x: auto;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
