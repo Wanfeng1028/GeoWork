@@ -12,6 +12,10 @@ echo.
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
+:: 定义端口常量
+set "GO_PORT=8765"
+set "PY_PORT=8766"
+
 :: 检查 PID 文件
 if not exist "%PID_FILE%" (
     echo [警告] 未找到 PID 文件，将使用端口检测模式
@@ -28,11 +32,11 @@ set "stopped_count=0"
 for /f "usebackq tokens=1,2 delims=:" %%a in ("%PID_FILE%") do (
     set "process_name=%%a"
     set "process_pid=%%b"
-    
+
     :: 去除前导空格
     for /f "tokens=* delims= " %%c in ("!process_name!") do set "process_name=%%c"
     for /f "tokens=* delims= " %%c in ("!process_pid!") do set "process_pid=%%c"
-    
+
     :: 检查进程是否存在
     tasklist /FI "PID eq !process_pid!" /NH 2>nul | findstr /I "!process_pid!" >nul
     if !errorlevel! equ 0 (
@@ -60,10 +64,10 @@ echo [信息] 通过端口检测停止进程...
 echo [警告] 此模式只停止监听指定端口的进程，不会误杀其他应用
 echo.
 
-:: 停止 Go Core Runtime (端口 8765)
-echo [1/2] 停止 Go Core Runtime (端口 8765)...
+:: 停止 Go Core Runtime (端口 !GO_PORT!)
+echo [1/2] 停止 Go Core Runtime (端口 !GO_PORT!)...
 set "go_stopped=false"
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do (
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!GO_PORT! ^| findstr LISTENING') do (
     echo 找到进程 PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
@@ -78,10 +82,10 @@ if "!go_stopped!"=="false" (
 )
 echo.
 
-:: 停止 Python Geo Worker (端口 8766)
-echo [2/2] 停止 Python Geo Worker (端口 8766)...
+:: 停止 Python Geo Worker (端口 !PY_PORT!)
+echo [2/2] 停止 Python Geo Worker (端口 !PY_PORT!)...
 set "py_stopped=false"
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!PY_PORT! ^| findstr LISTENING') do (
     echo 找到进程 PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
@@ -110,20 +114,20 @@ echo.
 :: 检查端口是否释放
 set "all_clear=true"
 
-netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :!GO_PORT! | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 8765 仍被占用
+    echo [!] 端口 !GO_PORT! 仍被占用
     set "all_clear=false"
 ) else (
-    echo [√] 端口 8765 已释放
+    echo [√] 端口 !GO_PORT! 已释放
 )
 
-netstat -aon | findstr :8766 | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :!PY_PORT! | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [!] 端口 8766 仍被占用
+    echo [!] 端口 !PY_PORT! 仍被占用
     set "all_clear=false"
 ) else (
-    echo [√] 端口 8766 已释放
+    echo [√] 端口 !PY_PORT! 已释放
 )
 
 if "!all_clear!"=="true" (
@@ -134,7 +138,7 @@ if "!all_clear!"=="true" (
 ) else (
     echo.
     echo [警告] 部分端口仍被占用
-    echo [提示] 可以手动检查：netstat -aon ^| findstr "8765 8766"
+    echo [提示] 可以手动检查：netstat -aon ^| findstr "!GO_PORT! !PY_PORT!"
     echo [提示] 或者运行 status.bat 查看详细状态
 )
 
