@@ -57,10 +57,11 @@ goto :check_ports
 
 :port_mode
 echo [信息] 通过端口检测停止进程...
+echo [警告] 此模式只停止监听指定端口的进程，不会误杀其他应用
 echo.
 
 :: 停止 Go Core Runtime (端口 8765)
-echo [1/3] 停止 Go Core Runtime...
+echo [1/2] 停止 Go Core Runtime (端口 8765)...
 set "go_stopped=false"
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8765 ^| findstr LISTENING') do (
     echo 找到进程 PID: %%a
@@ -78,7 +79,7 @@ if "!go_stopped!"=="false" (
 echo.
 
 :: 停止 Python Geo Worker (端口 8766)
-echo [2/3] 停止 Python Geo Worker...
+echo [2/2] 停止 Python Geo Worker (端口 8766)...
 set "py_stopped=false"
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
     echo 找到进程 PID: %%a
@@ -95,33 +96,9 @@ if "!py_stopped!"=="false" (
 )
 echo.
 
-:: 停止 Electron 桌面端
-echo [3/3] 停止 Electron 桌面端...
-set "electron_stopped=false"
-
-:: 通过进程名查找并停止 Electron 相关进程
-for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq electron.exe" /NH 2^>nul ^| findstr /I "electron"') do (
-    echo 找到 Electron 进程 PID: %%a
-    taskkill /PID %%a /F >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo [√] Electron 进程已停止
-        set "electron_stopped=true"
-    )
-)
-
-:: 通过进程名查找并停止 Node.js 相关进程（npm run dev 启动的）
-for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq node.exe" /NH 2^>nul ^| findstr /I "node"') do (
-    echo 找到 Node.js 进程 PID: %%a
-    taskkill /PID %%a /F >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo [√] Node.js 进程已停止
-        set "electron_stopped=true"
-    )
-)
-
-if "!electron_stopped!"=="false" (
-    echo [√] Electron 桌面端未运行或已停止
-)
+:: 提示用户手动关闭 Electron 窗口
+echo [提示] Electron 桌面端窗口需要手动关闭
+echo [提示] 请关闭 GeoWork 桌面窗口（如果已打开）
 
 :check_ports
 echo.
@@ -158,7 +135,7 @@ if "!all_clear!"=="true" (
     echo.
     echo [警告] 部分端口仍被占用
     echo [提示] 可以手动检查：netstat -aon ^| findstr "8765 8766"
-    echo [提示] 或者使用：tasklist /FI "IMAGENAME eq node.exe"
+    echo [提示] 或者运行 status.bat 查看详细状态
 )
 
 echo.

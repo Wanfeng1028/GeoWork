@@ -13,7 +13,7 @@ set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
 :: 检查依赖
-echo [1/7] 检查依赖...
+echo [1/6] 检查依赖...
 where node >nul 2>&1
 if !errorlevel! neq 0 (
     echo [错误] 未找到 Node.js，请先安装 Node.js
@@ -38,7 +38,7 @@ echo [√] 基础依赖检查通过
 echo.
 
 :: 检查 Electron 依赖
-echo [2/7] 检查 Electron 依赖...
+echo [2/6] 检查 Electron 依赖...
 if not exist "%ROOT_DIR%apps\desktop\node_modules\.package-lock.json" (
     echo [提示] 首次运行，需要安装前端依赖...
     cd /d "%ROOT_DIR%apps\desktop"
@@ -53,7 +53,7 @@ echo [√] Electron 依赖检查通过
 echo.
 
 :: 检查端口是否被占用
-echo [3/7] 检查端口占用...
+echo [3/6] 检查端口占用...
 set "port_clear=true"
 
 netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
@@ -93,7 +93,7 @@ if exist "%PID_FILE%" del "%PID_FILE%"
 if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
 :: 启动 Go Core Runtime
-echo [4/7] 启动 Go Core Runtime (端口 8765)...
+echo [4/6] 启动 Go Core Runtime (端口 8765)...
 start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ./cmd/geowork-runtime --port 8765 > "%ROOT_DIR%logs\go-core.log" 2>&1"
 
 :: 等待启动
@@ -110,7 +110,7 @@ if defined GO_PID (
 echo.
 
 :: 启动 Python Geo Worker
-echo [5/7] 启动 Python Geo Worker (端口 8766)...
+echo [5/6] 启动 Python Geo Worker (端口 8766)...
 start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port 8766 > "%ROOT_DIR%logs\python-worker.log" 2>&1"
 
 :: 等待启动
@@ -127,31 +127,18 @@ if defined PY_PID (
 echo.
 
 :: 启动 Electron 桌面端
-echo [6/7] 启动 Electron 桌面端...
+echo [6/6] 启动 Electron 桌面端...
 start "GeoWork-Desktop" /D "%ROOT_DIR%apps\desktop" cmd /c "npm run dev > "%ROOT_DIR%logs\desktop.log" 2>&1"
 
 :: 等待 Electron 启动
 timeout /t 5 >nul
 
-:: 获取 Electron 相关进程 PID
-:: 通过窗口标题获取 CMD 进程 PID
-for /f "tokens=2" %%a in ('tasklist /FI "IMAGENAME eq cmd.exe" /FI "STATUS eq Running" /NH 2^>nul ^| findstr /I "cmd.exe"') do (
-    set "ELECTRON_CMD_PID=%%a"
-)
-
-:: 也可以通过端口或进程树查找 Electron
-:: 这里我们记录 CMD 窗口的 PID
-if defined ELECTRON_CMD_PID (
-    echo Electron-CMD: !ELECTRON_CMD_PID! >> "%PID_FILE%"
-    echo [√] Electron 桌面端已启动
-) else (
-    echo [!] Electron 桌面端启动中，请稍候...
-)
+echo [√] Electron 桌面端已启动
 echo.
 
 :: 检查服务状态
-echo [7/7] 检查服务状态...
-timeout /t 3 >nul
+echo 检查服务状态...
+timeout /t 2 >nul
 
 curl -s http://127.0.0.1:8765/api/health >nul 2>&1
 if !errorlevel! equ 0 (
