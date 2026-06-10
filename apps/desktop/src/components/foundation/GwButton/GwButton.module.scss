@@ -1,0 +1,132 @@
+// GeoWork - GwButton Styles
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-space-8);
+  border: 1px solid transparent;
+  border-radius: var(--gw-radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover:not(.loading):not(.disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(.loading):not(.disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled,
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: gw-spin 0.6s linear infinite;
+  }
+}
+
+@keyframes gw-spin {
+  to { transform: rotate(360deg); }
+}
+
+// === Variants ===
+
+.primary {
+  background: var(--gw-accent);
+  color: var(--gw-bg-window);
+  border-color: var(--gw-accent);
+
+  &:hover:not(.loading):not(.disabled) {
+    background: color-mix(in srgb, var(--gw-accent) 85%, white);
+    border-color: color-mix(in srgb, var(--gw-accent) 85%, white);
+  }
+}
+
+.secondary {
+  background: var(--gw-bg-card);
+  color: var(--gw-text-primary);
+  border-color: var(--gw-border-subtle);
+
+  &:hover:not(.loading):not(.disabled) {
+    background: var(--gw-bg-popover);
+    border-color: var(--gw-border-strong);
+  }
+}
+
+.text {
+  background: transparent;
+  color: var(--gw-text-secondary);
+  border: none;
+  padding-left: var(--gw-space-8);
+  padding-right: var(--gw-space-8);
+
+  &:hover:not(.loading):not(.disabled) {
+    color: var(--gw-text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.danger {
+  background: var(--gw-danger);
+  color: #fff;
+  border-color: var(--gw-danger);
+
+  &:hover:not(.loading):not(.disabled) {
+    background: color-mix(in srgb, var(--gw-danger) 85%, white);
+    border-color: color-mix(in srgb, var(--gw-danger) 85%, white);
+  }
+}
+
+.ghost {
+  background: transparent;
+  color: var(--gw-text-secondary);
+  border-color: var(--gw-border-subtle);
+
+  &:hover:not(.loading):not(.disabled) {
+    color: var(--gw-text-primary);
+    border-color: var(--gw-border-strong);
+  }
+}
+
+// === Sizes ===
+
+.small {
+  height: 28px;
+  padding: 0 var(--gw-space-12);
+  font-size: 12px;
+}
+
+.default {
+  height: 36px;
+  padding: 0 var(--gw-space-20);
+  font-size: 14px;
+}
+
+.large {
+  height: 44px;
+  padding: 0 var(--gw-space-24);
+  font-size: 16px;
+}

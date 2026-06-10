@@ -1,0 +1,75 @@
+// GeoWork - GwCard Styles
+
+.card {
+  border-radius: var(--gw-radius-lg);
+  transition: all 0.2s ease;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-16) var(--gw-space-20) 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+}
+
+.extra {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+}
+
+.body {
+  padding: var(--gw-space-16) var(--gw-space-20);
+}
+
+// === Variants ===
+
+.elevated {
+  background: var(--gw-bg-card);
+  box-shadow: var(--gw-shadow-popover);
+
+  &.hoverable {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--gw-shadow-panel);
+    }
+  }
+}
+
+.outlined {
+  background: var(--gw-bg-panel);
+  border: 1px solid var(--gw-border-subtle);
+
+  &.hoverable {
+    &:hover {
+      border-color: var(--gw-border-strong);
+    }
+  }
+}
+
+.filled {
+  background: var(--gw-bg-sidebar);
+
+  &.hoverable {
+    &:hover {
+      background: color-mix(in srgb, var(--gw-bg-sidebar) 95%, var(--gw-text-primary));
+    }
+  }
+}
+
+.ghost {
+  background: transparent;
+  border: 1px dashed var(--gw-border-subtle);
+}
+
+// === Border state ===
+
+.bordered {
+  border: 1px solid var(--gw-border-subtle);
+}

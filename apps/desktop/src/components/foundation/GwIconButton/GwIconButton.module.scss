@@ -1,0 +1,98 @@
+// GeoWork - GwIconButton Styles
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--gw-radius-sm);
+  cursor: pointer;
+  color: var(--gw-text-secondary);
+  background: transparent;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--gw-text-primary);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// === Variants ===
+
+.ghost {
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.subtle {
+  background: rgba(255, 255, 255, 0.04);
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.solid {
+  background: var(--gw-bg-card);
+  border: 1px solid var(--gw-border-subtle);
+  &:hover {
+    border-color: var(--gw-border-strong);
+    background: var(--gw-bg-popover);
+  }
+}
+
+// === Active state ===
+
+.active {
+  color: var(--gw-accent);
+  background: rgba(77, 220, 151, 0.12);
+
+  &:hover {
+    background: rgba(77, 220, 151, 0.18);
+  }
+}
+
+// === Danger state ===
+
+.danger {
+  color: var(--gw-danger);
+  &:hover {
+    background: rgba(255, 107, 107, 0.12);
+  }
+}
+
+// === Sizes ===
+
+.xs {
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+.default {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+}
+
+.lg {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+}
