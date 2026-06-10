@@ -58,7 +58,9 @@ const MOCK_OUTPUT_LINES: (
 const PROMPT_TEXT = 'user@geowork:~$ ';
 
 const TerminalPanel: React.FC = () => {
-  const [history, setHistory] = useState<string[]>(MOCK_OUTPUT_LINES);
+  const [history, setHistory] = useState<
+    Array<{ type: 'prompt' | 'output' | 'warning' | 'error' | 'info'; text: string; id: number }>
+  >(MOCK_OUTPUT_LINES.map((line) => ({ ...line, id: nextId.current++ })));
   const [inputValue, setInputValue] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);

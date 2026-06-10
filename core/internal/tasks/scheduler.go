@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,14 +36,14 @@ type ScheduledTask struct {
 type TaskScheduler struct {
 	mu      sync.RWMutex
 	tasks   map[string]*ScheduledTask
-	log     *zap.Logger
+	log     *slog.Logger
 	stopCh  chan struct{}
 	once    sync.Once
 	running bool
 }
 
 // NewTaskScheduler creates a new scheduler instance.
-func NewTaskScheduler(log *zap.Logger) *TaskScheduler {
+func NewTaskScheduler(log *slog.Logger) *TaskScheduler {
 	return &TaskScheduler{
 		tasks:  make(map[string]*ScheduledTask),
 		log:    log,
@@ -93,7 +94,7 @@ func (s *TaskScheduler) Schedule(task ScheduledTask) error {
 	}
 
 	s.tasks[task.ID] = &task
-	s.log.Info("task scheduled", zap.String("id", task.ID), zap.String("type", string(task.Type)))
+	s.log.Info("task scheduled", "id", task.ID, "type", string(task.Type))
 	return nil
 }
 
@@ -163,7 +164,7 @@ func (s *TaskScheduler) run() {
 							case Cron:
 								next, err := parseSimpleCron(task.Schedule)
 								if err != nil {
-									s.log.Error("cron parse error", zap.String("id", task.ID), zap.Error(err))
+									s.log.Error("cron parse error", "id", task.ID, "error", err)
 									return
 								}
 								task.NextRun = next

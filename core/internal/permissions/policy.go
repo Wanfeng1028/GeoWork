@@ -130,13 +130,13 @@ func matchesConditions(ruleConditions, targetConditions map[string]string) bool 
 }
 
 // ToJSON serializes the policy to JSON bytes.
-func (p *PermissionPolicy) ToJSON() ([]byte, error) {
+func (p *AuthorizationPolicy) ToJSON() ([]byte, error) {
 	return json.MarshalIndent(p, "", "  ")
 }
 
 // FromJSON deserializes a policy from JSON bytes.
-func FromJSON(data []byte) (*PermissionPolicy, error) {
-	var policy PermissionPolicy
+func FromJSON(data []byte) (*AuthorizationPolicy, error) {
+	var policy AuthorizationPolicy
 	if err := json.Unmarshal(data, &policy); err != nil {
 		return nil, fmt.Errorf("unmarshal policy: %w", err)
 	}
@@ -147,14 +147,14 @@ func FromJSON(data []byte) (*PermissionPolicy, error) {
 }
 
 // GetRules returns a copy of the policy rules.
-func (p *PermissionPolicy) GetRules() []PermissionRule {
+func (p *AuthorizationPolicy) GetRules() []PermissionRule {
 	cp := make([]PermissionRule, len(p.Rules))
 	copy(cp, p.Rules)
 	return cp
 }
 
 // RemoveRule removes a rule at the given index.
-func (p *PermissionPolicy) RemoveRule(index int) error {
+func (p *AuthorizationPolicy) RemoveRule(index int) error {
 	if index < 0 || index >= len(p.Rules) {
 		return fmt.Errorf("rule index %d out of range", index)
 	}
@@ -163,7 +163,7 @@ func (p *PermissionPolicy) RemoveRule(index int) error {
 }
 
 // FindMatchingRules returns all rules that match a given resource and action.
-func (p *PermissionPolicy) FindMatchingRules(resource, action string) []PermissionRule {
+func (p *AuthorizationPolicy) FindMatchingRules(resource, action string) []PermissionRule {
 	var result []PermissionRule
 	for _, rule := range p.Rules {
 		if matchesResource(rule.Resource, resource) && matchesAction(rule.Action, action) {
@@ -174,39 +174,39 @@ func (p *PermissionPolicy) FindMatchingRules(resource, action string) []Permissi
 }
 
 // GetDefaultAction returns the policy's default action.
-func (p *PermissionPolicy) GetDefaultAction() Effect {
+func (p *AuthorizationPolicy) GetDefaultAction() Effect {
 	return p.DefaultAction
 }
 
 // SetDefaultAction sets the default action for the policy.
-func (p *PermissionPolicy) SetDefaultAction(action Effect) {
+func (p *AuthorizationPolicy) SetDefaultAction(action Effect) {
 	p.DefaultAction = action
 }
 
 // HasRules returns true if the policy contains any rules.
-func (p *PermissionPolicy) HasRules() bool {
+func (p *AuthorizationPolicy) HasRules() bool {
 	return len(p.Rules) > 0
 }
 
 // RuleCount returns the number of rules in the policy.
-func (p *PermissionPolicy) RuleCount() int {
+func (p *AuthorizationPolicy) RuleCount() int {
 	return len(p.Rules)
 }
 
 // Merge combines another policy's rules into this one.
-func (p *PermissionPolicy) Merge(other *PermissionPolicy) *PermissionPolicy {
+func (p *AuthorizationPolicy) Merge(other *AuthorizationPolicy) *AuthorizationPolicy {
 	p.Rules = append(p.Rules, other.Rules...)
 	return p
 }
 
 // ClearRules removes all rules from the policy.
-func (p *PermissionPolicy) ClearRules() {
+func (p *AuthorizationPolicy) ClearRules() {
 	p.Rules = nil
 }
 
 // Clone creates a deep copy of the policy.
-func (p *PermissionPolicy) Clone() *PermissionPolicy {
-	cp := &PermissionPolicy{
+func (p *AuthorizationPolicy) Clone() *AuthorizationPolicy {
+	cp := &AuthorizationPolicy{
 		DefaultAction: p.DefaultAction,
 		Rules:         make([]PermissionRule, len(p.Rules)),
 	}
@@ -229,7 +229,7 @@ type RuleSummary struct {
 }
 
 // GetSummary returns a condensed summary of the policy.
-func (p *PermissionPolicy) GetSummary() PolicySummary {
+func (p *AuthorizationPolicy) GetSummary() PolicySummary {
 	summary := PolicySummary{
 		DefaultAction: p.DefaultAction,
 		RuleCount:     len(p.Rules),
@@ -245,16 +245,16 @@ func (p *PermissionPolicy) GetSummary() PolicySummary {
 }
 
 // AllowAllResources returns a new policy that allows all resources and actions.
-func AllowAllResources() *PermissionPolicy {
-	return &PermissionPolicy{
+func AllowAllResources() *AuthorizationPolicy {
+	return &AuthorizationPolicy{
 		DefaultAction: Allow,
 		Rules:         []PermissionRule{},
 	}
 }
 
 // DenyAllResources returns a new policy that denies all access.
-func DenyAllResources() *PermissionPolicy {
-	return &PermissionPolicy{
+func DenyAllResources() *AuthorizationPolicy {
+	return &AuthorizationPolicy{
 		DefaultAction: Deny,
 		Rules:         []PermissionRule{},
 	}

@@ -632,8 +632,9 @@ func NewRouter(deps RouterDeps) http.Handler {
 				policy := deps.PermEngine.GetPolicies(taskID)
 				if policy == nil {
 					policy = &permissions.PermissionPolicy{
-						DefaultAction: permissions.Deny,
-						Rules:         []permissions.PermissionRule{},
+						DefaultLevel: permissions.Limited,
+						Actions:      make(map[string]string),
+						Remembered:   make(map[string]bool),
 					}
 				}
 				writeJSON(w, policy)

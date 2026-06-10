@@ -91,7 +91,7 @@ func (e *Engine) ApproveRequest(id, reason string) error {
 
 	req.Decision = "approved"
 	req.Reason = reason
-	req.ResolvedAt = time.Now()
+	req.ResolvedAt = time.Now().UnixMilli()
 	e.decisions[fmt.Sprintf("%s:%s", req.TaskID, req.Action)] = Decision{
 		Decision: "approved",
 		Reason:   reason,
@@ -111,7 +111,7 @@ func (e *Engine) DenyRequest(id, reason string) error {
 
 	req.Decision = "denied"
 	req.Reason = reason
-	req.ResolvedAt = time.Now()
+	req.ResolvedAt = time.Now().UnixMilli()
 	e.decisions[fmt.Sprintf("%s:%s", req.TaskID, req.Action)] = Decision{
 		Decision: "denied",
 		Reason:   reason,
