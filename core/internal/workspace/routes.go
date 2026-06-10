@@ -5,7 +5,6 @@ package workspace
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ func NewRoutes(service *Service) *Routes {
 	return &Routes{service: service}
 }
 
-func (r *Routes) Register(mux http.HandlerFunc) {
+func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/workspaces", r.handleWorkspaces)
 	mux.HandleFunc("/api/workspaces/tree", r.handleTree)
 	mux.HandleFunc("/api/workspaces/files/read", r.handleReadFile)

@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type Routes struct {
@@ -18,7 +16,7 @@ func NewRoutes(engine *Engine) *Routes {
 	return &Routes{engine: engine}
 }
 
-func (r *Routes) Register(mux http.HandlerFunc) {
+func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/permissions/requests", r.handleRequests)
 	mux.HandleFunc("/api/permissions/policies", r.handlePolicies)
 }

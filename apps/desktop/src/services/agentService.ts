@@ -23,6 +23,8 @@ export interface Workflow {
   description: string
   nodes: AgentNode[]
   edges: AgentEdge[]
+  mode: string
+  status: string
   createdAt: string
   updatedAt: string
 }

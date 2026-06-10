@@ -44,4 +44,8 @@ export interface TaskState {
   events: RuntimeEvent[];
   isLoading: boolean;
   error: string | null;
+  loadTasks: () => Promise<void>;
+  createTask: (data: Record<string, any>) => Promise<Task>;
+  subscribeToTask: (taskId: string) => void;
+  cancelTask: (taskId: string) => Promise<void>;
 }

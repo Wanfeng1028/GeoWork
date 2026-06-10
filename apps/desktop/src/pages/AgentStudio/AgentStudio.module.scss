@@ -1,0 +1,58 @@
+.agentStudio {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  padding: 16px;
+  gap: 16px;
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 50%, #f6ffed 100%);
+    border-radius: 12px;
+    border: 1px solid #d9e1e7;
+  }
+
+  .workflowCard {
+    :global(.ant-card-body) {
+      padding: 16px;
+    }
+  }
+
+  .workflowMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .runsCard {
+    :global(.ant-card-body) {
+      padding: 12px;
+    }
+  }
+
+  .runItem {
+    :global(.ant-list-item) {
+      padding: 8px 0;
+    }
+  }
+
+  .workflowDetail {
+    padding: 8px 0;
+
+    :global(.ant-typography) {
+      margin-bottom: 12px;
+    }
+  }
+}

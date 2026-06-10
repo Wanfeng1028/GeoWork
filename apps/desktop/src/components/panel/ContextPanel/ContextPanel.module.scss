@@ -1,0 +1,58 @@
+// GeoWork ContextPanel Styles
+
+.panel {
+  padding: var(--gw-space-8);
+  overflow: auto;
+  height: 100%;
+}
+
+.group {
+  margin-bottom: var(--gw-space-16);
+}
+
+.groupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--gw-space-8) var(--gw-space-12);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.groupLabel {
+  margin-right: var(--gw-space-8);
+}
+
+.contextItem {
+  padding: var(--gw-space-6) var(--gw-space-12);
+  border-radius: var(--gw-radius-sm);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+  }
+}
+
+.contextIcon {
+  margin-right: var(--gw-space-8);
+  color: var(--gw-text-tertiary);
+}
+
+.contextName {
+  flex: 1;
+  font-size: 13px;
+  color: var(--gw-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contextSize {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+  margin-left: var(--gw-space-8);
+  white-space: nowrap;
+}

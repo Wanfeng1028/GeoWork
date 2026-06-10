@@ -34,9 +34,12 @@ type FileManager struct {
 	watcher *fsnotify.Watcher
 }
 
-// NewFileManager creates a new FileManager with an in-memory SQLite database.
-func NewFileManager(logger *zap.Logger) (*FileManager, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+// NewFileManager creates a new FileManager with a file-based SQLite database.
+func NewFileManager(logger *zap.Logger, dbPath string) (*FileManager, error) {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+		return nil, fmt.Errorf("create db dir: %w", err)
+	}
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}

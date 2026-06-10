@@ -5,16 +5,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--gw-space-16);
+  padding: var(--gw-space-8) var(--gw-space-16);
+  background: var(--gw-bg-titlebar);
   border-bottom: 1px solid var(--gw-border-subtle);
-  background: var(--gw-bg-sidebar);
-  height: var(--topbar-height);
+  height: 48px;
+  user-select: none;
+  -webkit-app-region: drag;
 }
 
 .left {
   display: flex;
   align-items: center;
   gap: var(--gw-space-12);
+  -webkit-app-region: no-drag;
+}
+
+.menuBtn {
+  background: none;
+  border: none;
+  color: var(--gw-text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: var(--gw-space-4);
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    color: var(--gw-text-primary);
+  }
 }
 
 .title {
@@ -22,6 +41,7 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--gw-text-primary);
+  -webkit-app-region: no-drag;
 }
 
 .subtitle {
@@ -31,17 +51,81 @@
 
 .center {
   display: flex;
-  gap: var(--gw-space-8);
+  align-items: center;
+  gap: var(--gw-space-12);
+  flex: 1;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+}
+
+.searchInput {
+  width: 240px;
+
+  :global(.ant-input) {
+    background: var(--gw-bg-input);
+    border-color: var(--gw-border-subtle);
+    color: var(--gw-text-primary);
+    font-size: 12px;
+    height: 24px;
+
+    &::placeholder {
+      color: var(--gw-text-tertiary);
+    }
+  }
+}
+
+.modeDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--gw-border-subtle);
+}
+
+.modeTags {
+  display: flex;
+  gap: var(--gw-space-4);
 }
 
 .modeTag {
   margin: 0;
+  font-size: 11px;
+  padding: 0 var(--gw-space-8);
+  height: 20px;
+  line-height: 18px;
   cursor: pointer;
   transition: all 0.15s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 .right {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
+  gap: var(--gw-space-12);
+  -webkit-app-region: no-drag;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--gw-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: var(--gw-space-4);
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    color: var(--gw-text-primary);
+  }
+}
+
+.statusTag {
+  margin: 0;
+  font-size: 11px;
+  padding: 0 var(--gw-space-8);
+  height: 20px;
+  line-height: 18px;
 }

@@ -1,0 +1,11 @@
+// GeoWork ProblemsPanel Styles
+
+.panel {
+  padding: var(--gw-space-16);
+  overflow: auto;
+  height: 100%;
+}
+
+.empty {
+  margin-top: 40%;
+}

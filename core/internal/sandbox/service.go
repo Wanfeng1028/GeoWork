@@ -4,21 +4,20 @@ package sandbox
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Service struct {
-	mu       sync.Mutex
-	procs    map[string]*SandboxProcess
-	policy   *SandboxPolicy
+	mu     sync.Mutex
+	procs  map[string]*SandboxProcess
+	policy *SandboxPolicy
 }
 
 func NewService() *Service {
@@ -57,18 +56,19 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 		Status:    "running",
 		StartedAt: time.Now(),
 	}
+	proc.ctx, proc.cancel = context.WithTimeout(context.Background(), time.Duration(s.policy.Timeout)*time.Second)
 
 	s.mu.Lock()
 	s.procs[proc.ID] = proc
 	s.mu.Unlock()
 
-	cmd := exec.CommandContext("context", "bash", "-c", command)
+	cmd := exec.CommandContext(context.Background(), "bash", "-c", command)
 	cmd.Dir = workspace
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+
+	setSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
 		proc.Status = "failed"
@@ -94,12 +94,13 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 		Status:    "running",
 		StartedAt: time.Now(),
 	}
+	proc.ctx, proc.cancel = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 
 	s.mu.Lock()
 	s.procs[proc.ID] = proc
 	s.mu.Unlock()
 
-	cmd := exec.CommandContext("context", "python", scriptPath)
+	cmd := exec.CommandContext(context.Background(), "python", scriptPath)
 	cmd.Dir = workspace
 
 	for _, k := range s.policy.EnvWhitelist {
@@ -111,6 +112,8 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+
+	setSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
 		proc.Status = "failed"
@@ -127,6 +130,10 @@ func (s *Service) monitorProcess(proc *SandboxProcess, cmd *exec.Cmd, stdout, st
 	proc.Stdout = stdout.String()
 	proc.Stderr = stderr.String()
 	proc.FinishedAt = time.Now()
+
+	if proc.cancel != nil {
+		proc.cancel()
+	}
 
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
@@ -150,6 +157,10 @@ func (s *Service) StopProcess(id string) error {
 
 	if !ok {
 		return fmt.Errorf("process not found: %s", id)
+	}
+
+	if proc.cancel != nil {
+		proc.cancel()
 	}
 
 	proc.Status = "stopped"

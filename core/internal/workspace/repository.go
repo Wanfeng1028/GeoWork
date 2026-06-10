@@ -129,20 +129,21 @@ func buildFileTree(rootPath string) ([]FileTreeNode, error) {
 	})
 
 	// Sort: directories first, then alphabetically
-	sortNodes := func(nodes []FileTreeNode) {
-		for i := range nodes {
-			sortNodes(nodes[i].Children)
-		}
-		sort.SliceStable(nodes, func(i, j int) bool {
-			if nodes[i].IsDir != nodes[j].IsDir {
-				return nodes[i].IsDir
-			}
-			return nodes[i].Name < nodes[j].Name
-		})
-	}
 	sortNodes(nodes)
 
 	return nodes, err
+}
+
+func sortNodes(nodes []FileTreeNode) {
+	for i := range nodes {
+		sortNodes(nodes[i].Children)
+	}
+	sort.SliceStable(nodes, func(i, j int) bool {
+		if nodes[i].IsDir != nodes[j].IsDir {
+			return nodes[i].IsDir
+		}
+		return nodes[i].Name < nodes[j].Name
+	})
 }
 
 func (r *repository) GetTree(workspacePath string) ([]FileTreeNode, error) {

@@ -198,9 +198,10 @@ func New(workspace string, workerBaseURL string) *App {
 	app.loadState()
 	app.registerTools()
 
-	// Initialize knowledge manager
+	// Initialize knowledge manager (file-based SQLite)
 	kbLogger, _ := zap.NewProduction()
-	app.knowledgeMgr, _ = knowledge.NewKnowledgeManager(kbLogger)
+	kbDBPath := filepath.Join(workspace, "state", "knowledge.db")
+	app.knowledgeMgr, _ = knowledge.NewKnowledgeManager(kbLogger, kbDBPath)
 
 	// Initialize agent engine (workflow store)
 	agentLogger, _ := zap.NewProduction()

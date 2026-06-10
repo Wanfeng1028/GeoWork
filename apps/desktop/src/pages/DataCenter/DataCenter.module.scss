@@ -1,0 +1,58 @@
+.dataCenter {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  padding: 16px;
+  gap: 16px;
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f6ffed 0%, #f0f5ff 50%, #e6fffb 100%);
+    border-radius: 12px;
+    border: 1px solid #d9e1e7;
+  }
+
+  .searchInput {
+    :global(.ant-input-prefix) {
+      margin-right: 8px;
+    }
+  }
+
+  .tableCard {
+    :global(.ant-card-body) {
+      padding: 12px;
+    }
+  }
+
+  .statCard {
+    text-align: center;
+    cursor: default;
+
+    :global(.ant-card-body) {
+      padding: 16px;
+    }
+
+    .statValue {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1677ff;
+    }
+
+    .statLabel {
+      font-size: 13px;
+      color: #60717f;
+      margin-top: 4px;
+    }
+  }
+}

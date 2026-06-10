@@ -60,3 +60,16 @@ export interface ChatState {
   navItems: NavItem[];
   isLoading: boolean;
 }
+
+export interface ChatActions {
+  addMessage: (message: ChatMessage) => void;
+  addMessages: (messages: ChatMessage[]) => void;
+  addToolCall: (toolCall: any, parentMessageId?: string) => void;
+  updateToolCall: (toolCallId: string, updates: Partial<any>) => void;
+  addApprovalRequest: (approval: any) => void;
+  removeMessage: (messageId: string) => void;
+  clearMessages: () => void;
+  addNavItem: (item: NavItem) => void;
+  setNavItems: (items: NavItem[]) => void;
+  setLoading: (loading: boolean) => void;
+}

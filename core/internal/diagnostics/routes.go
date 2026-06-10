@@ -4,10 +4,10 @@ package diagnostics
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -19,7 +19,7 @@ func NewRoutes(logDir string) *Routes {
 	return &Routes{logDir: logDir}
 }
 
-func (r *Routes) Register(mux http.HandlerFunc) {
+func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/diagnostics/health", r.handleHealth)
 	mux.HandleFunc("/api/diagnostics/performance", r.handlePerformance)
 	mux.HandleFunc("/api/diagnostics/logs", r.handleLogs)

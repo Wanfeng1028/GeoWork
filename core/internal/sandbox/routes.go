@@ -5,7 +5,6 @@ package sandbox
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 )
 
 type Routes struct {
@@ -16,7 +15,7 @@ func NewRoutes(service *Service) *Routes {
 	return &Routes{service: service}
 }
 
-func (r *Routes) Register(mux http.HandlerFunc) {
+func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/sandbox/run-command", r.handleRunCommand)
 	mux.HandleFunc("/api/sandbox/run-python", r.handleRunPython)
 	mux.HandleFunc("/api/sandbox/processes", r.handleListProcesses)

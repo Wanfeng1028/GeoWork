@@ -5,6 +5,13 @@ import { ALLOWED_CHANNELS as FILE_DIALOGS } from '../ipc/file-dialogs';
 import { ALLOWED_CHANNELS as SYSTEM } from '../ipc/system';
 import { ALLOWED_CHANNELS as CLIPBOARD } from '../ipc/clipboard';
 import { ALLOWED_CHANNELS as NOTIFICATIONS } from '../ipc/notifications';
+import { ALLOWED_CHANNELS as SHELL } from '../ipc/shell';
+import { ALLOWED_CHANNELS as TRAY } from '../ipc/tray';
+import { ALLOWED_CHANNELS as MENU } from '../ipc/menu';
+import { ALLOWED_CHANNELS as SHORTCUTS } from '../ipc/shortcuts';
+import { ALLOWED_CHANNELS as SCREENSHOT } from '../ipc/screenshot';
+import { ALLOWED_CHANNELS as WINDOWS } from '../ipc/windows';
+import { ALLOWED_CHANNELS as PERMISSION } from '../security/permission-forwarder';
 
 // Merge all allowed channels
 const ALL_ALLOWED_CHANNELS = new Set<string>([
@@ -12,6 +19,13 @@ const ALL_ALLOWED_CHANNELS = new Set<string>([
   ...SYSTEM,
   ...CLIPBOARD,
   ...NOTIFICATIONS,
+  ...SHELL,
+  ...TRAY,
+  ...MENU,
+  ...SHORTCUTS,
+  ...SCREENSHOT,
+  ...WINDOWS,
+  ...PERMISSION,
 ]);
 
 /**

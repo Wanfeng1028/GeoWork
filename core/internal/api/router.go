@@ -3,17 +3,26 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"runtime"
 	"strings"
 	"time"
 
 	"geowork/core/internal/agent"
+	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
+	"geowork/core/internal/sandbox"
+	"geowork/core/internal/workspace"
 
 	"go.uber.org/zap"
 )
 
 type RouterDeps struct {
-	App *gruntime.App
+	App          *gruntime.App
+	LogDir       string
+	WorkspaceSvc *workspace.Service
+	PermEngine   *permissions.Engine
+	SandboxSvc   *sandbox.Service
 }
 
 var PublicRoutes = []string{
@@ -543,6 +552,169 @@ func NewRouter(deps RouterDeps) http.Handler {
 				return
 			}
 			http.Error(w, `{"error":"agent engine not available"}`, http.StatusServiceUnavailable)
+		// Workspace routes
+		case path == "api/workspaces":
+			if deps.WorkspaceSvc != nil {
+				ws, err := deps.WorkspaceSvc.ListWorkspaces()
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				writeJSON(w, ws)
+				return
+			}
+		case strings.HasPrefix(path, "api/workspaces/tree"):
+			if deps.WorkspaceSvc != nil {
+				wsID := req.URL.Query().Get("workspaceId")
+				if wsID == "" {
+					http.Error(w, "workspaceId required", http.StatusBadRequest)
+					return
+				}
+				tree, err := deps.WorkspaceSvc.GetTree(wsID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				writeJSON(w, tree)
+				return
+			}
+		case strings.HasPrefix(path, "api/workspaces/files/read"):
+			if deps.WorkspaceSvc != nil {
+				wsID := req.URL.Query().Get("workspaceId")
+				fPath := req.URL.Query().Get("path")
+				if wsID == "" || fPath == "" {
+					http.Error(w, "workspaceId and path required", http.StatusBadRequest)
+					return
+				}
+				data, err := deps.WorkspaceSvc.ReadFile(wsID, fPath)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				writeJSON(w, map[string]interface{}{"content": string(data), "path": fPath})
+				return
+			}
+		case strings.HasPrefix(path, "api/workspaces/files/write"):
+			if deps.WorkspaceSvc != nil {
+				var input struct {
+					WorkspaceID string `json:"workspaceId"`
+					Path        string `json:"path"`
+					Content     string `json:"content"`
+				}
+				_ = json.NewDecoder(req.Body).Decode(&input)
+				if err := deps.WorkspaceSvc.WriteFile(input.WorkspaceID, input.Path, []byte(input.Content)); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				writeJSON(w, map[string]string{"status": "ok"})
+				return
+			}
+		case strings.HasPrefix(path, "api/workspaces/files/import"):
+			if deps.WorkspaceSvc != nil {
+				var input struct {
+					WorkspaceID string   `json:"workspaceId"`
+					SrcPaths    []string `json:"srcPaths"`
+				}
+				_ = json.NewDecoder(req.Body).Decode(&input)
+				writeResult(w, nil, deps.WorkspaceSvc.ImportFiles(input.WorkspaceID, input.SrcPaths))
+				return
+			}
+		// Permissions routes
+		case req.Method == http.MethodGet && path == "api/permissions/requests":
+			if deps.PermEngine != nil {
+				writeJSON(w, deps.PermEngine.GetPendingRequests())
+				return
+			}
+		case req.Method == http.MethodGet && path == "api/permissions/policies":
+			if deps.PermEngine != nil {
+				taskID := req.URL.Query().Get("taskId")
+				policy := deps.PermEngine.GetPolicies(taskID)
+				if policy == nil {
+					policy = &permissions.PermissionPolicy{
+						DefaultLevel: permissions.Limited,
+						Actions:      make(map[string]string),
+						Remembered:   make(map[string]bool),
+					}
+				}
+				writeJSON(w, policy)
+				return
+			}
+		// Sandbox routes
+		case path == "api/sandbox/run-command":
+			if deps.SandboxSvc != nil {
+				var input struct {
+					TaskID    string            `json:"taskId"`
+					Workspace string            `json:"workspace"`
+					Command   string            `json:"command"`
+					Env       map[string]string `json:"env,omitempty"`
+				}
+				_ = json.NewDecoder(req.Body).Decode(&input)
+				proc, err := deps.SandboxSvc.RunCommand(input.TaskID, input.Workspace, input.Command)
+				writeResult(w, proc, err)
+				return
+			}
+		case path == "api/sandbox/run-python":
+			if deps.SandboxSvc != nil {
+				var input struct {
+					TaskID     string            `json:"taskId"`
+					Workspace  string            `json:"workspace"`
+					ScriptPath string            `json:"scriptPath"`
+					Env        map[string]string `json:"env,omitempty"`
+					Timeout    int               `json:"timeout"`
+				}
+				_ = json.NewDecoder(req.Body).Decode(&input)
+				proc, err := deps.SandboxSvc.RunPythonScript(input.TaskID, input.Workspace, input.ScriptPath, input.Env, input.Timeout)
+				writeResult(w, proc, err)
+				return
+			}
+		case path == "api/sandbox/processes":
+			if deps.SandboxSvc != nil {
+				taskID := req.URL.Query().Get("taskId")
+				writeJSON(w, deps.SandboxSvc.ListProcesses(taskID))
+				return
+			}
+		case path == "api/sandbox/processes/stop":
+			if deps.SandboxSvc != nil {
+				var input struct {
+					ProcessID string `json:"processId"`
+				}
+				_ = json.NewDecoder(req.Body).Decode(&input)
+				writeResult(w, map[string]string{"status": "stopped"}, deps.SandboxSvc.StopProcess(input.ProcessID))
+				return
+			}
+		// Diagnostics routes
+		case path == "api/diagnostics/health":
+			writeJSON(w, map[string]interface{}{
+				"status":        "ok",
+				"uptime":        time.Since(diagStartTime).String(),
+				"go_version":    strings.TrimSpace(strings.TrimPrefix(goVersion(), "go")),
+				"num_goroutine": runtime.NumGoroutine(),
+				"num_cpu":       runtime.NumCPU(),
+				"timestamp":     time.Now().UTC().Format(time.RFC3339),
+			})
+			return
+		case path == "api/diagnostics/performance":
+			var mem runtime.MemStats
+			runtime.ReadMemStats(&mem)
+			writeJSON(w, map[string]interface{}{
+				"alloc_mb":       mem.Alloc / 1024 / 1024,
+				"total_alloc_mb": mem.TotalAlloc / 1024 / 1024,
+				"sys_mb":         mem.Sys / 1024 / 1024,
+				"num_gc":         mem.NumGC,
+				"goroutines":     runtime.NumGoroutine(),
+			})
+			return
+		case path == "api/diagnostics/logs":
+			files := listLogFiles(deps.LogDir)
+			writeJSON(w, files)
+			return
+		case path == "api/diagnostics/crash":
+			writeJSON(w, map[string]interface{}{
+				"status":     "ok",
+				"message":    "Crash handler placeholder - no crashes recorded",
+				"last_crash": nil,
+			})
+			return
 		default:
 			http.NotFound(w, req)
 		}
@@ -574,3 +746,30 @@ func writeJSON(w http.ResponseWriter, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(value)
 }
+
+// diagStartTime tracks when the router was created for uptime calculation.
+var diagStartTime = time.Now()
+
+// goVersion returns the Go runtime version string.
+func goVersion() string {
+	return strings.TrimSpace(strings.TrimPrefix(runtime.Version(), "go"))
+}
+
+func listLogFiles(logDir string) []string {
+	if logDir == "" {
+		return []string{}
+	}
+	entries, err := os.ReadDir(logDir)
+	if err != nil || len(entries) == 0 {
+		return []string{}
+	}
+	var files []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".log") {
+			files = append(files, e.Name())
+		}
+	}
+	return files
+}
+
+

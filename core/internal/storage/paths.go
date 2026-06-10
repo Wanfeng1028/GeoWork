@@ -4,7 +4,6 @@ package storage
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 )

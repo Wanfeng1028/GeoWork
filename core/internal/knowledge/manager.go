@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,9 +40,12 @@ type KnowledgeManager struct {
 	logger *zap.Logger
 }
 
-// NewKnowledgeManager creates a new KnowledgeManager with an in-memory SQLite database.
-func NewKnowledgeManager(logger *zap.Logger) (*KnowledgeManager, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+// NewKnowledgeManager creates a new KnowledgeManager with a file-based SQLite database.
+func NewKnowledgeManager(logger *zap.Logger, dbPath string) (*KnowledgeManager, error) {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+		return nil, fmt.Errorf("create db dir: %w", err)
+	}
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}

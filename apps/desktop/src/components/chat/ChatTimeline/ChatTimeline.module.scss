@@ -7,6 +7,10 @@
   background: var(--gw-bg-window);
 }
 
+.emptyState {
+  margin-top: 40%;
+}
+
 .messageItem {
   padding: var(--gw-space-8) 0;
 }
@@ -34,6 +38,7 @@
   line-height: 1.6;
 }
 
+// Tool Call
 .toolCall {
   margin-top: var(--gw-space-8);
 }
@@ -43,16 +48,93 @@
   background: var(--gw-bg-subtle);
   border-radius: var(--gw-radius-sm);
   font-size: 13px;
-  
+
   p {
     margin: var(--gw-space-4) 0;
   }
 }
 
+.toolOutput {
+  margin: 0;
+  padding: var(--gw-space-8);
+  background: var(--gw-bg-window);
+  border-radius: var(--gw-radius-sm);
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 12px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.toolError {
+  color: var(--gw-color-error);
+}
+
+.runningIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  color: var(--gw-accent);
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--gw-accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.failedIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  color: var(--gw-color-error);
+}
+
+// Approval Card
+.approvalCard {
+  margin-top: var(--gw-space-8);
+  border: 1px solid var(--gw-border-strong);
+}
+
+.approvalHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin-bottom: var(--gw-space-8);
+}
+
+.approvalTitle {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.approvalDesc {
+  margin: 0 0 var(--gw-space-8) 0;
+  font-size: 13px;
+  color: var(--gw-text-secondary);
+}
+
+.approvalActions {
+  display: flex;
+  gap: var(--gw-space-8);
+}
+
+// Message type variants
 .userMsg {
   border-left: 3px solid #1890ff;
 }
 
 .assistantMsg {
   border-left: 3px solid #52c41a;
+}
+
+.systemMsg {
+  border-left: 3px solid #faad14;
 }
