@@ -46,7 +46,6 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function ArtifactPanel() {
   const { artifacts, currentPreview, isLoading } = useArtifactStore();
-  const { openFileInEditor } = useWorkspaceStore();
   const [selectedArtifact, setSelectedArtifact] = useState<string | null>(null);
 
   // Group artifacts by type

@@ -111,7 +111,7 @@ class KnowledgeService(BaseService):
 
             if ext not in supported_exts:
                 skipped.append({"path": path, "reason": f"unsupported extension: {ext}"})
-                skipped += 1
+                failed += 1
                 continue
 
             try:
