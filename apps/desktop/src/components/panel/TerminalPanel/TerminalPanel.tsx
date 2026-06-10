@@ -7,18 +7,18 @@ import {
 } from '@ant-design/icons';
 import styles from './TerminalPanel.module.scss';
 
-interface CommandEntry {
+interface HistoryLine {
+  type: 'prompt' | 'output' | 'warning' | 'error' | 'info';
+  text: string;
   id: number;
+}
+
+interface RawLine {
+  type: 'prompt' | 'output' | 'warning' | 'error' | 'info';
   text: string;
 }
 
-const MOCK_OUTPUT_LINES: (
-  | { type: 'prompt'; text: string }
-  | { type: 'output'; text: string }
-  | { type: 'warning'; text: string }
-  | { type: 'error'; text: string }
-  | { type: 'info'; text: string }
-)[] = [
+const MOCK_OUTPUT_RAW: RawLine[] = [
   { type: 'info', text: 'GeoWork Terminal v1.0.0 — Build 2026.06.11' },
   { type: 'info', text: 'Copyright (c) 2026 GeoWork Project. All rights reserved.' },
   { type: 'output', text: '' },
@@ -48,33 +48,36 @@ const MOCK_OUTPUT_LINES: (
   { type: 'output', text: '' },
   { type: 'prompt', text: 'git status' },
   { type: 'output', text: 'On branch main' },
-  { type: 'output', text: 'Your branch is up to date with \'origin/main\'.' },
+  { type: 'output', text: "Your branch is up to date with 'origin/main'." },
   { type: 'output', text: '' },
   { type: 'output', text: 'Changes not staged for commit:' },
   { type: 'warning', text: '        modified:   apps/desktop/src/components/panel/TerminalPanel/TerminalPanel.tsx' },
   { type: 'output', text: '' },
 ];
 
+function toHistory(raw: readonly RawLine[]): HistoryLine[] {
+  return raw.map((line, index) => ({ ...line, id: index }));
+}
+
 const PROMPT_TEXT = 'user@geowork:~$ ';
 
 const TerminalPanel: React.FC = () => {
-  const [history, setHistory] = useState<
-    Array<{ type: 'prompt' | 'output' | 'warning' | 'error' | 'info'; text: string; id: number }>
-  >(MOCK_OUTPUT_LINES.map((line) => ({ ...line, id: nextId.current++ })));
+  const [history, setHistory] = useState<HistoryLine[]>(() => toHistory(MOCK_OUTPUT_RAW));
   const [inputValue, setInputValue] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const nextId = useRef(0);
-  const generateId = useCallback(() => ++nextId.current, []);
+  const nextIdRef = useRef(MOCK_OUTPUT_RAW.length);
 
   useEffect(() => {
     outputRef.current?.scrollTo({ top: outputRef.current.scrollHeight });
   }, [history]);
 
+  const generateId = useCallback(() => nextIdRef.current++, []);
+
   const addLine = useCallback(
-    (text: string, type: 'prompt' | 'output' | 'warning' | 'error' | 'info' = 'output') => {
+    (text: string, type: HistoryLine['type'] = 'output') => {
       setHistory((prev) => [...prev, { id: generateId(), type, text }]);
     },
     [generateId],
@@ -88,15 +91,13 @@ const TerminalPanel: React.FC = () => {
       setCommandHistory((prev) => [...prev, trimmed]);
       setHistoryIndex(-1);
 
-      // Echo the command
       addLine(trimmed, 'output');
 
-      // Process the command
       const lower = trimmed.toLowerCase();
       if (lower === 'help') {
         addLine('Available commands: help, clear, echo <text>, date, whoami, pwd', 'info');
       } else if (lower === 'clear') {
-        setHistory(MOCK_OUTPUT_LINES);
+        setHistory(toHistory(MOCK_OUTPUT_RAW));
       } else if (lower.startsWith('echo ')) {
         addLine(trimmed.substring(5), 'output');
       } else if (lower === 'date') {
@@ -107,8 +108,6 @@ const TerminalPanel: React.FC = () => {
         addLine('/home/user/geowork', 'output');
       } else if (lower === 'ls') {
         addLine('apps/  core/  docs/  assets/  packages.json  go.mod  README.md', 'output');
-      } else if (lower === 'pwd') {
-        addLine('/home/user/geowork', 'output');
       } else if (lower.includes('warning')) {
         addLine('Warning: this command may have side effects.', 'warning');
       } else if (lower.includes('error')) {
@@ -148,7 +147,6 @@ const TerminalPanel: React.FC = () => {
         }
       } else if (e.key === 'Tab') {
         e.preventDefault();
-        // Placeholder: basic tab completion
         const words = ['help', 'clear', 'echo', 'date', 'whoami', 'pwd', 'ls'];
         const match = words.find((w) => w.startsWith(inputValue.toLowerCase()));
         if (match) {
@@ -160,17 +158,17 @@ const TerminalPanel: React.FC = () => {
   );
 
   const handleClear = useCallback(() => {
-    setHistory(MOCK_OUTPUT_LINES);
+    setHistory(toHistory(MOCK_OUTPUT_RAW));
   }, []);
 
   const handleNewTab = useCallback(() => {
-    setHistory(MOCK_OUTPUT_LINES);
+    setHistory(toHistory(MOCK_OUTPUT_RAW));
     setInputValue('');
     setCommandHistory([]);
     setHistoryIndex(-1);
   }, []);
 
-  const renderLine = (entry: (typeof MOCK_OUTPUT_LINES)[0] & { id: number }) => {
+  const renderLine = (entry: HistoryLine) => {
     const lineClass =
       entry.type === 'warning'
         ? styles.warning
