@@ -1,0 +1,136 @@
+@use '../../../styles/tokens.scss' as *;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--gw-bg-panel);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-2) var(--gw-space-3);
+  background: var(--gw-bg-card);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+  letter-spacing: 0.5px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-1);
+}
+
+.output {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-space-2) var(--gw-space-3);
+  background: rgba(0, 0, 0, 0.15);
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gw-text-primary);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--gw-border-subtle);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--gw-text-tertiary);
+  }
+}
+
+.outputLine {
+  display: flex;
+  flex-wrap: wrap;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.prompt {
+  color: #4ade80;
+  margin-right: var(--gw-space-2);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.outputText {
+  color: var(--gw-text-primary);
+}
+
+.warning {
+  color: #facc15;
+}
+
+.error {
+  color: #f87171;
+}
+
+.info {
+  color: #22d3ee;
+}
+
+.inputArea {
+  display: flex;
+  align-items: center;
+  padding: var(--gw-space-2) var(--gw-space-3);
+  background: var(--gw-bg-card);
+  border-top: 1px solid var(--gw-border-subtle);
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--gw-text-primary);
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  caret-color: transparent;
+
+  &::placeholder {
+    color: var(--gw-text-tertiary);
+  }
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: var(--gw-text-primary);
+  margin-left: 1px;
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

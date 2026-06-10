@@ -22,47 +22,47 @@ type PermissionRule struct {
 	Conditions map[string]string `json:"conditions,omitempty"`
 }
 
-// PermissionPolicy holds the authorization policy with default action and rules.
-type PermissionPolicy struct {
+// AuthorizationPolicy holds the authorization policy with default action and rules.
+type AuthorizationPolicy struct {
 	DefaultAction Effect          `json:"default_action"`
 	Rules         []PermissionRule `json:"rules"`
 }
 
 // DefaultPolicy returns a deny-all default policy.
-func DefaultPolicy() *PermissionPolicy {
-	return &PermissionPolicy{
+func DefaultPolicy() *AuthorizationPolicy {
+	return &AuthorizationPolicy{
 		DefaultAction: Deny,
 		Rules:         []PermissionRule{},
 	}
 }
 
-// NewPermissionPolicy creates a policy with a specified default action.
-func NewPermissionPolicy(defaultAction Effect) *PermissionPolicy {
-	return &PermissionPolicy{
+// NewAuthorizationPolicy creates a policy with a specified default action.
+func NewAuthorizationPolicy(defaultAction Effect) *AuthorizationPolicy {
+	return &AuthorizationPolicy{
 		DefaultAction: defaultAction,
 		Rules:         []PermissionRule{},
 	}
 }
 
 // AddRule appends a permission rule to the policy.
-func (p *PermissionPolicy) AddRule(rule PermissionRule) *PermissionPolicy {
+func (p *AuthorizationPolicy) AddRule(rule PermissionRule) *AuthorizationPolicy {
 	p.Rules = append(p.Rules, rule)
 	return p
 }
 
 // AddRules appends multiple rules at once.
-func (p *PermissionPolicy) AddRules(rules []PermissionRule) *PermissionPolicy {
+func (p *AuthorizationPolicy) AddRules(rules []PermissionRule) *AuthorizationPolicy {
 	p.Rules = append(p.Rules, rules...)
 	return p
 }
 
 // CheckPermission evaluates whether a resource+action combination is permitted.
-func (p *PermissionPolicy) CheckPermission(resource, action string, conditions map[string]string) bool {
+func (p *AuthorizationPolicy) CheckPermission(resource, action string, conditions map[string]string) bool {
 	return p.IsAllowed(resource, action, conditions)
 }
 
 // IsAllowed checks if the given resource and action are allowed by the policy.
-func (p *PermissionPolicy) IsAllowed(resource, action string, conditions map[string]string) bool {
+func (p *AuthorizationPolicy) IsAllowed(resource, action string, conditions map[string]string) bool {
 	resource = strings.ToLower(strings.TrimSpace(resource))
 	action = strings.ToLower(strings.TrimSpace(action))
 

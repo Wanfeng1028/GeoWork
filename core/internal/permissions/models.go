@@ -2,8 +2,6 @@
 
 package permissions
 
-import "time"
-
 // PermissionLevel defines the access level for agent operations
 type PermissionLevel string
 
@@ -32,23 +30,3 @@ const (
 )
 
 // PermissionRequest represents a request for permission
-type PermissionRequest struct {
-	ID          string            `json:"id"`
-	TaskID      string            `json:"taskId"`
-	Action      DangerousAction   `json:"action"`
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	Command     string            `json:"command,omitempty"`
-	RiskLevel   string            `json:"riskLevel"`
-	RequestedAt time.Time         `json:"requestedAt"`
-	ResolvedAt  time.Time         `json:"resolvedAt,omitempty"`
-	Decision    string            `json:"decision,omitempty"`
-	Reason      string            `json:"reason,omitempty"`
-}
-
-// PermissionPolicy defines default permission behavior
-type PermissionPolicy struct {
-	DefaultLevel PermissionLevel   `json:"defaultLevel"`
-	Actions      map[string]string `json:"actions"` // action -> permission level
-	Remembered   map[string]bool   `json:"remembered"`
-}
