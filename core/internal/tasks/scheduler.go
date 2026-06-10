@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 // TaskType defines the kind of scheduling.
@@ -68,7 +66,6 @@ func (s *TaskScheduler) Schedule(task ScheduledTask) error {
 
 	switch task.Type {
 	case Once:
-		// will run immediately when scheduler tick fires
 	case Delayed:
 		d, err := time.ParseDuration(task.Schedule)
 		if err != nil {
@@ -171,7 +168,7 @@ func (s *TaskScheduler) run() {
 							}
 						}()
 						if err := task.Handler(); err != nil {
-							s.log.Error("task handler error", zap.String("id", task.ID), zap.Error(err))
+							s.log.Error("task handler error", "id", task.ID, "error", err)
 						}
 					}()
 					s.mu.RLock()
@@ -282,7 +279,6 @@ func (s *TaskScheduler) CountTasks() int {
 }
 
 // parseSimpleCron parses a simple cron expression "*/N * * * *" or "@every N" format.
-// Supports: @every duration, @hourly, @daily, @weekly, and */N minute format.
 func parseSimpleCron(expr string) (time.Time, error) {
 	expr = strings.TrimSpace(expr)
 

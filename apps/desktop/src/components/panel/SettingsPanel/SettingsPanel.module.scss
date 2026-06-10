@@ -1,0 +1,298 @@
+// GeoWork - SettingsPanel Styles
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--gw-bg-panel);
+  overflow: hidden;
+}
+
+// === Tab Navigation ===
+
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--gw-space-8) var(--gw-space-8) 0;
+  gap: 2px;
+  border-bottom: 1px solid var(--gw-border-subtle);
+  background: var(--gw-bg-card);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-6);
+  flex: 1;
+  justify-content: center;
+  padding: var(--gw-space-8) var(--gw-space-12);
+  border: none;
+  border-radius: var(--gw-radius-md) var(--gw-radius-md) 0 0;
+  background: transparent;
+  color: var(--gw-text-tertiary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    color: var(--gw-text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.active {
+    color: var(--gw-accent);
+    background: var(--gw-bg-panel);
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gw-accent);
+    }
+  }
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.tabLabel {
+  white-space: nowrap;
+}
+
+// === Content Area ===
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--gw-space-16);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gw-border-subtle) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--gw-border-subtle);
+    border-radius: 3px;
+  }
+}
+
+// === Section ===
+
+.section {
+  min-height: 100%;
+}
+
+.sectionTitle {
+  margin: 0 0 var(--gw-space-16);
+  padding-bottom: var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+  letter-spacing: 0.02em;
+}
+
+// === Setting Row ===
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-16);
+  padding: var(--gw-space-10) 0;
+}
+
+.fullLabelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  flex-shrink: 0;
+  width: 110px;
+  font-size: 13px;
+  color: var(--gw-text-secondary);
+  line-height: 1.5;
+}
+
+.valueLabel {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--gw-text-tertiary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  min-width: 40px;
+  text-align: right;
+}
+
+.control {
+  flex: 1;
+  min-width: 0;
+}
+
+// === Form Controls ===
+
+.input {
+  :global {
+    .ant-input {
+      background: var(--gw-bg-input);
+      border-color: var(--gw-border-subtle);
+      color: var(--gw-text-primary);
+      font-size: 13px;
+
+      &::placeholder {
+        color: var(--gw-text-tertiary);
+      }
+
+      &:hover,
+      &:focus {
+        border-color: var(--gw-border-active);
+      }
+    }
+
+    .ant-input-addon-after {
+      background: var(--gw-bg-card);
+      border-color: var(--gw-border-subtle);
+      color: var(--gw-text-secondary);
+      font-size: 12px;
+    }
+  }
+}
+
+.select {
+  :global {
+    .ant-select-selector {
+      background: var(--gw-bg-input);
+      border-color: var(--gw-border-subtle);
+
+      &:hover {
+        border-color: var(--gw-border-strong);
+      }
+
+      &:focus,
+      &.ant-select-focused {
+        border-color: var(--gw-border-active);
+        box-shadow: 0 0 0 2px rgba(77, 220, 151, 0.12);
+      }
+    }
+
+    .ant-select-selection-item,
+    .ant-select-arrow {
+      color: var(--gw-text-primary);
+    }
+
+    .ant-select-dropdown {
+      background: var(--gw-bg-popover);
+      border-color: var(--gw-border-subtle);
+    }
+  }
+}
+
+// === Divider ===
+
+.divider {
+  margin: var(--gw-space-12) 0;
+  border-color: var(--gw-border-subtle);
+}
+
+// === Recent Paths ===
+
+.recentPath {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-6) var(--gw-space-10);
+  margin-bottom: var(--gw-space-4);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-card);
+  border: 1px solid var(--gw-border-subtle);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--gw-accent);
+    background: rgba(77, 220, 151, 0.06);
+  }
+}
+
+.recentPathText {
+  color: var(--gw-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyText {
+  font-size: 12px;
+  color: var(--gw-text-tertiary);
+  font-style: italic;
+}
+
+// === Input Number ===
+
+.inputNumber {
+  :global {
+    .ant-input-number {
+      background: var(--gw-bg-input);
+      border-color: var(--gw-border-subtle);
+      color: var(--gw-text-primary);
+
+      &:hover,
+      &:focus,
+      &.ant-input-number-focused {
+        border-color: var(--gw-border-active);
+        box-shadow: 0 0 0 2px rgba(77, 220, 151, 0.12);
+      }
+
+      .ant-input {
+        background: transparent;
+        color: var(--gw-text-primary);
+
+        &::placeholder {
+          color: var(--gw-text-tertiary);
+        }
+      }
+    }
+
+    .ant-input-number-addon-after {
+      color: var(--gw-text-tertiary);
+      font-size: 12px;
+    }
+  }
+}
+
+// === Slider Customization ===
+
+:global {
+  .ant-slider-track {
+    background: var(--gw-accent);
+  }
+
+  .ant-slider-rail {
+    background: var(--gw-border-subtle);
+  }
+
+  .ant-slider-handle::after {
+    box-shadow: 0 0 0 2px var(--gw-accent);
+  }
+
+  .ant-switch-checked {
+    background: var(--gw-accent);
+  }
+}

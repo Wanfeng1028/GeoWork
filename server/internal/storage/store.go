@@ -1,5 +1,5 @@
 // Package storage provides the in-memory data store for v0.4.0.
-// This is a placeholder that will be migrated to SQLite in v0.5.0.
+// Planned migration to SQLite in v0.5.0.
 package storage
 
 import (
