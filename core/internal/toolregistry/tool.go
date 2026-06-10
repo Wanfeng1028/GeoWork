@@ -16,6 +16,7 @@ type BaseTool struct {
 	riskLevel       string
 	sandboxRequired bool
 	streaming       bool
+	executeFn       func(ctx context.Context, args map[string]any) (map[string]any, error)
 }
 
 func (b *BaseTool) Name() string            { return b.name }
@@ -27,6 +28,9 @@ func (b *BaseTool) RiskLevel() string       { return b.riskLevel }
 func (b *BaseTool) SandboxRequired() bool   { return b.sandboxRequired }
 func (b *BaseTool) StreamingSupported() bool { return b.streaming }
 func (b *BaseTool) Execute(ctx context.Context, args map[string]any) (map[string]any, error) {
+	if b.executeFn != nil {
+		return b.executeFn(ctx, args)
+	}
 	return nil, nil
 }
 
@@ -75,7 +79,7 @@ func (b *Builder) Streaming(supported bool) *Builder {
 }
 
 func (b *Builder) Execute(fn func(ctx context.Context, args map[string]any) (map[string]any, error)) *Builder {
-	b.base.Execute = fn
+	b.base.executeFn = fn
 	return b
 }
 

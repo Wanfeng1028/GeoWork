@@ -121,7 +121,294 @@
   font-size: 14px;
 }
 
-// Placeholder views
+// Map & Layers view
+.mapAndLayers {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+
+  .layerList {
+    width: 240px;
+    border-right: 1px solid var(--gw-border-subtle);
+    display: flex;
+    flex-direction: column;
+
+    .layerListTitle {
+      margin: 0;
+      padding: var(--gw-space-12) var(--gw-space-16);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gw-text-primary);
+      border-bottom: 1px solid var(--gw-border-subtle);
+      background: var(--gw-bg-subtle);
+    }
+
+    .layerItem {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px var(--gw-space-16);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--gw-border-subtle);
+
+      &:hover {
+        background: var(--gw-bg-hover);
+      }
+
+      &.layerActive {
+        background: var(--gw-bg-subtle);
+      }
+
+      .layerCheck {
+        font-size: 14px;
+      }
+
+      .layerType {
+        font-size: 16px;
+      }
+
+      .layerName {
+        flex: 1;
+        font-size: 12px;
+        color: var(--gw-text-primary);
+      }
+
+      .layerTypeTag {
+        font-size: 10px;
+        padding: 1px 4px;
+        background: var(--gw-bg-subtle);
+        color: var(--gw-text-tertiary);
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .mapArea {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .mapPlaceholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--gw-space-12);
+      color: var(--gw-text-secondary);
+
+      .mapIcon {
+        font-size: 48px;
+        opacity: 0.5;
+      }
+    }
+  }
+}
+
+// Automation view
+.automationView {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+
+  .automationList {
+    width: 300px;
+    border-right: 1px solid var(--gw-border-subtle);
+    display: flex;
+    flex-direction: column;
+
+    .automationListTitle {
+      margin: 0;
+      padding: var(--gw-space-12) var(--gw-space-16);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gw-text-primary);
+      border-bottom: 1px solid var(--gw-border-subtle);
+      background: var(--gw-bg-subtle);
+    }
+
+    .automationItem {
+      padding: var(--gw-space-12) var(--gw-space-16);
+      cursor: pointer;
+      border-bottom: 1px solid var(--gw-border-subtle);
+      transition: background 0.15s;
+
+      &:hover,
+      &.automationSelected {
+        background: var(--gw-bg-hover);
+      }
+
+      .automationName {
+        display: block;
+        font-size: 13px;
+        color: var(--gw-text-primary);
+        margin-bottom: 4px;
+      }
+
+      .automationSchedule {
+        display: block;
+        font-size: 11px;
+        color: var(--gw-text-tertiary);
+      }
+
+      .automationStatus {
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 3px;
+
+        &.statusActive {
+          color: #52c41a;
+          background: #f6ffed;
+        }
+
+        &.statusPaused {
+          color: #faad14;
+          background: #fffbe6;
+        }
+      }
+    }
+  }
+
+  .automationDetail {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .automationPlaceholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--gw-space-12);
+      color: var(--gw-text-secondary);
+
+      .automationIcon {
+        font-size: 48px;
+        opacity: 0.5;
+      }
+    }
+  }
+}
+
+// Paper search view
+.paperSearchView {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--gw-space-16);
+
+  .searchSection {
+    margin-bottom: var(--gw-space-16);
+
+    .searchTitle {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gw-text-primary);
+    }
+
+    .searchInput {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--gw-border-subtle);
+      border-radius: 6px;
+      font-size: 13px;
+
+      &:focus {
+        outline: none;
+        border-color: var(--gw-accent-primary);
+      }
+    }
+  }
+
+  .paperList {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gw-space-8);
+
+    .paperItem {
+      padding: var(--gw-space-12);
+      background: var(--gw-bg-subtle);
+      border-radius: 6px;
+      border: 1px solid var(--gw-border-subtle);
+
+      .paperTitle {
+        display: block;
+        font-size: 13px;
+        color: var(--gw-text-primary);
+        margin-bottom: 4px;
+      }
+
+      .paperMeta {
+        font-size: 11px;
+        color: var(--gw-text-tertiary);
+      }
+    }
+  }
+}
+
+// Knowledge base view
+.knowledgeBaseView {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-space-16);
+
+  .kbTitle {
+    margin: 0 0 var(--gw-space-16) 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gw-text-primary);
+  }
+
+  .kbEntry {
+    padding: var(--gw-space-12);
+    background: var(--gw-bg-subtle);
+    border: 1px solid var(--gw-border-subtle);
+    border-radius: 6px;
+    margin-bottom: var(--gw-space-8);
+
+    .kbEntryHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .kbEntryTitle {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gw-text-primary);
+      }
+
+      .kbEntryCategory {
+        font-size: 11px;
+        padding: 2px 8px;
+        background: var(--gw-accent-primary);
+        color: white;
+        border-radius: 4px;
+      }
+    }
+
+    .kbTags {
+      display: flex;
+      gap: 6px;
+
+      .kbTag {
+        font-size: 10px;
+        padding: 1px 6px;
+        border: 1px solid var(--gw-border-subtle);
+        border-radius: 3px;
+        color: var(--gw-text-secondary);
+      }
+    }
+  }
+}
+
+// Legacy placeholder classes (used when components are not expanded)
 .mapPlaceholder,
 .automationPlaceholder,
 .paperPlaceholder,

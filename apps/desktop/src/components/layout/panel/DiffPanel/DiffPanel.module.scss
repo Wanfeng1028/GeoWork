@@ -1,0 +1,154 @@
+// GeoWork DiffPanel - Styles
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .diffCount {
+      font-size: 11px;
+      color: #999;
+    }
+  }
+
+  .diffList {
+    padding: 4px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    max-height: 120px;
+    overflow-y: auto;
+
+    .diffListItem {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.15s;
+
+      &:hover {
+        background: #f5f5f5;
+      }
+
+      &.diffListSelected {
+        background: #e6f7ff;
+      }
+
+      .diffListId {
+        font-family: monospace;
+        color: #666;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .diffListTime {
+        font-size: 10px;
+        color: #bfbfbf;
+      }
+    }
+  }
+
+  .diffContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .diffActions {
+      padding: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .fileDiffs {
+      flex: 1;
+      overflow-y: auto;
+
+      .fileDiffHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+
+        .fileName {
+          font-family: monospace;
+          font-size: 12px;
+          color: #333;
+        }
+      }
+
+      .diffView {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 8px 0;
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+
+        .oldContent {
+          background: #fff2f0;
+          color: #cf1322;
+          padding: 8px;
+          border-radius: 4px;
+          margin: 0;
+          overflow-x: auto;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .diffArrow {
+          text-align: center;
+          color: #999;
+          font-size: 10px;
+        }
+
+        .newContent {
+          background: #f6ffed;
+          color: #389e0d;
+          padding: 8px;
+          border-radius: 4px;
+          margin: 0;
+          overflow-x: auto;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+      }
+
+      .fileActions {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .emptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+  }
+}

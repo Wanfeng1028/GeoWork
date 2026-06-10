@@ -3,7 +3,6 @@
 package browserbridge
 
 import (
-	"encoding/json"
 	"time"
 )
 

@@ -1,0 +1,142 @@
+// GeoWork ArtifactPanel - Styles
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .artifactCount {
+      font-size: 11px;
+      color: #999;
+    }
+  }
+
+  .treeContainer {
+    flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+
+    .artifactTree {
+      font-size: 12px;
+
+      :global(.ant-tree-node-content-wrapper) {
+        padding: 2px 4px;
+      }
+
+      :global(.ant-tree-node-content-wrapper:hover) {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  .groupHeader {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #333;
+  }
+
+  .artifactItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover {
+      background: #e6f7ff;
+    }
+
+    .artifactName {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #333;
+    }
+  }
+
+  .detailPanel {
+    padding: 12px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+
+    .detailHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+
+      .detailTitle {
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 8px;
+      }
+    }
+
+    .detailInfo {
+      margin-bottom: 12px;
+
+      .detailRow {
+        display: flex;
+        margin-bottom: 4px;
+        font-size: 11px;
+
+        .detailLabel {
+          width: 70px;
+          color: #999;
+          flex-shrink: 0;
+        }
+
+        .detailValue {
+          flex: 1;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .detailActions {
+      display: flex;
+      gap: 6px;
+    }
+  }
+
+  .emptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+  }
+}

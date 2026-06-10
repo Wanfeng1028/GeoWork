@@ -4,7 +4,6 @@ package browserbridge
 
 import (
 	"sync"
-	"time"
 )
 
 // NetworkLog stores captured network requests.

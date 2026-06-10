@@ -1,0 +1,67 @@
+.popoverContent {
+  width: 300px;
+
+  .loginPrompt {
+    padding: 8px 12px;
+  }
+}
+
+.avatarBtn {
+  padding: 4px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .email {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.section {
+  margin-bottom: 4px;
+
+  .sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 6px;
+
+    :global(.anticon) {
+      color: #1890ff;
+    }
+  }
+
+  .creditsValue {
+    font-size: 20px;
+    color: #52c41a;
+  }
+}
+
+.overlay {
+  :global(.ant-popover-inner) {
+    background-color: #1a1a2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+  }
+
+  :global(.ant-popover-arrow) {
+    display: none;
+  }
+
+  :global(.ant-divider) {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}

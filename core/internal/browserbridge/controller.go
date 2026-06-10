@@ -3,7 +3,6 @@
 package browserbridge
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
