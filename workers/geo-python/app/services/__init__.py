@@ -65,14 +65,51 @@ class GISService(BaseService):
 
     def inspect_vector(self, path: str) -> dict[str, Any]:
         """Inspect a vector dataset and return metadata."""
-        return {
+        import os
+        from datetime import datetime
+
+        result = {
             "ok": True,
             "path": path,
-            "driver": "GeoJSON",
-            "crs": "EPSG:4326",
+            "exists": os.path.exists(path),
+            "size_bytes": os.path.getsize(path) if os.path.exists(path) else 0,
+            "last_modified": datetime.fromtimestamp(
+                os.path.getmtime(path)
+            ).isoformat() if os.path.exists(path) else None,
+            "driver": "Unknown",
+            "crs": "Unknown",
             "features": 0,
-            "message": "Vector inspection completed (placeholder)",
+            "layers": [],
+            "recommendations": [],
         }
+
+        # Try to read metadata via GDAL/OGR if available
+        try:
+            from osgeo import ogr
+            ds = ogr.Open(path, 0)  # 0 = read-only
+            if ds:
+                driver = ds.GetDriver().shortName
+                result["driver"] = driver
+                result["layers"] = [ds.GetLayer(i).name for i in range(ds.GetLayerCount())]
+                if ds.GetLayerCount() > 0:
+                    layer = ds.GetLayer(0)
+                    result["features"] = layer.feature_count
+                    srs = layer.spatial_reference
+                    if srs:
+                        is_geographic = srs.IsGeographic()
+                        result["crs"] = srs.GetAttrValue("GEOGCS") if is_geographic else srs.GetAttrValue("PROJCS")
+                        result["crs_wkt"] = srs.ExportToWkt()
+                    # Get field info
+                    defn = layer.GetLayerDefn()
+                    fields = [defn.GetFieldDefn(i).GetName() for i in range(defn.GetFieldCount())]
+                    result["fields"] = fields
+                ds = None
+        except ImportError:
+            result["recommendations"].append("Install osgeo (GDAL) for detailed vector inspection.")
+        except Exception as exc:
+            result["recommendations"].append(f"OGR inspection skipped: {exc}")
+
+        return result
 
     def check_qgis(self) -> dict[str, Any]:
         """Check QGIS installation status."""

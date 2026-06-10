@@ -26,13 +26,14 @@ type Store struct {
 
 // User represents a registered user.
 type User struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	AvatarURL string    `json:"avatar_url"`
-	Plan      string    `json:"plan"` // free | pro | team
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Name         string    `json:"name"`
+	AvatarURL    string    `json:"avatar_url"`
+	Plan         string    `json:"plan"` // free | pro | team
+	PasswordHash string    `json:"-"`    // hashed password, not exposed in JSON
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // Token represents an auth token.

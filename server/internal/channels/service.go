@@ -2,6 +2,7 @@
 package channels
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -81,13 +82,17 @@ func (s *Service) CreateChannel(c *gin.Context) {
 	s.store.ChannelWebhooks = append(s.store.ChannelWebhooks, webhook)
 	s.store.Mu.Unlock()
 
-	// Placeholder webhook URL (in production, this would be a public endpoint)
+	// Generate public webhook URL
+	baseURL := "http://127.0.0.1:8767"
+	publicWebhookURL := baseURL + webhookURL
+
 	c.JSON(http.StatusCreated, gin.H{
 		"id":          webhook.ID,
 		"name":        req.Name,
 		"type":        req.Type,
-		"webhook_url": "http://127.0.0.1:8767" + webhookURL,
+		"webhook_url": publicWebhookURL,
 		"active":      true,
+		"message":     "Channel created successfully — use webhook_url to receive events",
 	})
 }
 
@@ -117,12 +122,24 @@ func (s *Service) WebhookReceiver(c *gin.Context) {
 		return
 	}
 
-	// Placeholder: create task from webhook
-	// In production, parse the message and create a task
+	// Record webhook event as a telemetry/collaboration event
+	eventID := generateID()
+	s.store.Mu.Lock()
+	s.store.CollabRecords = append(s.store.CollabRecords, &storage.CollabRecord{
+		ID:          eventID,
+		WorkspaceID: webhook.TeamID,
+		Type:        "webhook_event",
+		UserID:      webhook.ID,
+		Data:        fmt.Sprintf(`{"channel": %q, "payload": %v}`, channelID, payload),
+		Timestamp:   time.Now(),
+	})
+	s.store.Mu.Unlock()
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "webhook received (task creation placeholder)",
-		"channel": channelID,
-		"payload": payload,
+		"message":  "webhook received and recorded",
+		"channel":  channelID,
+		"event_id": eventID,
+		"payload":  payload,
 	})
 }
 

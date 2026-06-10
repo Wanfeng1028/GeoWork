@@ -28,24 +28,46 @@ func NewInstaller(log *zap.Logger) *Installer {
 
 // InstallFromMarketplace downloads and installs a plugin from the marketplace.
 func (i *Installer) InstallFromMarketplace(pluginID string) (*Manifest, error) {
-	// Placeholder: In production this would call marketplace API
-	manifest := &Manifest{
-		ID:             pluginID,
-		Name:           pluginID,
-		Version:        "1.0.0",
-		Description:    "Plugin " + pluginID,
-		Author:         "Unknown",
-		License:        "MIT",
-		Categories:     []string{"general"},
-		Entrypoint:     "./main.js",
-		Enabled:        true,
-		AuthorVerified: false,
-		InstalledAt:    time.Now(),
-		UpdatedAt:      time.Now(),
-		Permissions: []Permission{
-			{Name: "read_file", Description: "Read workspace files", Required: true},
-			{Name: "write_file", Description: "Write workspace files", Required: false},
-		},
+	// Try to fetch manifest from marketplace API
+	marketplaceURL := os.Getenv("GEOWORK_MARKETPLACE_URL")
+	var manifest *Manifest
+
+	if marketplaceURL != "" {
+		fetched, err := DownloadManifest(marketplaceURL, pluginID)
+		if err == nil && fetched != nil {
+			manifest = fetched
+			i.log.Info("plugin manifest fetched from marketplace",
+				zap.String("id", pluginID),
+				zap.String("version", fetched.Version),
+			)
+		} else {
+			i.log.Warn("failed to fetch plugin from marketplace, using fallback",
+				zap.String("id", pluginID),
+				zap.Error(err),
+			)
+		}
+	}
+
+	// Fallback: create a local manifest if marketplace fetch failed
+	if manifest == nil {
+		manifest = &Manifest{
+			ID:             pluginID,
+			Name:           pluginID,
+			Version:        "1.0.0",
+			Description:    "Plugin " + pluginID + " (local install)",
+			Author:         "Local",
+			License:        "MIT",
+			Categories:     []string{"general"},
+			Entrypoint:     "./main.js",
+			Enabled:        true,
+			AuthorVerified: false,
+			InstalledAt:    time.Now(),
+			UpdatedAt:      time.Now(),
+			Permissions: []Permission{
+				{Name: "read_file", Description: "Read workspace files", Required: true},
+				{Name: "write_file", Description: "Write workspace files", Required: false},
+			},
+		}
 	}
 
 	if err := i.installLocally(manifest); err != nil {

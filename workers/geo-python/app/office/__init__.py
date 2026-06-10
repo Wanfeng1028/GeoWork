@@ -108,16 +108,71 @@ def write_spreadsheet(
     title: str = "GeoWork Statistics",
     data: list[list[Any]] | None = None,
 ) -> dict[str, Any]:
-    """Generate an Excel workbook."""
-    rows = data or [["metric", "value"], ["task_status", "completed"], ["mode", "Analysis"]]
-    return {
-        "ok": True,
-        "message": "Excel workbook generated (placeholder)",
-        "rows": rows,
-        "artifacts": [
-            {"name": "Excel Workbook", "type": "spreadsheet", "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-        ],
-    }
+    """Generate an Excel workbook.
+
+    Uses openpyxl to create a real .xlsx file with proper formatting.
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment
+        import os
+        import tempfile
+
+        rows = data or [["metric", "value"], ["task_status", "completed"], ["mode", "Analysis"]]
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = title[:31]  # Excel sheet name limit is 31 chars
+
+        # Title row
+        ws.append([title])
+        ws[1].font = Font(bold=True, size=14)
+
+        # Headers
+        ws.append(["Metric", "Value"])
+        ws[2].font = Font(bold=True)
+        ws[2].alignment = Alignment(horizontal="center")
+
+        # Data rows
+        for row in rows:
+            ws.append(row)
+
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            ws.column_dimensions[column_letter].width = min(max_length + 4, 50)
+
+        # Save
+        tmp_dir = tempfile.gettempdir()
+        output_path = os.path.join(tmp_dir, f"{title.replace(' ', '_')}.xlsx")
+        wb.save(output_path)
+
+        return {
+            "ok": True,
+            "message": f"Spreadsheet saved to {output_path}",
+            "output_path": output_path,
+            "row_count": len(rows) + 2,  # +2 for title and header
+            "artifacts": [
+                {"name": "Excel Workbook", "type": "spreadsheet", "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "path": output_path},
+            ],
+        }
+    except ImportError:
+        return {
+            "ok": True,
+            "message": "openpyxl not installed — returning metadata only",
+            "rows": rows,
+            "artifacts": [
+                {"name": "Excel Workbook", "type": "spreadsheet", "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+            ],
+            "hint": "Install openpyxl to generate actual .xlsx files: pip install openpyxl",
+        }
 
 
 def write_notebook(
@@ -125,17 +180,77 @@ def write_notebook(
     prompt: str = "",
     cells: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Generate a Jupyter Notebook."""
+    """Generate a Jupyter Notebook.
+
+    Creates a valid .ipynb notebook file with proper notebook format version 4.
+    """
+    import json
+    import os
+    import tempfile
+    from datetime import datetime
+
     if cells is None:
         cells = [
-            {"cell_type": "markdown", "source": [f"# {title}\n", prompt]},
-            {"cell_type": "code", "source": ["print('GeoWork task completed')"]},
+            {
+                "cell_type": "markdown",
+                "metadata": {},
+                "source": [f"# {title}\n", prompt or "GeoWork analysis task"],
+            },
+            {
+                "cell_type": "code",
+                "metadata": {},
+                "source": ["print('GeoWork task completed')"],
+                "execution_count": None,
+                "outputs": [],
+            },
         ]
+
+    # Build proper notebook structure
+    nb = {
+        "nbformat": 4,
+        "nbformat_minor": 5,
+        "metadata": {
+            "kernelspec": {
+                "display_name": "Python 3",
+                "language": "python",
+                "name": "python3",
+            },
+            "language_info": {
+                "name": "python",
+                "version": "3.10.0",
+            },
+            "geowork": {
+                "title": title,
+                "prompt": prompt,
+                "generated_at": datetime.now().isoformat(),
+            },
+        },
+        "cells": [],
+    }
+
+    for cell in cells:
+        nb_cell = {
+            "cell_type": cell.get("cell_type", "code"),
+            "metadata": cell.get("metadata", {}),
+            "source": cell.get("source", []),
+        }
+        if cell.get("cell_type") == "code":
+            nb_cell["execution_count"] = cell.get("execution_count")
+            nb_cell["outputs"] = cell.get("outputs", [])
+        nb["cells"].append(nb_cell)
+
+    # Save to file
+    tmp_dir = tempfile.gettempdir()
+    output_path = os.path.join(tmp_dir, f"{title.replace(' ', '_')}.ipynb")
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(nb, f, indent=2, ensure_ascii=False)
+
     return {
         "ok": True,
-        "message": "Jupyter Notebook generated (placeholder)",
-        "cells": cells,
+        "message": f"Notebook saved to {output_path}",
+        "output_path": output_path,
+        "cell_count": len(nb["cells"]),
         "artifacts": [
-            {"name": "Jupyter Notebook", "type": "notebook", "mimeType": "application/x-ipynb+json"},
+            {"name": "Jupyter Notebook", "type": "notebook", "mimeType": "application/x-ipynb+json", "path": output_path},
         ],
     }

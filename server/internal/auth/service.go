@@ -3,6 +3,7 @@ package auth
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
 	"time"
@@ -41,8 +42,11 @@ func (s *Service) Login(c *gin.Context) {
 		return
 	}
 
-	// Placeholder: accept any valid email format, password >= 1 char
-	// In production, hash and verify password here
+	// Validate email and password
+	// For v0.4.0: simple hash-based password verification
+	// In production, use bcrypt or argon2id
+	hashedPassword := hashPassword(req.Password)
+
 	s.store.Mu.RLock()
 	existing, ok := s.store.Users[req.Email]
 	s.store.Mu.RUnlock()
@@ -51,17 +55,23 @@ func (s *Service) Login(c *gin.Context) {
 	if !ok {
 		// Auto-register new Users
 		user = &storage.User{
-			ID:        generateID(),
-			Email:     req.Email,
-			Name:      splitEmail(req.Email),
-			Plan:      "free",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ID:           generateID(),
+			Email:        req.Email,
+			Name:         splitEmail(req.Email),
+			Plan:         "free",
+			PasswordHash: hashedPassword,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		}
 		s.store.Mu.Lock()
 		s.store.Users[req.Email] = user
 		s.store.Mu.Unlock()
 	} else {
+		// Verify password hash
+		if existing.PasswordHash != hashedPassword {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
 		user = existing
 	}
 
@@ -246,4 +256,11 @@ func splitEmail(email string) string {
 		}
 	}
 	return email
+}
+
+// hashPassword creates a simple SHA-256 hash of the password.
+// In production, use bcrypt or argon2id for proper password hashing.
+func hashPassword(password string) string {
+	h := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(h[:])
 }

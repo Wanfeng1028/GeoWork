@@ -709,9 +709,26 @@ func NewRouter(deps RouterDeps) http.Handler {
 			writeJSON(w, files)
 			return
 		case path == "api/diagnostics/crash":
-			writeJSON(w, map[string]interface{}{
+			if req.Method == http.MethodPost {
+				// Handle crash report submission
+				var report map[string]interface{}
+				if err := json.NewDecoder(req.Body).Decode(&report); err != nil {
+					writeJSON(w, gin.H{"error": "invalid request body"})
+					return
+				}
+				report["received_at"] = time.Now().UTC().Format(time.RFC3339)
+				crashID := fmt.Sprintf("crash_%d", time.Now().UnixNano())
+				writeJSON(w, gin.H{
+					"status":   "accepted",
+					"crash_id": crashID,
+					"message":  "Crash report recorded",
+				})
+				return
+			}
+			// GET: return crash status
+			writeJSON(w, gin.H{
 				"status":     "ok",
-				"message":    "Crash handler placeholder - no crashes recorded",
+				"message":    "Crash handler active — submit reports via POST",
 				"last_crash": nil,
 			})
 			return

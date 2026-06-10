@@ -2,6 +2,7 @@
 package billing
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -40,15 +41,26 @@ func (s *Service) GetCredits(c *gin.Context) {
 		return
 	}
 
-	// Placeholder: credits based on plan
+	s.store.Mu.RLock()
 	var credits float64
-	switch user.Plan {
-	case "pro":
-		credits = 100.0
-	case "team":
-		credits = 500.0
-	default:
-		credits = 10.0
+	for _, bd := range []*storage.BillingData{s.store.BillingData} {
+		if bd.UserID == user.ID {
+			credits = bd.Credits
+			break
+		}
+	}
+	s.store.Mu.RUnlock()
+
+	// Default credits based on plan if no billing record exists
+	if credits == 0 {
+		switch user.Plan {
+		case "pro":
+			credits = 100.0
+		case "team":
+			credits = 500.0
+		default:
+			credits = 10.0
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -65,8 +77,28 @@ func (s *Service) GetInvoices(c *gin.Context) {
 		return
 	}
 
-	// Placeholder: no real invoices yet
-	c.JSON(http.StatusOK, []gin.H{})
+	// Return billing history for the user
+	s.store.Mu.RLock()
+	var invoices []gin.H
+	for _, evt := range s.store.UsageEvents {
+		if evt.UserID == user.ID && evt.Type == "billing" {
+			invoices = append(invoices, gin.H{
+				"id":        evt.ID,
+				"amount":    evt.Amount,
+				"type":      evt.Type,
+				"timestamp": evt.Timestamp,
+			})
+		}
+	}
+	s.store.Mu.RUnlock()
+
+	if invoices == nil {
+		invoices = []gin.H{}
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"total":    len(invoices),
+		"invoices": invoices,
+	})
 }
 
 // CheckoutSession handles POST /api/billing/checkout-session
@@ -85,18 +117,70 @@ func (s *Service) CheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Placeholder: update user plan
-	s.store.Mu.Lock()
-	if user.Plan != req.Plan {
-		user.Plan = req.Plan
-		user.UpdatedAt = time.Now()
+	// Validate plan
+	validPlans := map[string]bool{"free": true, "pro": true, "team": true}
+	if !validPlans[req.Plan] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid plan: " + req.Plan})
+		return
 	}
+
+	// Update user plan and credits
+	s.store.Mu.Lock()
+	oldPlan := user.Plan
+	user.Plan = req.Plan
+	user.UpdatedAt = time.Now()
+
+	// Update credits based on new plan
+	var newCredits float64
+	switch req.Plan {
+	case "pro":
+		newCredits = 100.0
+	case "team":
+		newCredits = 500.0
+	default:
+		newCredits = 10.0
+	}
+
+	// Update or create billing record
+	if s.store.BillingData == nil {
+		s.store.BillingData = &storage.BillingData{
+			UserID:  user.ID,
+			Plan:    req.Plan,
+			Credits: newCredits,
+		}
+	} else {
+		s.store.BillingData.Plan = req.Plan
+		s.store.BillingData.Credits = newCredits
+	}
+
+	// Record billing event
+	s.store.UsageEvents = append(s.store.UsageEvents, &storage.UsageEvent{
+		ID:        fmt.Sprintf("evt_%d", time.Now().UnixNano()),
+		UserID:    user.ID,
+		Type:      "billing",
+		Amount:    int64(getPlanPrice(req.Plan)),
+		Timestamp: time.Now(),
+	})
 	s.store.Mu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "checkout placeholder - plan updated to " + req.Plan,
-		"plan":    req.Plan,
+		"message":       fmt.Sprintf("Plan updated from %s to %s", oldPlan, req.Plan),
+		"plan":          req.Plan,
+		"credits":       newCredits,
+		"previous_plan": oldPlan,
 	})
+}
+
+func getPlanPrice(plan string) int {
+	prices := map[string]int{
+		"free": 0,
+		"pro":  19,
+		"team": 49,
+	}
+	if p, ok := prices[plan]; ok {
+		return p
+	}
+	return 0
 }
 
 func getPlanInfo(plan string) gin.H {
