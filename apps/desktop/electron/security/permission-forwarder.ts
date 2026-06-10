@@ -24,19 +24,19 @@ const PERMISSION_CATEGORIES: Readonly<Record<string, any>> = {
 };
 
 function registerPermissionForwarder(mainWindow: BrowserWindow) {
-  // Request a permission (placeholder - in production, would show a dialog)
-  ipcMain.handle('security:requestPermission', async (_event, category) => {
+  // Request a permission — returns based on safety policy
+  ipcMain.handle("security:requestPermission", async (_event, category) => {
     const allowed = isPermissionAllowed(category);
     return { granted: allowed, category };
   });
 
   // Get current permission status
-  ipcMain.handle('security:getPermissionStatus', async (_event, category) => {
-    return { status: PERMISSION_CATEGORIES[category] ?? 'default', category };
+  ipcMain.handle("security:getPermissionStatus", async (_event, category) => {
+    return { status: PERMISSION_CATEGORIES[category] ?? "default", category };
   });
 
   // List all permission categories
-  ipcMain.handle('security:listPermissions', async () => {
+  ipcMain.handle("security:listPermissions", async () => {
     return PERMISSION_CATEGORIES;
   });
 }

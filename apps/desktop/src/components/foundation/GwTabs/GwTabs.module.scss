@@ -1,0 +1,177 @@
+// GeoWork - GwTabs Styles
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-16);
+}
+
+.tabList {
+  display: flex;
+  gap: var(--gw-space-4);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.tabItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-space-6);
+  padding: var(--gw-space-8) var(--gw-space-16);
+  border: none;
+  border-radius: var(--gw-radius-sm);
+  background: transparent;
+  color: var(--gw-text-secondary);
+  font-size: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+
+  &:hover:not(.disabled) {
+    color: var(--gw-text-primary);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &.active {
+    color: var(--gw-accent);
+
+    .tabLabel {
+      font-weight: 600;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tabLabel {
+  position: relative;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.tabContent {
+  overflow: auto;
+}
+
+// === Tab Types ===
+
+.line {
+  .tabList {
+    border-bottom: 1px solid var(--gw-border-subtle);
+    gap: 0;
+  }
+
+  .tabItem {
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding-bottom: var(--gw-space-8);
+
+    &.active {
+      color: var(--gw-accent);
+      border-bottom-color: var(--gw-accent);
+
+      .tabLabel {
+        font-weight: 600;
+      }
+    }
+
+    &:hover:not(.disabled) {
+      border-bottom-color: var(--gw-border-strong);
+    }
+  }
+}
+
+.card {
+  .tabList {
+    background: var(--gw-bg-card);
+    border-radius: var(--gw-radius-md);
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .tabItem {
+    border-radius: var(--gw-radius-sm);
+
+    &.active {
+      background: var(--gw-bg-popover);
+      color: var(--gw-accent);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.segmented {
+  .tabList {
+    display: inline-flex;
+    background: var(--gw-bg-card);
+    border: 1px solid var(--gw-border-subtle);
+    border-radius: var(--gw-radius-md);
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .tabItem {
+    border-radius: var(--gw-radius-sm);
+    font-size: 13px;
+
+    &.active {
+      background: var(--gw-accent);
+      color: var(--gw-bg-window);
+      font-weight: 500;
+    }
+
+    &:hover:not(.active):not(.disabled) {
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+}
+
+// === Sizes ===
+
+.small {
+  .tabItem {
+    padding: var(--gw-space-4) var(--gw-space-12);
+    font-size: 12px;
+  }
+}
+
+.default {
+  .tabItem {
+    padding: var(--gw-space-8) var(--gw-space-16);
+    font-size: 13px;
+  }
+}
+
+.large {
+  .tabItem {
+    padding: var(--gw-space-10) var(--gw-space-20);
+    font-size: 14px;
+  }
+}
+
+.centered {
+  .tabList {
+    justify-content: center;
+  }
+}

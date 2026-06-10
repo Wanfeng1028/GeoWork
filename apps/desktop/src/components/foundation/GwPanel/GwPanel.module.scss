@@ -1,0 +1,141 @@
+// GeoWork - GwPanel Styles
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--gw-bg-panel);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-lg);
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-12) var(--gw-space-16);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  background: var(--gw-bg-card);
+  flex-shrink: 0;
+  min-height: 40px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+  user-select: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-4);
+}
+
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--gw-text-tertiary);
+  border-radius: var(--gw-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--gw-text-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--gw-space-12);
+}
+
+.resizeHandle {
+  width: 4px;
+  cursor: col-resize;
+  background: var(--gw-border-subtle);
+  transition: background 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--gw-accent);
+  }
+}
+
+// === Variants ===
+
+.sidebar {
+  width: 232px;
+  min-width: 200px;
+  max-width: 400px;
+  border-right: 1px solid var(--gw-border-subtle);
+
+  .body {
+    padding: var(--gw-space-8);
+  }
+}
+
+.dock {
+  width: 320px;
+  min-width: 280px;
+  max-width: 500px;
+  box-shadow: var(--gw-shadow-panel);
+
+  &.right {
+    border-left: 1px solid var(--gw-border-subtle);
+  }
+
+  &.left {
+    border-right: 1px solid var(--gw-border-subtle);
+  }
+}
+
+.modal {
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  box-shadow: var(--gw-shadow-panel);
+
+  .body {
+    max-height: calc(80vh - 60px);
+  }
+}
+
+.floating {
+  box-shadow: var(--gw-shadow-panel);
+  border-radius: var(--gw-radius-lg);
+  backdrop-filter: blur(12px);
+}
+
+// === Positions ===
+
+.left {
+  border-right: 1px solid var(--gw-border-subtle);
+  border-left: none;
+}
+
+.right {
+  border-left: 1px solid var(--gw-border-subtle);
+  border-right: none;
+}
+
+.top {
+  border-bottom: 1px solid var(--gw-border-subtle);
+  border-top: none;
+}
+
+.bottom {
+  border-top: 1px solid var(--gw-border-subtle);
+  border-bottom: none;
+}

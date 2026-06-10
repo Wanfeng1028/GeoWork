@@ -1,0 +1,78 @@
+// GeoWork - PermissionSelector Styles
+
+.container {
+  padding: var(--gw-space-8) 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-8);
+}
+
+.labelText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.currentLevel {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-4);
+  font-size: 12px;
+  color: var(--gw-text-primary);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gw-space-6);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-space-4);
+  padding: var(--gw-space-10) var(--gw-space-8);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-card);
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--gw-border-strong);
+    background: var(--gw-bg-popover);
+  }
+
+  &.active {
+    border-color: var(--gw-border-active);
+    background: rgba(77, 220, 151, 0.08);
+    box-shadow: var(--gw-shadow-glow);
+    color: var(--gw-text-primary);
+  }
+}
+
+.icon {
+  font-size: 18px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.risk {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 600;
+}

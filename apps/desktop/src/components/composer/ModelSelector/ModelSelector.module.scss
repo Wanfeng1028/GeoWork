@@ -1,0 +1,40 @@
+// GeoWork - ModelSelector Styles
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-8) var(--gw-space-12);
+  background: var(--gw-bg-card);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+}
+
+.icon {
+  color: var(--gw-accent);
+  font-size: 14px;
+}
+
+.selectors {
+  display: flex;
+  gap: var(--gw-space-8);
+}
+
+.providerSelect,
+.modelSelect {
+  width: 140px;
+
+  :global(.ant-select-selector) {
+    background: var(--gw-bg-input);
+    border-color: var(--gw-border-subtle);
+    color: var(--gw-text-primary);
+
+    &:hover {
+      border-color: var(--gw-border-strong);
+    }
+  }
+
+  :global(.ant-select-selection-item) {
+    color: var(--gw-text-primary);
+  }
+}

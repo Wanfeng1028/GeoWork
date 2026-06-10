@@ -1,0 +1,41 @@
+// GeoWork - GwBadge Styles
+
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  color: var(--gw-bg-window);
+}
+
+// === Colors ===
+
+.default { background: var(--gw-text-tertiary); }
+.success { background: var(--gw-accent); }
+.warning { background: var(--gw-warning); }
+.error   { background: var(--gw-danger); }
+.info    { background: var(--gw-info); }
+.accent  { background: var(--gw-accent); }
+.muted   { background: var(--gw-text-disabled); }
