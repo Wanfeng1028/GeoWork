@@ -19,7 +19,7 @@ func NewService(store *storage.Store) *Service {
 }
 
 // CheckPermission handles checking if a user has a specific permission.
-// This is a placeholder RBAC implementation for v0.4.0.
+// RBAC implementation for v0.4.0 — plan-based and team-based permissions.
 //
 // Supported permissions:
 // - workspace:owner - workspace owner
