@@ -1,15 +1,63 @@
 {
-  "id": "ndvi-timeseries-analysis",
+  "id": "ndvi-timeseries",
   "name": "NDVI 时序分析",
-  "version": "1.0.0",
-  "description": "基于 GEE 或本地影像计算 NDVI 并生成报告",
+  "version": "0.1.0",
+  "description": "基于 GEE 或本地遥感影像计算 NDVI 并生成图表和实验报告",
+  "author": "GeoWork Team",
+  "license": "MIT",
+  "tags": ["remote-sensing", "ndvi", "gee", "experiment-report"],
+  "category": "遥感指数",
   "required_tools": [
+    "geo.gee.search_dataset",
     "geo.gee.generate_ndvi_script",
     "geo.office.write_report"
+  ],
+  "optional_tools": [
+    "geo.raster.metadata",
+    "geo.raster.ndvi"
   ],
   "permissions": {
     "network": true,
     "file_write": true,
     "shell": false
-  }
+  },
+  "parameters": {
+    "start_date": {
+      "type": "string",
+      "default": "2019-01-01",
+      "description": "分析起始日期"
+    },
+    "end_date": {
+      "type": "string",
+      "default": "2024-12-31",
+      "description": "分析结束日期"
+    },
+    "dataset": {
+      "type": "string",
+      "default": "COPERNICUS/S2_SR_HARMONIZED",
+      "description": "GEE 数据集 ID"
+    },
+    "cloud_cover": {
+      "type": "number",
+      "default": 20,
+      "description": "最大云覆盖率 (%)"
+    }
+  },
+  "outputs": [
+    {
+      "name": "ndvi_script",
+      "type": "python",
+      "description": "GEE NDVI 分析脚本"
+    },
+    {
+      "name": "ndvi_chart",
+      "type": "png",
+      "description": "NDVI 时序图表"
+    },
+    {
+      "name": "report",
+      "type": "docx",
+      "description": "实验报告 Word 文档"
+    }
+  ]
 }
