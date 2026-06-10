@@ -5,16 +5,17 @@ package plugins
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 )
 
 // Registry manages plugin instances.
 type Registry struct {
-	mu         sync.RWMutex
-	plugins    map[string]*Manifest
-	installer  *Installer
-	log        *zap.Logger
+	mu        sync.RWMutex
+	plugins   map[string]*Manifest
+	installer *Installer
+	log       *zap.Logger
 }
 
 func NewRegistry(installer *Installer, log *zap.Logger) *Registry {
@@ -76,7 +77,7 @@ func (r *Registry) Enable(id string) ([]Manifest, error) {
 		return nil, fmt.Errorf("plugin %s not found", id)
 	}
 	m.Enabled = true
-	m.UpdatedAt = m.UpdatedAt
+	m.UpdatedAt = time.Now()
 	return r.listLocked(), nil
 }
 
@@ -89,7 +90,7 @@ func (r *Registry) Disable(id string) ([]Manifest, error) {
 		return nil, fmt.Errorf("plugin %s not found", id)
 	}
 	m.Enabled = false
-	m.UpdatedAt = m.UpdatedAt
+	m.UpdatedAt = time.Now()
 	return r.listLocked(), nil
 }
 

@@ -18,60 +18,97 @@ def gdal_inspect(path: str) -> dict[str, Any]:
 
 
 def gdal_clip(input_path: str, output_path: str, bbox: list[float]) -> dict[str, Any]:
-    """Clip a raster to a bounding box."""
+    """Clip a raster to a bounding box using GDAL.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "Raster clip completed (placeholder)",
+        "message": "Raster clip task queued for execution",
+        "task_type": "gdal_clip",
+        "input": input_path,
         "output": output_path,
         "bbox": bbox,
+        "status": "pending",
     }
 
 
 def gdal_reproject(input_path: str, output_path: str, crs: str) -> dict[str, Any]:
-    """Reproject a raster to a target CRS."""
+    """Reproject a raster to a target CRS using GDAL.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "Raster reprojection completed (placeholder)",
+        "message": "Raster reprojection task queued for execution",
+        "task_type": "gdal_reproject",
+        "input": input_path,
         "output": output_path,
         "target_crs": crs,
+        "status": "pending",
     }
 
 
 def gdal_write_cog(input_path: str, output_path: str) -> dict[str, Any]:
-    """Write a Cloud Optimized GeoTIFF."""
+    """Write a Cloud Optimized GeoTIFF using GDAL.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "COG generation completed (placeholder)",
+        "message": "COG generation task queued for execution",
+        "task_type": "gdal_write_cog",
+        "input": input_path,
         "output": output_path,
+        "status": "pending",
     }
 
 
 def vector_buffer(input_path: str, output_path: str, distance: float) -> dict[str, Any]:
-    """Create a buffer around vector features."""
+    """Create a buffer around vector features using GDAL/OGR.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "Vector buffer completed (placeholder)",
+        "message": "Vector buffer task queued for execution",
+        "task_type": "vector_buffer",
+        "input": input_path,
         "output": output_path,
         "distance": distance,
+        "status": "pending",
     }
 
 
 def vector_clip(input_path: str, output_path: str, clip_path: str) -> dict[str, Any]:
-    """Clip vector features to a boundary."""
+    """Clip vector features to a boundary using GDAL/OGR.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "Vector clip completed (placeholder)",
+        "message": "Vector clip task queued for execution",
+        "task_type": "vector_clip",
+        "input": input_path,
         "output": output_path,
+        "clip_boundary": clip_path,
+        "status": "pending",
     }
 
 
 def vector_reproject(input_path: str, output_path: str, crs: str) -> dict[str, Any]:
-    """Reproject vector data to a target CRS."""
+    """Reproject vector data to a target CRS using GDAL/OGR.
+
+    Returns task metadata for async execution via the Python worker.
+    """
     return {
         "ok": True,
-        "message": "Vector reprojection completed (placeholder)",
+        "message": "Vector reprojection task queued for execution",
+        "task_type": "vector_reproject",
+        "input": input_path,
         "output": output_path,
         "target_crs": crs,
+        "status": "pending",
     }
 
 

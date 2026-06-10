@@ -111,9 +111,8 @@ export function ArtifactPanel() {
         {TYPE_ICONS[type] || <FolderOutlined />}
         <span>{TYPE_LABELS[type] || type}</span>
         <Tag
-          style={{ marginLeft: 4 }}
           color="blue"
-          style={{ fontSize: 10 }}
+          style={{ marginLeft: 4, fontSize: 10 }}
         >
           {items.length}
         </Tag>
