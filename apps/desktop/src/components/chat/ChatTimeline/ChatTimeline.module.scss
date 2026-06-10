@@ -1,0 +1,58 @@
+// GeoWork ChatTimeline Styles
+
+.timeline {
+  flex: 1;
+  overflow: auto;
+  padding: var(--gw-space-16);
+  background: var(--gw-bg-window);
+}
+
+.messageItem {
+  padding: var(--gw-space-8) 0;
+}
+
+.messageCard {
+  width: 100%;
+  margin-bottom: var(--gw-space-12);
+}
+
+.messageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--gw-space-8);
+}
+
+.timestamp {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+}
+
+.messageContent {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.toolCall {
+  margin-top: var(--gw-space-8);
+}
+
+.toolCallDetail {
+  padding: var(--gw-space-8);
+  background: var(--gw-bg-subtle);
+  border-radius: var(--gw-radius-sm);
+  font-size: 13px;
+  
+  p {
+    margin: var(--gw-space-4) 0;
+  }
+}
+
+.userMsg {
+  border-left: 3px solid #1890ff;
+}
+
+.assistantMsg {
+  border-left: 3px solid #52c41a;
+}

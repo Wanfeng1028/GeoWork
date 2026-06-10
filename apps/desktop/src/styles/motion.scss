@@ -1,0 +1,86 @@
+// GeoWork Motion & Transitions
+
+// === Transition Speeds ===
+$gw-transition-fast: 150ms;
+$gw-transition-normal: 250ms;
+$gw-transition-slow: 350ms;
+
+// === Easing Functions ===
+$gw-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+$gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+// === Panel Transitions ===
+.gw-panel-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.gw-panel-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity $gw-transition-normal $gw-ease-out, 
+              transform $gw-transition-normal $gw-ease-out;
+}
+
+.gw-panel-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gw-panel-exit-active {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity $gw-transition-fast $gw-ease-in, 
+              transform $gw-transition-fast $gw-ease-in;
+}
+
+// === Dock Transitions ===
+.gw-dock-slide {
+  transition: transform $gw-transition-normal $gw-ease-out;
+}
+
+// === Hover Effects ===
+.gw-hover-lift {
+  transition: transform $gw-transition-fast $gw-ease-out,
+              box-shadow $gw-transition-fast $gw-ease-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gw-shadow-popover);
+  }
+}
+
+// === Pulse Animation ===
+@keyframes gw-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.gw-pulse {
+  animation: gw-pulse 2s ease-in-out infinite;
+}
+
+// === Shimmer Loading ===
+@keyframes gw-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gw-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--gw-bg-card) 25%,
+    var(--gw-bg-panel) 50%,
+    var(--gw-bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: gw-shimmer 1.5s ease-in-out infinite;
+}

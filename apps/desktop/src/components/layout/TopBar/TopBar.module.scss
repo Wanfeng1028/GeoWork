@@ -1,0 +1,47 @@
+// GeoWork TopBar Styles
+
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gw-space-16);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  background: var(--gw-bg-sidebar);
+  height: var(--topbar-height);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-12);
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+}
+
+.subtitle {
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+}
+
+.center {
+  display: flex;
+  gap: var(--gw-space-8);
+}
+
+.modeTag {
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+}

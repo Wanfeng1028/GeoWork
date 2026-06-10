@@ -1,0 +1,59 @@
+// GeoWork GeoComposer Styles
+
+.composer {
+  padding: var(--gw-space-16);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  background: var(--gw-bg-window);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--gw-space-12);
+}
+
+.modeSelect {
+  width: 120px;
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--gw-space-12);
+  border: 1px solid var(--gw-border-strong);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-input);
+  color: var(--gw-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--gw-accent);
+    box-shadow: 0 0 0 2px rgba(77, 220, 151, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--gw-text-tertiary);
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--gw-space-12);
+}
+
+.primaryBtn {
+  background: var(--gw-accent);
+  border-color: var(--gw-accent);
+  color: #fff;
+  
+  &:hover {
+    background: rgba(77, 220, 151, 0.8);
+    border-color: rgba(77, 220, 151, 0.8);
+  }
+}

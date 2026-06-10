@@ -1,0 +1,50 @@
+// GeoWork Themes
+// 主题切换配置
+
+// === Dark Geo (Default) ===
+[data-theme="dark-geo"] {
+  --gw-bg-primary: var(--gw-bg-window);
+  --gw-bg-secondary: var(--gw-bg-sidebar);
+  --gw-bg-tertiary: var(--gw-bg-panel);
+  --gw-bg-card: var(--gw-bg-card);
+  --gw-text-primary: var(--gw-text-primary);
+  --gw-text-secondary: var(--gw-text-secondary);
+  --gw-border-color: var(--gw-border-subtle);
+  --gw-accent-color: var(--gw-accent);
+}
+
+// === Light Geo ===
+[data-theme="light-geo"] {
+  --gw-bg-primary: var(--gw-bg-window);
+  --gw-bg-secondary: var(--gw-bg-sidebar);
+  --gw-bg-tertiary: var(--gw-bg-panel);
+  --gw-bg-card: var(--gw-bg-card);
+  --gw-text-primary: var(--gw-text-primary);
+  --gw-text-secondary: var(--gw-text-secondary);
+  --gw-border-color: var(--gw-border-subtle);
+  --gw-accent-color: #0f6b57;
+}
+
+// === Dark Glass ===
+[data-theme="dark-glass"] {
+  --gw-bg-primary: var(--gw-bg-window);
+  --gw-bg-secondary: var(--gw-bg-sidebar);
+  --gw-bg-tertiary: var(--gw-bg-panel);
+  --gw-bg-card: var(--gw-bg-card);
+  --gw-text-primary: var(--gw-text-primary);
+  --gw-text-secondary: var(--gw-text-secondary);
+  --gw-border-color: var(--gw-border-subtle);
+  --gw-accent-color: var(--gw-accent);
+}
+
+// === Ant Design 变量适配注释 ===
+// 在 AppProviders.tsx 中通过 ConfigProvider 设置 antd 主题
+// 建议覆盖以下 antd 变量以匹配 GeoWork 设计系统:
+//
+// @primary-color: var(--gw-accent);
+// @border-radius: var(--gw-radius-md);
+// @bg-color: var(--gw-bg-window);
+// @text-color: var(--gw-text-primary);
+// @text-color-secondary: var(--gw-text-secondary);
+// @border-color-base: var(--gw-border-subtle);
+// @component-background: var(--gw-bg-card);

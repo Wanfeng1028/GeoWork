@@ -1,5 +1,15 @@
+// GeoWork Global Styles
+// 导入设计 tokens 和主题
+
+@import './tokens';
+@import './themes';
+
 :root {
   font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme="light-geo"] {
   color-scheme: light;
 }
 
@@ -9,6 +19,10 @@
 
 body {
   margin: 0;
+  padding: 0;
+  background: var(--gw-bg-window);
+  color: var(--gw-text-primary);
+  overflow: hidden;
 }
 
 button,
@@ -16,4 +30,83 @@ input,
 textarea,
 select {
   font: inherit;
+  color: inherit;
+}
+
+// === Scrollbar Styling ===
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gw-bg-panel);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gw-border-subtle);
+  border-radius: var(--gw-radius-sm);
+  
+  &:hover {
+    background: var(--gw-border-strong);
+  }
+}
+
+// === Selection ===
+::selection {
+  background: var(--gw-accent);
+  color: var(--gw-bg-window);
+}
+
+// === Focus ===
+:focus-visible {
+  outline: 2px solid var(--gw-border-active);
+  outline-offset: 2px;
+}
+
+// === Animations ===
+@keyframes gw-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gw-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes gw-slide-up {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gw-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(77, 220, 151, 0.15);
+  }
+  50% { 
+    box-shadow: 0 0 38px rgba(77, 220, 151, 0.25);
+  }
+}
+
+.gw-animate-fade-in {
+  animation: gw-fade-in 0.2s ease-out;
+}
+
+.gw-animate-fade-out {
+  animation: gw-fade-out 0.2s ease-in;
+}
+
+.gw-animate-slide-up {
+  animation: gw-slide-up 0.3s ease-out;
+}
+
+.gw-animate-glow {
+  animation: gw-glow 2s ease-in-out infinite;
 }

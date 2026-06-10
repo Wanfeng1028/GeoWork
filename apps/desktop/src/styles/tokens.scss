@@ -1,11 +1,115 @@
+// GeoWork Design Tokens
+// QoderWork 质感 + Geo 专业配色
+
 :root {
-  --gw-color-primary: #1677ff;
-  --gw-color-geo: #10b981;
-  --gw-color-rs: #0ea5e9;
-  --gw-color-bg: #f5f7fb;
-  --gw-color-surface: #ffffff;
-  --gw-color-border: #d9dee8;
-  --gw-sidebar-width: 232px;
-  --gw-topbar-height: 48px;
-  --gw-bottom-panel-height: 220px;
+  // === Background Layers ===
+  --gw-bg-window: #070a0f;
+  --gw-bg-sidebar: #0c1118;
+  --gw-bg-panel: #101722;
+  --gw-bg-card: #141d2a;
+  --gw-bg-popover: #1a2435;
+  --gw-bg-input: rgba(16, 23, 34, 0.92);
+
+  // === Text Layers ===
+  --gw-text-primary: #f5f7fb;
+  --gw-text-secondary: #a9b3c2;
+  --gw-text-tertiary: #6f7b8e;
+  --gw-text-disabled: #434b58;
+
+  // === Border Layers ===
+  --gw-border-subtle: rgba(255, 255, 255, 0.08);
+  --gw-border-strong: rgba(255, 255, 255, 0.14);
+  --gw-border-active: rgba(77, 220, 151, 0.72);
+
+  // === Geo Theme Colors ===
+  --gw-accent: #4ddc97;
+  --gw-accent-blue: #4aa3ff;
+  --gw-accent-map: #7ee787;
+  --gw-warning: #f2c94c;
+  --gw-danger: #ff6b6b;
+  --gw-info: #4aa3ff;
+
+  // === Map & Geo Specific ===
+  --gw-map-base: #0f1923;
+  --gw-map-grid: rgba(77, 220, 151, 0.06);
+  --gw-map-feature: #4ddc97;
+  --gw-map-highlight: #f2c94c;
+
+  // === Diff Colors ===
+  --gw-diff-add: rgba(77, 220, 151, 0.15);
+  --gw-diff-add-text: #4ddc97;
+  --gw-diff-remove: rgba(255, 107, 107, 0.15);
+  --gw-diff-remove-text: #ff6b6b;
+
+  // === Radius ===
+  --gw-radius-sm: 6px;
+  --gw-radius-md: 10px;
+  --gw-radius-lg: 16px;
+  --gw-radius-xl: 22px;
+
+  // === Shadows ===
+  --gw-shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.35);
+  --gw-shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.28);
+  --gw-shadow-glow: 0 0 38px rgba(77, 220, 151, 0.2);
+
+  // === Spacing ===
+  --gw-space-4: 4px;
+  --gw-space-6: 6px;
+  --gw-space-8: 8px;
+  --gw-space-12: 12px;
+  --gw-space-16: 16px;
+  --gw-space-20: 20px;
+  --gw-space-24: 24px;
+  --gw-space-32: 32px;
+
+  // === Z-Index ===
+  --gw-z-titlebar: 100;
+  --gw-z-dock: 200;
+  --gw-z-popover: 300;
+  --gw-z-modal: 400;
+  --gw-z-overlay: 500;
+}
+
+// === Light Theme (Reserved) ===
+[data-theme="light-geo"] {
+  --gw-bg-window: #f3f6f8;
+  --gw-bg-sidebar: #ffffff;
+  --gw-bg-panel: #f8fafb;
+  --gw-bg-card: #ffffff;
+  --gw-bg-popover: #ffffff;
+  --gw-bg-input: rgba(255, 255, 255, 0.95);
+
+  --gw-text-primary: #1f2a32;
+  --gw-text-secondary: #47606d;
+  --gw-text-tertiary: #6f7b8e;
+  --gw-text-disabled: #a9b3c2;
+
+  --gw-border-subtle: rgba(0, 0, 0, 0.08);
+  --gw-border-strong: rgba(0, 0, 0, 0.14);
+  --gw-border-active: rgba(15, 107, 87, 0.72);
+
+  --gw-shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.08);
+  --gw-shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+// === Dark Glass Theme (Reserved) ===
+[data-theme="dark-glass"] {
+  --gw-bg-window: rgba(10, 14, 23, 0.95);
+  --gw-bg-sidebar: rgba(15, 20, 30, 0.92);
+  --gw-bg-panel: rgba(20, 28, 42, 0.9);
+  --gw-bg-card: rgba(25, 35, 52, 0.88);
+  --gw-bg-popover: rgba(25, 35, 52, 0.95);
+  --gw-bg-input: rgba(16, 23, 34, 0.85);
+
+  --gw-text-primary: #f5f7fb;
+  --gw-text-secondary: #a9b3c2;
+  --gw-text-tertiary: #6f7b8e;
+  --gw-text-disabled: #434b58;
+
+  --gw-border-subtle: rgba(255, 255, 255, 0.06);
+  --gw-border-strong: rgba(255, 255, 255, 0.12);
+  --gw-border-active: rgba(77, 220, 151, 0.8);
+
+  --gw-shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --gw-shadow-popover: 0 12px 40px rgba(0, 0, 0, 0.35);
 }

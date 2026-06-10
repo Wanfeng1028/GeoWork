@@ -1,0 +1,52 @@
+// GeoWork ArtifactPanel Styles
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-12);
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gw-text-primary);
+}
+
+.artifactItem {
+  padding: var(--gw-space-8) 0;
+}
+
+.artifactCard {
+  width: 100%;
+}
+
+.artifactHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin-bottom: var(--gw-space-8);
+}
+
+.artifactName {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gw-text-primary);
+}
+
+.artifactMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artifactPath {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+  font-family: monospace;
+}
+
+.artifactDate {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+}

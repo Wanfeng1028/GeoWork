@@ -1,0 +1,34 @@
+// GeoWork AppShell Styles
+
+.shell {
+  --topbar-height: 48px;
+  --sidebar-width: 232px;
+  --sidebar-collapsed-width: 48px;
+  --bottom-height: 220px;
+  --minimap-width: 4px;
+  --minimap-expanded-width: 200px;
+  --right-dock-width: 320px;
+  
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--minimap-width) var(--right-dock-width);
+  grid-template-rows: var(--topbar-height) 1fr var(--bottom-height);
+  background: var(--gw-bg-window);
+  color: var(--gw-text-primary);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr var(--minimap-width) var(--right-dock-width);
+  overflow: hidden;
+}
+
+@media (max-width: 1400px) {
+  .shell {
+    grid-template-columns: var(--sidebar-width) 1fr var(--right-dock-width);
+  }
+  
+  .body {
+    grid-template-columns: 1fr var(--right-dock-width);
+  }
+}

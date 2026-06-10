@@ -1,0 +1,196 @@
+// GeoWork LeftSidebar Styles
+
+.sidebar {
+  grid-row: 2 / 4;
+  background: var(--gw-bg-sidebar);
+  border-right: 1px solid var(--gw-border-subtle);
+  display: flex;
+  flex-direction: column;
+  padding: var(--gw-space-12);
+  overflow: auto;
+}
+
+.sidebarCollapsed {
+  grid-row: 2 / 4;
+  width: var(--sidebar-collapsed-width);
+  background: var(--gw-bg-sidebar);
+  border-right: 1px solid var(--gw-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapsedIcon {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gw-accent);
+}
+
+.newTaskBtn {
+  width: 100%;
+  padding: var(--gw-space-8) var(--gw-space-12);
+  border: 1px dashed var(--gw-border-strong);
+  border-radius: var(--gw-radius-sm);
+  background: transparent;
+  color: var(--gw-accent);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: var(--gw-space-12);
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: var(--gw-bg-card);
+    border-color: var(--gw-accent);
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: var(--gw-space-4);
+  margin-bottom: var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  padding-bottom: var(--gw-space-8);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--gw-space-6);
+  border: none;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: var(--gw-bg-card);
+    color: var(--gw-text-primary);
+  }
+}
+
+.navigation {
+  flex: 1;
+  overflow: auto;
+  margin-bottom: var(--gw-space-12);
+}
+
+.navGroup {
+  margin-bottom: var(--gw-space-8);
+}
+
+.groupHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-8) var(--gw-space-4);
+  border: none;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: var(--gw-bg-card);
+    color: var(--gw-text-primary);
+  }
+}
+
+.groupLabel {
+  flex: 1;
+  text-align: left;
+}
+
+.groupArrow {
+  font-size: 10px;
+}
+
+.groupItems {
+  padding-left: var(--gw-space-8);
+  margin-top: var(--gw-space-4);
+}
+
+.navItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-6) var(--gw-space-8);
+  border: none;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+  text-align: left;
+  
+  &:hover {
+    background: var(--gw-bg-card);
+    color: var(--gw-text-primary);
+  }
+}
+
+.activeNavItem {
+  background: rgba(77, 220, 151, 0.1);
+  color: var(--gw-accent);
+  font-weight: 500;
+}
+
+.navIcon {
+  font-size: 14px;
+}
+
+.navLabel {
+  flex: 1;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-8);
+  border-top: 1px solid var(--gw-border-subtle);
+  margin-top: auto;
+}
+
+.userAvatar {
+  font-size: 24px;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.userNickname {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gw-text-primary);
+}
+
+.userSubscription {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+}
+
+.settingsBtn {
+  padding: var(--gw-space-4);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: var(--gw-radius-sm);
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: var(--gw-bg-card);
+  }
+}

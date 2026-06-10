@@ -1,0 +1,27 @@
+// GeoWork RuntimeEvents Styles
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+}
+
+.eventItem {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-6) var(--gw-space-8);
+  border-bottom: 1px solid var(--gw-border-subtle);
+}
+
+.eventMessage {
+  flex: 1;
+  font-size: 13px;
+  color: var(--gw-text-primary);
+}
+
+.eventTime {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+  font-family: monospace;
+}
