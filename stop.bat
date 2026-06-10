@@ -13,6 +13,11 @@ echo.
 set "ROOT_DIR=%~dp0"
 set "PID_FILE=%ROOT_DIR%.geowork-pids"
 
+:: Set port constants
+set "GO_PORT=8765"
+set "PY_PORT=8766"
+set "CLOUD_PORT=8767"
+
 :: Method: Kill processes by port (most reliable)
 echo [1/2] Stopping GeoWork processes by port...
 echo.
@@ -34,9 +39,9 @@ if "!go_stopped!"=="false" (
 echo.
 
 :: Stop Python Geo Worker (port 8766)
-echo [2/2] Checking port 8766 (Python Worker)...
+echo [2/3] Checking port 8766 (Python Worker)...
 set "py_stopped=false"
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') do (
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!PY_PORT! ^| findstr LISTENING') do (
     echo Found process PID: %%a
     taskkill /PID %%a /F >nul 2>&1
     if !errorlevel! equ 0 (
@@ -45,7 +50,23 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8766 ^| findstr LISTENING') 
     )
 )
 if "!py_stopped!"=="false" (
-    echo [OK] Port 8766 is free
+    echo [OK] Port !PY_PORT! is free
+)
+echo.
+
+:: Stop Cloud Server (port 8767)
+echo [3/3] Checking port !CLOUD_PORT! (Cloud Server)...
+set "cloud_stopped=false"
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!CLOUD_PORT! ^| findstr LISTENING') do (
+    echo Found process PID: %%a
+    taskkill /PID %%a /F >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [OK] Process stopped
+        set "cloud_stopped=true"
+    )
+)
+if "!cloud_stopped!"=="false" (
+    echo [OK] Port !CLOUD_PORT! is free
 )
 echo.
 
@@ -66,18 +87,26 @@ set "all_clear=true"
 
 netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [WARNING] Port 8765 still in use
+    echo [WARNING] Port !GO_PORT! still in use
     set "all_clear=false"
 ) else (
-    echo [OK] Port 8765 released
+    echo [OK] Port !GO_PORT! released
 )
 
-netstat -aon | findstr :8766 | findstr LISTENING >nul 2>&1
+netstat -aon | findstr :!PY_PORT! | findstr LISTENING >nul 2>&1
 if !errorlevel! equ 0 (
-    echo [WARNING] Port 8766 still in use
+    echo [WARNING] Port !PY_PORT! still in use
     set "all_clear=false"
 ) else (
-    echo [OK] Port 8766 released
+    echo [OK] Port !PY_PORT! released
+)
+
+netstat -aon | findstr :!CLOUD_PORT! | findstr LISTENING >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [WARNING] Port !CLOUD_PORT! still in use
+    set "all_clear=false"
+) else (
+    echo [OK] Port !CLOUD_PORT! released
 )
 
 echo.
@@ -88,7 +117,7 @@ if "!all_clear!"=="true" (
 ) else (
     echo [WARNING] Some ports still in use
     echo [HINT] Try running stop.bat again
-    echo [HINT] Or check manually: netstat -aon ^| findstr "8765 8766"
+    echo [HINT] Or check manually: netstat -aon ^| findstr "!GO_PORT! !PY_PORT! !CLOUD_PORT!"
 )
 
 echo.

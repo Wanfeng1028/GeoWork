@@ -19,6 +19,7 @@ echo.
 
 set "go_running=false"
 set "py_running=false"
+set "cloud_running=false"
 
 :: Check Go Core Runtime (port 8765)
 netstat -aon | findstr :8765 | findstr LISTENING >nul 2>&1
@@ -38,6 +39,16 @@ if !errorlevel! equ 0 (
     set "py_running=true"
 ) else (
     echo [MISSING] Python Geo Worker not running (port 8766)
+)
+
+:: Check Cloud Server (port 8767)
+netstat -aon | findstr :8767 | findstr LISTENING >nul 2>&1
+if !errorlevel! equ 0 (
+    for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8767 ^| findstr LISTENING') do set "cloud_pid=%%a"
+    echo [OK] Cloud Server running (port 8767, PID: !cloud_pid!)
+    set "cloud_running=true"
+) else (
+    echo [MISSING] Cloud Server not running (port 8767)
 )
 
 echo.
@@ -104,6 +115,18 @@ if "!py_running!"=="true" (
     echo [MISSING] Python Geo Worker not running, skipping health check
 )
 
+:: Check Cloud Server health status
+if "!cloud_running!"=="true" (
+    curl -s http://127.0.0.1:8767/api/health >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo [OK] Cloud Server health check passed
+    ) else (
+        echo [WARNING] Cloud Server health check failed
+    )
+) else (
+    echo [MISSING] Cloud Server not running, skipping health check
+)
+
 echo.
 
 :: Check log files
@@ -134,6 +157,14 @@ if exist "%ROOT_DIR%logs" (
     ) else (
         echo [MISSING] desktop.log does not exist
     )
+
+    if exist "%ROOT_DIR%logs\cloud-server.log" (
+        for %%a in ("%ROOT_DIR%logs\cloud-server.log") do (
+            echo [OK] cloud-server.log (%%~za bytes)
+        )
+    ) else (
+        echo [MISSING] cloud-server.log does not exist
+    )
 ) else (
     echo [MISSING] logs directory does not exist
 )
@@ -145,11 +176,14 @@ echo ========================================
 echo.
 
 :: Provide operation suggestions
-if "!go_running!"=="true" if "!py_running!"=="true" (
-    echo [OK] GeoWork services running normally
-    echo [HINT] Access http://127.0.0.1:8765 to use services
+if "!go_running!"=="true" if "!py_running!"=="true" if "!cloud_running!"=="true" (
+    echo [OK] GeoWork services running normally (Go Core + Python Worker + Cloud Server)
+    echo [HINT] Access:
+    echo   - Go Core: http://127.0.0.1:8765
+    echo   - Python Worker: http://127.0.0.1:8766
+    echo   - Cloud Server: http://127.0.0.1:8767
 ) else (
-    if "!go_running!"=="false" if "!py_running!"=="false" (
+    if "!go_running!"=="false" if "!py_running!"=="false" if "!cloud_running!"=="false" (
         echo [MISSING] GeoWork services not running
         echo [HINT] Run start.bat to start services
     ) else (

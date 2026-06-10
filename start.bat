@@ -15,6 +15,7 @@ set "PID_FILE=%ROOT_DIR%.geowork-pids"
 :: 定义端口常量
 set "GO_PORT=8765"
 set "PY_PORT=8766"
+set "CLOUD_PORT=8767"
 
 :: 设置 Electron 路径
 set "ELECTRON_PATH=%ROOT_DIR%node_modules\electron\dist\electron.exe"
@@ -103,7 +104,7 @@ echo [√] Electron 依赖检查通过
 echo.
 
 :: 检查端口是否被占用
-echo [5/7] 检查端口占用...
+echo [5/8] 检查端口占用...
 set "port_clear=true"
 
 netstat -aon | findstr :!GO_PORT! | findstr LISTENING >nul 2>&1
@@ -120,6 +121,14 @@ if !errorlevel! equ 0 (
     set "port_clear=false"
 ) else (
     echo [√] 端口 !PY_PORT! 可用
+)
+
+netstat -aon | findstr :!CLOUD_PORT! | findstr LISTENING >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [!] 端口 !CLOUD_PORT! 已被占用
+    set "port_clear=false"
+) else (
+    echo [√] 端口 !CLOUD_PORT! 可用
 )
 
 if "!port_clear!"=="false" (
@@ -143,7 +152,7 @@ if exist "%PID_FILE%" del "%PID_FILE%"
 if not exist "%ROOT_DIR%logs" mkdir "%ROOT_DIR%logs"
 
 :: 启动 Go Core Runtime
-echo [6/7] 启动 Go Core Runtime (端口 !GO_PORT!)...
+echo [6/8] 启动 Go Core Runtime (端口 !GO_PORT!)...
 start "GeoWork-Go-Core" /D "%ROOT_DIR%core" cmd /c "go run ./cmd/geowork-runtime --port !GO_PORT! > "%ROOT_DIR%logs\go-core.log" 2>&1"
 
 :: 等待启动
@@ -161,7 +170,7 @@ if defined GO_PID (
 echo.
 
 :: 启动 Python Geo Worker
-echo [7/7] 启动 Python Geo Worker (端口 !PY_PORT!)...
+echo [7/8] 启动 Python Geo Worker (端口 !PY_PORT!)...
 start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port !PY_PORT! > "%ROOT_DIR%logs\python-worker.log" 2>&1"
 
 :: 等待启动
@@ -175,6 +184,24 @@ if defined PY_PID (
 ) else (
     echo [!] Python Geo Worker 启动中，请稍候...
     echo [提示] 如果启动失败，请检查日志: %ROOT_DIR%logs\python-worker.log
+)
+echo.
+
+:: 启动 Cloud Server (v0.4.0)
+echo [8/8] 启动 Cloud Server (端口 !CLOUD_PORT!)...
+start "GeoWork-Cloud-Server" /D "%ROOT_DIR%server" cmd /c "go run ./cmd/geowork-api > "%ROOT_DIR%logs\cloud-server.log" 2>&1"
+
+:: 等待启动
+timeout /t 3 >nul
+
+:: 获取 Cloud Server 进程 PID
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :!CLOUD_PORT! ^| findstr LISTENING') do set "CLOUD_PID=%%a"
+if defined CLOUD_PID (
+    echo Cloud-Server: !CLOUD_PID! >> "%PID_FILE%"
+    echo [√] Cloud Server 已启动 (PID: !CLOUD_PID!)
+) else (
+    echo [!] Cloud Server 启动中，请稍候...
+    echo [提示] 如果启动失败，请检查日志: %ROOT_DIR%logs\cloud-server.log
 )
 echo.
 
@@ -207,6 +234,14 @@ if !errorlevel! equ 0 (
 ) else (
     echo [!] Python Geo Worker 可能未正常启动，请检查日志
     echo [提示] 日志位置: %ROOT_DIR%logs\python-worker.log
+)
+
+curl -s http://127.0.0.1:!CLOUD_PORT!/api/health >nul 2>&1
+if !errorlevel! equ 0 (
+    echo [√] Cloud Server 运行正常
+) else (
+    echo [!] Cloud Server 可能未正常启动，请检查日志
+    echo [提示] 日志位置: %ROOT_DIR%logs\cloud-server.log
 )
 
 :: 显示 PID 文件内容
