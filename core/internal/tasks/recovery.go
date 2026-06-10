@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 // Checkpoint holds the execution state for a task recovery point.
@@ -21,7 +20,7 @@ type Checkpoint struct {
 // RecoveryManager handles task interruption recovery via checkpoints.
 type RecoveryManager struct {
 	db  *sql.DB
-	log *zap.Logger
+	log *slog.Logger
 }
 
 const checkpointTableSQL = `
@@ -37,14 +36,14 @@ CREATE TABLE IF NOT EXISTS recovery_checkpoints (
 `
 
 // NewRecoveryManager creates a new recovery manager and ensures the checkpoint table exists.
-func NewRecoveryManager(db *sql.DB, log *zap.Logger) *RecoveryManager {
+func NewRecoveryManager(db *sql.DB, log *slog.Logger) *RecoveryManager {
 	rm := &RecoveryManager{
 		db:  db,
 		log: log,
 	}
 
 	if err := rm.ensureCheckpointTable(); err != nil {
-		log.Error("failed to create checkpoint table", zap.Error(err))
+		log.Error("failed to create checkpoint table", "error", err)
 	}
 
 	return rm
@@ -80,9 +79,9 @@ func (rm *RecoveryManager) SaveCheckpoint(checkpoint Checkpoint) error {
 	}
 
 	rm.log.Debug("checkpoint saved",
-		zap.String("task_id", checkpoint.TaskID),
-		zap.Int("step_index", checkpoint.StepIndex),
-		zap.String("status", checkpoint.Status),
+		"task_id", checkpoint.TaskID,
+		"step_index", checkpoint.StepIndex,
+		"status", checkpoint.Status,
 	)
 	return nil
 }
@@ -112,7 +111,7 @@ func (rm *RecoveryManager) ClearCheckpoint(taskID string) error {
 		return fmt.Errorf("checkpoint not found for task %s", taskID)
 	}
 
-	rm.log.Debug("checkpoint cleared", zap.String("task_id", taskID))
+	rm.log.Debug("checkpoint cleared", "task_id", taskID)
 	return nil
 }
 
@@ -128,9 +127,9 @@ func (rm *RecoveryManager) RecoverTask(taskID string) (*Checkpoint, error) {
 	}
 
 	rm.log.Info("recovering task",
-		zap.String("task_id", taskID),
-		zap.Int("step_index", cp.StepIndex),
-		zap.String("status", cp.Status),
+		"task_id", taskID,
+		"step_index", cp.StepIndex,
+		"status", cp.Status,
 	)
 	return cp, nil
 }
