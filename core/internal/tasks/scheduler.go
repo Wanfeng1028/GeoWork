@@ -2,6 +2,8 @@ package tasks
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,12 +33,12 @@ type ScheduledTask struct {
 
 // TaskScheduler manages scheduled task execution.
 type TaskScheduler struct {
-	mu       sync.RWMutex
-	tasks    map[string]*ScheduledTask
-	log      *zap.Logger
-	stopCh   chan struct{}
-	once     sync.Once
-	running  bool
+	mu      sync.RWMutex
+	tasks   map[string]*ScheduledTask
+	log     *zap.Logger
+	stopCh  chan struct{}
+	once    sync.Once
+	running bool
 }
 
 // NewTaskScheduler creates a new scheduler instance.
