@@ -22,10 +22,15 @@ export interface WorkspaceFile {
 }
 
 export interface WorkspaceState {
+  workspaces: Workspace[];
   currentWorkspace: Workspace | null;
   fileTree: WorkspaceFile | null;
   branch: string;
   recentFiles: WorkspaceFile[];
   isLoading: boolean;
   error: string | null;
+  loadWorkspaces: () => Promise<void>;
+  openWorkspace: (workspaceId: string) => Promise<void>;
+  readFile: (workspaceId: string, filePath: string) => Promise<string>;
+  writeFile: (workspaceId: string, filePath: string, content: string) => Promise<void>;
 }

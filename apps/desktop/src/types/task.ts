@@ -43,4 +43,5 @@ export interface TaskState {
   currentTask: Task | null;
   events: RuntimeEvent[];
   isLoading: boolean;
+  error: string | null;
 }

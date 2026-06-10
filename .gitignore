@@ -1,19 +1,37 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 out/
 .tools/
+
+# Environment
 .env
-.venv/
-docx/
-docs/
-.qwen/
 .env.local
-*.log
+
+# Python virtual env
+.venv/
 *.egg-info/
 __pycache__/
-.pytest_cache/
+
+# Docs & documentation source (文档都不需要上传)
+docs/
+docx/
+
+# AI/IDE config
+.qwen/
+
+# Logs
+logs/
+*.log
+
+# IDE
 .DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# Cache
+.pytest_cache/

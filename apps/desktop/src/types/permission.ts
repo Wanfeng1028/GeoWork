@@ -40,4 +40,8 @@ export interface PermissionState {
   defaultLevel: PermissionLevel;
   pendingRequests: PermissionRequest[];
   policies: Record<string, PermissionPolicy>;
+  loadPendingRequests: () => Promise<void>;
+  approveRequest: (id: string, reason?: string) => Promise<void>;
+  denyRequest: (id: string, reason?: string) => Promise<void>;
+  setDefaultLevel: (level: PermissionLevel) => void;
 }
