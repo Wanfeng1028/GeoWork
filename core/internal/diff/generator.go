@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -132,9 +133,11 @@ func generateUnifiedDiff(path, old, new string) string {
 
 	// Write removed lines
 	if prefixLines < len(oldLines) {
-		buf.WriteString("@@ -")
-		buf.WriteString(fmt.Sprintf("%d,%d", prefixLines+1, len(oldLines)-prefixLines))
-		buf.WriteString(fmt.Sprintf(" +%d,%d @@\n", prefixLines+1, len(newLines)-prefixLines))
+		var diffHeader strings.Builder
+		diffHeader.WriteString("@@ -")
+		diffHeader.WriteString(fmt.Sprintf("%d,%d", prefixLines+1, len(oldLines)-prefixLines))
+		diffHeader.WriteString(fmt.Sprintf(" +%d,%d @@\n", prefixLines+1, len(newLines)-prefixLines))
+		buf.WriteString(diffHeader.String())
 		for i := prefixLines; i < len(oldLines); i++ {
 			buf.WriteString(fmt.Sprintf("-%s\n", oldLines[i]))
 		}
@@ -143,7 +146,10 @@ func generateUnifiedDiff(path, old, new string) string {
 		}
 	} else {
 		// New file
-		buf.WriteString("@@ -0,0 +%d @@\n", len(newLines))
+		var header strings.Builder
+		header.WriteString("@@ -0,0 +")
+		header.WriteString(fmt.Sprintf("%d @@\n", len(newLines)))
+		buf.WriteString(header.String())
 		for _, line := range newLines {
 			buf.WriteString(fmt.Sprintf("+%s\n", line))
 		}

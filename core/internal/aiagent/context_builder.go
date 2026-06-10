@@ -8,6 +8,19 @@ import (
 	"go.uber.org/zap"
 )
 
+// ToolDef represents a tool definition for LLM function calling.
+type ToolDef struct {
+	Type     string      `json:"type"`
+	Function ToolFunction `json:"function"`
+}
+
+// ToolFunction represents a function tool definition.
+type ToolFunction struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Parameters  map[string]any `json:"parameters"`
+}
+
 // ContextBuilder assembles the full context for model calls.
 type ContextBuilder struct {
 	log     *zap.Logger

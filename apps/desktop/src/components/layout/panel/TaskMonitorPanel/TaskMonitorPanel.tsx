@@ -14,8 +14,8 @@ import {
   LoadingOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
-import useTaskStore from "../../../stores/taskStore";
-import useChatStore from "../../../stores/chatStore";
+import useTaskStore from "../../../../stores/taskStore";
+import useChatStore from "../../../../stores/chatStore";
 import styles from "./TaskMonitorPanel.module.scss";
 
 const { Panel } = Collapse;
@@ -68,10 +68,9 @@ export function TaskMonitorPanel() {
 
   const recentEvents = events.slice(-10).reverse();
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (currentTask) {
-      const { cancelTask } = await import("../../../stores/taskStore");
-      cancelTask.getState().cancelTask(currentTask.id);
+      useTaskStore.getState().cancelTask(currentTask.id);
     }
   };
 

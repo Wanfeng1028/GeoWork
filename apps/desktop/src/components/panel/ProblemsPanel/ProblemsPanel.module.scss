@@ -1,11 +1,64 @@
 // GeoWork ProblemsPanel Styles
 
 .panel {
-  padding: var(--gw-space-16);
-  overflow: auto;
   height: 100%;
-}
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
 
-.empty {
-  margin-top: 40%;
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .badgeLabel {
+        font-size: 11px;
+        margin-right: 2px;
+      }
+
+      .totalCount {
+        font-size: 11px;
+        color: #999;
+        margin-left: 8px;
+      }
+    }
+  }
+
+  .filterSection {
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tableContainer {
+    flex: 1;
+    overflow: auto;
+
+    .problemTable {
+      :global(.ant-table-tbody > tr > td) {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .location {
+        font-family: monospace;
+        font-size: 11px;
+        color: #666;
+      }
+    }
+  }
+
+  .empty {
+    margin-top: 40%;
+  }
 }

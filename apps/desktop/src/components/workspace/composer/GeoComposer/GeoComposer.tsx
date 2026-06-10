@@ -57,10 +57,10 @@ export function GeoComposer() {
   const { settings } = useSettingsStore();
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState(
-    settings?.defaultModel || "gpt-4o"
+    settings?.agent?.defaultMode || "gpt-4o"
   );
   const [selectedPermission, setSelectedPermission] = useState(
-    settings?.defaultPermission || "limited"
+    settings?.agent?.defaultPermission || "limited"
   );
   const [selectedTemplate, setSelectedTemplate] = useState("custom");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -205,7 +205,7 @@ export function GeoComposer() {
               <Button
                 type={activeMode === mode.value ? "primary" : "text"}
                 icon={<span style={{ fontSize: 16 }}>{mode.icon}</span>}
-                onClick={() => setActiveMode(mode.value)}
+                onClick={() => setActiveMode(mode.value as any)}
               />
             </Tooltip>
           ))}

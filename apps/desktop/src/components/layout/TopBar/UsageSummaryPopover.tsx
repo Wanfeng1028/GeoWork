@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { Popover, Tag, Progress, Space, Typography, Avatar, Button, Divider } from 'antd'
 import { UserOutlined, CreditCardOutlined, BulbOutlined, CloudServerOutlined } from '@ant-design/icons'
-import { useAccountStore } from '../../stores/accountStore'
+import { useAccountStore } from '../../../stores/accountStore'
 import styles from './UsageSummaryPopover.module.scss'
 
 const { Text, Paragraph } = Typography

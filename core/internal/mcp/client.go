@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"os/exec"
 	"sync"
 	"sync/atomic"
@@ -19,7 +19,7 @@ import (
 type MCPClient struct {
 	config     *ServerConfig
 	cmd        *exec.Cmd
-	stdin      *os.File
+	stdin      io.WriteCloser
 	stdout     *bufio.Reader
 	log        *zap.Logger
 	mu         sync.Mutex
@@ -74,7 +74,7 @@ func (c *MCPClient) Connect(ctx context.Context) error {
 	}
 
 	// Initialize with JSON-RPC initialize request
-	_ = c.sendRequest(ctx, map[string]any{
+	resp, err := c.sendRequest(ctx, map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "initialize",
 		"params": map[string]any{
@@ -84,6 +84,12 @@ func (c *MCPClient) Connect(ctx context.Context) error {
 		},
 		"id": c.nextID.Add(1),
 	})
+	if err != nil {
+		return fmt.Errorf("initialize: %w", err)
+	}
+	if resp.Error != nil {
+		return fmt.Errorf("initialize error: %s", resp.Error.Message)
+	}
 
 	// Send initialized notification
 	_ = c.sendNotification("notifications/initialized", map[string]any{})
@@ -126,7 +132,7 @@ func (c *MCPClient) CallTool(ctx context.Context, name string, args map[string]a
 		"jsonrpc": "2.0",
 		"method":  "tools/call",
 		"params": map[string]any{
-			"name":   name,
+			"name":      name,
 			"arguments": args,
 		},
 		"id": c.nextID.Add(1),

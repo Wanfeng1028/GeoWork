@@ -3,7 +3,6 @@
 package diff
 
 import (
-	"bufio"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +10,7 @@ import (
 
 // Apply applies a diff to the old content, producing new content.
 func Apply(d *Diff) (string, error) {
-	patch, err := ParseUnifiedDiff(d.Diff)
+	patch, err := ParseUnifiedDiff(d.Unified)
 	if err != nil {
 		// Fallback: just return new content
 		return d.NewContent, nil
@@ -93,8 +92,8 @@ func RejectAll(diffs []*Diff) {
 }
 
 // SavePatch saves the diff as a .patch file.
-func SavePatch(diff *Diff, path string) error {
-	return os.WriteFile(path, []byte(diff.Diff), 0644)
+func SavePatch(d *Diff, path string) error {
+	return os.WriteFile(path, []byte(d.Unified), 0644)
 }
 
 // CreateBranchSnapshot creates a copy of workspace files for branch rollback.
@@ -124,7 +123,7 @@ func joinLines(lines []string) string {
 	if len(lines) == 0 {
 		return ""
 	}
-	var buf bufio.Builder
+	var buf strings.Builder
 	for i, l := range lines {
 		if i > 0 {
 			buf.WriteByte('\n')

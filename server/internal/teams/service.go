@@ -64,7 +64,7 @@ func (s *Service) CreateTeam(c *gin.Context) {
 	c.JSON(http.StatusCreated, team)
 }
 
-// ListTeams handles GET /api/Teams
+// ListTeams handles GET /api/teams
 func (s *Service) ListTeams(c *gin.Context) {
 	user := getUserFromContext(c)
 	if user == nil {

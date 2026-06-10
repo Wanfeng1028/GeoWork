@@ -12,7 +12,7 @@ import {
   BranchesOutlined,
   DiffOutlined,
 } from "@ant-design/icons";
-import useDiffStore from "../../../stores/diffStore";
+import useDiffStore from "../../../../stores/diffStore";
 import styles from "./DiffPanel.module.scss";
 
 const { Panel } = Collapse;
@@ -180,7 +180,7 @@ export function DiffPanel() {
           </div>
 
           <Collapse
-            defaultActiveKeys={Array.from(expandedFiles)}
+            defaultActiveKey={Array.from(expandedFiles) as any}
             onChange={(keys) => {
               setExpandedFiles(new Set(keys as string[]));
             }}

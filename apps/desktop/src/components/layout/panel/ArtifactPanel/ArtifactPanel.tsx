@@ -16,8 +16,8 @@ import {
   DownloadOutlined,
   OpenAIOutlined,
 } from "@ant-design/icons";
-import useArtifactStore from "../../../stores/artifactStore";
-import useWorkspaceStore from "../../../stores/workspaceStore";
+import useArtifactStore from "../../../../stores/artifactStore";
+import useWorkspaceStore from "../../../../stores/workspaceStore";
 import styles from "./ArtifactPanel.module.scss";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
