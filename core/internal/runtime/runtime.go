@@ -1124,7 +1124,7 @@ func (a *App) archiveTaskLog(taskID, projectPath string) {
 }
 
 func defaultSkills() []Skill {
-	names := []string{"ndvi-timeseries-analysis", "gee-sentinel2-cloudfree-composite", "landsat-lst-retrieval", "land-cover-classification", "urban-expansion-analysis", "water-extraction-ndwi", "dem-terrain-analysis", "paper-reading-geography", "literature-review-remote-sensing", "undergraduate-experiment-report", "graduate-thesis-outline", "map-layout-export"}
+	names := []string{"ndvi-timeseries", "gee-sentinel2-cloudfree-composite", "landsat-lst-retrieval", "land-cover-classification", "urban-expansion-analysis", "water-extraction-ndwi", "dem-terrain-analysis", "paper-reading-geography", "literature-review-remote-sensing", "undergraduate-experiment-report", "graduate-thesis-outline", "map-layout-export"}
 	out := make([]Skill, 0, len(names))
 	for _, id := range names {
 		out = append(out, Skill{ID: id, Name: strings.ReplaceAll(id, "-", " "), Version: "1.0.0", Description: "GeoWork official workflow skill", RequiredTools: []string{"geo.gee.generate_ndvi_script", "geo.office.write_report"}, Permissions: map[string]any{"network": true, "file_write": true, "shell": false}, Status: "ready"})
