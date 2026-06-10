@@ -22,7 +22,6 @@ import {
   FilePdfOutlined,
   ImportOutlined,
   PlusOutlined,
-  SearchOutlined,
   UploadOutlined,
 } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
@@ -92,7 +91,7 @@ export function KnowledgeBase() {
     try {
       const values = await createForm.validateFields()
       await createCategory(values.name, values.parentId || undefined)
-      createForm.reset()
+      createForm.resetFields()
       setCreateModalOpen(false)
       message.success('分类创建成功')
     } catch {
@@ -117,7 +116,7 @@ export function KnowledgeBase() {
     try {
       const values = await paperIndexForm.validateFields()
       await indexFromPaper(values.paperId, values.title, values.content, values.tags?.split(',').map((t: string) => t.trim()) || [])
-      paperIndexForm.reset()
+      paperIndexForm.resetFields()
       setPaperIndexModalOpen(false)
       message.success('论文索引成功')
     } catch {
@@ -301,14 +300,13 @@ export function KnowledgeBase() {
         <div className={styles.toolbar}>
           <Breadcrumb items={breadcrumbItems} />
           <Space style={{ flex: 1, minWidth: 0 }}>
-            <Input
+            <Input.Search
               className={styles.toolbarSearch}
               placeholder="搜索知识条目..."
-              prefix={<SearchOutlined />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
               allowClear
-              onSearch={(val) => search(val)}
+              onSearch={(val: string) => search(val)}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              style={{ minWidth: 200 }}
             />
             <Upload
               accept=".pdf,.txt,.md,.csv,.json"
@@ -373,7 +371,7 @@ export function KnowledgeBase() {
         title="新建知识分类"
         open={createModalOpen}
         onOk={handleCreateCategory}
-        onCancel={() => { setCreateModalOpen(false); createForm.reset() }}
+        onCancel={() => { setCreateModalOpen(false); createForm.resetFields() }}
         okText="创建"
         cancelText="取消"
       >
@@ -396,7 +394,7 @@ export function KnowledgeBase() {
         title="从论文索引到知识库"
         open={paperIndexModalOpen}
         onOk={handleIndexFromPaper}
-        onCancel={() => { setPaperIndexModalOpen(false); paperIndexForm.reset() }}
+        onCancel={() => { setPaperIndexModalOpen(false); paperIndexForm.resetFields() }}
         okText="索引"
         cancelText="取消"
         width={600}

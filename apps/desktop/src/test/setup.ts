@@ -57,4 +57,4 @@ HTMLCanvasElement.prototype.getContext = (() => ({
   transform: () => undefined,
   rect: () => undefined,
   clip: () => undefined
-})) as typeof HTMLCanvasElement.prototype.getContext
+})) as unknown as typeof HTMLCanvasElement.prototype.getContext

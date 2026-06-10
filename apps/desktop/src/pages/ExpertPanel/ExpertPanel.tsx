@@ -25,7 +25,7 @@ import {
   AppstoreOutlined,
   PictureOutlined,
   FileDoneOutlined,
-  PenOutlined,
+  EditOutlined,
   CheckSquareOutlined,
   CodeOutlined,
   SearchOutlined
@@ -128,7 +128,7 @@ const EXPERT_CONFIGS: Omit<ExpertItem, 'skills'>[] = [
   { id: 'e7', name: 'GIS 工程专家', description: '空间分析专家，执行叠加分析、缓冲区分析、空间统计和三维可视化', icon: <AppstoreOutlined />, color: '#8b5cf6', category: '工程' },
   { id: 'e8', name: '地图制图专家', description: '地图输出专家，生成专题地图，设计专业图例，导出高分辨率地图', icon: <PictureOutlined />, color: '#ec4899', category: '工程' },
   { id: 'e9', name: '实验报告专家', description: '实验报告生成，自动生成 DOCX 报告，插入分析图表，生成结果讨论', icon: <FileDoneOutlined />, color: '#14b8a6', category: '写作' },
-  { id: 'e10', name: '论文写作专家', description: '论文撰写专家，根据实验结果撰写论文，按期刊格式调整，生成中英文摘要', icon: <PenOutlined />, color: '#a855f7', category: '写作' },
+  { id: 'e10', name: '论文写作专家', description: '论文撰写专家，根据实验结果撰写论文，按期刊格式调整，生成中英文摘要', icon: <EditOutlined />, color: '#a855f7', category: '写作' },
   { id: 'e11', name: '质量检查专家', description: '结果验证专家，验证分析结果正确性，进行精度验证和误差分析', icon: <CheckSquareOutlined />, color: '#f97316', category: '分析' },
   { id: 'e12', name: '代码审查专家', description: '代码质量专家，检查代码质量和规范，优化代码性能，审查安全隐患', icon: <CodeOutlined />, color: '#6366f1', category: '分析' }
 ]
@@ -257,7 +257,7 @@ export default function ExpertPanel({
             size="small"
             column={1}
             items={[
-              { key: 'msg', label: '提示', span: 'full', children: '没有找到匹配的专家，请调整搜索条件' }
+              { key: 'msg', label: '提示', span: 1, children: '没有找到匹配的专家，请调整搜索条件' }
             ]}
           />
         </Card>
@@ -295,7 +295,7 @@ export default function ExpertPanel({
               size="small"
               column={1}
               items={[
-                { key: 'desc', label: '描述', span: 'full', children: selectedExpert.description }
+                { key: 'desc', label: '描述', span: 1, children: selectedExpert.description }
               ]}
             />
 

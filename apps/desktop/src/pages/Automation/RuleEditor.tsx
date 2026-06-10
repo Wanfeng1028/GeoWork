@@ -38,7 +38,7 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
         description: editingRule?.description ?? '',
         trigger: editingRule?.trigger ?? 'manual',
         target: editingRule?.target ?? '',
-        params: editingRule?.params ?? {},
+        params: (editingRule?.params ?? {}) as Record<string, any>,
         enabled: editingRule?.enabled ?? true
       })
     }

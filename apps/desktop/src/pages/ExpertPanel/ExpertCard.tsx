@@ -10,7 +10,7 @@ import {
   AppstoreOutlined,
   PictureOutlined,
   FileDoneOutlined,
-  PenOutlined,
+  EditOutlined,
   CheckSquareOutlined,
   CodeOutlined
 } from '@ant-design/icons'
@@ -47,7 +47,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   'GIS 工程专家': <AppstoreOutlined />,
   '地图制图专家': <PictureOutlined />,
   '实验报告专家': <FileDoneOutlined />,
-  '论文写作专家': <PenOutlined />,
+  '论文写作专家': <EditOutlined />,
   '质量检查专家': <CheckSquareOutlined />,
   '代码审查专家': <CodeOutlined />
 }

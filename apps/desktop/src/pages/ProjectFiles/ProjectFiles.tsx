@@ -265,7 +265,7 @@ export function ProjectFiles() {
   )
 
   // Convert tree data to Ant Design Tree format
-  const transformTreeData = (nodes: FileNode[]) => {
+  const transformTreeData = (nodes: FileNode[]): Array<{key: string; title: React.ReactNode; isLeaf: boolean; children?: Array<{key: string; title: React.ReactNode; isLeaf: boolean; children?: Array<any>}>}> => {
     return nodes.map((node) => ({
       key: node.id,
       title: renderTreeNode(node),

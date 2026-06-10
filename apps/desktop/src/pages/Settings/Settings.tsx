@@ -1,9 +1,9 @@
 // GeoWork Settings Page
 
 import { Card, Form, Input, Select, Switch, Space, Button, message } from 'antd'
-import type { Settings as SettingsType } from '../types/settings'
-import { mockSettings } from '../mocks/settings.mock'
-import useSettingsStore from '../stores/settingsStore'
+import type { Settings as SettingsType } from '../../types/settings'
+import { mockSettings } from '../../mocks/settings.mock'
+import useSettingsStore from '../../stores/settingsStore'
 import styles from './Settings.module.scss'
 
 const { TextArea } = Input

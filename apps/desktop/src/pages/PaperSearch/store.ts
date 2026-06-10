@@ -41,6 +41,10 @@ export interface PaperSearchState {
   pageSize: number
   selectedPaper: PaperResult | null
   isAdvancedOpen: boolean
+  author?: string
+  yearFrom?: number
+  yearTo?: number
+  topic?: string
   setQuery: (q: string) => void
   setSearchParams: (params: Partial<SearchParams>) => void
   search: (params?: SearchParams) => Promise<void>
@@ -100,6 +104,10 @@ export const usePaperSearchStore = create<PaperSearchState>((set, get) => ({
   pageSize: 20,
   selectedPaper: null,
   isAdvancedOpen: false,
+  author: undefined,
+  yearFrom: undefined,
+  yearTo: undefined,
+  topic: undefined,
 
   setQuery: (q) => set({ query: q }),
 

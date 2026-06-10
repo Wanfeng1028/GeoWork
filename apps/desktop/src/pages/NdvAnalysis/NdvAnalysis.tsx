@@ -12,7 +12,8 @@ import {
   Table,
   Tabs,
   Tag,
-  Typography
+  Typography,
+  Input
 } from 'antd'
 import {
   CheckCircleOutlined,
@@ -92,7 +93,8 @@ export default function NdvAnalysis() {
   // Handle band changes
   const handleBandChange = useCallback(
     (field: 'red' | 'nir', value: string) => {
-      setBands((prev) => ({ ...prev!, [field]: value }))
+      const current = useNdvStore.getState().bands
+      setBands({ red: current?.red ?? 'B4', nir: current?.nir ?? 'B8', [field]: value })
     },
     [setBands]
   )
@@ -100,9 +102,8 @@ export default function NdvAnalysis() {
   // Handle threshold changes
   const handleThresholdChange = useCallback(
     (field: 'min' | 'max', value: number | null) => {
-      if (value !== null) {
-        setThresholds((prev) => ({ ...prev, [field]: value }))
-      }
+      const current = useNdvStore.getState().thresholds
+      setThresholds({ ...current, [field]: value ?? 0 })
     },
     [setThresholds]
   )
@@ -247,7 +248,7 @@ export default function NdvAnalysis() {
             <Form.Item label="遥感数据源" required>
               <Select
                 placeholder="选择数据源"
-                options={DATA_SOURCES}
+                options={DATA_SOURCES as any}
                 value={dataSource}
                 onChange={handleDataSourceChange}
               />

@@ -30,7 +30,7 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
         name: editingJob?.name ?? '',
         cronExpression: expr,
         target: editingJob?.target ?? '',
-        params: editingJob?.params ?? {},
+        params: (editingJob?.params ?? {}) as Record<string, any>,
         enabled: editingJob?.enabled ?? true
       })
       setNextRunPreview(calculateNextRun(expr))

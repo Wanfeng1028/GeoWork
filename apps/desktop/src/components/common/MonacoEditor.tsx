@@ -81,7 +81,8 @@ export function MonacoEditor({
 
   const handleSave = useCallback(() => {
     if (editorRef.current) {
-      editorRef.current.save()
+      // Monaco editor doesn't have a save method - trigger save command
+      editorRef.current.trigger('save', 'editor.action.save', null)
     }
   }, [])
 

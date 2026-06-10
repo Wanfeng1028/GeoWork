@@ -74,8 +74,7 @@ const MapLibreMap = memo(function MapLibreMap({
       },
       center: [104.0, 35.0] as [number, number],
       zoom: 4,
-      attributionControl: true,
-      logoDisplay: false
+      attributionControl: true as any
     })
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
@@ -162,7 +161,7 @@ const MapLibreMap = memo(function MapLibreMap({
         },
         properties: { name: 'Sample Point' }
       }
-    ],
+    ] as unknown as DeckGeoJsonFeature[],
     []
   )
 

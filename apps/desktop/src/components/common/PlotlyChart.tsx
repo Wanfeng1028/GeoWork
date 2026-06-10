@@ -33,10 +33,10 @@ function buildTerrainOption(data: TerrainData, title?: string): echarts.EChartsO
       : undefined,
     tooltip: {
       formatter: (params: Record<string, unknown>) => {
-        const p = params as Record<string, unknown>
-        return `X: ${p.data?.[0] ?? 0}<br/>Y: ${p.data?.[1] ?? 0}<br/>Z: ${p.data?.[2] ?? 0}`
+        const d = (params.data as unknown[] | null) ?? []
+        return `X: ${(d[0] ?? 0).toString()}<br/>Y: ${(d[1] ?? 0).toString()}<br/>Z: ${(d[2] ?? 0).toString()}`
       },
-    },
+    } as any,
     visualMap: {
       show: true,
       min: Math.min(...z.flat()),
@@ -85,7 +85,7 @@ function buildTerrainOption(data: TerrainData, title?: string): echarts.EChartsO
         ),
         shading: 'lambert',
         label: { show: false },
-      },
+      } as any,
     ],
   }
 }
@@ -103,7 +103,7 @@ function buildScatter3DOption(
         const p = params.data as Scatter3DItem
         return `X: ${p.x}<br/>Y: ${p.y}<br/>Z: ${p.z}`
       },
-    },
+    } as any,
     xAxis3D: { type: 'value', name: 'X' },
     yAxis3D: { type: 'value', name: 'Y' },
     zAxis3D: { type: 'value', name: 'Z' },
@@ -124,7 +124,7 @@ function buildScatter3DOption(
         data: data.map((d) => [d.x, d.y, d.z]),
         symbolSize: 8,
         itemStyle: { opacity: 0.9 },
-      },
+      } as any,
     ],
   }
 }

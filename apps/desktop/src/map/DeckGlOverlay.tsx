@@ -1,10 +1,10 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
-import { DeckGL as DeckGLCore } from '@deck.gl/react'
+import { DeckGL } from '@deck.gl/react'
 import { Layer } from '@deck.gl/core'
 import { LineLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers'
 import { HeatmapLayer } from '@deck.gl/aggregation-layers'
 import type MapLibreGL from 'maplibre-gl'
-import type { DeckGeoJsonFeature, MapLayerItem } from './layers'
+import type { MapLayerItem } from './layers'
 
 interface DeckGlOverlayProps {
   map: MapLibreGL.Map | null
@@ -26,7 +26,7 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
   width,
   height,
 }: DeckGlOverlayProps) {
-  const deckRef = useRef<DeckGLCore | null>(null)
+  const deckRef = useRef<any>(null)
 
   const deckLayers = useMemo<Layer[]>(() => {
     const result: Layer[] = []
@@ -44,20 +44,24 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
         visible: item.visible,
       }
 
+      const getProp = <T,>(key: string, fallback: T): T => {
+        return (props[key] ?? fallback) as T
+      }
+
       switch (deckType) {
         case 'PointLayer':
           result.push(
             new ScatterplotLayer({
               id: `deck-${item.id}`,
-              data: (layer.props?.data ?? []) as DeckGeoJsonFeature[],
-              getFillColor: (props.getFillColor ?? (() => [22, 119, 255, 180])) as any,
-              getLineColor: (props.getStrokeColor ?? (() => [0, 0, 0, 64])) as any,
-              getRadius: (props.getRadius ?? (() => 10)) as any,
-              radiusMinPixels: props.radiusMinPixels ?? 2,
-              radiusMaxPixels: props.radiusMaxPixels ?? 50,
-              lineWidthScale: props.lineWidthScale ?? 1,
-              lineWidthMinPixels: props.lineWidthMinPixels ?? 1,
-              getLineWidth: props.getLineWidth ?? (() => 1),
+              data: (getProp<any[]>('data', []) as any),
+              getFillColor: getProp<(p: any) => [number, number, number, number]>('getFillColor', () => [22, 119, 255, 180]),
+              getLineColor: getProp<(p: any) => [number, number, number, number]>('getStrokeColor', () => [0, 0, 0, 64]),
+              getRadius: getProp<(p: any) => number>('getRadius', () => 10),
+              radiusMinPixels: 2,
+              radiusMaxPixels: 50,
+              lineWidthScale: 1,
+              lineWidthMinPixels: 1,
+              getLineWidth: () => 1,
               pickable: true,
             })
           )
@@ -67,13 +71,13 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
           result.push(
             new LineLayer({
               id: `deck-${item.id}`,
-              data: (layer.props?.data ?? []) as DeckGeoJsonFeature[],
-              getFillColor: props.getFillColor ?? (() => [22, 119, 255, 200]),
-              getStrokeColor: props.getStrokeColor ?? (() => [0, 0, 0, 64]),
-              getRadius: props.getRadius ?? (() => 1),
-              lineWidthScale: props.lineWidthScale ?? 1,
-              lineJointRounded: props.lineJointRounded ?? true,
-              lineMiterLimit: props.lineMiterLimit ?? 2,
+              data: (getProp<any[]>('data', []) as any),
+              getFillColor: getProp<(p: any) => [number, number, number, number]>('getFillColor', () => [22, 119, 255, 200]),
+              getStrokeColor: getProp<(p: any) => [number, number, number, number]>('getStrokeColor', () => [0, 0, 0, 64]),
+              getRadius: getProp<(p: any) => number>('getRadius', () => 1),
+              lineWidthScale: 1,
+              lineJointRounded: true,
+              lineMiterLimit: 2,
               pickable: true,
             })
           )
@@ -83,12 +87,12 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
           result.push(
             new PolygonLayer({
               id: `deck-${item.id}`,
-              data: (layer.props?.data ?? []) as DeckGeoJsonFeature[],
-              getFillColor: props.getFillColor ?? (() => [22, 119, 255, 120]),
-              getStrokeColor: props.getStrokeColor ?? (() => [0, 0, 0, 100]),
-              getLineWidth: props.getLineWidth ?? (() => 1),
-              lineWidthMinPixels: props.lineWidthMinPixels ?? 1,
-              lineWidthMaxPixels: props.lineWidthMaxPixels ?? 4,
+              data: (getProp<any[]>('data', []) as any),
+              getFillColor: getProp<(p: any) => [number, number, number, number]>('getFillColor', () => [22, 119, 255, 120]),
+              getStrokeColor: getProp<(p: any) => [number, number, number, number]>('getStrokeColor', () => [0, 0, 0, 100]),
+              getLineWidth: getProp<(p: any) => number>('getLineWidth', () => 1),
+              lineWidthMinPixels: 1,
+              lineWidthMaxPixels: 4,
               pickable: true,
             })
           )
@@ -98,12 +102,12 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
           result.push(
             new HeatmapLayer({
               id: `deck-${item.id}`,
-              data: (layer.props?.data ?? []) as DeckGeoJsonFeature[],
-              radiusMinPixels: props.radiusMinPixels ?? 8,
-              radiusMaxPixels: props.radiusMaxPixels ?? 25,
-              weight: props.weight ?? (() => 1),
-              opacity: props.opacity ?? item.opacity,
-              visible: props.visible ?? item.visible,
+              data: (getProp<any[]>('data', []) as any),
+              radiusMinPixels: 8,
+              radiusMaxPixels: 25,
+              weight: () => 1,
+              opacity: item.opacity,
+              visible: item.visible,
             })
           )
           break
@@ -128,13 +132,13 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
     const bearing = map.getBearing()
     const pitch = map.getPitch()
     return {
-      longitude: center.lng,
-      latitude: center.lat,
-      zoom,
-      bearing,
-      pitch,
+      longitude: center.lng as number,
+      latitude: center.lat as number,
+      zoom: zoom as number,
+      bearing: bearing as number,
+      pitch: pitch as number,
       transitionInterpolator: null,
-    }
+    } as any
   }, [map])
 
   // Update Deck.gl viewport when MapLibre camera changes
@@ -168,7 +172,7 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
   if (!map || !width || !height) return null
 
   return (
-    <DeckGLCore
+    <DeckGL
       ref={deckRef}
       width={width}
       height={height}
@@ -183,12 +187,11 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
         longitude: 104.0,
         latitude: 35.0,
         zoom: 4,
-      }}
+      } as any}
       controller={{
-        type: 'orbit',
         rotateSpeed: 1,
         zoomFactor: 0.5,
-      }}
+      } as any}
     />
   )
 })

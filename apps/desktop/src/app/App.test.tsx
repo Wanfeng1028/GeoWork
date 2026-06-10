@@ -5,7 +5,7 @@ import { App } from './App'
 import { antdTheme } from '../styles/antd-theme'
 
 globalThis.fetch = vi.fn((url: string) => {
-  const data: Record<string, unknown> = url.includes('/api/health') ? { status: 'ok' } :
+  const data: any = url.includes('/api/health') ? { status: 'ok' } :
     url.includes('/api/projects/') && url.includes('/files') ? [] :
     url.includes('/api/projects') ? [] :
     url.includes('/api/artifacts') ? [] :
@@ -26,7 +26,7 @@ globalThis.fetch = vi.fn((url: string) => {
     url.includes('/api/tools') ? [] :
     url.includes('/api/eino/schema') ? {} :
     url.includes('/api/mcp') ? [] :
-    {}
+    {} as Record<string, unknown>
   return Promise.resolve({ ok: true, json: () => Promise.resolve(data) })
 }) as any
 

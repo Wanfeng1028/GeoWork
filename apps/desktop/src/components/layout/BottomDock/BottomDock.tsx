@@ -1,7 +1,7 @@
 // GeoWork BottomDock
 
 import { Tabs } from 'antd'
-import { Terminal } from '../../components/common/Terminal'
+import { Terminal } from '../../common/Terminal'
 import { RuntimeEvents } from '../panel/RuntimeEvents/RuntimeEvents'
 import useShellStore from '../../../stores/shellStore'
 import styles from './BottomDock.module.scss'

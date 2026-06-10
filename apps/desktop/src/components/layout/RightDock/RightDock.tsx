@@ -16,7 +16,7 @@ export function RightDock() {
     <aside className={styles.dock}>
       <Tabs
         activeKey={activeRightPanel}
-        onChange={setActiveRightPanel}
+        onChange={(key) => setActiveRightPanel(key as any)}
         size="small"
         className={styles.tabs}
       >
