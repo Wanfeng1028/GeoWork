@@ -3,18 +3,28 @@
 package browserbridge
 
 import (
+	"context"
 	"time"
 )
 
+// BrowserInterface defines the browser operations available through the bridge.
+type BrowserInterface interface {
+	CaptureScreenshot(ctx context.Context, page interface{}, format string, quality int) ([]byte, int, int, error)
+	ExtractText(page interface{}) (string, error)
+}
+
 // Session represents a browser browsing session.
 type Session struct {
-	ID        string    `json:"id"`
-	URL       string    `json:"url"`
-	Title     string    `json:"title"`
-	Screenshot string  `json:"screenshot,omitempty"`
-	Tabs      []Tab     `json:"tabs,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID         string    `json:"id"`
+	URL        string    `json:"url"`
+	Title      string    `json:"title"`
+	Screenshot string    `json:"screenshot,omitempty"`
+	Tabs       []Tab     `json:"tabs,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	Browser    BrowserInterface `json:"-"`
+	Page       interface{} `json:"-"`
+	LastText   string      `json:"lastText,omitempty"`
 }
 
 // Tab represents a browser tab.

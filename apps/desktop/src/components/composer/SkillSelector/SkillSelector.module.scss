@@ -1,0 +1,70 @@
+// GeoWork - SkillSelector Styles
+
+.container {
+  padding: var(--gw-space-8) 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-8);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.count {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-space-6);
+}
+
+.skill {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-4);
+  padding: var(--gw-space-4) var(--gw-space-8);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-card);
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--gw-border-strong);
+    background: var(--gw-bg-popover);
+  }
+
+  &.enabled {
+    border-color: var(--gw-border-active);
+    background: rgba(77, 220, 151, 0.08);
+    color: var(--gw-text-primary);
+  }
+}
+
+.icon {
+  font-size: 14px;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gw-accent);
+}

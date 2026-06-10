@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"runtime"
@@ -713,12 +714,12 @@ func NewRouter(deps RouterDeps) http.Handler {
 				// Handle crash report submission
 				var report map[string]interface{}
 				if err := json.NewDecoder(req.Body).Decode(&report); err != nil {
-					writeJSON(w, gin.H{"error": "invalid request body"})
+					writeJSON(w, map[string]interface{}{"error": "invalid request body"})
 					return
 				}
 				report["received_at"] = time.Now().UTC().Format(time.RFC3339)
 				crashID := fmt.Sprintf("crash_%d", time.Now().UnixNano())
-				writeJSON(w, gin.H{
+				writeJSON(w, map[string]interface{}{
 					"status":   "accepted",
 					"crash_id": crashID,
 					"message":  "Crash report recorded",
@@ -726,7 +727,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 				return
 			}
 			// GET: return crash status
-			writeJSON(w, gin.H{
+			writeJSON(w, map[string]interface{}{
 				"status":     "ok",
 				"message":    "Crash handler active — submit reports via POST",
 				"last_crash": nil,

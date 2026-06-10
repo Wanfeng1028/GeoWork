@@ -76,7 +76,7 @@ function registerSystem(mainWindow: BrowserWindow) {
     }
   });
 
-  // Create tray (placeholder)
+  // Create system tray with icon and menu
   ipcMain.handle(
     "system:createTray",
     async (_event: IpcMainInvokeEvent, trayOptions: TrayOptions) => {
