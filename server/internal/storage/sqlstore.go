@@ -137,13 +137,18 @@ func (s *Store) CreateTeam(t *Team) error {
 
 func (s *Store) GetTeam(id string) (*Team, error) {
 	t := &Team{}
+	var createdAt int64
 	err := s.db.QueryRow(`SELECT id, name, owner_id, created_at FROM teams WHERE id = ?`, id).Scan(
-		&t.ID, &t.Name, &t.OwnerID, &t.CreatedAt,
+		&t.ID, &t.Name, &t.OwnerID, &createdAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+	t.CreatedAt = scanTime(createdAt)
+	return t, nil
 }
 
 func (s *Store) ListTeamsByUser(userID string) ([]*Team, error) {
@@ -157,9 +162,11 @@ func (s *Store) ListTeamsByUser(userID string) ([]*Team, error) {
 	var teams []*Team
 	for rows.Next() {
 		t := &Team{}
-		if err := rows.Scan(&t.ID, &t.Name, &t.OwnerID, &t.CreatedAt); err != nil {
+		var createdAt int64
+		if err := rows.Scan(&t.ID, &t.Name, &t.OwnerID, &createdAt); err != nil {
 			return nil, err
 		}
+		t.CreatedAt = scanTime(createdAt)
 		teams = append(teams, t)
 	}
 	return teams, rows.Err()
