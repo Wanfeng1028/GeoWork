@@ -36,11 +36,6 @@ func SetupRoutes(
 	collabSvc *collaboration.Service,
 	channelSvc *channels.Service,
 ) {
-	// Health check (no auth)
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "version": "v0.4.0"})
-	})
-
 	// API v1 root
 	api := r.Group("/api")
 	{
@@ -60,6 +55,7 @@ func SetupRoutes(
 			account.GET("/profile", accountSvc.GetProfile)
 			account.PATCH("/profile", accountSvc.UpdateProfile)
 			account.GET("/subscription", accountSvc.GetSubscription)
+			account.GET("/permissions", rbacSvc.GetPermissions)
 		}
 
 		// Team routes (auth required)
@@ -70,6 +66,7 @@ func SetupRoutes(
 			teamGroup.GET("", teamSvc.ListTeams)
 			teamGroup.POST("/:id/invite", teamSvc.InviteMember)
 			teamGroup.PATCH("/:id/members/:userid", teamSvc.UpdateMember)
+			teamGroup.GET("/:id/workspaces", teamSvc.GetTeamWorkspaces)
 		}
 
 		// RBAC routes (auth required)
@@ -94,21 +91,19 @@ func SetupRoutes(
 		billingGroup.Use(authSvc.Middleware())
 		{
 			billingGroup.GET("/plan", billingSvc.GetPlan)
+			billingGroup.GET("/usage", billingSvc.GetUsage)
 			billingGroup.GET("/credits", billingSvc.GetCredits)
 			billingGroup.GET("/invoices", billingSvc.GetInvoices)
-			billingGroup.POST("/checkout-session", billingSvc.CheckoutSession)
+			billingGroup.POST("/checkout/mock", billingSvc.CheckoutSession)
 		}
 
 		// Model proxy routes (auth required)
 		modelGroup := api.Group("/model")
 		modelGroup.Use(authSvc.Middleware())
 		{
-			// Provider management
 			modelGroup.POST("/providers", modelProxySvc.AddProvider)
 			modelGroup.GET("/providers", modelProxySvc.ListProviders)
 			modelGroup.GET("/models", modelProxySvc.ListModels)
-
-			// Chat endpoints
 			modelGroup.POST("/chat", modelProxySvc.Chat)
 			modelGroup.POST("/stream", modelProxySvc.Stream)
 		}
@@ -117,6 +112,7 @@ func SetupRoutes(
 		syncGroup := api.Group("/sync")
 		syncGroup.Use(authSvc.Middleware())
 		{
+			syncGroup.GET("/state", syncSvc.GetState)
 			syncGroup.POST("/push", syncSvc.Push)
 			syncGroup.GET("/pull", syncSvc.Pull)
 			syncGroup.POST("/resolve-conflict", syncSvc.ResolveConflict)

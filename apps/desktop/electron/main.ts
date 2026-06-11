@@ -10,7 +10,8 @@ import { registerPermissionForwarder } from './security/permission-forwarder'
 import { initTray } from './local/tray'
 import { buildMenu, getDefaultMenu } from './local/menu'
 import { registerLoggingIPC, writeLog } from './local/logging'
-import { cleanupSystemIPC, cleanupShortcuts } from './local/shortcuts'
+import { cleanupShortcuts } from './local/shortcuts'
+import { cleanupSystemIPC } from './ipc/systemIpc'
 
 let mainWindow: BrowserWindow | null = null
 let isAppReady = false

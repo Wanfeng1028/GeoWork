@@ -71,7 +71,7 @@ function generatePermissionId(): string {
   return `perm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
-function registerPermissionForwarder(mainWindow: BrowserWindow) {
+export function registerPermissionForwarder(mainWindow: BrowserWindow) {
   // Request a permission — returns { permissionId } for dangerous ops, or { allowed: true } for safe ones
   ipcMain.handle(
     'security:requestPermission',
@@ -131,4 +131,3 @@ function registerPermissionForwarder(mainWindow: BrowserWindow) {
 }
 
 export { pendingPermissions, permissionCache }
-export default registerPermissionForwarder
