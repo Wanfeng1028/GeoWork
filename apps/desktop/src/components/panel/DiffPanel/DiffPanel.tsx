@@ -1,6 +1,6 @@
 // GeoWork DiffPanel - Real data from diffStore
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Table, Button, Space, Tag, Select, Collapse, Tooltip } from 'antd'
 import {
   CheckOutlined,
@@ -36,11 +36,6 @@ export function DiffPanel() {
     acceptAll,
     rejectAll,
   } = useDiffStore()
-
-  const activeDiffs = useMemo(() =>
-    diffs.filter(d => d.id !== activeDiffId),
-    [diffs, activeDiffId]
-  )
 
   const handleAccept = (path: string) => {
     acceptFile(path)

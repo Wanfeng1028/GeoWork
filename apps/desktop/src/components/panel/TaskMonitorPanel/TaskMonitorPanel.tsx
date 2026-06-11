@@ -8,6 +8,7 @@ import {
   CloseCircleOutlined,
   RollbackOutlined,
   ReloadOutlined,
+  MinusCircleOutlined,
 } from '@ant-design/icons'
 import useTaskStore from '../../../stores/taskStore'
 import type { TaskStep } from '../../../types/task'
@@ -18,6 +19,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string; icon: React.
   running: { color: 'processing', label: '运行中', icon: <LoadingOutlined /> },
   completed: { color: 'success', label: '已完成', icon: <CheckCircleOutlined /> },
   failed: { color: 'error', label: '失败', icon: <CloseCircleOutlined /> },
+  cancelled: { color: 'default', label: '已取消', icon: <MinusCircleOutlined /> },
   waiting_approval: { color: 'warning', label: '等待审批', icon: <StopOutlined /> },
   recovered: { color: 'cyan', label: '已恢复', icon: <ReloadOutlined /> },
 }
@@ -115,7 +117,7 @@ export function TaskMonitorPanel() {
         <Progress
           percent={progressPercent}
           size="small"
-          status={currentTask.status === 'failed' ? 'exception' : 'normal'}
+          status={currentTask.status === 'failed' || currentTask.status === 'cancelled' ? 'exception' : 'normal'}
           className={styles.progress}
         />
       </div>
