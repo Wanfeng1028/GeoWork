@@ -42,56 +42,77 @@ export function Terminal({
   useEffect(() => {
     if (!containerRef.current) return
 
-    const term = new XtermTerminal({
-      cursorBlink: false,
-      fontSize: 13,
-      fontFamily: 'Consolas, "Courier New", monospace',
-      theme: {
-        background: '#1e1e1e',
-        foreground: '#d4d4d4',
-        cursor: '#aeafad',
-        selectionBackground: '#264f78',
-        black: '#1e1e1e',
-        red: '#f44747',
-        green: '#6a9955',
-        yellow: '#d7ba7d',
-        blue: '#569cd6',
-        magenta: '#c586c0',
-        cyan: '#4dc9b0',
-        white: '#d4d4d4',
-        brightBlack: '#808080',
-        brightRed: '#ff6b6b',
-        brightGreen: '#8bc24a',
-        brightYellow: '#ffd700',
-        brightBlue: '#61afef',
-        brightMagenta: '#c678dd',
-        brightCyan: '#56b6c2',
-        brightWhite: '#ffffff'
-      },
-      rows: 12
-    })
+    const initTerminal = () => {
+      if (!containerRef.current) return
 
-    term.open(containerRef.current)
-    terminalRef.current = term
+      // Check container dimensions before initializing
+      const rect = containerRef.current.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) {
+        // Retry after a frame if container not ready
+        const id = window.requestAnimationFrame(initTerminal)
+        return () => window.cancelAnimationFrame(id)
+      }
 
-    // Print system prompt
-    term.writeln(`\x1b[32m${SYSTEM_PROMPT}\x1b[0m`)
-    term.writeln('')
-    term.writeln(`\x1b[36m提示: 输入命令并回车执行，例如:\x1b[0m`)
-    term.writeln(`  \x1b[33mgee run script.py\x1b[0m  — 运行 GEE 脚本`)
-    term.writeln(`  \x1b[33mgee status\x1b[0m      — 查看任务状态`)
-    term.writeln(`  \x1b[33mgee clear\x1b[0m       — 清屏`)
-    term.writeln('')
+      try {
+        const term = new XtermTerminal({
+          cursorBlink: false,
+          fontSize: 13,
+          fontFamily: 'Consolas, "Courier New", monospace',
+          theme: {
+            background: '#1e1e1e',
+            foreground: '#d4d4d4',
+            cursor: '#aeafad',
+            selectionBackground: '#264f78',
+            black: '#1e1e1e',
+            red: '#f44747',
+            green: '#6a9955',
+            yellow: '#d7ba7d',
+            blue: '#569cd6',
+            magenta: '#c586c0',
+            cyan: '#4dc9b0',
+            white: '#d4d4d4',
+            brightBlack: '#808080',
+            brightRed: '#ff6b6b',
+            brightGreen: '#8bc24a',
+            brightYellow: '#ffd700',
+            brightBlue: '#61afef',
+            brightMagenta: '#c678dd',
+            brightCyan: '#56b6c2',
+            brightWhite: '#ffffff'
+          },
+          rows: 12
+        })
 
-    // Print initial lines
-    initialLines.forEach((line) => {
-      term.writeln(line)
-    })
+        term.open(containerRef.current)
+        terminalRef.current = term
 
-    term.focus()
+        // Print system prompt
+        term.writeln(`\x1b[32m${SYSTEM_PROMPT}\x1b[0m`)
+        term.writeln('')
+        term.writeln(`\x1b[36m提示: 输入命令并回车执行，例如:\x1b[0m`)
+        term.writeln(`  \x1b[33mgee run script.py\x1b[0m  — 运行 GEE 脚本`)
+        term.writeln(`  \x1b[33mgee status\x1b[0m      — 查看任务状态`)
+        term.writeln(`  \x1b[33mgee clear\x1b[0m       — 清屏`)
+        term.writeln('')
 
+        // Print initial lines
+        initialLines.forEach((line) => {
+          term.writeln(line)
+        })
+
+        term.focus()
+      } catch (err) {
+        console.error('Failed to initialize terminal:', err)
+      }
+    }
+
+    const cleanup = initTerminal()
     return () => {
-      term.dispose()
+      cleanup?.()
+      if (terminalRef.current) {
+        terminalRef.current.dispose()
+        terminalRef.current = null
+      }
     }
   }, [])
 

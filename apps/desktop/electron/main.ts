@@ -26,8 +26,9 @@ async function createWindow() {
     minHeight: 760,
     title: 'GeoWork',
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: join(__dirname, '../preload/preload.mjs'),
       contextIsolation: true,
+      nodeIntegration: false,
     },
   })
 
