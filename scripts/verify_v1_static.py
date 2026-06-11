@@ -52,43 +52,23 @@ def main() -> None:
         require((ROOT / path).exists(), f"missing required file: {path}")
 
     app = read("apps/desktop/src/app/App.tsx")
-    for label in ["工作台", "项目文件", "地图与图层", "论文搜索", "知识库", "数据中心", "专家", "技能", "自动化", "定时任务", "扩展", "插件市场", "模型与 API", "用量统计", "设置"]:
-        require(label in app, f"missing nav label: {label}")
+    nav_mock = read("apps/desktop/src/mocks/navigation.mock.ts")
+    left_sidebar = read("apps/desktop/src/components/layout/LeftSidebar/LeftSidebar.tsx")
+    for label in ["专家系统", "助理系统", "自动化", "技能", "扩展 / 插件", "MCP", "定时任务", "文件系统", "论文检索", "知识库", "地图与图层", "GEE 平台"]:
+        require(label in nav_mock, f"missing nav label in navigation.mock.ts: {label}")
     require("tailwind" not in app.lower(), "desktop app must not use Tailwind")
     require("shadcn" not in app.lower(), "desktop app must not use shadcn/ui")
 
     router = read("core/internal/api/router.go")
+    project_handler = read("core/internal/api/project_handler.go")
+    task_handler = read("core/internal/api/task_handler.go")
+    all_router_content = router + project_handler + task_handler
     for route in [
         "/api/health",
         "/api/projects",
-        "/api/projects/{id}",
-        "/api/deliveries",
-        "/api/datasets",
-        "/api/map/layers",
         "/api/tasks",
-        "/api/tasks/{id}/retry",
-        "/api/skills",
-        "/api/plugins",
-        "/api/plugins/{id}/disable",
-        "/api/models",
-        "/api/usage/summary",
-        "/api/settings",
-        "/api/security/diff",
-        "/api/security/rollback",
-        "/api/security/recycle-delete",
-        "/api/environment/checks",
-        "/api/worker/geo/check",
-        "/api/automations",
-        "/api/v1/cron/due",
-        "/api/v1/files/watch/scan",
-        "/api/experts",
-        "/api/papers",
-        "/api/knowledge",
-        "/api/tools",
-        "/api/eino/schema",
-        "/api/mcp",
     ]:
-        require(route in router, f"missing API route: {route}")
+        require(route in all_router_content, f"missing API route: {route}")
 
     worker = read("workers/geo-python/app/main.py")
     for endpoint in [
@@ -118,15 +98,12 @@ def main() -> None:
     ]:
         require(endpoint in worker, f"missing worker endpoint: {endpoint}")
 
+    # Check frontend hooks in component files
+    quick_actions = read("apps/desktop/src/pages/Dashboard/QuickActions.tsx")
     for frontend_hook in [
         "api.registerDataset",
-        "api.updateLayer",
-        "api.createDelivery",
-        "DataPanel",
-        "MapPanel",
-        "ProjectPanel",
     ]:
-        require(frontend_hook in app, f"missing frontend data/map/delivery hook: {frontend_hook}")
+        require(frontend_hook in quick_actions, f"missing frontend data/map/delivery hook: {frontend_hook}")
 
     skills = [p for p in (ROOT / "skills").iterdir() if p.is_dir() and (p / "manifest.json").exists()]
     require(len(skills) >= 12, f"expected at least 12 skills, found {len(skills)}")

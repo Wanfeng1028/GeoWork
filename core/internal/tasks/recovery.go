@@ -223,22 +223,23 @@ func (rm *RecoveryManager) RecoverTask(taskID string) (*RecoveryState, error) {
 	// Find the last checkpoint
 	checkpoint, err := rm.GetLastCheckpoint(taskID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		// No checkpoint means nothing to recover from; mark as completed
-		if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
-			return nil, fmt.Errorf("recover task: update status: %w", err)
-		}
+		return nil, fmt.Errorf("recover task: get checkpoint: %w", err)
+	}
+
+	// No checkpoint means nothing to recover from
+	if checkpoint == nil {
 		return &RecoveryState{
 			TaskID:         taskID,
 			RecoveredAt:    time.Now().UTC(),
-			RecoveryStatus: "recovered",
+			RecoveryStatus: "no_checkpoint",
 		}, nil
 	}
 
 	// Count existing artifacts and events
 	eventsCount := rm.countEvents(taskID)
 
-	// Restore task state: mark as recovered
-	if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
+	// Restore task state: mark as paused (user should decide to continue or abandon)
+	if err := rm.service.UpdateStatus(ctx, taskID, StatusPaused); err != nil {
 		return &RecoveryState{
 			TaskID:         taskID,
 			LastCheckpoint: checkpoint,
@@ -249,10 +250,8 @@ func (rm *RecoveryManager) RecoverTask(taskID string) (*RecoveryState, error) {
 	}
 
 	// Mark checkpoint as recovered
-	if checkpoint != nil {
-		if err := rm.MarkCheckpointRecovered(checkpoint.ID); err != nil {
-			rm.log.Warn("failed to mark checkpoint as recovered", "task_id", taskID, "error", err)
-		}
+	if err := rm.MarkCheckpointRecovered(checkpoint.ID); err != nil {
+		rm.log.Warn("failed to mark checkpoint as recovered", "task_id", taskID, "error", err)
 	}
 
 	// Broadcast recovery event
@@ -314,7 +313,7 @@ func (rm *RecoveryManager) RecoverAllPending() ([]RecoveryState, error) {
 
 // CreateReadOnlySnapshot creates a read-only snapshot for a task that cannot continue.
 // It saves all existing events and artifacts as immutable records,
-// then sets the task status to recovered with a read-only flag.
+// then sets the task status to paused with a read-only flag.
 func (rm *RecoveryManager) CreateReadOnlySnapshot(taskID string) error {
 	ctx := context.TODO()
 
@@ -330,8 +329,8 @@ func (rm *RecoveryManager) CreateReadOnlySnapshot(taskID string) error {
 		return fmt.Errorf("create snapshot: save checkpoint: %w", err)
 	}
 
-	// Set task status to recovered
-	if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
+	// Set task status to paused (not completed - snapshot is not normal completion)
+	if err := rm.service.UpdateStatus(ctx, taskID, StatusPaused); err != nil {
 		return fmt.Errorf("create snapshot: update status: %w", err)
 	}
 

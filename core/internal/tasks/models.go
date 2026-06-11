@@ -15,6 +15,8 @@ const (
 	StatusCompleted  Status = "completed"
 	StatusFailed     Status = "failed"
 	StatusCancelled  Status = "cancelled"
+	StatusPaused     Status = "paused"
+	StatusRecovered  Status = "recovered"
 )
 
 // Task represents a unit of work in GeoWork

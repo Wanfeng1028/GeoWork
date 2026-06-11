@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,13 +65,21 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 	s.mu.Unlock()
 
 	// Select shell based on platform
-	var shell, shellArg string
+	var shell string
+	var args []string
 	if runtime.GOOS == "windows" {
-		shell, shellArg = "cmd", "/C"
+		if _, err := exec.LookPath("pwsh"); err == nil {
+			shell = "pwsh"
+			args = []string{"-NoProfile", "-Command", command}
+		} else {
+			shell = "cmd"
+			args = []string{"/C", command}
+		}
 	} else {
-		shell, shellArg = "bash", "-c"
+		shell = "bash"
+		args = []string{"-c", command}
 	}
-	cmd := exec.CommandContext(proc.ctx, shell, shellArg, command)
+	cmd := exec.CommandContext(proc.ctx, shell, args...)
 	cmd.Dir = workspace
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -201,8 +210,18 @@ func (s *Service) isBlocked(command string) bool {
 }
 
 func (s *Service) isPathAllowed(path string) bool {
+	if len(s.policy.AllowedPaths) == 0 {
+		return true // dev mode: allow caller-provided workspace
+	}
+
 	for _, allowed := range s.policy.AllowedPaths {
-		if path == allowed || len(path) >= len(allowed) && path[:len(allowed)] == allowed {
+		if path == allowed {
+			return true
+		}
+		// support both / and \ as path separators
+		prefix := allowed + "/"
+		prefixWin := allowed + "\\"
+		if strings.HasPrefix(path, prefix) || strings.HasPrefix(path, prefixWin) {
 			return true
 		}
 	}
