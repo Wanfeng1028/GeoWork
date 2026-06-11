@@ -51,6 +51,10 @@ contextBridge.exposeInMainWorld('geowork', {
     performance: () => ipcRenderer.invoke('runtime:api', 'GET', '/api/diagnostics/performance'),
     getLogs: () => ipcRenderer.invoke('runtime:api', 'GET', '/api/diagnostics/logs'),
 
+    // Runtime status & health
+    getStatus: () => ipcRenderer.invoke('runtime:status'),
+    checkHealth: () => ipcRenderer.invoke('runtime:health'),
+
     // SSE Event Stream
     connectSSE: (url: string, onMessage: (data: any) => void, onError: (err: any) => void, onDone: () => void) => {
       const eventSource = new EventSource(url)
@@ -62,6 +66,18 @@ contextBridge.exposeInMainWorld('geowork', {
       })
       return () => eventSource.close()
     },
+
+    // Runtime status change events
+    onStatusChange: (callback: (data: any) => void) => {
+      const listener = (_event: any, data: any) => callback(data)
+      ipcRenderer.on('runtime:status-change', listener)
+      return () => ipcRenderer.removeListener('runtime:status-change', listener)
+    },
+  },
+
+  // Cloud API proxy -> http://127.0.0.1:8767
+  cloud: {
+    api: (method: string, path: string, body?: any) => ipcRenderer.invoke('cloud:api', method, path, body),
   },
 
   // System
@@ -88,5 +104,22 @@ contextBridge.exposeInMainWorld('geowork', {
   notifications: {
     show: (options: any) => ipcRenderer.invoke('notifications:show', options),
     requestPermission: () => ipcRenderer.invoke('notifications:requestPermission'),
+  },
+
+  // Security/Permission Approval
+  security: {
+    requestPermission: (category: string, detail?: Record<string, unknown>) =>
+      ipcRenderer.invoke('security:requestPermission', category, detail),
+    approvePermission: (permissionId: string) =>
+      ipcRenderer.invoke('security:approvePermission', permissionId),
+    denyPermission: (permissionId: string, reason?: string) =>
+      ipcRenderer.invoke('security:denyPermission', permissionId, reason),
+    listPermissions: () =>
+      ipcRenderer.invoke('security:listPermissions'),
+    onStatusChange: (callback: (data: any) => void) => {
+      const listener = (_event: any, data: any) => callback(data)
+      ipcRenderer.on('security:status-change', listener)
+      return () => ipcRenderer.removeListener('security:status-change', listener)
+    },
   },
 })
