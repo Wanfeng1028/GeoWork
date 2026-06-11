@@ -4,9 +4,50 @@ import { create } from 'zustand'
 import type { SettingsState } from '../types/settings'
 import { mockSettings } from '../mocks/settings.mock'
 
+const savedTheme = (() => {
+  try {
+    const theme = window.localStorage.getItem('geowork.theme')
+    return theme === 'dark' || theme === 'light' || theme === 'system' ? theme : mockSettings.appearance.theme
+  } catch {
+    return mockSettings.appearance.theme
+  }
+})()
+
 const useSettingsStore = create<SettingsState>((set) => ({
-  settings: mockSettings,
-  isLoading: false
+  settings: {
+    ...mockSettings,
+    appearance: {
+      ...mockSettings.appearance,
+      theme: savedTheme
+    }
+  },
+  isLoading: false,
+  resolvedTheme: savedTheme === 'system'
+    ? (window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    : savedTheme,
+
+  setTheme: (theme) => {
+    try {
+      window.localStorage.setItem('geowork.theme', theme)
+    } catch {
+      // localStorage can be unavailable in test environments.
+    }
+    const resolvedTheme = theme === 'system'
+      ? (window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+      : theme
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        appearance: {
+          ...state.settings.appearance,
+          theme
+        }
+      },
+      resolvedTheme
+    }))
+  },
+
+  setResolvedTheme: (resolvedTheme) => set({ resolvedTheme })
 }))
 
 export default useSettingsStore

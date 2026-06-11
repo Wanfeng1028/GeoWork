@@ -1,77 +1,139 @@
-// GeoWork GeoComposer - Styles
-
 .composer {
+  width: min(760px, 100%);
+  border: 1px solid rgba(var(--gw-accent-rgb), 0.24);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(var(--gw-accent-rgb), 0.08), transparent 42%),
+    rgba(20, 16, 12, 0.72);
+  box-shadow: var(--gw-shadow-panel), var(--gw-shadow-glow);
+  backdrop-filter: blur(12px);
+  padding: 12px;
+}
+
+[data-theme="light"] .composer {
+  background:
+    linear-gradient(180deg, rgba(var(--gw-accent-rgb), 0.07), transparent 42%),
+    rgba(255, 253, 248, 0.86);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 126px;
+  max-height: 230px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--gw-text);
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.7;
+
+  &::placeholder {
+    color: var(--gw-text-subtle);
+  }
+}
+
+.modeRow {
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 4px 10px;
 
-  .modeSelector {
-    margin-bottom: 12px;
-    padding: 8px;
-    background: #fafafa;
-    border-radius: 6px;
-  }
+  button {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--gw-border-soft);
+    background: var(--gw-bg-subtle);
+    color: var(--gw-text-muted);
+    cursor: pointer;
 
-  .inputSection {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-
-    .textarea {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #e8e8e8;
-      border-radius: 6px;
-      resize: none;
-      font-size: 14px;
-      line-height: 1.5;
-      transition: border-color 0.2s;
-
-      &:focus {
-        outline: none;
-        border-color: #1890ff;
-        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
-      }
-
-      &::placeholder {
-        color: #bfbfbf;
-      }
-    }
-
-    .toolbar {
-      margin-top: 8px;
-      padding: 8px;
-      background: #fafafa;
-      border-radius: 6px;
-    }
-
-    .attachments {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
+    &:hover {
+      color: var(--gw-text);
+      background: var(--gw-bg-hover);
     }
   }
+}
 
-  .sendSection {
-    display: flex;
+.modeActive {
+  color: var(--gw-accent-hover) !important;
+  border-color: rgba(var(--gw-accent-rgb), 0.34) !important;
+  background: var(--gw-accent-soft) !important;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--gw-border-soft);
+  padding-top: 10px;
+}
+
+.tools,
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+
+  button,
+  label {
+    height: 32px;
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
+    gap: 6px;
+    padding: 0 10px;
+    border: 1px solid var(--gw-border-soft);
+    border-radius: var(--gw-radius-md);
+    background: var(--gw-bg-subtle);
+    color: var(--gw-text-muted);
+    cursor: pointer;
+  }
 
-    .shortcutHint {
-      font-size: 12px;
-      color: #bfbfbf;
-    }
+  button:hover,
+  label:hover {
+    color: var(--gw-text);
+    background: var(--gw-bg-hover);
+  }
 
-    .sendButton {
-      min-width: 100px;
-    }
+  select {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    max-width: 120px;
+  }
+}
+
+.iconBtn {
+  width: 34px;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.sendBtn {
+  color: var(--gw-bg) !important;
+  background: var(--gw-accent) !important;
+  border-color: var(--gw-accent) !important;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 820px) {
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools,
+  .actions {
+    flex-wrap: wrap;
   }
 }

@@ -1,15 +1,13 @@
 // GeoWork Settings Page
 
 import { Card, Form, Input, Select, Switch, Space, Button, message } from 'antd'
-import type { Settings as SettingsType } from '../../types/settings'
-import { mockSettings } from '../../mocks/settings.mock'
 import useSettingsStore from '../../stores/settingsStore'
 import styles from './Settings.module.scss'
 
 const { TextArea } = Input
 
 export function SettingsPage() {
-  const { settings, isLoading } = useSettingsStore()
+  const { settings, setTheme } = useSettingsStore()
   const [form] = Form.useForm()
 
   const handleSave = async (values: any) => {
@@ -62,11 +60,17 @@ export function SettingsPage() {
         
         <Card title="外观" className={styles.card}>
           <Form.Item name={['appearance', 'theme']} label="主题">
-            <Select>
-              <Select.Option value="dark-geo">深色地理</Select.Option>
-              <Select.Option value="light-geo">浅色地理</Select.Option>
-              <Select.Option value="dark-glass">深色玻璃</Select.Option>
-            </Select>
+            <Select
+              onChange={(value) => {
+                setTheme(value)
+                message.success('外观主题已更新')
+              }}
+              options={[
+                { value: 'dark', label: '深色' },
+                { value: 'light', label: '浅色' },
+                { value: 'system', label: '跟随系统' },
+              ]}
+            />
           </Form.Item>
           
           <Form.Item name={['appearance', 'fontSize']} label="字体大小">

@@ -1,14 +1,14 @@
 // GeoWork TopBar Styles
 
 .topbar {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--gw-space-8) var(--gw-space-16);
-  background: var(--gw-bg-titlebar);
-  border-bottom: 1px solid var(--gw-border-subtle);
-  height: 48px;
+  padding: 0 var(--gw-space-12);
+  background: rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--gw-border-soft);
+  height: var(--gw-topbar-height);
+  min-height: var(--gw-topbar-height);
   user-select: none;
   -webkit-app-region: drag;
 }
@@ -32,7 +32,7 @@
 
   &:hover {
     background: var(--gw-bg-hover);
-    color: var(--gw-text-primary);
+    color: var(--gw-text);
   }
 }
 
@@ -40,7 +40,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--gw-text-primary);
+  color: var(--gw-text);
   -webkit-app-region: no-drag;
 }
 
@@ -58,18 +58,18 @@
   -webkit-app-region: no-drag;
 }
 
-.searchInput {
+  .searchInput {
   width: 240px;
 
   :global(.ant-input) {
     background: var(--gw-bg-input);
-    border-color: var(--gw-border-subtle);
-    color: var(--gw-text-primary);
+    border-color: var(--gw-border-soft);
+    color: var(--gw-text);
     font-size: 12px;
     height: 24px;
 
     &::placeholder {
-      color: var(--gw-text-tertiary);
+      color: var(--gw-text-subtle);
     }
   }
 }
@@ -77,7 +77,7 @@
 .modeDivider {
   width: 1px;
   height: 16px;
-  background: var(--gw-border-subtle);
+  background: var(--gw-border-soft);
 }
 
 .modeTags {
@@ -118,7 +118,7 @@
 
   &:hover {
     background: var(--gw-bg-hover);
-    color: var(--gw-text-primary);
+    color: var(--gw-text);
   }
 }
 

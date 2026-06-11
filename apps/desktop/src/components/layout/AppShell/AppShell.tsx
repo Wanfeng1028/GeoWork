@@ -14,8 +14,10 @@ export function AppShell() {
     rightDockVisible,
     bottomDockVisible,
     sidebarCollapsed,
-    conversationMinimapEnabled
+    conversationMinimapEnabled,
+    activeNavKey
   } = useShellStore()
+  const showMinimap = conversationMinimapEnabled && activeNavKey !== 'workbench'
 
   return (
     <div className={styles.shell}>
@@ -26,7 +28,7 @@ export function AppShell() {
         
         <MainWorkspace />
         
-        {conversationMinimapEnabled && <ConversationMinimap />}
+        {showMinimap && <ConversationMinimap />}
         
         {rightDockVisible && <RightDock />}
       </div>

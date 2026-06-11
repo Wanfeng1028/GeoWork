@@ -1,13 +1,14 @@
 // GeoWork RightDock Styles
 
 .dock {
-  width: var(--right-dock-width);
-  min-width: var(--right-dock-width);
-  border-left: 1px solid var(--gw-border-subtle);
-  background: var(--gw-bg-sidebar);
+  width: var(--gw-rightdock-width);
+  min-width: var(--gw-rightdock-width);
+  border-left: 1px solid var(--gw-border-soft);
+  background: var(--gw-bg-elevated);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .tabs {
@@ -17,6 +18,7 @@
   
   :global(.ant-tabs-nav) {
     padding: var(--gw-space-8) var(--gw-space-8) 0;
+    margin-bottom: 0;
   }
   
   :global(.ant-tabs-content) {

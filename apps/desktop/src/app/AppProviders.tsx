@@ -2,7 +2,7 @@
 
 import { ConfigProvider, theme as antdTheme } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import useSettingsStore from '../stores/settingsStore'
 
 const queryClient = new QueryClient({
@@ -19,21 +19,38 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
-  const theme = useSettingsStore((state) => state.settings.appearance.theme)
+  const selectedTheme = useSettingsStore((state) => state.settings.appearance.theme)
+  const resolvedTheme = useSettingsStore((state) => state.resolvedTheme)
+  const setResolvedTheme = useSettingsStore((state) => state.setResolvedTheme)
+
+  useEffect(() => {
+    if (selectedTheme !== 'system') {
+      setResolvedTheme(selectedTheme)
+      return
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: light)')
+    const syncTheme = () => setResolvedTheme(media.matches ? 'light' : 'dark')
+    syncTheme()
+    media.addEventListener('change', syncTheme)
+    return () => media.removeEventListener('change', syncTheme)
+  }, [selectedTheme, setResolvedTheme])
 
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider
         theme={{
           token: {
-            colorPrimary: '#4ddc97',
-            borderRadius: 10,
-            fontFamily: '"Microsoft YaHei", "Segoe UI", system-ui, sans-serif'
+            colorPrimary: resolvedTheme === 'dark' ? '#d9ad7c' : '#0f766e',
+            borderRadius: 8,
+            fontFamily: '"Instrument Sans", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif',
+            colorBgBase: resolvedTheme === 'dark' ? '#0d0b09' : '#f6f3ee',
+            colorTextBase: resolvedTheme === 'dark' ? '#f3eee7' : '#1f2522'
           },
-          algorithm: theme === 'light-geo' ? undefined : antdTheme.darkAlgorithm
+          algorithm: resolvedTheme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm
         }}
       >
-        <div data-theme={theme}>{children}</div>
+        <div data-theme={resolvedTheme}>{children}</div>
       </ConfigProvider>
     </QueryClientProvider>
   )

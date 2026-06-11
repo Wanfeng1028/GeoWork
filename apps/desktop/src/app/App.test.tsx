@@ -37,10 +37,11 @@ describe('App', () => {
         <App />
       </ConfigProvider>
     )
-    expect(await screen.findByText('GeoWork')).toBeInTheDocument()
-    expect(screen.getByText('智能体')).toBeInTheDocument()
-    expect(screen.getByText('扩展能力')).toBeInTheDocument()
+    expect((await screen.findAllByRole('heading', { name: 'GeoWork' })).length).toBeGreaterThan(0)
+    expect(screen.getByText('主能力')).toBeInTheDocument()
+    expect(screen.getByText('专家系统')).toBeInTheDocument()
     expect(screen.getByText('知识资料')).toBeInTheDocument()
     expect(screen.getByText('地理空间')).toBeInTheDocument()
+    expect(screen.queryByText('任务终端')).not.toBeInTheDocument()
   })
 })

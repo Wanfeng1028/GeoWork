@@ -1,13 +1,44 @@
 // GeoWork BottomDock Styles
 
 .dock {
-  height: var(--bottom-height);
-  max-height: 40vh;
-  border-top: 1px solid var(--gw-border-subtle);
-  background: var(--gw-bg-sidebar);
+  position: relative;
+  max-height: 45vh;
+  min-height: 180px;
+  border-top: 1px solid var(--gw-border-soft);
+  background: var(--gw-bg-elevated);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  z-index: 2;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--gw-border-soft);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-subtle);
+  color: var(--gw-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gw-text);
+    background: var(--gw-bg-hover);
+  }
 }
 
 .tabs {
@@ -16,7 +47,8 @@
   flex-direction: column;
   
   :global(.ant-tabs-nav) {
-    padding: var(--gw-space-8) var(--gw-space-8) 0;
+    padding: var(--gw-space-8) 46px 0 var(--gw-space-8);
+    margin-bottom: 0;
   }
   
   :global(.ant-tabs-content) {

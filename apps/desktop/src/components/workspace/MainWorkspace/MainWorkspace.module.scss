@@ -1,445 +1,159 @@
-// GeoWork MainWorkspace Styles
-
 .main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-window);
+  background: var(--gw-bg);
 }
 
-.modeIndicator {
-  padding: var(--gw-space-8) var(--gw-space-16);
-  font-size: 12px;
-  color: var(--gw-text-tertiary);
-  border-bottom: 1px solid var(--gw-border-subtle);
-  background: var(--gw-bg-subtle);
-}
-
-// Welcome Hero
-.welcome {
+.home {
+  position: relative;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gw-space-16);
-}
-
-.welcomeIcon {
-  font-size: 64px;
-  opacity: 0.6;
-}
-
-.welcomeTitle {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--gw-text-primary);
-}
-
-.welcomeDesc {
-  margin: 0;
-  font-size: 14px;
-  color: var(--gw-text-secondary);
-}
-
-// Project Files
-.projectFiles {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-.fileTreePanel {
-  width: 280px;
-  border-right: 1px solid var(--gw-border-subtle);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.treeHeader {
-  padding: var(--gw-space-12) var(--gw-space-16);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gw-text-primary);
-  border-bottom: 1px solid var(--gw-border-subtle);
-  background: var(--gw-bg-subtle);
-}
-
-.tree {
-  flex: 1;
-  overflow: auto;
-  padding: var(--gw-space-8) 0;
-}
-
-.treeNode {
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 4px;
-  display: inline-block;
-  width: 100%;
-
-  &:hover {
-    background: var(--gw-bg-hover);
-  }
-
-  &.selectedNode {
-    background: var(--gw-accent-primary);
-    color: white;
-  }
-}
-
-.fileContentPanel {
-  flex: 1;
-  overflow: auto;
-  padding: var(--gw-space-16);
-}
-
-.fileContent {
-  margin: 0;
-  padding: var(--gw-space-16);
-  background: var(--gw-bg-subtle);
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: 6px;
-  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--gw-text-primary);
-  overflow: auto;
-  max-height: 100%;
-}
-
-.filePlaceholder {
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  color: var(--gw-text-tertiary);
-  font-size: 14px;
+  overflow: hidden;
+  padding: clamp(20px, 4vh, 44px);
 }
 
-// Map & Layers view
-.mapAndLayers {
-  flex: 1;
+.dotField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(var(--gw-accent-rgb), 0.18) 1px, transparent 1px),
+    radial-gradient(circle at 50% 35%, rgba(var(--gw-accent-rgb), 0.13), transparent 34%);
+  background-size: 22px 22px, 100% 100%;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+  opacity: 0.72;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-
-  .mapContent {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-  }
-
-  .layerList {
-    width: 240px;
-    border-right: 1px solid var(--gw-border-subtle);
-    display: flex;
-    flex-direction: column;
-
-    .layerListTitle {
-      margin: 0;
-      padding: var(--gw-space-12) var(--gw-space-16);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--gw-text-primary);
-      border-bottom: 1px solid var(--gw-border-subtle);
-      background: var(--gw-bg-subtle);
-    }
-
-    .layerItem {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px var(--gw-space-16);
-      cursor: pointer;
-      transition: background 0.15s;
-      border-bottom: 1px solid var(--gw-border-subtle);
-
-      &:hover {
-        background: var(--gw-bg-hover);
-      }
-
-      &.layerActive {
-        background: var(--gw-bg-subtle);
-      }
-
-      .layerCheck {
-        font-size: 14px;
-      }
-
-      .layerType {
-        font-size: 16px;
-      }
-
-      .layerName {
-        flex: 1;
-        font-size: 12px;
-        color: var(--gw-text-primary);
-      }
-
-      .layerTypeTag {
-        font-size: 10px;
-        padding: 1px 4px;
-        background: var(--gw-bg-subtle);
-        color: var(--gw-text-tertiary);
-        border-radius: 2px;
-      }
-    }
-  }
-
-  .mapArea {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .mapPlaceholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--gw-space-12);
-      color: var(--gw-text-secondary);
-
-      .mapIcon {
-        font-size: 48px;
-        opacity: 0.5;
-      }
-    }
-  }
+  align-items: center;
+  gap: 18px;
 }
 
-// Automation view
-.automationView {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-
-  .automationContent {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-  }
-
-  .automationList {
-    width: 300px;
-    border-right: 1px solid var(--gw-border-subtle);
-    display: flex;
-    flex-direction: column;
-
-    .automationListTitle {
-      margin: 0;
-      padding: var(--gw-space-12) var(--gw-space-16);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--gw-text-primary);
-      border-bottom: 1px solid var(--gw-border-subtle);
-      background: var(--gw-bg-subtle);
-    }
-
-    .automationItem {
-      padding: var(--gw-space-12) var(--gw-space-16);
-      cursor: pointer;
-      border-bottom: 1px solid var(--gw-border-subtle);
-      transition: background 0.15s;
-
-      &:hover,
-      &.automationSelected {
-        background: var(--gw-bg-hover);
-      }
-
-      .automationName {
-        display: block;
-        font-size: 13px;
-        color: var(--gw-text-primary);
-        margin-bottom: 4px;
-      }
-
-      .automationSchedule {
-        display: block;
-        font-size: 11px;
-        color: var(--gw-text-tertiary);
-      }
-
-      .automationStatus {
-        display: inline-block;
-        margin-top: 4px;
-        font-size: 10px;
-        padding: 1px 6px;
-        border-radius: 3px;
-
-        &.statusActive {
-          color: #52c41a;
-          background: #f6ffed;
-        }
-
-        &.statusPaused {
-          color: #faad14;
-          background: #fffbe6;
-        }
-      }
-    }
-  }
-
-  .automationDetail {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .automationPlaceholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--gw-space-12);
-      color: var(--gw-text-secondary);
-
-      .automationIcon {
-        font-size: 48px;
-        opacity: 0.5;
-      }
-    }
-  }
+.mascot {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 2px;
 }
 
-// Paper search view
-.paperSearchView {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: var(--gw-space-16);
-
-  .searchSection {
-    margin-bottom: var(--gw-space-16);
-
-    .searchTitle {
-      margin: 0 0 8px 0;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--gw-text-primary);
-    }
-
-    .searchInput {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid var(--gw-border-subtle);
-      border-radius: 6px;
-      font-size: 13px;
-
-      &:focus {
-        outline: none;
-        border-color: var(--gw-accent-primary);
-      }
-    }
-  }
-
-  .paperList {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gw-space-8);
-
-    .paperItem {
-      padding: var(--gw-space-12);
-      background: var(--gw-bg-subtle);
-      border-radius: 6px;
-      border: 1px solid var(--gw-border-subtle);
-
-      .paperTitle {
-        display: block;
-        font-size: 13px;
-        color: var(--gw-text-primary);
-        margin-bottom: 4px;
-      }
-
-      .paperMeta {
-        font-size: 11px;
-        color: var(--gw-text-tertiary);
-      }
-    }
-  }
+.mascotHalo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--gw-accent-rgb), 0.28), transparent 66%);
+  filter: blur(2px);
+  animation: gw-glow 2.8s ease-in-out infinite;
 }
 
-// Knowledge base view
-.knowledgeBaseView {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--gw-space-16);
+.mascotCore {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 26px;
+  border: 1px solid rgba(var(--gw-accent-rgb), 0.36);
+  background:
+    linear-gradient(135deg, rgba(var(--gw-accent-rgb), 0.22), transparent),
+    var(--gw-bg-panel);
+  box-shadow: var(--gw-shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  transform: rotate(45deg);
+}
 
-  .kbTitle {
-    margin: 0 0 var(--gw-space-16) 0;
+.mascotGrid {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(var(--gw-accent-rgb), 0.32);
+  border-radius: 18px;
+}
+
+.mascotPulse {
+  position: absolute;
+  inset: 27px;
+  border-radius: 50%;
+  background: var(--gw-accent);
+  box-shadow: 0 0 24px rgba(var(--gw-accent-rgb), 0.6);
+}
+
+.heroHeader {
+  text-align: center;
+
+  h1 {
+    margin: 10px 0 6px;
+    font-size: clamp(34px, 5vw, 58px);
+    line-height: 1;
+    font-weight: 760;
+    color: var(--gw-text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--gw-text-muted);
     font-size: 15px;
-    font-weight: 600;
-    color: var(--gw-text-primary);
-  }
-
-  .kbEntry {
-    padding: var(--gw-space-12);
-    background: var(--gw-bg-subtle);
-    border: 1px solid var(--gw-border-subtle);
-    border-radius: 6px;
-    margin-bottom: var(--gw-space-8);
-
-    .kbEntryHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-
-      .kbEntryTitle {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--gw-text-primary);
-      }
-
-      .kbEntryCategory {
-        font-size: 11px;
-        padding: 2px 8px;
-        background: var(--gw-accent-primary);
-        color: white;
-        border-radius: 4px;
-      }
-    }
-
-    .kbTags {
-      display: flex;
-      gap: 6px;
-
-      .kbTag {
-        font-size: 10px;
-        padding: 1px 6px;
-        border: 1px solid var(--gw-border-subtle);
-        border-radius: 3px;
-        color: var(--gw-text-secondary);
-      }
-    }
   }
 }
 
-// Legacy placeholder classes (used when components are not expanded)
-.mapPlaceholder,
-.automationPlaceholder,
-.paperPlaceholder,
-.knowledgePlaceholder {
-  flex: 1;
+.workspaceStrip {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--gw-space-12);
-  color: var(--gw-text-secondary);
+  gap: 8px;
+
+  button {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--gw-border-soft);
+    background: var(--gw-bg-subtle);
+    color: var(--gw-text-muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--gw-text);
+      border-color: var(--gw-border);
+      background: var(--gw-bg-hover);
+    }
+  }
 }
 
-.mapIcon,
-.automationIcon,
-.paperIcon,
-.knowledgeIcon {
-  font-size: 48px;
-  opacity: 0.5;
+.placeholder {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.placeholderPanel {
+  width: min(420px, 100%);
+  padding: 28px;
+  border: 1px solid var(--gw-border-soft);
+  border-radius: var(--gw-radius-lg);
+  background: var(--gw-bg-panel);
+  box-shadow: var(--gw-shadow-panel);
+  text-align: center;
+
+  h2 {
+    margin: 14px 0 8px;
+    color: var(--gw-text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--gw-text-muted);
+    line-height: 1.7;
+  }
 }

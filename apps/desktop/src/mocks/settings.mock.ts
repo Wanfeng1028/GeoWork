@@ -26,10 +26,10 @@ export const mockSettings: Settings = {
     cacheEnabled: true
   },
   appearance: {
-    theme: 'dark-geo',
+    theme: 'dark',
     fontSize: 14,
     sidebarCollapsed: false,
-    conversationMinimapEnabled: true
+    conversationMinimapEnabled: false
   },
   workspace: {
     rootPath: '',

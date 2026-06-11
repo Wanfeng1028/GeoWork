@@ -26,7 +26,7 @@ export interface Settings {
     cacheEnabled: boolean;
   };
   appearance: {
-    theme: 'dark-geo' | 'light-geo' | 'dark-glass';
+    theme: 'dark' | 'light' | 'system';
     fontSize: number;
     sidebarCollapsed: boolean;
     conversationMinimapEnabled: boolean;
@@ -48,4 +48,7 @@ export interface Settings {
 export interface SettingsState {
   settings: Settings;
   isLoading: boolean;
+  resolvedTheme: 'dark' | 'light';
+  setTheme: (theme: Settings['appearance']['theme']) => void;
+  setResolvedTheme: (theme: 'dark' | 'light') => void;
 }

@@ -1,115 +1,128 @@
-// GeoWork Design Tokens
-// QoderWork 质感 + Geo 专业配色
+// GeoWork desktop design tokens.
 
 :root {
-  // === Background Layers ===
-  --gw-bg-window: #070a0f;
-  --gw-bg-sidebar: #0c1118;
-  --gw-bg-panel: #101722;
-  --gw-bg-card: #141d2a;
-  --gw-bg-popover: #1a2435;
-  --gw-bg-input: rgba(16, 23, 34, 0.92);
+  --gw-sidebar-width: 248px;
+  --gw-sidebar-collapsed-width: 56px;
+  --gw-topbar-height: 46px;
+  --gw-rightdock-width: 340px;
+  --gw-bottomdock-height: 260px;
 
-  // === Text Layers ===
-  --gw-text-primary: #f5f7fb;
-  --gw-text-secondary: #a9b3c2;
-  --gw-text-tertiary: #6f7b8e;
-  --gw-text-disabled: #434b58;
-
-  // === Border Layers ===
-  --gw-border-subtle: rgba(255, 255, 255, 0.08);
-  --gw-border-strong: rgba(255, 255, 255, 0.14);
-  --gw-border-active: rgba(77, 220, 151, 0.72);
-
-  // === Geo Theme Colors ===
-  --gw-accent: #4ddc97;
-  --gw-accent-blue: #4aa3ff;
-  --gw-accent-map: #7ee787;
-  --gw-warning: #f2c94c;
-  --gw-danger: #ff6b6b;
-  --gw-info: #4aa3ff;
-
-  // === Map & Geo Specific ===
-  --gw-map-base: #0f1923;
-  --gw-map-grid: rgba(77, 220, 151, 0.06);
-  --gw-map-feature: #4ddc97;
-  --gw-map-highlight: #f2c94c;
-
-  // === Diff Colors ===
-  --gw-diff-add: rgba(77, 220, 151, 0.15);
-  --gw-diff-add-text: #4ddc97;
-  --gw-diff-remove: rgba(255, 107, 107, 0.15);
-  --gw-diff-remove-text: #ff6b6b;
-
-  // === Radius ===
   --gw-radius-sm: 6px;
-  --gw-radius-md: 10px;
-  --gw-radius-lg: 16px;
-  --gw-radius-xl: 22px;
+  --gw-radius-md: 8px;
+  --gw-radius-lg: 14px;
+  --gw-radius-xl: 20px;
 
-  // === Shadows ===
-  --gw-shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.35);
-  --gw-shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.28);
-  --gw-shadow-glow: 0 0 38px rgba(77, 220, 151, 0.2);
-
-  // === Spacing ===
   --gw-space-4: 4px;
   --gw-space-6: 6px;
   --gw-space-8: 8px;
+  --gw-space-10: 10px;
   --gw-space-12: 12px;
   --gw-space-16: 16px;
   --gw-space-20: 20px;
   --gw-space-24: 24px;
   --gw-space-32: 32px;
 
-  // === Z-Index ===
   --gw-z-titlebar: 100;
   --gw-z-dock: 200;
   --gw-z-popover: 300;
   --gw-z-modal: 400;
-  --gw-z-overlay: 500;
 }
 
-// === Light Theme (Reserved) ===
-[data-theme="light-geo"] {
-  --gw-bg-window: #f3f6f8;
-  --gw-bg-sidebar: #ffffff;
-  --gw-bg-panel: #f8fafb;
-  --gw-bg-card: #ffffff;
+[data-theme="dark"],
+:root {
+  color-scheme: dark;
+
+  --gw-bg: #0d0b09;
+  --gw-bg-elevated: #16120f;
+  --gw-bg-panel: #1d1813;
+  --gw-bg-card: #231d17;
+  --gw-bg-popover: #2a221b;
+  --gw-bg-input: rgba(24, 20, 16, 0.94);
+  --gw-bg-hover: rgba(217, 173, 124, 0.1);
+  --gw-bg-subtle: rgba(255, 244, 226, 0.045);
+
+  --gw-text: #f3eee7;
+  --gw-text-muted: #b9aa98;
+  --gw-text-subtle: #7d7164;
+  --gw-text-disabled: #53483f;
+
+  --gw-border: rgba(255, 244, 226, 0.13);
+  --gw-border-soft: rgba(255, 244, 226, 0.075);
+  --gw-border-strong: rgba(255, 244, 226, 0.2);
+
+  --gw-accent: #d9ad7c;
+  --gw-accent-hover: #efc895;
+  --gw-accent-soft: rgba(217, 173, 124, 0.16);
+  --gw-accent-rgb: 217, 173, 124;
+
+  --gw-danger: #ff6f61;
+  --gw-warning: #e6b85f;
+  --gw-success: #73d99f;
+  --gw-info: #73b7ff;
+
+  --gw-map-base: #101611;
+  --gw-map-grid: rgba(115, 217, 159, 0.08);
+  --gw-map-feature: #73d99f;
+  --gw-map-highlight: #e6b85f;
+
+  --gw-shadow-panel: 0 20px 70px rgba(0, 0, 0, 0.42);
+  --gw-shadow-popover: 0 12px 42px rgba(0, 0, 0, 0.34);
+  --gw-shadow-glow: 0 0 44px rgba(var(--gw-accent-rgb), 0.18);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --gw-bg: #f6f3ee;
+  --gw-bg-elevated: #fffaf2;
+  --gw-bg-panel: #fff7ec;
+  --gw-bg-card: #fffdf8;
   --gw-bg-popover: #ffffff;
-  --gw-bg-input: rgba(255, 255, 255, 0.95);
+  --gw-bg-input: rgba(255, 252, 246, 0.96);
+  --gw-bg-hover: rgba(15, 118, 110, 0.08);
+  --gw-bg-subtle: rgba(31, 37, 34, 0.045);
 
-  --gw-text-primary: #1f2a32;
-  --gw-text-secondary: #47606d;
-  --gw-text-tertiary: #6f7b8e;
-  --gw-text-disabled: #a9b3c2;
+  --gw-text: #1f2522;
+  --gw-text-muted: #68756f;
+  --gw-text-subtle: #8a948f;
+  --gw-text-disabled: #b4bbb7;
 
-  --gw-border-subtle: rgba(0, 0, 0, 0.08);
-  --gw-border-strong: rgba(0, 0, 0, 0.14);
-  --gw-border-active: rgba(15, 107, 87, 0.72);
+  --gw-border: rgba(31, 37, 34, 0.13);
+  --gw-border-soft: rgba(31, 37, 34, 0.075);
+  --gw-border-strong: rgba(31, 37, 34, 0.2);
 
-  --gw-shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.08);
-  --gw-shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --gw-accent: #0f766e;
+  --gw-accent-hover: #0b8f82;
+  --gw-accent-soft: rgba(15, 118, 110, 0.12);
+  --gw-accent-rgb: 15, 118, 110;
+
+  --gw-danger: #cf3f35;
+  --gw-warning: #a66f00;
+  --gw-success: #168a4f;
+  --gw-info: #1864ab;
+
+  --gw-map-base: #eef5ef;
+  --gw-map-grid: rgba(15, 118, 110, 0.08);
+  --gw-map-feature: #0f766e;
+  --gw-map-highlight: #a66f00;
+
+  --gw-shadow-panel: 0 20px 70px rgba(56, 43, 31, 0.12);
+  --gw-shadow-popover: 0 12px 42px rgba(56, 43, 31, 0.14);
+  --gw-shadow-glow: 0 0 36px rgba(var(--gw-accent-rgb), 0.16);
 }
 
-// === Dark Glass Theme (Reserved) ===
-[data-theme="dark-glass"] {
-  --gw-bg-window: rgba(10, 14, 23, 0.95);
-  --gw-bg-sidebar: rgba(15, 20, 30, 0.92);
-  --gw-bg-panel: rgba(20, 28, 42, 0.9);
-  --gw-bg-card: rgba(25, 35, 52, 0.88);
-  --gw-bg-popover: rgba(25, 35, 52, 0.95);
-  --gw-bg-input: rgba(16, 23, 34, 0.85);
-
-  --gw-text-primary: #f5f7fb;
-  --gw-text-secondary: #a9b3c2;
-  --gw-text-tertiary: #6f7b8e;
-  --gw-text-disabled: #434b58;
-
-  --gw-border-subtle: rgba(255, 255, 255, 0.06);
-  --gw-border-strong: rgba(255, 255, 255, 0.12);
-  --gw-border-active: rgba(77, 220, 151, 0.8);
-
-  --gw-shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.45);
-  --gw-shadow-popover: 0 12px 40px rgba(0, 0, 0, 0.35);
+// Backward-compatible aliases for older components while they are migrated.
+[data-theme] {
+  --gw-bg-window: var(--gw-bg);
+  --gw-bg-sidebar: var(--gw-bg-elevated);
+  --gw-bg-primary: var(--gw-bg);
+  --gw-bg-secondary: var(--gw-bg-elevated);
+  --gw-bg-tertiary: var(--gw-bg-panel);
+  --gw-text-primary: var(--gw-text);
+  --gw-text-secondary: var(--gw-text-muted);
+  --gw-text-tertiary: var(--gw-text-subtle);
+  --gw-border-subtle: var(--gw-border-soft);
+  --gw-border-active: var(--gw-accent);
+  --gw-accent-primary: var(--gw-accent);
+  --gw-accent-color: var(--gw-accent);
 }
