@@ -18,4 +18,8 @@ export interface ArtifactState {
   artifacts: Artifact[];
   currentPreview: Artifact | null;
   isLoading: boolean;
+  setArtifacts: (artifacts: Artifact[]) => void;
+  addArtifact: (artifact: Artifact) => void;
+  setPreviewArtifact: (artifact: Artifact | null) => void;
+  clearPreview: () => void;
 }

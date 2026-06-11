@@ -4,20 +4,136 @@
   display: flex;
   flex-direction: column;
   gap: var(--gw-space-12);
+  overflow-y: auto;
 }
 
-.title {
+.empty {
+  padding: var(--gw-space-24) 0;
+}
+
+.deliverySection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-12);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-card);
+}
+
+.deliveryTitle {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--gw-text-primary);
+}
+
+.deliveryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gw-space-8);
+}
+
+.deliveryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-space-4);
+  padding: var(--gw-space-12);
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-elevated);
+  border: 1px solid var(--gw-border-subtle);
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--gw-border-strong);
+    background: var(--gw-bg-hover);
+  }
+}
+
+.deliveryIcon {
+  font-size: 20px;
+}
+
+.deliveryCount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gw-accent);
+  font-family: monospace;
+}
+
+.deliveryLabel {
+  font-size: 11px;
+  color: var(--gw-text-secondary);
+}
+
+.typeGroup {
+  padding: var(--gw-space-8) 0;
+  border-bottom: 1px solid var(--gw-border-subtle);
+}
+
+.typeHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin-bottom: var(--gw-space-8);
+  padding: 0 var(--gw-space-8);
+}
+
+.typeIcon {
+  font-size: 14px;
+  color: var(--gw-text-secondary);
+}
+
+.typeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.typeBadge {
+  margin: 0;
+  font-size: 10px;
 }
 
 .artifactItem {
   padding: var(--gw-space-8) 0;
+
+  &.selected {
+    background: rgba(77, 220, 151, 0.04);
+  }
 }
 
 .artifactCard {
   width: 100%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  :global(.ant-card-body) {
+    padding: 8px 12px;
+  }
+
+  &:hover {
+    border-color: var(--gw-border-strong);
+  }
+
+  &.cardSelected {
+    border-color: var(--gw-accent);
+    background: rgba(77, 220, 151, 0.04);
+  }
+}
+
+.acceptBtn {
+  font-size: 14px;
+  color: var(--gw-accent);
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--gw-accent-hover);
+  }
 }
 
 .artifactHeader {
@@ -27,11 +143,18 @@
   margin-bottom: var(--gw-space-8);
 }
 
+.artifactIcon {
+  font-size: 14px;
+}
+
 .artifactName {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
   color: var(--gw-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .artifactMeta {
@@ -44,9 +167,167 @@
   font-size: 11px;
   color: var(--gw-text-tertiary);
   font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
 }
 
 .artifactDate {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--gw-text-tertiary);
+}
+
+// Preview placeholders
+.previewImage,
+.previewGeojson,
+.previewCsv,
+.previewHtml,
+.previewCode {
+  margin-top: var(--gw-space-8);
+  height: 40px;
+  border-radius: var(--gw-radius-sm);
+  border: 1px dashed var(--gw-border-subtle);
+  background: var(--gw-bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--gw-text-tertiary);
+}
+
+.previewImage {
+  background: linear-gradient(135deg, var(--gw-bg-elevated) 25%, var(--gw-bg-hover) 25%, var(--gw-bg-hover) 50%, var(--gw-bg-elevated) 50%, var(--gw-bg-elevated) 75%, var(--gw-bg-elevated) 100%);
+  background-size: 8px 8px;
+}
+
+.previewGeojson {
+  background: repeating-linear-gradient(0deg, var(--gw-bg-elevated) 0px, var(--gw-bg-elevated) 6px, transparent 6px, transparent 8px);
+}
+
+.previewCsv {
+  background: repeating-linear-gradient(90deg, var(--gw-border-subtle) 0px, var(--gw-border-subtle) 1px, transparent 1px, transparent 20px);
+}
+
+.previewHtml {
+  color: var(--gw-accent-secondary);
+}
+
+.previewCode {
+  font-family: monospace;
+  font-size: 9px;
+  color: var(--gw-text-tertiary);
+}
+
+// Preview panel
+.previewPanel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-card);
+  overflow: hidden;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-8) var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  background: var(--gw-bg-elevated);
+}
+
+.previewTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+  font-family: monospace;
+}
+
+.previewClose {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: var(--gw-text-tertiary);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--gw-text-primary);
+  }
+}
+
+.previewContent {
+  padding: var(--gw-space-12);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.previewMap,
+.previewImageContainer,
+.previewGeojsonContainer,
+.previewCsvContainer,
+.previewHtmlContainer,
+.previewCodeContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.mapPlaceholder,
+.imagePlaceholder,
+.htmlPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-space-4);
+  color: var(--gw-text-secondary);
+}
+
+.mapIcon,
+.imageIcon,
+.htmlIcon {
+  font-size: 28px;
+  color: var(--gw-accent);
+  margin-bottom: var(--gw-space-4);
+}
+
+.previewHint {
+  margin: 0;
+  font-size: 10px;
+  color: var(--gw-text-tertiary);
+  font-style: italic;
+}
+
+.geojsonPlaceholder,
+.csvPlaceholder,
+.codePlaceholder {
+  margin: 0;
+  padding: var(--gw-space-8);
+  background: var(--gw-bg-elevated);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-sm);
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 1.5;
+  max-height: 150px;
+  overflow: auto;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  code {
+    display: block;
+    color: var(--gw-text-secondary);
+  }
+
+  .previewHint {
+    color: var(--gw-text-tertiary);
+    font-style: italic;
+  }
 }

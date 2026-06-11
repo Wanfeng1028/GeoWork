@@ -19,8 +19,16 @@ export interface Diff {
 export interface DiffState {
   diffs: Diff[];
   currentDiff: Diff | null;
+  activeDiffId: string | null;
   acceptedFiles: Set<string>;
   rejectedFiles: Set<string>;
+  setActiveDiffId: (diffId: string | null) => void;
+  setDiffs: (diffs: Diff[]) => void;
+  addDiff: (diff: Diff) => void;
+  acceptFile: (filePath: string) => void;
+  rejectFile: (filePath: string) => void;
+  acceptAll: (diffId?: string) => void;
+  rejectAll: (diffId?: string) => void;
   setAcceptedFile: (filePath: string) => void;
   setRejectedFile: (filePath: string) => void;
   setAllAccepted: (filePath: string) => void;
