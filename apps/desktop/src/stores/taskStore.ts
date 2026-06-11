@@ -126,11 +126,11 @@ const useTaskStore = create<TaskState>((set, get) => ({
       await runtimeClient.cancelTask(taskId)
       set((state) => {
         const updatedTask = state.currentTask?.id === taskId
-          ? { ...state.currentTask, status: 'completed' as const }
+          ? { ...state.currentTask, status: 'cancelled' as const }
           : state.currentTask
         const plan = updatedTask?.plan || []
         return {
-          tasks: state.tasks.map(t => t.id === taskId ? { ...t, status: 'completed' as const } : t),
+          tasks: state.tasks.map(t => t.id === taskId ? { ...t, status: 'cancelled' as const } : t),
           currentTask: updatedTask,
           pendingSteps: plan.filter(s => s.status === 'pending'),
           runningStep: undefined,

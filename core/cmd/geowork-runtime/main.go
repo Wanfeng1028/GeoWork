@@ -35,7 +35,7 @@ func main() {
 	os.MkdirAll(stateDir, 0755)
 
 	// Workspace: file-based SQLite
-	wsDB, err := sql.Open("sqlite3", filepath.Join(stateDir, "workspaces.db"))
+	wsDB, err := sql.Open("sqlite", filepath.Join(stateDir, "workspaces.db"))
 	if err != nil {
 		log.Fatalf("Failed to open workspace DB: %v", err)
 	}

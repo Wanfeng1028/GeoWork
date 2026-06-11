@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // Workflow represents a user-defined agent workflow.
@@ -57,7 +57,7 @@ type Store struct {
 
 // NewStore creates a new workflow store backed by SQLite.
 func NewStore(dbPath string) (*Store, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open workflow store: %w", err)
 	}

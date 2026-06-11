@@ -1,0 +1,6 @@
+{
+  "operation": "dissolve",
+  "layerId": "regions.shp",
+  "field": "province",
+  "sourceBytes": 0
+}

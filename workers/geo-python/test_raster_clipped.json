@@ -1,0 +1,11 @@
+{
+  "operation": "clip",
+  "layerId": "test_raster.tif",
+  "extent": {
+    "minX": 73.0,
+    "minY": 18.0,
+    "maxX": 135.0,
+    "maxY": 54.0
+  },
+  "sourceBytes": 0
+}

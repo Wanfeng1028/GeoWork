@@ -1,0 +1,6 @@
+{
+  "operation": "reproject",
+  "layerId": "test_layer.tif",
+  "targetCrs": "EPSG:3857",
+  "sourceBytes": 0
+}

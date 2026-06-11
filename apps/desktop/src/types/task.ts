@@ -2,7 +2,7 @@
 
 import type { Artifact } from './artifact'
 
-export type TaskStatus = 'pending' | 'running' | 'waiting_approval' | 'completed' | 'failed' | 'recovered';
+export type TaskStatus = 'pending' | 'running' | 'waiting_approval' | 'completed' | 'failed' | 'recovered' | 'cancelled';
 
 export type TaskStepStatus = 'pending' | 'running' | 'completed' | 'failed';
 

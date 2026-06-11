@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func OpenDB() (*sql.DB, error) {
@@ -15,7 +15,7 @@ func OpenDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to ensure dirs: %w", err)
 	}
 
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}

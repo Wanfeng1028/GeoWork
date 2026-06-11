@@ -95,7 +95,7 @@ function notifyStartupStatus(service: 'goCore' | 'cloudServer', status: 'running
 /**
  * Log stdout/stderr to a file
  */
-function logChildOutput(child: ChildProcess, type: 'goCore' | 'cloudServer', logDir: string) {
+function logChildOutput(child: ChildProcess, type: 'goCore' | 'cloudServer') {
   const logFile = getLogFilePath(type === 'goCore' ? 'runtime' : 'runtime')
   
   child.stdout?.on('data', (data: Buffer) => {
@@ -158,7 +158,7 @@ export async function startRuntime() {
     goPid = goRuntime.pid ?? null
     console.log(`[GeoWork] Starting Go Core Runtime (PID: ${goPid})...`)
     writeLog('main', `Starting Go Core Runtime with PID ${goPid}`)
-    logChildOutput(goRuntime, 'goCore', resolve(logDir, ''))
+    logChildOutput(goRuntime, 'goCore')
 
     goRuntime.on('error', (err) => {
       startupState.goCore = 'failed'
@@ -214,7 +214,7 @@ export async function startRuntime() {
     cloudPid = cloudServer.pid ?? null
     console.log(`[GeoWork] Starting Cloud Server (PID: ${cloudPid})...`)
     writeLog('main', `Starting Cloud Server with PID ${cloudPid}`)
-    logChildOutput(cloudServer, 'cloudServer', resolve(__dirname, ''))
+    logChildOutput(cloudServer, 'cloudServer')
 
     cloudServer.on('error', (err) => {
       startupState.cloudServer = 'failed'

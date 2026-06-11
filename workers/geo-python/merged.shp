@@ -1,0 +1,11 @@
+{
+  "operation": "merge",
+  "layerIds": [
+    "layer1.shp",
+    "layer2.shp"
+  ],
+  "sourceBytes": [
+    0,
+    0
+  ]
+}
