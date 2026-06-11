@@ -1,0 +1,84 @@
+// GeoWork - SkillPickerButton Styles
+
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trigger {
+  border-radius: var(--gw-radius-md);
+
+  &.custom {
+    border-color: var(--gw-accent);
+    background: rgba(77, 220, 151, 0.1);
+    color: var(--gw-accent);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  margin-left: 4px;
+  border-radius: 8px;
+  background: var(--gw-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.popup {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 1000;
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-popover);
+  box-shadow: var(--gw-shadow-md);
+
+  .skillItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--gw-radius-sm);
+    background: transparent;
+    color: var(--gw-text-primary);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--gw-bg-hover);
+    }
+
+    &.active {
+      background: rgba(77, 220, 151, 0.1);
+      color: var(--gw-accent);
+    }
+  }
+
+  .skillIcon {
+    font-size: 14px;
+  }
+
+  .skillName {
+    flex: 1;
+  }
+
+  .check {
+    font-size: 12px;
+    color: var(--gw-accent);
+  }
+}

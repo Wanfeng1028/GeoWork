@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react'
 import { Select, Tag } from 'antd'
-import { SparklesOutlined } from '@ant-design/icons'
+import { SettingOutlined } from '@ant-design/icons'
 import useSettingsStore from '../../../stores/settingsStore'
 import styles from './ModelSelector.module.scss'
 
@@ -24,7 +24,7 @@ export const ModelSelector: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <SparklesOutlined className={styles.icon} />
+      <SettingOutlined className={styles.icon} />
       <div className={styles.selectors}>
         <Select
           value={selectedProvider}

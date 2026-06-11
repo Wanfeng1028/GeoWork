@@ -1,0 +1,39 @@
+// GeoWork - TemplateSelector Styles
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  background: var(--gw-bg-card);
+}
+
+.icon {
+  color: var(--gw-accent-secondary);
+  font-size: 13px;
+}
+
+.templateSelect {
+  :global(.ant-select-selector) {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+
+    &:hover {
+      border: none;
+      box-shadow: none;
+    }
+  }
+
+  :global(.ant-select-selection-item) {
+    color: var(--gw-text-primary);
+    padding-left: 0;
+  }
+
+  :global(.ant-select-arrow) {
+    color: var(--gw-text-tertiary);
+  }
+}

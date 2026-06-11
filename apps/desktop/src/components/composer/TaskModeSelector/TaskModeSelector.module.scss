@@ -1,0 +1,24 @@
+// GeoWork - TaskModeSelector Styles
+
+.container {
+  display: flex;
+  align-items: center;
+}
+
+.modeSelect {
+  width: 160px;
+
+  :global(.ant-select-selector) {
+    background: var(--gw-bg-input);
+    border-color: var(--gw-border-subtle);
+    border-radius: var(--gw-radius-sm);
+
+    &:hover {
+      border-color: var(--gw-border-strong);
+    }
+  }
+
+  :global(.ant-select-selection-item) {
+    color: var(--gw-text-primary);
+  }
+}

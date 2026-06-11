@@ -1,0 +1,50 @@
+// GeoWork - SpeedSelector Styles
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-text-secondary);
+}
+
+.group {
+  :global(.ant-radio-button-wrapper) {
+    border: 1px solid var(--gw-border-subtle);
+    border-radius: var(--gw-radius-sm);
+    background: var(--gw-bg-card);
+    color: var(--gw-text-secondary);
+    padding: 2px 10px;
+    height: auto;
+    line-height: 1.5;
+
+    &:first-child {
+      border-radius: var(--gw-radius-sm);
+    }
+
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+
+    &:hover {
+      color: var(--gw-text-primary);
+      border-color: var(--gw-border-strong);
+    }
+
+    &.ant-radio-button-wrapper-checked {
+      color: var(--gw-accent);
+      border-color: var(--gw-accent);
+      background: rgba(77, 220, 151, 0.08);
+    }
+  }
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
