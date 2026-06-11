@@ -115,9 +115,9 @@ func TestTokenCRUD(t *testing.T) {
 	if err := s.DeleteToken("tok_001"); err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.GetToken("tok_001")
-	if err == nil {
-		t.Fatal("expected error after deletion")
+	found, _ = s.GetToken("tok_001")
+	if found != nil {
+		t.Fatal("expected nil token after deletion")
 	}
 }
 

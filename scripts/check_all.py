@@ -35,8 +35,10 @@ def main() -> None:
 
     if go:
         ok &= run("Go tests", [go, "test", "./..."], ROOT / "core")
+        ok &= run("Go server build", [go, "build", "./..."], ROOT / "server")
+        ok &= run("Go server tests", [go, "test", "./...", "-count=1"], ROOT / "server")
     else:
-        print("\n== Go tests ==\nSKIP: go is not on PATH")
+        print("\n== Go tests/build ==\nSKIP: go is not on PATH")
 
     if (ROOT / "node_modules").exists() and npm:
         ok &= run("frontend tests", [npm, "test"])

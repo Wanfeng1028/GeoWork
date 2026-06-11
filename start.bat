@@ -235,7 +235,7 @@ if !errorlevel! equ 0 (
     echo [INFO] Log location: %ROOT_DIR%logs\python-worker.log
 )
 
-curl -s http://127.0.0.1:!CLOUD_PORT!/api/health >nul 2>&1
+curl -s http://127.0.0.1:!CLOUD_PORT!/health >nul 2>&1
 if !errorlevel! equ 0 (
     echo [OK] Cloud Server is running normally
 ) else (

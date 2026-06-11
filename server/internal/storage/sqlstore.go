@@ -276,14 +276,19 @@ func (s *Store) GetUsageByModel(userID string) (map[string]int64, error) {
 
 func (s *Store) GetBillingData(userID string) (*BillingData, error) {
 	b := &BillingData{}
+	var updatedAt int64
 	err := s.db.QueryRow(`
 		SELECT user_id, plan, credits, usage_cost, updated_at FROM billing_data WHERE user_id=?`, userID).Scan(
-		&b.UserID, &b.Plan, &b.Credits, &b.UsageCost, &b.UpdatedAt,
+		&b.UserID, &b.Plan, &b.Credits, &b.UsageCost, &updatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return b, err
+	if err != nil {
+		return nil, err
+	}
+	b.UpdatedAt = scanTime(updatedAt)
+	return b, nil
 }
 
 func (s *Store) UpsertBillingData(b *BillingData) error {
@@ -327,9 +332,11 @@ func (s *Store) GetSyncRecordsAfter(userID string, cursor int64) ([]*SyncRecord,
 	var recs []*SyncRecord
 	for rows.Next() {
 		r := &SyncRecord{}
-		if err := rows.Scan(&r.ID, &r.UserID, &r.ObjectType, &r.ObjectID, &r.Data, &r.Cursor, &r.CreatedAt); err != nil {
+		var createdAt int64
+		if err := rows.Scan(&r.ID, &r.UserID, &r.ObjectType, &r.ObjectID, &r.Data, &r.Cursor, &createdAt); err != nil {
 			return nil, err
 		}
+		r.CreatedAt = scanTime(createdAt)
 		recs = append(recs, r)
 	}
 	return recs, rows.Err()
@@ -445,9 +452,11 @@ func (s *Store) GetCollabRecordsByWorkspace(workspaceID string) ([]*CollabRecord
 	var recs []*CollabRecord
 	for rows.Next() {
 		r := &CollabRecord{}
-		if err := rows.Scan(&r.ID, &r.WorkspaceID, &r.Type, &r.UserID, &r.Data, &r.Timestamp); err != nil {
+		var timestamp int64
+		if err := rows.Scan(&r.ID, &r.WorkspaceID, &r.Type, &r.UserID, &r.Data, &timestamp); err != nil {
 			return nil, err
 		}
+		r.Timestamp = scanTime(timestamp)
 		recs = append(recs, r)
 	}
 	return recs, rows.Err()
@@ -483,10 +492,12 @@ func (s *Store) ListChannelWebhooks() ([]*ChannelWebhook, error) {
 	for rows.Next() {
 		wh := &ChannelWebhook{}
 		var active int
-		if err := rows.Scan(&wh.ID, &wh.ChannelID, &wh.URL, &wh.TeamID, &active, &wh.CreatedAt); err != nil {
+		var createdAt int64
+		if err := rows.Scan(&wh.ID, &wh.ChannelID, &wh.URL, &wh.TeamID, &active, &createdAt); err != nil {
 			return nil, err
 		}
 		wh.Active = active == 1
+		wh.CreatedAt = scanTime(createdAt)
 		whs = append(whs, wh)
 	}
 	return whs, rows.Err()
