@@ -24,6 +24,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons'
 import useShellStore from '../../../stores/shellStore'
+import { runAction } from '../../../services/actionRegistry'
 import styles from './LeftSidebar.module.scss'
 
 interface LeftSidebarProps {
@@ -33,22 +34,10 @@ interface LeftSidebarProps {
 type NavTuple = [string, string, ReactNode]
 
 export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
-  const {
-    activeNavKey,
-    setActiveNavKey,
-    toggleSidebar,
-    focusComposer,
-    closeBottomDock,
-    closeRightDock
-  } = useShellStore()
+  const { activeNavKey, toggleSidebar } = useShellStore()
 
   const openNav = (key: string) => {
-    setActiveNavKey(key)
-    if (key === 'workbench') {
-      closeBottomDock()
-      closeRightDock()
-      focusComposer()
-    }
+    runAction('switchMainModule', key)
   }
 
   return (

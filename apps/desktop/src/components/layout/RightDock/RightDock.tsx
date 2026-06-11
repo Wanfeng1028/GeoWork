@@ -1,6 +1,7 @@
 // GeoWork RightDock - Complete with all tabs
 
 import { Tabs } from 'antd'
+import { CloseOutlined } from '@ant-design/icons'
 import { TaskMonitorPanel } from '../../panel/TaskMonitorPanel/TaskMonitorPanel'
 import { ArtifactPanel } from '../../panel/ArtifactPanel/ArtifactPanel'
 import { DiffPanel } from '../../panel/DiffPanel/DiffPanel'
@@ -11,10 +12,13 @@ import styles from './RightDock.module.scss'
 const { TabPane } = Tabs
 
 export function RightDock() {
-  const { activeRightPanel, setActiveRightPanel } = useShellStore()
+  const { activeRightPanel, setActiveRightPanel, closeRightDock } = useShellStore()
 
   return (
     <aside className={styles.dock}>
+      <button className={styles.closeBtn} onClick={closeRightDock} aria-label="关闭右侧面板">
+        <CloseOutlined />
+      </button>
       <Tabs
         activeKey={activeRightPanel}
         onChange={(key) => setActiveRightPanel(key as any)}

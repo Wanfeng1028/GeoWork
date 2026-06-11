@@ -129,3 +129,13 @@
   height: 20px;
   line-height: 18px;
 }
+
+.commandItem {
+  cursor: pointer;
+  border-radius: var(--gw-radius-md);
+  padding-inline: 10px !important;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+  }
+}
