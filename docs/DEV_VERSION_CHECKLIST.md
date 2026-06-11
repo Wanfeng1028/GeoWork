@@ -1,12 +1,77 @@
-# GeoWork v0.4.x-dev 开发版验收标准
+# GeoWork v0.4.x-dev 开发版验收清单
 
 ## 版本说明
 
-GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列出哪些能力已完成、哪些仍是开发态/占位/mock，防止后续 Agent 把 dev/in-memory/mock 误判成正式实现。
+GeoWork 当前是 **v0.4.x-dev 开发版**，不是正式上线版。本文档明确列出哪些能力已完成、哪些仍是开发态/占位/mock，防止后续 Agent 把 dev/in-memory/mock 误判成正式实现。
+
+---
+
+## 基础命令
+
+- [ ] `npm install`
+- [ ] `npm run test:core`
+- [ ] `npm run test:worker`
+- [ ] `npm run test:cloud`
+- [ ] `npm test`
+- [ ] `npm run build`
+
+## 启动链路
+
+- [ ] `npm run dev`
+- [ ] Core 8765 health 正常
+- [ ] Worker 8766 health 正常
+- [ ] Cloud 8767 health 正常
+- [ ] Desktop 不白屏
+- [ ] Electron 无 `No handler registered`
+
+## 前端主链路
+
+- [ ] AppShell 正常显示
+- [ ] LeftSidebar 正常显示
+- [ ] MainWorkspace 正常显示
+- [ ] ConversationMinimap 不崩
+- [ ] RightDock 不崩
+- [ ] BottomDock 不崩
+- [ ] 无任务时显示空状态
+- [ ] 无 diff 时显示空状态
+- [ ] 无产物时显示空状态
+
+## Agent / Runtime 开发态说明
+
+- [ ] Agent Context Budget 已有初步实现
+- [ ] State Machine 已有初步实现
+- [ ] Tool Governance 已有初步实现
+- [ ] Sandbox 是开发版策略，不是强隔离容器
+- [ ] Recovery 仍在完善
+- [ ] Cloud Server 当前是 dev / in-memory
+- [ ] 部分 GEE / QGIS / GDAL 能力依赖本机环境
+- [ ] 部分页面仍为开发态占位
+
+## 不应伪装为正式完成的功能
+
+- [ ] 账号计费
+- [ ] 团队协作
+- [ ] 插件市场正式安装/卸载
+- [ ] MCP Server 完整运行管理
+- [ ] Cloud 数据持久化
+- [ ] Windows 安装包发布
+- [ ] 完整 GIS 生产级处理链路
 
 ---
 
 ## 已完成的能力
+
+### Agent Runtime (第一版)
+- [x] Go Core Runtime 基础框架
+- [x] Agent 引擎（Engine）
+- [x] State Machine 状态机
+- [x] Context Budget 管理
+- [x] Tool Governor 工具治理
+
+### Server SQLite (第一版)
+- [x] pure-Go SQLite 持久化层
+- [x] 数据库迁移机制
+- [x] Storage 层基础 CRUD
 
 ### AppShell 工作台
 - [x] 五区布局（TopBar、LeftSidebar、MainWorkspace、RightDock、BottomDock）
@@ -22,7 +87,6 @@ GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列
 ### Go Core Runtime
 - [x] 项目 CRUD
 - [x] 任务 CRUD 和状态管理
-- [x] Agent 引擎（Engine）
 - [x] Sandbox 服务（开发版策略）
 - [x] Recovery 管理器（checkpoint/pause/recover）
 - [x] API 路由和处理器
@@ -38,16 +102,6 @@ GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列
 - [x] QGIS 环境检测
 - [x] GEE 数据集搜索
 
-### Cloud Server dev/in-memory
-- [x] 基础 HTTP 服务
-- [x] Storage 层（in-memory）
-- [x] 健康检查端点
-
-### Agent 模块
-- [x] Context Budget 管理
-- [x] State Machine 状态机
-- [x] Tool Governor 工具治理
-
 ### 前端组件
 - [x] TaskStore 任务状态管理
 - [x] SSE 实时事件流
@@ -59,10 +113,24 @@ GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列
 
 ## 仍是开发态的能力
 
-### Cloud Server
-- **状态**: dev/in-memory
-- **说明**: Cloud Server 使用内存存储，重启后数据丢失
-- **v0.5.0 计划**: 迁移到 SQLite/PostgreSQL
+### Sandbox 策略
+- **状态**: 开发版策略，不是强隔离容器
+- **说明**: 
+  - 空 AllowedPaths 允许所有路径（dev 模式）
+  - 非空 AllowedPaths 只允许指定目录及子目录
+  - 阻止危险命令（rm, sudo, mkfs, fdisk）
+  - Windows 优先 pwsh，fallback cmd
+  - 路径判断支持 `/` 和 `\` 分隔符
+- **v0.5.0 计划**: 强隔离容器
+
+### Recovery 机制
+- **状态**: 恢复机制，不等于任务完成
+- **说明**: 
+  - 有 checkpoint 时：恢复后任务状态为 `paused`（用户决定继续/放弃）
+  - 无 checkpoint 时：返回 `no_checkpoint`，不修改任务状态
+  - CreateReadOnlySnapshot：任务状态为 `paused`（非 completed）
+  - **重要**: 恢复 ≠ 完成，不能把恢复操作标记为 completed
+- **v0.5.0 计划**: 完整的任务恢复、回滚、Diff patch
 
 ### 地图/GEE/QGIS/GDAL
 - **状态**: 依赖本机环境或占位
@@ -79,22 +147,6 @@ GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列
   - 部分页面使用 mock 数据
   - 无真实功能实现
 - **v0.5.0 计划**: 逐步替换为真实功能页面
-
-### 任务恢复语义
-- **状态**: 基础可用
-- **说明**: 
-  - 恢复后任务状态为 paused（非 completed）
-  - 无 checkpoint 时返回 no_checkpoint
-  - 恢复 ≠ 完成
-- **v0.5.0 计划**: 完整的任务恢复、回滚、Diff patch
-
-### Sandbox 策略
-- **状态**: 开发版策略
-- **说明**: 
-  - 空 AllowedPaths 允许所有路径（dev 模式）
-  - 阻止危险命令（rm, sudo, mkfs, fdisk）
-  - Windows 优先 pwsh，fallback cmd
-- **v0.5.0 计划**: 强隔离容器
 
 ### 账号/计费/团队协作
 - **状态**: 未实现
@@ -113,7 +165,9 @@ GeoWork v0.4.x-dev 是**开发版**，不是正式上线版。本文档明确列
 
 ---
 
-## 验收命令
+## 发布前验收命令
+
+发布前必须通过以下测试和验证：
 
 ```bash
 # 运行所有测试
@@ -136,8 +190,8 @@ npm run dev            # 启动 core/worker/cloud/desktop
 
 ## 开发版限制
 
-1. **数据持久化**: Cloud Server 数据重启丢失
-2. **环境依赖**: 部分功能依赖本机安装特定软件
+1. **数据持久化**: Server SQLite 已有第一版，但仍需验证
+2. **环境依赖**: 部分功能依赖本机安装特定软件（GEE/QGIS/GDAL）
 3. **功能完整性**: 部分页面为开发占位，非真实功能
 4. **安全隔离**: Sandbox 为开发版策略，非强隔离
 5. **账号系统**: 无真实账号认证和授权
@@ -146,16 +200,15 @@ npm run dev            # 启动 core/worker/cloud/desktop
 
 ## 下一步计划 (v0.5.0)
 
-1. Cloud Server 迁移到 SQLite/PostgreSQL
-2. 账号、计费、团队协作真实化
-3. 插件市场真实安装/卸载
-4. MCP Server 管理器真实运行
-5. 完整任务恢复、回滚、Diff patch
-6. Windows 安装包发布
-7. 地图页接入 MapLibre 真实底图
-8. PaperSearch 接入 OpenAlex 真实搜索
+1. 账号、计费、团队协作真实化
+2. 插件市场真实安装/卸载
+3. MCP Server 管理器真实运行
+4. 完整任务恢复、回滚、Diff patch
+5. Windows 安装包发布
+6. 地图页接入 MapLibre 真实底图
+7. PaperSearch 接入 OpenAlex 真实搜索
 
 ---
 
 *最后更新: 2026-06-11*
-*版本: v0.4.x-dev*
+*版本: v0.4.x-dev / v0.5.0-dev*
