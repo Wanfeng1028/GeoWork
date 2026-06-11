@@ -33,7 +33,7 @@ interface BrowserLog {
   timestamp: string;
 }
 
-// Sample screenshot placeholder (in production, this would come from Playwright)
+// Screenshot placeholder SVG (shown when no screenshot is available from Playwright)
 const PLACEHOLDER_SCREENSHOT =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7ml6Dlkq7nrp7np5/ogqDorq7lp5Hku73lv5HlubrmoYHfPP8AAP//AAADAgMBAA==</text></svg>";
 

@@ -1,3 +1,5 @@
+// GeoWork Go Core - Permission Repository
+
 package permissions
 
 import (
@@ -6,336 +8,460 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
-// PermissionRepository handles CRUD operations for permission entries.
-type PermissionRepository struct {
+// Repository handles persistent storage for permission requests, policies, and decisions.
+type Repository struct {
 	db  *sql.DB
 	log *slog.Logger
 }
 
-// PermissionEntry represents a single permission record in the database.
-type PermissionEntry struct {
-	ID        string                 `json:"id"`
-	Resource  string                 `json:"resource"`
-	Action    string                 `json:"action"`
-	Effect    string                 `json:"effect"`
-	Conditions map[string]string   `json:"conditions,omitempty"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
+// PermissionPolicyEntry is a lightweight struct for returning policy summaries.
+type PermissionPolicyEntry struct {
+	TaskID       string            `json:"taskId"`
+	DefaultLevel PermissionLevel   `json:"defaultLevel"`
+	Actions      map[string]string `json:"actions"`
+	CreatedAt    time.Time         `json:"createdAt"`
+	UpdatedAt    time.Time         `json:"updatedAt"`
 }
 
-const permissionTableSQL = `
-CREATE TABLE IF NOT EXISTS permissions (
+// StoredDecision represents a stored decision record with optional TTL.
+type StoredDecision struct {
+	ID        string    `json:"id"`
+	TaskID    string    `json:"taskId"`
+	Action    string    `json:"action"`
+	Decision  string    `json:"decision"`
+	Reason    string    `json:"reason"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+const (
+	permissionRequestsSQL = `
+CREATE TABLE IF NOT EXISTS permission_requests (
 	id TEXT PRIMARY KEY,
-	resource TEXT NOT NULL,
+	task_id TEXT NOT NULL,
 	action TEXT NOT NULL,
-	effect TEXT NOT NULL DEFAULT 'allow',
-	conditions TEXT,
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+	title TEXT NOT NULL,
+	description TEXT,
+	command TEXT,
+	risk_level TEXT NOT NULL DEFAULT 'medium',
+	requested_at TIMESTAMP NOT NULL,
+	resolved_at TIMESTAMP,
+	decision TEXT,
+	reason TEXT
+);`
+
+	permissionRequestsIndexSQL = `
+CREATE INDEX IF NOT EXISTS idx_permission_requests_task ON permission_requests(task_id);
+CREATE INDEX IF NOT EXISTS idx_permission_requests_task_pending ON permission_requests(task_id, decision);
 `
 
-const permissionIndexSQL = `
-CREATE INDEX IF NOT EXISTS idx_permissions_resource ON permissions(resource);
-CREATE INDEX IF NOT EXISTS idx_permissions_action ON permissions(action);
-CREATE INDEX IF NOT EXISTS idx_permissions_effect ON permissions(effect);
-CREATE INDEX IF NOT EXISTS idx_permissions_resource_action ON permissions(resource, action);
-`
+	permissionPoliciesSQL = `
+CREATE TABLE IF NOT EXISTS permission_policies (
+	task_id TEXT PRIMARY KEY,
+	default_level TEXT NOT NULL,
+	actions TEXT,
+	created_at TIMESTAMP NOT NULL,
+	updated_at TIMESTAMP NOT NULL
+);`
 
-// NewPermissionRepository creates a new repository and ensures tables/indexes exist.
-func NewPermissionRepository(db *sql.DB) *PermissionRepository {
-	return &PermissionRepository{
+	permissionDecisionsSQL = `
+CREATE TABLE IF NOT EXISTS permission_decisions (
+	id TEXT PRIMARY KEY,
+	task_id TEXT NOT NULL,
+	action TEXT NOT NULL,
+	decision TEXT NOT NULL,
+	reason TEXT,
+	expires_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL
+);`
+
+	permissionDecisionsIndexSQL = `
+CREATE INDEX IF NOT EXISTS idx_permission_decisions_task_action ON permission_decisions(task_id, action);
+CREATE INDEX IF NOT EXISTS idx_permission_decisions_expires ON permission_decisions(expires_at);
+`
+)
+
+// scanner is a minimal interface matching *sql.Row and *sql.Rows Scan capability.
+type scanner interface {
+	Scan(dest ...interface{}) error
+}
+
+// NewRepository initializes the repository and creates tables if they don't exist.
+func NewRepository(db *sql.DB) (*Repository, error) {
+	repo := &Repository{
 		db:  db,
 		log: slog.Default(),
 	}
+
+	if err := repo.init(); err != nil {
+		return nil, fmt.Errorf("initialize repository: %w", err)
+	}
+
+	return repo, nil
 }
 
-// Init ensures the permissions table and indexes are created.
-func (pr *PermissionRepository) Init() error {
-	if _, err := pr.db.Exec(permissionTableSQL); err != nil {
-		return fmt.Errorf("create permissions table: %w", err)
+// init creates the database tables and indexes.
+func (r *Repository) init() error {
+	for _, stmt := range []string{
+		permissionRequestsSQL,
+		permissionRequestsIndexSQL,
+		permissionPoliciesSQL,
+		permissionDecisionsSQL,
+		permissionDecisionsIndexSQL,
+	} {
+		if _, err := r.db.Exec(stmt); err != nil {
+			return fmt.Errorf("exec schema: %w", err)
+		}
 	}
-	if _, err := pr.db.Exec(permissionIndexSQL); err != nil {
-		return fmt.Errorf("create permission indexes: %w", err)
-	}
+	r.log.Info("permission repository initialized")
 	return nil
 }
 
-// Create inserts a new permission entry.
-func (pr *PermissionRepository) Create(entry PermissionEntry) error {
-	if entry.ID == "" {
-		entry.ID = generateUUID()
-	}
-	if entry.Resource == "" || entry.Action == "" {
-		return fmt.Errorf("resource and action are required")
-	}
-	if entry.Effect == "" {
-		entry.Effect = "allow"
-	}
-	now := time.Now().Format(time.RFC3339)
-	entry.CreatedAt = time.Now()
-	entry.UpdatedAt = now
+// ---------- PermissionRequest CRUD ----------
 
-	conditionsJSON, err := json.Marshal(entry.Conditions)
-	if err != nil {
-		return fmt.Errorf("marshal conditions: %w", err)
-	}
+// Create inserts a new permission request.
+func (r *Repository) Create(req *PermissionRequest) error {
+	now := time.Now()
+	req.RequestedAt = now.UnixMilli()
 
-	_, err = pr.db.Exec(`
-		INSERT INTO permissions (id, resource, action, effect, conditions, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, entry.ID, entry.Resource, entry.Action, entry.Effect, string(conditionsJSON), now, now)
+	_, err := r.db.Exec(`
+		INSERT INTO permission_requests (id, task_id, action, title, description, command, risk_level, requested_at, resolved_at, decision, reason)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, req.ID, req.TaskID, string(req.Action), req.Title, req.Description, req.Command, req.RiskLevel, now.Format(time.RFC3339), nil, nil, nil)
 
 	if err != nil {
-		return fmt.Errorf("create permission: %w", err)
+		return fmt.Errorf("create permission request: %w", err)
 	}
-
-	pr.log.Info("permission created", "id", entry.ID, "resource", entry.Resource, "action", entry.Action)
+	r.log.Info("permission request created", "id", req.ID, "task_id", req.TaskID)
 	return nil
 }
 
-// Get retrieves a permission entry by ID.
-func (pr *PermissionRepository) Get(id string) (*PermissionEntry, error) {
-	row := pr.db.QueryRow(`
-		SELECT id, resource, action, effect, conditions, created_at, updated_at
-		FROM permissions WHERE id = ?
+// GetByID retrieves a permission request by its ID.
+func (r *Repository) GetByID(id string) (*PermissionRequest, error) {
+	row := r.db.QueryRow(`
+		SELECT id, task_id, action, title, description, command, risk_level, requested_at, resolved_at, decision, reason
+		FROM permission_requests WHERE id = ?
 	`, id)
 
-	return pr.scanEntry(row)
+	return r.scanRequest(row)
 }
 
-// List returns permission entries, optionally filtered by resource and action.
-func (pr *PermissionRepository) List(resource string, action string) ([]PermissionEntry, error) {
-	query := `SELECT id, resource, action, effect, conditions, created_at, updated_at FROM permissions`
-	args := []interface{}{}
-
-	conditions := ""
-	if resource != "" && action != "" {
-		conditions = " WHERE resource = ? AND action = ?"
-		args = append(args, resource, action)
-	} else if resource != "" {
-		conditions = " WHERE resource = ?"
-		args = append(args, resource)
-	} else if action != "" {
-		conditions = " WHERE action = ?"
-		args = append(args, action)
-	}
-
-	query += conditions
-
-	rows, err := pr.db.Query(query, args...)
+// GetPendingByTask returns all unresolved permission requests for a task.
+func (r *Repository) GetPendingByTask(taskID string) ([]*PermissionRequest, error) {
+	rows, err := r.db.Query(`
+		SELECT id, task_id, action, title, description, command, risk_level, requested_at, resolved_at, decision, reason
+		FROM permission_requests WHERE task_id = ? AND (decision IS NULL OR decision = '')
+	`, taskID)
 	if err != nil {
-		return nil, fmt.Errorf("list permissions: %w", err)
+		return nil, fmt.Errorf("get pending requests: %w", err)
 	}
 	defer rows.Close()
 
-	var entries []PermissionEntry
+	var results []*PermissionRequest
 	for rows.Next() {
-		entry, err := pr.scanEntry(rows)
+		req, err := r.scanRequest(rows)
 		if err != nil {
 			return nil, err
 		}
-		entries = append(entries, *entry)
+		results = append(results, req)
 	}
-	return entries, rows.Err()
+	return results, rows.Err()
 }
 
-// Update replaces an existing permission entry by ID.
-func (pr *PermissionRepository) Update(id string, entry PermissionEntry) error {
-	if entry.Resource == "" || entry.Action == "" {
-		return fmt.Errorf("resource and action are required")
-	}
-
-	existing, err := pr.Get(id)
+// UpdateDecision marks a permission request as resolved with the given decision and reason.
+func (r *Repository) UpdateDecision(id, decision, reason string) error {
+	now := time.Now().Format(time.RFC3339)
+	_, err := r.db.Exec(`
+		UPDATE permission_requests SET decision = ?, reason = ?, resolved_at = ? WHERE id = ?
+	`, decision, reason, now, id)
 	if err != nil {
-		return fmt.Errorf("existing entry not found: %w", err)
+		return fmt.Errorf("update request decision: %w", err)
 	}
-	entry.CreatedAt = existing.CreatedAt
-
-	entry.UpdatedAt = time.Now()
-	now := entry.UpdatedAt.Format(time.RFC3339)
-
-	conditionsJSON, err := json.Marshal(entry.Conditions)
-	if err != nil {
-		return fmt.Errorf("marshal conditions: %w", err)
-	}
-
-	_, err = pr.db.Exec(`
-		UPDATE permissions SET resource = ?, action = ?, effect = ?, conditions = ?, updated_at = ?
-		WHERE id = ?
-	`, entry.Resource, entry.Action, entry.Effect, string(conditionsJSON), now, id)
-
-	if err != nil {
-		return fmt.Errorf("update permission: %w", err)
-	}
-
-	pr.log.Info("permission updated", "id", id)
+	r.log.Info("permission request decision updated", "id", id, "decision", decision)
 	return nil
 }
 
-// Delete removes a permission entry by ID.
-func (pr *PermissionRepository) Delete(id string) error {
-	result, err := pr.db.Exec("DELETE FROM permissions WHERE id = ?", id)
+// GetExpiredBefore returns all permission requests whose requested_at is before the given time and are still unresolved.
+func (r *Repository) GetExpiredBefore(before time.Time) ([]*PermissionRequest, error) {
+	rows, err := r.db.Query(`
+		SELECT id, task_id, action, title, description, command, risk_level, requested_at, resolved_at, decision, reason
+		FROM permission_requests WHERE requested_at < ? AND (decision IS NULL OR decision = '')
+	`, before.Format(time.RFC3339))
 	if err != nil {
-		return fmt.Errorf("delete permission: %w", err)
+		return nil, fmt.Errorf("get expired requests: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*PermissionRequest
+	for rows.Next() {
+		req, err := r.scanRequest(rows)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, req)
+	}
+	return results, rows.Err()
+}
+
+// scanRequest reads a row into a PermissionRequest.
+func (r *Repository) scanRequest(s scanner) (*PermissionRequest, error) {
+	var req PermissionRequest
+	var requestedAt, resolvedAt, decision, reason sql.NullString
+	var taskID, actionStr, title, desc, command, riskLevel sql.NullString
+
+	err := s.Scan(&req.ID, &taskID, &actionStr, &title, &desc, &command, &riskLevel, &requestedAt, &resolvedAt, &decision, &reason)
+	if err != nil {
+		return nil, fmt.Errorf("scan request: %w", err)
+	}
+
+	if taskID.Valid {
+		req.TaskID = taskID.String
+	}
+	if actionStr.Valid {
+		req.Action = DangerousAction(actionStr.String)
+	}
+	req.Title = title.String
+	req.Description = desc.String
+	req.Command = command.String
+	req.RiskLevel = riskLevel.String
+
+	if requestedAt.Valid {
+		t, err := time.Parse(time.RFC3339, requestedAt.String)
+		if err == nil {
+			req.RequestedAt = t.UnixMilli()
+		}
+	}
+	if resolvedAt.Valid {
+		t, err := time.Parse(time.RFC3339, resolvedAt.String)
+		if err == nil {
+			req.ResolvedAt = t.UnixMilli()
+		}
+	}
+	req.Decision = decision.String
+	req.Reason = reason.String
+
+	return &req, nil
+}
+
+// ---------- PermissionPolicy CRUD ----------
+
+// Upsert inserts or replaces a permission policy for a task.
+func (r *Repository) Upsert(taskID string, policy *PermissionPolicy) error {
+	now := time.Now().Format(time.RFC3339)
+
+	actionsJSON, err := json.Marshal(policy.Actions)
+	if err != nil {
+		return fmt.Errorf("marshal policy actions: %w", err)
+	}
+
+	_, err = r.db.Exec(`
+		INSERT INTO permission_policies (task_id, default_level, actions, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(task_id) DO UPDATE SET
+			default_level = excluded.default_level,
+			actions = excluded.actions,
+			updated_at = excluded.updated_at
+	`, taskID, string(policy.DefaultLevel), string(actionsJSON), now, now)
+	if err != nil {
+		return fmt.Errorf("upsert policy: %w", err)
+	}
+	r.log.Info("permission policy upserted", "task_id", taskID)
+	return nil
+}
+
+// GetByTask retrieves the permission policy for a task.
+func (r *Repository) GetByTask(taskID string) (*PermissionPolicy, error) {
+	row := r.db.QueryRow(`
+		SELECT task_id, default_level, actions, created_at, updated_at
+		FROM permission_policies WHERE task_id = ?
+	`, taskID)
+
+	var entry PermissionPolicyEntry
+	var actionsStr sql.NullString
+	var createdAtStr, updatedAtStr string
+
+	err := row.Scan(&entry.TaskID, &entry.DefaultLevel, &actionsStr, &createdAtStr, &updatedAtStr)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("policy not found for task %s", taskID)
+		}
+		return nil, fmt.Errorf("scan policy: %w", err)
+	}
+
+	if actionsStr.Valid {
+		if err := json.Unmarshal([]byte(actionsStr.String), &entry.Actions); err != nil {
+			return nil, fmt.Errorf("unmarshal policy actions: %w", err)
+		}
+	} else {
+		entry.Actions = make(map[string]string)
+	}
+
+	policy := &PermissionPolicy{
+		DefaultLevel: entry.DefaultLevel,
+		Actions:      entry.Actions,
+		Remembered:   make(map[string]bool),
+	}
+
+	// Populate remembered from actions map — actions that are set override default
+	for action, level := range policy.Actions {
+		if level == string(FullAccess) || level == string(ReadOnly) {
+			policy.Remembered[action] = true
+		}
+	}
+
+	return policy, nil
+}
+
+// DeleteByTask removes the permission policy for a task.
+func (r *Repository) DeleteByTask(taskID string) error {
+	result, err := r.db.Exec("DELETE FROM permission_policies WHERE task_id = ?", taskID)
+	if err != nil {
+		return fmt.Errorf("delete policy: %w", err)
 	}
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("permission not found: %s", id)
+		return fmt.Errorf("policy not found for task %s", taskID)
 	}
-
-	pr.log.Info("permission deleted", "id", id)
+	r.log.Info("permission policy deleted", "task_id", taskID)
 	return nil
 }
 
-// FindMatching returns all permission entries matching the given resource and action.
-func (pr *PermissionRepository) FindMatching(resource, action string) ([]PermissionEntry, error) {
-	rows, err := pr.db.Query(`
-		SELECT id, resource, action, effect, conditions, created_at, updated_at
-		FROM permissions
-		WHERE resource = ? OR resource = '*'
-		AND action = ? OR action = '*'
-	`, resource, action)
-
+// ListAll returns all permission policies stored in the database.
+func (r *Repository) ListAll() ([]PermissionPolicyEntry, error) {
+	rows, err := r.db.Query(`
+		SELECT task_id, default_level, actions, created_at, updated_at
+		FROM permission_policies
+	`)
 	if err != nil {
-		return nil, fmt.Errorf("find matching permissions: %w", err)
+		return nil, fmt.Errorf("list policies: %w", err)
 	}
 	defer rows.Close()
 
-	var entries []PermissionEntry
+	var results []PermissionPolicyEntry
 	for rows.Next() {
-		entry, err := pr.scanEntry(rows)
+		var entry PermissionPolicyEntry
+		var actionsStr sql.NullString
+		var createdAtStr, updatedAtStr string
+
+		err := rows.Scan(&entry.TaskID, &entry.DefaultLevel, &actionsStr, &createdAtStr, &updatedAtStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scan policy entry: %w", err)
 		}
-		entries = append(entries, *entry)
+
+		if actionsStr.Valid {
+			if err := json.Unmarshal([]byte(actionsStr.String), &entry.Actions); err != nil {
+				return nil, fmt.Errorf("unmarshal actions: %w", err)
+			}
+		} else {
+			entry.Actions = make(map[string]string)
+		}
+
+		if createdAtStr != "" {
+			t, err := time.Parse(time.RFC3339, createdAtStr)
+			if err == nil {
+				entry.CreatedAt = t
+			}
+		}
+		if updatedAtStr != "" {
+			t, err := time.Parse(time.RFC3339, updatedAtStr)
+			if err == nil {
+				entry.UpdatedAt = t
+			}
+		}
+
+		results = append(results, entry)
+	}
+	return results, rows.Err()
+}
+
+// ---------- Decision storage ----------
+
+// Save stores a permission decision with optional TTL.
+func (r *Repository) Save(taskID string, action DangerousAction, decision string, reason string, ttlHours int) error {
+	now := time.Now()
+	dec := &StoredDecision{
+		ID:        fmt.Sprintf("%d", now.UnixNano()),
+		TaskID:    taskID,
+		Action:    string(action),
+		Decision:  decision,
+		Reason:    reason,
+		CreatedAt: now,
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate permissions: %w", err)
+	if ttlHours > 0 {
+		dec.ExpiresAt = now.Add(time.Duration(ttlHours) * time.Hour)
 	}
 
-	return entries, nil
-}
-
-// FindByResource returns all permissions for a specific resource.
-func (pr *PermissionRepository) FindByResource(resource string) ([]PermissionEntry, error) {
-	return pr.List(resource, "")
-}
-
-// FindByAction returns all permissions for a specific action.
-func (pr *PermissionRepository) FindByAction(action string) ([]PermissionEntry, error) {
-	return pr.List("", action)
-}
-
-// Count returns the total number of permission entries.
-func (pr *PermissionRepository) Count() (int, error) {
-	var count int
-	err := pr.db.QueryRow("SELECT COUNT(*) FROM permissions").Scan(&count)
+	_, err := r.db.Exec(`
+		INSERT INTO permission_decisions (id, task_id, action, decision, reason, expires_at, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, dec.ID, taskID, dec.Action, dec.Decision, dec.Reason,
+		dec.ExpiresAt.Format(time.RFC3339), now.Format(time.RFC3339))
 	if err != nil {
-		return 0, fmt.Errorf("count permissions: %w", err)
+		return fmt.Errorf("save decision: %w", err)
 	}
-	return count, nil
-}
-
-// ClearAll removes all permission entries.
-func (pr *PermissionRepository) ClearAll() error {
-	_, err := pr.db.Exec("DELETE FROM permissions")
-	if err != nil {
-		return fmt.Errorf("clear all permissions: %w", err)
-	}
-	pr.log.Info("all permissions cleared")
 	return nil
 }
 
-// BatchCreate inserts multiple permission entries.
-func (pr *PermissionRepository) BatchCreate(entries []PermissionEntry) error {
-	tx, err := pr.db.Begin()
-	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
-	}
+// GetEffective retrieves the most recent effective decision for a task+action.
+func (r *Repository) GetEffective(taskID string, action DangerousAction) (*StoredDecision, error) {
+	row := r.db.QueryRow(`
+		SELECT id, task_id, action, decision, reason, expires_at, created_at
+		FROM permission_decisions
+		WHERE task_id = ? AND action = ?
+		ORDER BY created_at DESC
+		LIMIT 1
+	`, taskID, string(action))
 
-	stmt, err := tx.Prepare(`
-		INSERT INTO permissions (id, resource, action, effect, conditions, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("prepare insert: %w", err)
-	}
-	defer stmt.Close()
+	return r.scanStoredDecision(row)
+}
 
+// CleanupExpired removes all decisions whose expires_at is before now and returns the count deleted.
+func (r *Repository) CleanupExpired() (int64, error) {
 	now := time.Now().Format(time.RFC3339)
-
-	for _, entry := range entries {
-		if entry.ID == "" {
-			entry.ID = generateUUID()
-		}
-		if entry.Effect == "" {
-			entry.Effect = "allow"
-		}
-		entry.CreatedAt = time.Now()
-		entry.UpdatedAt, _ = time.Parse(time.RFC3339, now)
-
-		conditionsJSON, err := json.Marshal(entry.Conditions)
-		if err != nil {
-			tx.Rollback()
-			return fmt.Errorf("marshal conditions for %s: %w", entry.Resource, err)
-		}
-
-		if _, err := stmt.Exec(entry.ID, entry.Resource, entry.Action, entry.Effect, string(conditionsJSON), now, now); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("batch insert %s/%s: %w", entry.Resource, entry.Action, err)
-		}
+	result, err := r.db.Exec(`
+		DELETE FROM permission_decisions WHERE expires_at IS NOT NULL AND expires_at < ?
+	`, now)
+	if err != nil {
+		return 0, fmt.Errorf("cleanup expired decisions: %w", err)
 	}
 
-	return tx.Commit()
+	count, _ := result.RowsAffected()
+	r.log.Info("cleaned up expired decisions", "count", count)
+	return count, nil
 }
 
-// scanEntry reads a single row into a PermissionEntry.
-func (pr *PermissionRepository) scanEntry(row scanner) (*PermissionEntry, error) {
-	var id, resource, action, effect string
-	var conditionsStr string
-	var createdAtStr, updatedAtStr string
+// scanStoredDecision reads a row into a StoredDecision.
+func (r *Repository) scanStoredDecision(s scanner) (*StoredDecision, error) {
+	var dec StoredDecision
+	var expiresAtStr, createdAtStr sql.NullString
+	var reason sql.NullString
 
-	if err := row.Scan(&id, &resource, &action, &effect, &conditionsStr, &createdAtStr, &updatedAtStr); err != nil {
-		return nil, fmt.Errorf("scan permission entry: %w", err)
+	err := s.Scan(&dec.ID, &dec.TaskID, &dec.Action, &dec.Decision, &reason, &expiresAtStr, &createdAtStr)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("decision not found for %s/%s", dec.TaskID, dec.Action)
+		}
+		return nil, fmt.Errorf("scan decision: %w", err)
 	}
 
-	var conditions map[string]string
-	if conditionsStr != "" {
-		if err := json.Unmarshal([]byte(conditionsStr), &conditions); err != nil {
-			return nil, fmt.Errorf("unmarshal conditions: %w", err)
+	dec.Reason = reason.String
+
+	if expiresAtStr.Valid && expiresAtStr.String != "" {
+		t, err := time.Parse(time.RFC3339, expiresAtStr.String)
+		if err == nil {
+			dec.ExpiresAt = t
+		}
+	}
+	if createdAtStr.Valid && createdAtStr.String != "" {
+		t, err := time.Parse(time.RFC3339, createdAtStr.String)
+		if err == nil {
+			dec.CreatedAt = t
 		}
 	}
 
-	createdAt, err := time.Parse(time.RFC3339, createdAtStr)
-	if err != nil {
-		createdAt = time.Time{}
-	}
-
-	updatedAt, err := time.Parse(time.RFC3339, updatedAtStr)
-	if err != nil {
-		updatedAt = time.Time{}
-	}
-
-	return &PermissionEntry{
-		ID:         id,
-		Resource:   resource,
-		Action:     action,
-		Effect:     effect,
-		Conditions: conditions,
-		CreatedAt:  createdAt,
-		UpdatedAt:  updatedAt,
-	}, nil
-}
-
-// generateUUID generates a simple UUID-like identifier.
-func generateUUID() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
+	return &dec, nil
 }

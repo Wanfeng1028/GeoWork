@@ -1,0 +1,33 @@
+/* GeoWork Browser Control Bar - CSS Modules */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-space-12);
+  padding: var(--gw-space-8) var(--gw-space-12);
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-border-subtle);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar {
+  flex: 1;
+}
+
+.toolbarLabel {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--gw-text-primary);
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--gw-border-subtle);
+}

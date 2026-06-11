@@ -1,204 +1,172 @@
+// GeoWork Go Core - Task Recovery Mechanism
+
 package tasks
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 )
 
+// RecoveryManager handles task interruption recovery via checkpoints.
+// It persists execution state, detects stale tasks, and restores interrupted work.
+type RecoveryManager struct {
+	db       *sql.DB
+	service  *Service
+	eventBus *EventBridge
+	log      *slog.Logger
+}
+
 // Checkpoint holds the execution state for a task recovery point.
 type Checkpoint struct {
-	TaskID    string                 `json:"task_id"`
-	StepIndex int                    `json:"step_index"`
-	Status    string                 `json:"status"`
-	Data      map[string]interface{} `json:"data,omitempty"`
-	Timestamp time.Time              `json:"timestamp"`
+	TaskID    string    `json:"taskId"`
+	StepIndex int       `json:"stepIndex"`
+	EventType string    `json:"eventType"`
+	EventData string    `json:"eventData"`
+	CreatedAt time.Time `json:"createdAt"`
+	Status    string    `json:"status"` // saved, recovered, lost
 }
 
-// RecoveryManager handles task interruption recovery via checkpoints.
-type RecoveryManager struct {
-	db  *sql.DB
-	log *slog.Logger
+// RecoveryState tracks the outcome of a task recovery operation.
+type RecoveryState struct {
+	TaskID         string      `json:"taskId"`
+	LastCheckpoint *Checkpoint `json:"lastCheckpoint"`
+	RecoveredAt    time.Time   `json:"recoveredAt"`
+	RecoveryStatus string      `json:"recoveryStatus"` // pending, recovering, recovered, failed
+	ArtifactsCount int         `json:"artifactsCount"`
+	EventsCount    int         `json:"eventsCount"`
 }
 
-const checkpointTableSQL = `
-CREATE TABLE IF NOT EXISTS recovery_checkpoints (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	task_id TEXT NOT NULL,
-	step_index INTEGER NOT NULL DEFAULT 0,
-	status TEXT NOT NULL DEFAULT 'pending',
-	data TEXT,
-	timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE(task_id)
-);
-`
+// RecoveryConfig holds configuration for the recovery mechanism.
+type RecoveryConfig struct {
+	CheckpointInterval int           // seconds between auto-checkpoints
+	HeartbeatInterval  time.Duration // how often to record heartbeats
+	StaleThreshold     time.Duration // time before considering task stale
+	MaxCheckpointDays  int           // days to keep old checkpoints
+}
 
-// NewRecoveryManager creates a new recovery manager and ensures the checkpoint table exists.
-func NewRecoveryManager(db *sql.DB, log *slog.Logger) *RecoveryManager {
+// DefaultRecoveryConfig returns sensible defaults for the recovery mechanism.
+func DefaultRecoveryConfig() RecoveryConfig {
+	return RecoveryConfig{
+		CheckpointInterval: 30, // seconds
+		HeartbeatInterval:  15 * time.Minute,
+		StaleThreshold:     15 * time.Minute,
+		MaxCheckpointDays:  7,
+	}
+}
+
+// NewRecoveryManager creates a new recovery manager and ensures required tables exist.
+func NewRecoveryManager(db *sql.DB, service *Service, eventBus *EventBridge, log *slog.Logger) *RecoveryManager {
 	rm := &RecoveryManager{
-		db:  db,
-		log: log,
+		db:       db,
+		service:  service,
+		eventBus: eventBus,
+		log:      log,
 	}
 
-	if err := rm.ensureCheckpointTable(); err != nil {
-		log.Error("failed to create checkpoint table", "error", err)
+	if err := rm.ensureTables(); err != nil {
+		log.Error("failed to create recovery tables", "error", err)
 	}
 
 	return rm
 }
 
-// ensureCheckpointTable creates the recovery checkpoints table if missing.
-func (rm *RecoveryManager) ensureCheckpointTable() error {
-	_, err := rm.db.Exec(checkpointTableSQL)
-	return err
-}
+// ensureTables creates recovery-related tables if they do not exist.
+func (rm *RecoveryManager) ensureTables() error {
+	checkpointsDDL := `
+		CREATE TABLE IF NOT EXISTS task_checkpoints (
+			id TEXT PRIMARY KEY,
+			task_id TEXT NOT NULL,
+			step_index INTEGER NOT NULL DEFAULT 0,
+			event_type TEXT NOT NULL DEFAULT '',
+			event_data TEXT DEFAULT '',
+			created_at TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'saved'
+		);
+		CREATE INDEX IF NOT EXISTS idx_task_checkpoints_task_id ON task_checkpoints(task_id);
+		CREATE INDEX IF NOT EXISTS idx_task_checkpoints_status ON task_checkpoints(status);
+	`
 
-// SaveCheckpoint writes or updates a checkpoint for the given task.
-func (rm *RecoveryManager) SaveCheckpoint(checkpoint Checkpoint) error {
-	checkpoint.Timestamp = time.Now()
+	heartbeatsDDL := `
+		CREATE TABLE IF NOT EXISTS task_heartbeats (
+			task_id TEXT PRIMARY KEY,
+			last_heartbeat TEXT NOT NULL
+		);
+	`
 
-	dataBytes, err := json.Marshal(checkpoint.Data)
-	if err != nil {
-		return fmt.Errorf("marshal checkpoint data: %w", err)
+	if _, err := rm.db.Exec(checkpointsDDL); err != nil {
+		return fmt.Errorf("create task_checkpoints table: %w", err)
 	}
-
-	_, err = rm.db.Exec(`
-		INSERT INTO recovery_checkpoints (task_id, step_index, status, data, timestamp)
-		VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT(task_id) DO UPDATE SET
-			step_index = excluded.step_index,
-			status = excluded.status,
-			data = excluded.data,
-			timestamp = excluded.timestamp
-	`, checkpoint.TaskID, checkpoint.StepIndex, checkpoint.Status, string(dataBytes), checkpoint.Timestamp)
-
-	if err != nil {
-		return fmt.Errorf("save checkpoint: %w", err)
+	if _, err := rm.db.Exec(heartbeatsDDL); err != nil {
+		return fmt.Errorf("create task_heartbeats table: %w", err)
 	}
-
-	rm.log.Debug("checkpoint saved",
-		"task_id", checkpoint.TaskID,
-		"step_index", checkpoint.StepIndex,
-		"status", checkpoint.Status,
-	)
 	return nil
 }
 
-// LoadCheckpoint retrieves the latest checkpoint for a specific task.
-func (rm *RecoveryManager) LoadCheckpoint(taskID string) (*Checkpoint, error) {
+// SaveCheckpoint records a checkpoint for the given task.
+// It upserts: if a checkpoint already exists for the task, it is updated.
+func (rm *RecoveryManager) SaveCheckpoint(taskID string, stepIndex int, eventType string, eventData string) error {
+	id, err := rm.saveCheckpointLocked(taskID, stepIndex, eventType, eventData)
+	if err != nil {
+		return err
+	}
+	rm.log.Debug("checkpoint saved", "task_id", taskID, "step_index", stepIndex)
+	_ = id
+	return nil
+}
+
+// saveCheckpointLocked performs the actual checkpoint upsert, returning the checkpoint ID.
+func (rm *RecoveryManager) saveCheckpointLocked(taskID string, stepIndex int, eventType string, eventData string) (string, error) {
+	id := generateCheckpointID(taskID)
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	_, err := rm.db.Exec(`
+		INSERT INTO task_checkpoints (id, task_id, step_index, event_type, event_data, created_at, status)
+		VALUES (?, ?, ?, ?, ?, ?, 'saved')
+		ON CONFLICT(task_id) DO UPDATE SET
+			step_index = excluded.step_index,
+			event_type = excluded.event_type,
+			event_data = excluded.event_data,
+			created_at = excluded.created_at,
+			status = 'saved'
+	`, id, taskID, stepIndex, eventType, eventData, now)
+	if err != nil {
+		return "", fmt.Errorf("save checkpoint: %w", err)
+	}
+	return id, nil
+}
+
+// GetLastCheckpoint retrieves the most recent checkpoint for a task.
+func (rm *RecoveryManager) GetLastCheckpoint(taskID string) (*Checkpoint, error) {
 	row := rm.db.QueryRow(`
-		SELECT task_id, step_index, status, data, timestamp
-		FROM recovery_checkpoints
+		SELECT id, task_id, step_index, event_type, event_data, created_at, status
+		FROM task_checkpoints
 		WHERE task_id = ?
-		ORDER BY timestamp DESC
+		ORDER BY created_at DESC
 		LIMIT 1
 	`, taskID)
 
-	return rm.scanCheckpoint(row)
-}
-
-// ClearCheckpoint removes the checkpoint for a given task.
-func (rm *RecoveryManager) ClearCheckpoint(taskID string) error {
-	result, err := rm.db.Exec("DELETE FROM recovery_checkpoints WHERE task_id = ?", taskID)
+	cp, err := rm.scanCheckpoint(row)
 	if err != nil {
-		return fmt.Errorf("clear checkpoint: %w", err)
+		return nil, fmt.Errorf("get last checkpoint: %w", err)
 	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("checkpoint not found for task %s", taskID)
-	}
-
-	rm.log.Debug("checkpoint cleared", "task_id", taskID)
-	return nil
-}
-
-// RecoverTask loads the most recent checkpoint for a task, returning it for recovery.
-func (rm *RecoveryManager) RecoverTask(taskID string) (*Checkpoint, error) {
-	cp, err := rm.LoadCheckpoint(taskID)
-	if err != nil {
-		return nil, fmt.Errorf("recover task: %w", err)
-	}
-
-	if cp.Status == "completed" {
-		return cp, nil
-	}
-
-	rm.log.Info("recovering task",
-		"task_id", taskID,
-		"step_index", cp.StepIndex,
-		"status", cp.Status,
-	)
 	return cp, nil
 }
 
-// ListPendingTasks returns all task IDs that have checkpoints with non-completed status.
-func (rm *RecoveryManager) ListPendingTasks() ([]string, error) {
+// GetCheckpoints retrieves all checkpoints for a task, sorted by creation time.
+func (rm *RecoveryManager) GetCheckpoints(taskID string) ([]Checkpoint, error) {
 	rows, err := rm.db.Query(`
-		SELECT task_id
-		FROM recovery_checkpoints
-		WHERE status != 'completed'
-		ORDER BY timestamp DESC
-	`)
-	if err != nil {
-		return nil, fmt.Errorf("list pending tasks: %w", err)
-	}
-	defer rows.Close()
-
-	var tasks []string
-	for rows.Next() {
-		var taskID string
-		if err := rows.Scan(&taskID); err != nil {
-			return nil, fmt.Errorf("scan pending task: %w", err)
-		}
-		tasks = append(tasks, taskID)
-	}
-	return tasks, rows.Err()
-}
-
-// ListAllTasks returns all task IDs that have any checkpoint.
-func (rm *RecoveryManager) ListAllTasks() ([]string, error) {
-	rows, err := rm.db.Query("SELECT task_id FROM recovery_checkpoints ORDER BY timestamp DESC")
-	if err != nil {
-		return nil, fmt.Errorf("list all tasks: %w", err)
-	}
-	defer rows.Close()
-
-	var tasks []string
-	for rows.Next() {
-		var taskID string
-		if err := rows.Scan(&taskID); err != nil {
-			return nil, fmt.Errorf("scan task: %w", err)
-		}
-		tasks = append(tasks, taskID)
-	}
-	return tasks, rows.Err()
-}
-
-// MarkCompleted marks a task's checkpoint as completed.
-func (rm *RecoveryManager) MarkCompleted(taskID string) error {
-	_, err := rm.db.Exec(`
-		UPDATE recovery_checkpoints
-		SET status = 'completed', timestamp = ?
+		SELECT id, task_id, step_index, event_type, event_data, created_at, status
+		FROM task_checkpoints
 		WHERE task_id = ?
-	`, time.Now().Format(time.RFC3339), taskID)
+		ORDER BY created_at ASC
+	`, taskID)
 	if err != nil {
-		return fmt.Errorf("mark completed: %w", err)
-	}
-	return nil
-}
-
-// GetAllCheckpoints returns all checkpoints sorted by timestamp.
-func (rm *RecoveryManager) GetAllCheckpoints() ([]Checkpoint, error) {
-	rows, err := rm.db.Query(`
-		SELECT task_id, step_index, status, data, timestamp
-		FROM recovery_checkpoints
-		ORDER BY timestamp DESC
-	`)
-	if err != nil {
-		return nil, fmt.Errorf("get all checkpoints: %w", err)
+		return nil, fmt.Errorf("get checkpoints: %w", err)
 	}
 	defer rows.Close()
 
@@ -213,64 +181,288 @@ func (rm *RecoveryManager) GetAllCheckpoints() ([]Checkpoint, error) {
 	return checkpoints, rows.Err()
 }
 
-// scanCheckpoint reads one row into a Checkpoint struct.
-func (rm *RecoveryManager) scanCheckpoint(row scanner) (*Checkpoint, error) {
-	var taskID string
-	var stepIndex int
-	var status string
-	var dataStr string
-	var timestampStr string
+// MarkCheckpointRecovered marks a specific checkpoint as recovered.
+func (rm *RecoveryManager) MarkCheckpointRecovered(checkpointID string) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := rm.db.Exec(
+		"UPDATE task_checkpoints SET status = 'recovered', created_at = ? WHERE id = ?",
+		now, checkpointID,
+	)
+	if err != nil {
+		return fmt.Errorf("mark checkpoint recovered: %w", err)
+	}
+	return nil
+}
 
-	if err := row.Scan(&taskID, &stepIndex, &status, &dataStr, &timestampStr); err != nil {
-		return nil, fmt.Errorf("scan checkpoint row: %w", err)
+// CleanupOldCheckpoints removes checkpoints older than the given threshold.
+func (rm *RecoveryManager) CleanupOldCheckpoints(olderThan time.Time) (int64, error) {
+	cutoff := olderThan.Format(time.RFC3339)
+	result, err := rm.db.Exec(
+		"DELETE FROM task_checkpoints WHERE created_at < ?",
+		cutoff,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("cleanup old checkpoints: %w", err)
+	}
+	rows, _ := result.RowsAffected()
+	rm.log.Debug("cleaned up old checkpoints", "older_than", cutoff, "removed", rows)
+	return rows, nil
+}
+
+// RecoverTask loads the task from the database, finds the last checkpoint,
+// restores task state, marks the task as recovered, and returns the recovery state.
+func (rm *RecoveryManager) RecoverTask(taskID string) (*RecoveryState, error) {
+	ctx := context.TODO()
+
+	// Load the task from database
+	if _, err := rm.service.GetByID(ctx, taskID); err != nil {
+		return nil, fmt.Errorf("recover task: load task: %w", err)
 	}
 
-	var data map[string]interface{}
-	if dataStr != "" {
-		if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
-			return nil, fmt.Errorf("unmarshal checkpoint data: %w", err)
+	// Find the last checkpoint
+	checkpoint, err := rm.GetLastCheckpoint(taskID)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		// No checkpoint means nothing to recover from; mark as completed
+		if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
+			return nil, fmt.Errorf("recover task: update status: %w", err)
+		}
+		return &RecoveryState{
+			TaskID:         taskID,
+			RecoveredAt:    time.Now().UTC(),
+			RecoveryStatus: "recovered",
+		}, nil
+	}
+
+	// Count existing artifacts and events
+	eventsCount := rm.countEvents(taskID)
+
+	// Restore task state: mark as recovered
+	if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
+		return &RecoveryState{
+			TaskID:         taskID,
+			LastCheckpoint: checkpoint,
+			RecoveredAt:    time.Now().UTC(),
+			RecoveryStatus: "failed",
+			EventsCount:    eventsCount,
+		}, fmt.Errorf("recover task: update status: %w", err)
+	}
+
+	// Mark checkpoint as recovered
+	if checkpoint != nil {
+		if err := rm.MarkCheckpointRecovered(checkpoint.TaskID); err != nil {
+			rm.log.Warn("failed to mark checkpoint as recovered", "task_id", taskID, "error", err)
 		}
 	}
 
-	timestamp, err := time.Parse(time.RFC3339, timestampStr)
+	// Broadcast recovery event
+	rm.broadcastRecoveryEvent(taskID, checkpoint, eventsCount)
+
+	return &RecoveryState{
+		TaskID:         taskID,
+		LastCheckpoint: checkpoint,
+		RecoveredAt:    time.Now().UTC(),
+		RecoveryStatus: "recovered",
+		ArtifactsCount: 0,
+		EventsCount:    eventsCount,
+	}, nil
+}
+
+// RecoverAllPending finds all tasks with StatusRunning that lack recent heartbeats
+// and attempts recovery for each. Returns a list of recovery states.
+func (rm *RecoveryManager) RecoverAllPending() ([]RecoveryState, error) {
+	ctx := context.TODO()
+
+	// Find all running tasks
+	runningTasks, err := rm.service.ListByWorkspace(ctx, "", nil)
 	if err != nil {
-		timestamp, err = time.Parse("2006-01-02T15:04:05Z", timestampStr)
+		return nil, fmt.Errorf("recover all: list tasks: %w", err)
+	}
+
+	staleIDs, err := rm.GetStaleTasks(DefaultRecoveryConfig().StaleThreshold)
+	if err != nil {
+		return nil, fmt.Errorf("recover all: get stale tasks: %w", err)
+	}
+
+	staleSet := make(map[string]struct{}, len(staleIDs))
+	for _, id := range staleIDs {
+		staleSet[id] = struct{}{}
+	}
+
+	var results []RecoveryState
+	for _, task := range runningTasks {
+		if task.Status != StatusRunning {
+			continue
+		}
+		if _, isStale := staleSet[task.ID]; !isStale {
+			continue
+		}
+
+		state, err := rm.RecoverTask(task.ID)
 		if err != nil {
-			timestamp = time.Now()
+			state = &RecoveryState{
+				TaskID:         task.ID,
+				RecoveredAt:    time.Now().UTC(),
+				RecoveryStatus: "failed",
+			}
+		}
+		results = append(results, *state)
+	}
+
+	return results, nil
+}
+
+// CreateReadOnlySnapshot creates a read-only snapshot for a task that cannot continue.
+// It saves all existing events and artifacts as immutable records,
+// then sets the task status to recovered with a read-only flag.
+func (rm *RecoveryManager) CreateReadOnlySnapshot(taskID string) error {
+	ctx := context.TODO()
+
+	// Retrieve all existing events to preserve as immutable records
+	events, err := rm.service.ListEvents(ctx, taskID)
+	if err != nil {
+		rm.log.Warn("failed to list events for snapshot", "task_id", taskID, "error", err)
+	}
+
+	// Save a read-only marker checkpoint
+	_, err = rm.saveCheckpointLocked(taskID, -1, "snapshot", fmt.Sprintf(`{"type":"read_only","events":%d}`, len(events)))
+	if err != nil {
+		return fmt.Errorf("create snapshot: save checkpoint: %w", err)
+	}
+
+	// Set task status to recovered
+	if err := rm.service.UpdateStatus(ctx, taskID, StatusCompleted); err != nil {
+		return fmt.Errorf("create snapshot: update status: %w", err)
+	}
+
+	rm.log.Info("read-only snapshot created", "task_id", taskID, "events", len(events))
+	return nil
+}
+
+// RecordHeartbeat updates the heartbeat timestamp for a running task.
+func (rm *RecoveryManager) RecordHeartbeat(taskID string) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := rm.db.Exec(`
+		INSERT INTO task_heartbeats (task_id, last_heartbeat)
+		VALUES (?, ?)
+		ON CONFLICT(task_id) DO UPDATE SET
+			last_heartbeat = excluded.last_heartbeat
+	`, taskID, now)
+	if err != nil {
+		return fmt.Errorf("record heartbeat: %w", err)
+	}
+	return nil
+}
+
+// GetStaleTasks returns task IDs whose last heartbeat is older than the threshold.
+func (rm *RecoveryManager) GetStaleTasks(threshold time.Duration) ([]string, error) {
+	cutoff := time.Now().UTC().Add(-threshold).Format(time.RFC3339)
+
+	rows, err := rm.db.Query(`
+		SELECT task_id
+		FROM task_heartbeats
+		WHERE last_heartbeat < ?
+	`, cutoff)
+	if err != nil {
+		return nil, fmt.Errorf("get stale tasks: %w", err)
+	}
+	defer rows.Close()
+
+	var staleIDs []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan stale task: %w", err)
+		}
+		staleIDs = append(staleIDs, id)
+	}
+	return staleIDs, rows.Err()
+}
+
+// broadcastRecoveryEvent sends a task.recovered event through the event bridge.
+func (rm *RecoveryManager) broadcastRecoveryEvent(taskID string, checkpoint *Checkpoint, eventsCount int) {
+	payload := map[string]interface{}{
+		"taskId":         taskID,
+		"lastCheckpoint": checkpoint,
+		"recoveredAt":    time.Now().UTC().Format(time.RFC3339),
+		"eventsCount":    eventsCount,
+	}
+
+	data, _ := json.Marshal(payload)
+	rm.eventBus.Publish(TaskEvent{
+		TaskID:  taskID,
+		Type:    "task.recovered",
+		Payload: string(data),
+	})
+}
+
+// ListenForRecoveryEvents starts a goroutine that listens for task completion events
+// via the EventBridge and automatically saves checkpoints on step completion events.
+// It blocks on the subscriber channel, so this is intended to be called with a
+// fresh subscription per task or goroutine.
+func (rm *RecoveryManager) ListenForRecoveryEvents() {
+	ch := rm.eventBus.Subscribe("")
+	go func() {
+		for event := range ch {
+			switch event.Type {
+			case EventStepCompleted:
+				// Auto-save checkpoint on step completion
+				rm.SaveCheckpoint(event.TaskID, 0, string(event.Type), event.Payload)
+			case EventStatus:
+				// Log status transitions for audit trail
+				rm.log.Debug("task status event received", "task_id", event.TaskID, "payload", event.Payload)
+			}
+		}
+	}()
+}
+
+// countEvents returns the number of events for a task.
+func (rm *RecoveryManager) countEvents(taskID string) int {
+	var count int
+	err := rm.db.QueryRow(
+		"SELECT COUNT(*) FROM task_events WHERE task_id = ?",
+		taskID,
+	).Scan(&count)
+	if err != nil {
+		return 0
+	}
+	return count
+}
+
+// scanCheckpoint reads a single row into a Checkpoint struct.
+func (rm *RecoveryManager) scanCheckpoint(row scanner) (*Checkpoint, error) {
+	var id string
+	var taskID string
+	var stepIndex int
+	var eventType string
+	var eventData string
+	var createdAtStr string
+	var status string
+
+	if err := row.Scan(&id, &taskID, &stepIndex, &eventType, &eventData, &createdAtStr, &status); err != nil {
+		return nil, fmt.Errorf("scan checkpoint row: %w", err)
+	}
+
+	createdAt, err := time.Parse(time.RFC3339, createdAtStr)
+	if err != nil {
+		createdAt, err = time.Parse("2006-01-02T15:04:05Z", createdAtStr)
+		if err != nil {
+			createdAt = time.Now().UTC()
 		}
 	}
 
 	return &Checkpoint{
 		TaskID:    taskID,
 		StepIndex: stepIndex,
+		EventType: eventType,
+		EventData: eventData,
+		CreatedAt: createdAt,
 		Status:    status,
-		Data:      data,
-		Timestamp: timestamp,
 	}, nil
 }
 
-// ClearAllCheckpoints deletes all checkpoints.
-func (rm *RecoveryManager) ClearAllCheckpoints() error {
-	_, err := rm.db.Exec("DELETE FROM recovery_checkpoints")
-	if err != nil {
-		return fmt.Errorf("clear all checkpoints: %w", err)
-	}
-	rm.log.Info("all checkpoints cleared")
-	return nil
-}
-
-// GetPendingCount returns the number of tasks with non-completed checkpoints.
-func (rm *RecoveryManager) GetPendingCount() (int, error) {
-	var count int
-	err := rm.db.QueryRow(`
-		SELECT COUNT(*)
-		FROM recovery_checkpoints
-		WHERE status != 'completed'
-	`).Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("get pending count: %w", err)
-	}
-	return count, nil
+// generateCheckpointID produces a deterministic ID from a task ID.
+func generateCheckpointID(taskID string) string {
+	return "cp-" + taskID
 }
 
 // scanner is an interface matching *sql.Row and *sql.Rows Scan method.

@@ -1,0 +1,109 @@
+// GeoWork Desktop - Agent Plan Card Styles
+
+.planCard {
+  width: 100%;
+}
+
+.modeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gw-space-12) var(--gw-space-16);
+  border: 1px solid var(--gw-accent);
+  border-radius: var(--gw-radius-md);
+  margin-bottom: var(--gw-space-16);
+}
+
+.modeTag {
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0 var(--gw-space-12);
+  height: auto;
+  line-height: 22px;
+}
+
+.stepCollapse {
+  :global(.ant-collapse) {
+    background: transparent;
+    border: none;
+  }
+
+  :global(.ant-collapse-header) {
+    padding: var(--gw-space-12) 0 !important;
+  }
+
+  :global(.ant-collapse-content-box) {
+    padding: 0 0 var(--gw-space-12) 28px !important;
+  }
+
+  :global(.ant-collapse-item) {
+    border-bottom: 1px solid var(--gw-border-subtle) !important;
+  }
+
+  :global(.ant-collapse-item:last-child) {
+    border-bottom: none !important;
+  }
+
+  :global(.ant-collapse-expand-icon) {
+    padding-inline-start: 0 !important;
+    color: var(--gw-text-secondary);
+  }
+}
+
+.stepLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-12);
+  min-height: 24px;
+}
+
+.stepIcon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  flex: 1;
+  font-size: 14px;
+  color: var(--gw-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepStatus {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.stepDetail {
+  display: flex;
+  gap: var(--gw-space-8);
+}
+
+.toolTag {
+  font-size: 12px;
+  padding: 0 var(--gw-space-8);
+  line-height: 20px;
+  height: auto;
+  background: rgba(74, 163, 255, 0.1);
+  border-color: rgba(74, 163, 255, 0.2);
+  color: #4aa3ff;
+}
+
+.empty {
+  padding: var(--gw-space-20) 0;
+  text-align: center;
+  color: var(--gw-text-tertiary);
+  font-size: 14px;
+}
+
+.error {
+  margin-top: var(--gw-space-12);
+  padding: var(--gw-space-12) var(--gw-space-16);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--gw-radius-md);
+  color: var(--gw-danger);
+  font-size: 13px;
+}

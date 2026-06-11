@@ -1,0 +1,91 @@
+// GeoWork Model Gateway - Speed Profile Selector Styles
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+}
+
+.label {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.options {
+  display: flex;
+  gap: var(--gw-space-8);
+}
+
+.option {
+  flex: 1;
+  padding: var(--gw-space-12) var(--gw-space-8);
+  background: var(--gw-bg-card);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--gw-border-strong);
+  }
+
+  &.selected {
+    border-color: var(--gw-border-active);
+    box-shadow: 0 0 0 1px rgba(77, 220, 151, 0.2);
+  }
+
+  &.turbo {
+    border-color: rgba(242, 201, 76, 0.3);
+
+    &.selected {
+      border-color: rgba(242, 201, 76, 0.7);
+      box-shadow: 0 0 0 1px rgba(242, 201, 76, 0.2);
+    }
+  }
+}
+
+.optionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-4);
+}
+
+.profileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+}
+
+.warnIcon {
+  color: var(--gw-warning);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.optionMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metaItem {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+}
+
+.costBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--gw-radius-sm);
+  background: rgba(77, 220, 151, 0.12);
+  color: var(--gw-accent);
+
+  &.costHigh {
+    background: rgba(242, 201, 76, 0.12);
+    color: var(--gw-warning);
+  }
+}

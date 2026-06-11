@@ -1,0 +1,96 @@
+/* GeoWork Browser Tab View - CSS Modules */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+  background: var(--gw-bg-panel);
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-border-subtle);
+  overflow: hidden;
+}
+
+/* ── Navigation bar ─────────────────────────────────── */
+
+.navBar {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-8) var(--gw-space-12);
+  background: var(--gw-bg-card);
+  border-bottom: 1px solid var(--gw-border-subtle);
+}
+
+.navButtons {
+  flex-shrink: 0;
+}
+
+.urlInput {
+  flex: 1;
+
+  :global(.ant-input-prefix) {
+    color: var(--gw-accent);
+  }
+
+  :global(.ant-input) {
+    background: var(--gw-bg-panel);
+    border-color: var(--gw-border-subtle);
+    color: var(--gw-text-primary);
+  }
+
+  :global(.ant-input:disabled) {
+    opacity: 0.6;
+  }
+}
+
+/* ── Preview area ────────────────────────────────────── */
+
+.previewArea {
+  position: relative;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-bg-panel);
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-bg-panel);
+  z-index: 1;
+}
+
+.screenshotContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gw-space-8);
+}
+
+.screenshotImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--gw-radius-md);
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-space-12);
+  color: var(--gw-text-secondary);
+}
+
+/* ── Action bar ──────────────────────────────────────── */
+
+.actionBar {
+  padding: var(--gw-space-8) var(--gw-space-12);
+  border-top: 1px solid var(--gw-border-subtle);
+}

@@ -1,0 +1,149 @@
+/* GeoWork Desktop - Plugin Detail Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--gw-bg-panel);
+}
+
+.header {
+  padding: var(--gw-space-16) var(--gw-space-20) var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  flex-shrink: 0;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-16);
+}
+
+.pluginIcon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-md);
+  color: var(--gw-accent);
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin-bottom: var(--gw-space-4);
+}
+
+.closeBtn {
+  color: var(--gw-text-secondary);
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--gw-text-primary);
+  }
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-space-16) var(--gw-space-20);
+}
+
+.section {
+  margin-bottom: var(--gw-space-20);
+}
+
+.sectionTitle {
+  color: var(--gw-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: var(--gw-space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+}
+
+.description {
+  color: var(--gw-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--gw-space-8);
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-8) var(--gw-space-12);
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-md);
+  color: var(--gw-text-primary);
+  font-size: 13px;
+
+  :global(.anticon) {
+    color: var(--gw-text-tertiary);
+  }
+}
+
+.permissionAlert {
+  margin-bottom: var(--gw-space-12);
+}
+
+.permissionsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+}
+
+.permissionItem {
+  padding: var(--gw-space-12);
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-md);
+}
+
+.permissionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-4);
+}
+
+.permissionName {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gw-text-primary);
+}
+
+.permissionDesc {
+  font-size: 12px;
+  display: block;
+}
+
+.actions {
+  margin-top: var(--gw-space-8);
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-12);
+  padding: var(--gw-space-8) 0;
+}

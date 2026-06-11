@@ -1,0 +1,78 @@
+// GeoWork Desktop - Agent Recovery Banner Styles
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-space-12) var(--gw-space-20);
+  border-radius: var(--gw-radius-md);
+  border: 1px solid;
+  margin-bottom: var(--gw-space-16);
+  gap: var(--gw-space-16);
+}
+
+.recoverable {
+  background: rgba(242, 201, 76, 0.06);
+  border-color: rgba(242, 201, 76, 0.2);
+}
+
+.read-only {
+  background: rgba(255, 107, 107, 0.06);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.failed {
+  background: rgba(255, 107, 107, 0.06);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-12);
+  flex: 1;
+  min-width: 0;
+}
+
+.warningIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gw-text-primary);
+}
+
+.description {
+  font-size: 12px;
+  color: var(--gw-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: var(--gw-space-8);
+  flex-shrink: 0;
+}
+
+.recoverBtn {
+  background: rgba(242, 201, 76, 0.12);
+  border-color: rgba(242, 201, 76, 0.3);
+  color: #f2c94c;
+
+  &:hover {
+    background: rgba(242, 201, 76, 0.18);
+    border-color: rgba(242, 201, 76, 0.4);
+  }
+}

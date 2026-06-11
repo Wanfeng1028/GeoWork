@@ -1,0 +1,161 @@
+// GeoWork Desktop - Agent Step Timeline Styles
+
+.timelineCard {
+  width: 100%;
+}
+
+.empty {
+  padding: var(--gw-space-24) 0;
+  text-align: center;
+  color: var(--gw-text-tertiary);
+  font-size: 14px;
+}
+
+.timeline {
+  position: relative;
+  padding: var(--gw-space-12) 0;
+}
+
+.step {
+  display: flex;
+  gap: var(--gw-space-16);
+  padding: var(--gw-space-12) 0;
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.stepFailed {
+  .stepTitle {
+    color: var(--gw-danger);
+  }
+}
+
+.stepNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.stepNumber {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gw-text-tertiary);
+  border-radius: 50%;
+  background: var(--gw-bg-panel);
+  border: 1px solid var(--gw-border-subtle);
+  margin-bottom: var(--gw-space-8);
+}
+
+.stepDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  position: relative;
+
+  .icon {
+    font-size: 14px;
+    color: var(--step-color, var(--gw-text-tertiary));
+  }
+
+  .completed {
+    color: var(--gw-accent) !important;
+  }
+
+  .running {
+    color: var(--gw-accent-blue) !important;
+    animation: spin 1s linear infinite;
+  }
+
+  .failed {
+    color: var(--gw-danger) !important;
+  }
+
+  .pending {
+    color: var(--gw-text-tertiary) !important;
+  }
+}
+
+.stepContent {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: var(--gw-space-8);
+}
+
+.stepTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  font-size: 14px;
+  color: var(--gw-text-primary);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.stepRunning {
+  .stepTitle {
+    animation: pulseText 1.5s ease-in-out infinite;
+  }
+}
+
+.toolName {
+  font-size: 12px;
+  color: var(--gw-accent-blue);
+  background: rgba(74, 163, 255, 0.1);
+  padding: 1px var(--gw-space-8);
+  border-radius: var(--gw-radius-sm);
+}
+
+.stepMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-16);
+  margin-top: var(--gw-space-4);
+}
+
+.duration {
+  font-size: 12px;
+  color: var(--gw-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusText {
+  font-size: 11px;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.connector {
+  width: 2px;
+  height: var(--gw-space-20);
+  margin-left: 13px;
+  background: var(--gw-border-subtle);
+}
+
+.error {
+  margin-top: var(--gw-space-12);
+  padding: var(--gw-space-12) var(--gw-space-16);
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: var(--gw-radius-md);
+  color: var(--gw-danger);
+  font-size: 13px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

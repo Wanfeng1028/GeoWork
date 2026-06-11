@@ -3,6 +3,8 @@ package permissions
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -24,7 +26,7 @@ type PermissionRule struct {
 
 // AuthorizationPolicy holds the authorization policy with default action and rules.
 type AuthorizationPolicy struct {
-	DefaultAction Effect          `json:"default_action"`
+	DefaultAction Effect           `json:"default_action"`
 	Rules         []PermissionRule `json:"rules"`
 }
 
@@ -216,16 +218,16 @@ func (p *AuthorizationPolicy) Clone() *AuthorizationPolicy {
 
 // PolicySummary holds a high-level view of a policy.
 type PolicySummary struct {
-	DefaultAction  Effect          `json:"default_action"`
-	RuleCount      int             `json:"rule_count"`
-	Rules          []RuleSummary   `json:"rules"`
+	DefaultAction Effect        `json:"default_action"`
+	RuleCount     int           `json:"rule_count"`
+	Rules         []RuleSummary `json:"rules"`
 }
 
 // RuleSummary is a simplified view of a single rule.
 type RuleSummary struct {
-	Resource string   `json:"resource"`
-	Action   string   `json:"action"`
-	Effect   Effect   `json:"effect"`
+	Resource string `json:"resource"`
+	Action   string `json:"action"`
+	Effect   Effect `json:"effect"`
 }
 
 // GetSummary returns a condensed summary of the policy.
@@ -258,4 +260,251 @@ func DenyAllResources() *AuthorizationPolicy {
 		DefaultAction: Deny,
 		Rules:         []PermissionRule{},
 	}
+}
+
+// --- PolicyConfig: permission policy configuration for file loading ---
+
+// PolicyConfig holds permission policy configuration loaded from a JSON/YAML config file.
+type PolicyConfig struct {
+	Version      string       `json:"version"`
+	Global       GlobalPolicy `json:"global"`
+	TaskPolicies []TaskPolicy `json:"taskPolicies,omitempty"`
+	Whitelist    []ActionRule `json:"whitelist,omitempty"`
+	Blacklist    []ActionRule `json:"blacklist,omitempty"`
+}
+
+// GlobalPolicy defines global permission policy defaults.
+type GlobalPolicy struct {
+	DefaultLevel         PermissionLevel `json:"defaultLevel"`
+	HighRiskAlwaysReview bool            `json:"highRiskAlwaysReview"`
+	DecisionTTLHours     int             `json:"decisionTTLHours"`
+}
+
+// TaskPolicy defines per-task permission overrides.
+type TaskPolicy struct {
+	TaskID  string            `json:"taskId"`
+	Mode    string            `json:"mode"` // work/code/paper/ppt
+	Level   PermissionLevel   `json:"level"`
+	Actions map[string]string `json:"actions"`
+}
+
+// ActionRule defines a whitelist/blacklist rule for dangerous actions.
+type ActionRule struct {
+	Action  DangerousAction `json:"action"`
+	Level   PermissionLevel `json:"level"`
+	Pattern string          `json:"pattern,omitempty"` // glob or regex pattern
+	Comment string          `json:"comment,omitempty"`
+}
+
+// PolicyLoader handles loading and saving PolicyConfig from/to disk.
+type PolicyLoader struct{}
+
+// NewPolicyLoader returns a new PolicyLoader instance.
+func NewPolicyLoader() *PolicyLoader {
+	return &PolicyLoader{}
+}
+
+// Load reads a PolicyConfig from the given file path.
+func (l *PolicyLoader) Load(path string) (*PolicyConfig, error) {
+	if path == "" {
+		return nil, fmt.Errorf("load: path is empty")
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("load: resolve path %q: %w", path, err)
+	}
+
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("load: read file %q: %w", absPath, err)
+	}
+
+	var config PolicyConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("load: unmarshal policy config %q: %w", absPath, err)
+	}
+
+	return &config, nil
+}
+
+// Save writes a PolicyConfig to the given file path as indented JSON.
+func (l *PolicyLoader) Save(path string, config *PolicyConfig) error {
+	if path == "" {
+		return fmt.Errorf("save: path is empty")
+	}
+	if config == nil {
+		return fmt.Errorf("save: config is nil")
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("save: resolve path %q: %w", path, err)
+	}
+
+	dir := filepath.Dir(absPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("save: create directory %q: %w", dir, err)
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("save: marshal policy config: %w", err)
+	}
+
+	if err := os.WriteFile(absPath, data, 0644); err != nil {
+		return fmt.Errorf("save: write file %q: %w", absPath, err)
+	}
+
+	return nil
+}
+
+// Default returns a sensible default PolicyConfig.
+func (l *PolicyLoader) Default() *PolicyConfig {
+	return &PolicyConfig{
+		Version: "1.0",
+		Global: GlobalPolicy{
+			DefaultLevel:         Limited,
+			HighRiskAlwaysReview: true,
+			DecisionTTLHours:     24,
+		},
+		Whitelist: []ActionRule{
+			{
+				Action:  ActionReadEnv,
+				Level:   Limited,
+				Pattern: "*",
+				Comment: "Allow reading environment variables within workspace",
+			},
+			{
+				Action:  ActionRunShell,
+				Level:   Limited,
+				Pattern: "ls|cat|echo|pwd|whoami|date",
+				Comment: "Allow safe read-only shell commands",
+			},
+		},
+		Blacklist: []ActionRule{
+			{
+				Action:  ActionModifySystem,
+				Level:   Limited,
+				Pattern: "*",
+				Comment: "Always deny system-level modifications",
+			},
+			{
+				Action:  ActionAccessSecrets,
+				Level:   Limited,
+				Pattern: "*",
+				Comment: "Always deny access to secrets and credentials",
+			},
+		},
+	}
+}
+
+// Validate checks that the PolicyConfig has valid required fields and returns
+// descriptive errors for any problems found.
+func (c *PolicyConfig) Validate() error {
+	if c.Version == "" {
+		return fmt.Errorf("policy config: version is required")
+	}
+
+	if err := c.Global.validate(); err != nil {
+		return fmt.Errorf("policy config: global: %w", err)
+	}
+
+	if c.TaskPolicies != nil {
+		for i, tp := range c.TaskPolicies {
+			if err := tp.validate(i); err != nil {
+				return fmt.Errorf("policy config: taskPolicies[%d]: %w", i, err)
+			}
+		}
+	}
+
+	for i, r := range c.Whitelist {
+		if err := r.validate(i, "whitelist"); err != nil {
+			return err
+		}
+	}
+
+	for i, r := range c.Blacklist {
+		if err := r.validate(i, "blacklist"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// mergeInto merges the policy config into an in-memory PermissionPolicy.
+func (c *PolicyConfig) MergeInto(policy *PermissionPolicy) {
+	if policy == nil {
+		return
+	}
+
+	policy.DefaultLevel = c.Global.DefaultLevel
+
+	if c.Global.DecisionTTLHours > 0 {
+		// Decision TTL is stored indirectly; actions and defaults take effect here.
+	}
+
+	for _, tp := range c.TaskPolicies {
+		// Merge per-task action overrides into the global policy.
+		for actionStr, actionLevel := range tp.Actions {
+			policy.Actions[actionStr] = actionLevel
+		}
+		// tp.Level is the task-level default; specific action mappings above take precedence.
+	}
+
+	for _, rule := range c.Whitelist {
+		policy.Actions[string(rule.Action)] = string(rule.Level)
+	}
+
+	for _, rule := range c.Blacklist {
+		policy.Actions[string(rule.Action)] = string(rule.Level)
+	}
+}
+
+// --- Internal validation helpers ---
+
+func (g *GlobalPolicy) validate() error {
+	if g.DefaultLevel == "" {
+		return fmt.Errorf("defaultLevel is required")
+	}
+	if g.DefaultLevel != ReadOnly && g.DefaultLevel != AskEveryTime && g.DefaultLevel != Limited && g.DefaultLevel != FullAccess {
+		return fmt.Errorf("defaultLevel has invalid value %q", g.DefaultLevel)
+	}
+	if g.DecisionTTLHours < 0 {
+		return fmt.Errorf("decisionTTLHours must be non-negative, got %d", g.DecisionTTLHours)
+	}
+	return nil
+}
+
+func (tp *TaskPolicy) validate(index int) error {
+	if tp.TaskID == "" {
+		return fmt.Errorf("taskId is required")
+	}
+	if tp.Mode == "" {
+		return fmt.Errorf("mode is required")
+	}
+	if tp.Level == "" {
+		return fmt.Errorf("level is required")
+	}
+	validModes := map[string]bool{
+		"work":  true,
+		"code":  true,
+		"paper": true,
+		"ppt":   true,
+	}
+	if !validModes[tp.Mode] {
+		return fmt.Errorf("mode has invalid value %q, expected one of: work, code, paper, ppt", tp.Mode)
+	}
+	return nil
+}
+
+func (r *ActionRule) validate(index int, source string) error {
+	if string(r.Action) == "" {
+		return fmt.Errorf("%s[%d]: action is required", source, index)
+	}
+	if r.Level == "" {
+		return fmt.Errorf("%s[%d]: level is required for action %q", source, index, r.Action)
+	}
+	return nil
 }

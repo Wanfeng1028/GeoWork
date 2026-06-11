@@ -1,0 +1,86 @@
+/* GeoWork Desktop - Plugin Install Approval Styles */
+
+.card {
+  :global(.ant-card-head) {
+    padding: 0 16px;
+    min-height: 44px;
+  }
+
+  :global(.ant-card-body) {
+    padding: 12px 16px;
+  }
+}
+
+.alert {
+  margin-bottom: var(--gw-space-12);
+}
+
+.permissionsList {
+  margin-bottom: var(--gw-space-12);
+  padding: var(--gw-space-8);
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-md);
+}
+
+.permissionsTitle {
+  display: block;
+  font-size: 12px;
+  margin-bottom: var(--gw-space-8);
+}
+
+.permissionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.permissionName {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  background: transparent;
+  color: var(--gw-text-primary);
+  padding: 0;
+}
+
+.riskTag {
+  margin: 0;
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+.reasonSection {
+  margin-bottom: var(--gw-space-12);
+}
+
+.reasonInput {
+  margin-bottom: var(--gw-space-8);
+}
+
+.rememberRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--gw-text-secondary);
+}
+
+.actions {
+  width: 100%;
+  margin-top: var(--gw-space-8);
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--gw-space-12);
+  padding: var(--gw-space-8);
+  background: rgba(250, 173, 20, 0.08);
+  border-radius: var(--gw-radius-sm);
+  font-size: 12px;
+
+  :global(.anticon) {
+    color: #faad14;
+  }
+}

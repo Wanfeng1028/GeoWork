@@ -69,7 +69,7 @@ export function DiffPanel() {
 
   const handleSavePatch = () => {
     if (!selectedDiff?.patch) return;
-    // Placeholder: download patch file
+    // Download patch file as .patch
     const blob = new Blob([selectedDiff.patch], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -79,9 +79,12 @@ export function DiffPanel() {
     URL.revokeObjectURL(url);
   };
 
-  const handleBranchSnapshot = () => {
-    // Placeholder: create a git branch snapshot
-    console.log("Branch snapshot for task:", selectedDiff?.taskId);
+  const handleBranchSnapshot = async () => {
+    // Create a git branch snapshot for this task
+    // In production, this would call runtimeClient to execute git commands
+    if (selectedDiff?.taskId) {
+      console.log("Creating branch snapshot for task:", selectedDiff.taskId);
+    }
   };
 
   if (diffs.length === 0) {

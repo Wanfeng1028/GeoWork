@@ -1,0 +1,111 @@
+// GeoWork Model Gateway - Usage Mini Card Styles
+
+.card {
+  background: var(--gw-bg-card);
+  border: 1px solid var(--gw-border-subtle);
+  border-radius: var(--gw-radius-md);
+  padding: var(--gw-space-16);
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.statsRow {
+  display: flex;
+  gap: var(--gw-space-24);
+  padding-bottom: var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  margin-bottom: var(--gw-space-16);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-4);
+
+  .label {
+    font-size: 11px;
+    color: var(--gw-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gw-text-primary);
+  }
+}
+
+.section {
+  margin-top: var(--gw-space-16);
+
+  .sectionLabel {
+    display: block;
+    font-size: 11px;
+    color: var(--gw-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--gw-space-8);
+  }
+}
+
+.modelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin-bottom: var(--gw-space-8);
+
+  .modelName {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--gw-text-secondary);
+    width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .modelBar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+
+    .modelBarFill {
+      height: 100%;
+      background: var(--gw-accent);
+      border-radius: 2px;
+      min-width: 2px;
+    }
+  }
+
+  .modelPct {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--gw-text-tertiary);
+    width: 44px;
+    text-align: right;
+  }
+}
+
+.speedRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-4);
+}
+
+.speedRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+
+  .speedLabel {
+    color: var(--gw-text-secondary);
+  }
+
+  .speedCount {
+    color: var(--gw-text-tertiary);
+  }
+}

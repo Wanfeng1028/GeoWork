@@ -1,0 +1,51 @@
+// GeoWork Model Gateway - Model Provider Form Styles
+
+.form {
+  :global(.ant-form-item-label) {
+    label {
+      color: var(--gw-text-secondary);
+      font-size: 12px;
+    }
+  }
+
+  :global(.ant-input),
+  :global(.ant-input-password) {
+    background: var(--gw-bg-input);
+    border-color: var(--gw-border-subtle);
+
+    &:hover,
+    &:focus {
+      border-color: var(--gw-border-strong);
+    }
+  }
+
+  :global(.ant-select) {
+    .ant-select-selector {
+      background: var(--gw-bg-input);
+      border-color: var(--gw-border-subtle);
+
+      &:hover {
+        border-color: var(--gw-border-strong);
+      }
+    }
+  }
+}
+
+.testRow {
+  margin-bottom: 0;
+
+  .testBtn {
+    margin-right: 8px;
+  }
+
+  .testTag {
+    line-height: 28px;
+    :global(.anticon) {
+      margin-right: 4px;
+    }
+  }
+}
+
+.actions {
+  margin-top: 8px;
+}

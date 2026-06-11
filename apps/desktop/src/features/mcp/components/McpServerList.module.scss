@@ -1,0 +1,210 @@
+.container {
+  padding: var(--gw-space-24);
+  background: var(--gw-bg-panel);
+  min-height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gw-space-24);
+}
+
+.title {
+  color: var(--gw-text-primary);
+  margin: 0;
+}
+
+.collapse {
+  background: transparent;
+
+  :global(.ant-collapse-header) {
+    padding: 0 !important;
+  }
+
+  :global(.ant-collapse-content-box) {
+    padding: 0;
+  }
+
+  :global(.ant-collapse-item) {
+    border: none !important;
+    background: transparent !important;
+  }
+
+  :global(.ant-collapse-content) {
+    border: none !important;
+  }
+
+  :global(.ant-collapse-expand-icon) {
+    padding-right: var(--gw-space-16) !important;
+    color: var(--gw-text-secondary);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-space-12);
+  padding: var(--gw-space-48) var(--gw-space-24);
+  color: var(--gw-text-tertiary);
+}
+
+.emptyIcon {
+  font-size: 48px;
+}
+
+// ── Server Header ──────────────────────────────────────────────────
+.serverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.serverInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-12);
+  min-width: 0;
+  flex: 1;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.statusConnected {
+    background: var(--gw-accent);
+    box-shadow: 0 0 6px rgba(77, 220, 151, 0.5);
+  }
+
+  &.statusDisconnected {
+    background: var(--gw-text-disabled);
+  }
+}
+
+.serverName {
+  color: var(--gw-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.serverCommand {
+  color: var(--gw-text-tertiary);
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 12px;
+  background: var(--gw-bg-card);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+// ── Server Panel ───────────────────────────────────────────────────
+.serverPanel {
+  :global(.ant-collapse-header) {
+    padding: var(--gw-space-16) var(--gw-space-12) !important;
+    background: var(--gw-bg-card);
+    border-radius: var(--gw-radius-md);
+  }
+
+  :global(.ant-collapse-content-box) {
+    padding: var(--gw-space-16) !important;
+  }
+
+  :global(.ant-collapse-header) {
+    border: 1px solid var(--gw-border-subtle);
+    border-bottom: none;
+    border-radius: var(--gw-radius-md) var(--gw-radius-md) 0 0;
+  }
+
+  :global(.ant-collapse-content) {
+    border: 1px solid var(--gw-border-subtle);
+    border-top: none;
+    border-radius: 0 0 var(--gw-radius-md) var(--gw-radius-md);
+  }
+}
+
+// ── Tools Section ──────────────────────────────────────────────────
+.toolsSection {
+  margin-bottom: var(--gw-space-16);
+}
+
+.toolsTitle {
+  color: var(--gw-text-secondary);
+  font-size: 13px;
+  margin: 0 0 var(--gw-space-12) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+}
+
+.toolsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-8);
+}
+
+.toolItem {
+  padding: var(--gw-space-8) 0;
+}
+
+.toolName {
+  display: block;
+  color: var(--gw-text-primary);
+  font-weight: 500;
+}
+
+.toolDesc {
+  display: block;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.noTools {
+  display: block;
+  padding: var(--gw-space-8) 0;
+}
+
+// ── Environment Section ────────────────────────────────────────────
+.envSection {
+  margin-bottom: var(--gw-space-16);
+}
+
+.envTitle {
+  color: var(--gw-text-secondary);
+  font-size: 13px;
+  margin: 0 0 var(--gw-space-12) 0;
+}
+
+.envGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--gw-space-8);
+}
+
+.envItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gw-space-8);
+  background: var(--gw-bg-card);
+  border-radius: var(--gw-radius-sm);
+  border: 1px solid var(--gw-border-subtle);
+}
+
+.envKey {
+  color: var(--gw-accent);
+  font-size: 12px;
+}
+
+// ── Last Connected ─────────────────────────────────────────────────
+.lastConnected {
+  display: block;
+  margin-top: var(--gw-space-12);
+  font-size: 12px;
+}

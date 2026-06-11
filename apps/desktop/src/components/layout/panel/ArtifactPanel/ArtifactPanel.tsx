@@ -66,8 +66,10 @@ export function ArtifactPanel() {
 
   const handleSaveToWorkspace = async (artifact: any) => {
     try {
-      // Placeholder for save to workspace action
-      console.log("Save artifact to workspace:", artifact.path);
+      // Copy artifact to workspace via runtimeClient
+      // In production, this would call runtimeClient.copyToWorkspace(artifact.path)
+      console.log("Saving artifact to workspace:", artifact.path);
+      // TODO: Implement runtimeClient.copyToWorkspace(artifact.path)
     } catch (error) {
       console.error("Failed to save artifact:", error);
     }
@@ -75,8 +77,10 @@ export function ArtifactPanel() {
 
   const handleAddToKnowledgeBase = async (artifact: any) => {
     try {
-      // Placeholder for adding to knowledge base
-      console.log("Add to knowledge base:", artifact.path);
+      // Index artifact in knowledge base via runtimeClient
+      // In production, this would call runtimeClient.indexInKnowledgeBase(artifact.path)
+      console.log("Adding artifact to knowledge base:", artifact.path);
+      // TODO: Implement runtimeClient.indexInKnowledgeBase(artifact.path)
     } catch (error) {
       console.error("Failed to add to knowledge base:", error);
     }

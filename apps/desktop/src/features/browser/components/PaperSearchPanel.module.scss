@@ -1,0 +1,104 @@
+/* GeoWork Paper Search Panel - CSS Modules */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-12);
+  background: var(--gw-bg-panel);
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-border-subtle);
+  overflow: hidden;
+}
+
+/* ── Search bar ──────────────────────────────────────── */
+
+.searchBar {
+  padding: var(--gw-space-12);
+  border-bottom: 1px solid var(--gw-border-subtle);
+}
+
+.searchInput {
+  :global(.ant-input) {
+    background: var(--gw-bg-card);
+    border-color: var(--gw-border-subtle);
+    color: var(--gw-text-primary);
+  }
+
+  :global(.ant-input-prefix) {
+    color: var(--gw-accent);
+  }
+}
+
+/* ── Results area ────────────────────────────────────── */
+
+.resultsArea {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-space-12);
+  padding: var(--gw-space-32);
+}
+
+.emptyState {
+  padding: var(--gw-space-32) 0;
+}
+
+/* ── Result item ─────────────────────────────────────── */
+
+.resultItem {
+  padding: var(--gw-space-12) var(--gw-space-12);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--gw-bg-card);
+  }
+
+  :global(.ant-list-item-action) {
+    border: none;
+  }
+}
+
+.resultContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-space-4);
+}
+
+.resultTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-space-8);
+  margin: 0;
+  color: var(--gw-text-primary);
+
+  .resultUrlIcon {
+    color: var(--gw-accent);
+    font-size: 14px;
+  }
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+}
+
+.metaSeparator {
+  margin: 0 2px;
+}
+
+.resultSnippet {
+  display: block;
+  margin-top: var(--gw-space-4);
+}
+
+.resultActions {
+  display: flex;
+  gap: var(--gw-space-8);
+  margin-top: var(--gw-space-8);
+}

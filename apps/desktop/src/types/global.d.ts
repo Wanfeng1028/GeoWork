@@ -59,10 +59,19 @@ interface NotificationsAPI {
   requestPermission(): Promise<string>;
 }
 
+interface PluginAPI {
+  listMarketplace(): Promise<any[]>;
+  getPlugin(id: string): Promise<any>;
+  installPlugin(id: string): Promise<void>;
+  uninstallPlugin(id: string): Promise<void>;
+  togglePlugin(id: string, enabled: boolean): Promise<void>;
+}
+
 interface GeoWorkWindow {
   coreUrl?: string;
   desktop: DesktopAPI;
   runtime: RuntimeAPI;
+  plugin: PluginAPI;
   system: SystemAPI;
   clipboard: ClipboardAPI;
   notifications: NotificationsAPI;
