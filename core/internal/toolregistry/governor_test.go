@@ -60,20 +60,15 @@ func TestGovernor_PerTaskLimit(t *testing.T) {
 	g.ApproveTool("write_file")
 	g.ApprovePermission("write_file", ActionWriteFile)
 
-	// Per-turn limit is 3, so first 3 should succeed
-	for i := 0; i < 3; i++ {
-		if err := g.RecordCall("write_file"); err != nil {
-			t.Fatalf("Per-turn call %d failed: %v", i+1, err)
+	// Make 50 calls total, resetting turn every 3 calls (MaxCallsPerTurn=3)
+	totalCalls := 50
+	turnSize := 3
+	for i := 0; i < totalCalls; i++ {
+		if i > 0 && i%turnSize == 0 {
+			g.StartNewTurn()
 		}
-	}
-
-	// Reset turn to test per-task limit
-	g.StartNewTurn()
-
-	// Now do more calls to hit per-task limit (50 total, 3 already done)
-	for i := 0; i < 47; i++ {
 		if err := g.RecordCall("write_file"); err != nil {
-			t.Fatalf("Per-task call %d failed: %v", i+4, err)
+			t.Fatalf("Call %d failed: %v", i+1, err)
 		}
 	}
 
@@ -279,8 +274,8 @@ func TestToolRisk_IsDangerous(t *testing.T) {
 	if RiskLow.IsDangerous() {
 		t.Error("RiskLow should not be dangerous")
 	}
-	if !RiskMedium.IsDangerous() {
-		t.Error("RiskMedium should not be dangerous")
+	if RiskMedium.IsDangerous() {
+		t.Error("RiskMedium should not be dangerous (only High and Critical are)")
 	}
 	if !RiskHigh.IsDangerous() {
 		t.Error("RiskHigh should be dangerous")
