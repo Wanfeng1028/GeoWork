@@ -42,63 +42,73 @@ func (s *Service) Login(c *gin.Context) {
 		return
 	}
 
-	// Validate email and password
-	// For v0.4.0: simple hash-based password verification
-	// In production, use bcrypt or argon2id
 	hashedPassword := hashPassword(req.Password)
 
-	s.store.Mu.RLock()
-	existing, ok := s.store.Users[req.Email]
-	s.store.Mu.RUnlock()
+	user, err := s.store.GetUserByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
 
-	var user *storage.User
-	if !ok {
-		// Auto-register new Users
+	if user == nil {
+		// Auto-register new users
 		user = &storage.User{
 			ID:           generateID(),
 			Email:        req.Email,
 			Name:         splitEmail(req.Email),
 			Plan:         "free",
 			PasswordHash: hashedPassword,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
 		}
-		s.store.Mu.Lock()
-		s.store.Users[req.Email] = user
-		s.store.Mu.Unlock()
+		if err := s.store.CreateUser(user); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
+			return
+		}
 	} else {
-		// Verify password hash
-		if existing.PasswordHash != hashedPassword {
+		if user.PasswordHash != hashedPassword {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 			return
 		}
-		user = existing
 	}
 
-	// Generate Tokens
 	accessToken := generateToken(user.ID, "access")
 	refreshToken := generateToken(user.ID, "refresh")
 
-	// Store Tokens
-	s.store.Mu.Lock()
-	s.store.Tokens[accessToken] = &storage.Token{
+	now := time.Now()
+	accessTokenObj := &storage.Token{
 		ID:        accessToken,
 		UserID:    user.ID,
 		Type:      "access",
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-		CreatedAt: time.Now(),
+		ExpiresAt: now.Add(24 * time.Hour),
+		CreatedAt: now,
 	}
-	s.store.Tokens[refreshToken] = &storage.Token{
+	refreshTokenObj := &storage.Token{
 		ID:        refreshToken,
 		UserID:    user.ID,
 		Type:      "refresh",
-		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
-		CreatedAt: time.Now(),
+		ExpiresAt: now.Add(7 * 24 * time.Hour),
+		CreatedAt: now,
 	}
-	s.store.Mu.Unlock()
 
+	if err := s.store.CreateToken(accessTokenObj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
+		return
+	}
+	if err := s.store.CreateToken(refreshTokenObj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
+		return
+	}
+
+	// Return user without password hash
 	c.JSON(http.StatusOK, LoginResponse{
-		User:         user,
+		User: &storage.User{
+			ID:        user.ID,
+			Email:     user.Email,
+			Name:      user.Name,
+			AvatarURL: user.AvatarURL,
+			Plan:      user.Plan,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		},
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})
@@ -112,9 +122,10 @@ func (s *Service) Logout(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.Lock()
-	delete(s.store.Tokens, token)
-	s.store.Mu.Unlock()
+	if err := s.store.DeleteToken(token); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
@@ -127,35 +138,35 @@ func (s *Service) Refresh(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	tok, ok := s.store.Tokens[refreshToken]
-	s.store.Mu.RUnlock()
-
-	if !ok || tok.Type != "refresh" || time.Now().After(tok.ExpiresAt) {
+	tok, err := s.store.GetToken(refreshToken)
+	if err != nil || tok == nil || tok.Type != "refresh" || time.Now().After(tok.ExpiresAt) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
 		return
 	}
 
-	// Get user
-	s.store.Mu.RLock()
-	_, exists := s.store.Users[tok.UserID]
-	s.store.Mu.RUnlock()
-	if !exists {
+	// Verify user still exists
+	user, err := s.store.GetUserByID(tok.UserID)
+	if err != nil || user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 		return
 	}
 
+	// Invalidate old tokens for this user
+	s.store.InvalidateUserTokens(tok.UserID)
+
 	// Generate new access token
 	newAccessToken := generateToken(tok.UserID, "access")
-	s.store.Mu.Lock()
-	s.store.Tokens[newAccessToken] = &storage.Token{
+	newToken := &storage.Token{
 		ID:        newAccessToken,
 		UserID:    tok.UserID,
 		Type:      "access",
 		ExpiresAt: time.Now().Add(24 * time.Hour),
 		CreatedAt: time.Now(),
 	}
-	s.store.Mu.Unlock()
+	if err := s.store.CreateToken(newToken); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token": newAccessToken,
@@ -170,28 +181,30 @@ func (s *Service) Me(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	tok, ok := s.store.Tokens[token]
-	s.store.Mu.RUnlock()
-
-	if !ok || time.Now().After(tok.ExpiresAt) {
+	tok, err := s.store.GetToken(token)
+	if err != nil || tok == nil || time.Now().After(tok.ExpiresAt) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
 		return
 	}
 
-	s.store.Mu.RLock()
-	user, ok := s.store.Users[tok.UserID]
-	s.store.Mu.RUnlock()
-
-	if !ok {
+	user, err := s.store.GetUserByID(tok.UserID)
+	if err != nil || user == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, &storage.User{
+		ID:        user.ID,
+		Email:     user.Email,
+		Name:      user.Name,
+		AvatarURL: user.AvatarURL,
+		Plan:      user.Plan,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	})
 }
 
-// Middleware returns a Gin middleware that validates Tokens.
+// Middleware returns a Gin middleware that validates tokens.
 func (s *Service) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)
@@ -200,20 +213,14 @@ func (s *Service) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		s.store.Mu.RLock()
-		tok, ok := s.store.Tokens[token]
-		s.store.Mu.RUnlock()
-
-		if !ok || time.Now().After(tok.ExpiresAt) {
+		tok, err := s.store.GetToken(token)
+		if err != nil || tok == nil || time.Now().After(tok.ExpiresAt) {
 			c.Next()
 			return
 		}
 
-		s.store.Mu.RLock()
-		user, ok := s.store.Users[tok.UserID]
-		s.store.Mu.RUnlock()
-
-		if !ok {
+		user, err := s.store.GetUserByID(tok.UserID)
+		if err != nil || user == nil {
 			c.Next()
 			return
 		}
@@ -237,12 +244,10 @@ func generateToken(userID, typ string) string {
 }
 
 func extractToken(c *gin.Context) string {
-	// Check Authorization header first
 	authHeader := c.GetHeader("Authorization")
 	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
 		return authHeader[7:]
 	}
-	// Check query param (for WebSocket etc.)
 	if t := c.Query("token"); t != "" {
 		return t
 	}
@@ -258,8 +263,6 @@ func splitEmail(email string) string {
 	return email
 }
 
-// hashPassword creates a simple SHA-256 hash of the password.
-// In production, use bcrypt or argon2id for proper password hashing.
 func hashPassword(password string) string {
 	h := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(h[:])

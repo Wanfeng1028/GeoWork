@@ -4,7 +4,6 @@ package channels
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"server/internal/storage"
@@ -28,9 +27,14 @@ func (s *Service) ListChannels(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	var result []gin.H
-	for _, wh := range s.store.ChannelWebhooks {
+	webhooks, err := s.store.ListChannelWebhooks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
+
+	result := make([]gin.H, 0, len(webhooks))
+	for _, wh := range webhooks {
 		result = append(result, gin.H{
 			"id":         wh.ID,
 			"channel_id": wh.ChannelID,
@@ -39,11 +43,6 @@ func (s *Service) ListChannels(c *gin.Context) {
 			"active":     wh.Active,
 			"created_at": wh.CreatedAt,
 		})
-	}
-	s.store.Mu.RUnlock()
-
-	if result == nil {
-		result = []gin.H{}
 	}
 	c.JSON(http.StatusOK, result)
 }
@@ -58,7 +57,7 @@ func (s *Service) CreateChannel(c *gin.Context) {
 
 	var req struct {
 		Name   string `json:"name" binding:"required"`
-		Type   string `json:"type" binding:"required"` // feishu | dingtalk | wecom | slack
+		Type   string `json:"type" binding:"required"`
 		TeamID string `json:"team_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -75,14 +74,13 @@ func (s *Service) CreateChannel(c *gin.Context) {
 		URL:       webhookURL,
 		TeamID:    req.TeamID,
 		Active:    true,
-		CreatedAt: time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.ChannelWebhooks = append(s.store.ChannelWebhooks, webhook)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendChannelWebhook(webhook); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create channel"})
+		return
+	}
 
-	// Generate public webhook URL
 	baseURL := "http://127.0.0.1:8767"
 	publicWebhookURL := baseURL + webhookURL
 
@@ -96,44 +94,43 @@ func (s *Service) CreateChannel(c *gin.Context) {
 	})
 }
 
-// WebhookReceiver handles POST /api/channels/webhook/{channelId}
+// WebhookReceiver handles POST /api/channels/webhook/:channelId
 func (s *Service) WebhookReceiver(c *gin.Context) {
 	channelID := c.Param("channelId")
 
-	s.store.Mu.RLock()
+	webhooks, err := s.store.ListChannelWebhooks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
+
 	var webhook *storage.ChannelWebhook
-	for _, wh := range s.store.ChannelWebhooks {
+	for _, wh := range webhooks {
 		if wh.ID == channelID && wh.Active {
 			webhook = wh
 			break
 		}
 	}
-	s.store.Mu.RUnlock()
 
 	if webhook == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "channel not found"})
 		return
 	}
 
-	// Parse webhook payload
 	var payload gin.H
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
 
-	// Record webhook event as a telemetry/collaboration event
 	eventID := generateID()
-	s.store.Mu.Lock()
-	s.store.CollabRecords = append(s.store.CollabRecords, &storage.CollabRecord{
+	s.store.AppendCollabRecord(&storage.CollabRecord{
 		ID:          eventID,
 		WorkspaceID: webhook.TeamID,
 		Type:        "webhook_event",
 		UserID:      webhook.ID,
 		Data:        fmt.Sprintf(`{"channel": %q, "payload": %v}`, channelID, payload),
-		Timestamp:   time.Now(),
 	})
-	s.store.Mu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "webhook received and recorded",
@@ -157,10 +154,4 @@ func getUserFromContext(c *gin.Context) *storage.User {
 
 func generateID() string {
 	return "wh_" + time.Now().Format("20060102150405")
-}
-
-// Helper to extract ID from path
-func extractID(c *gin.Context, prefix string) string {
-	id := c.Param("id")
-	return strings.TrimPrefix(id, prefix+"/")
 }

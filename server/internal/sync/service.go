@@ -2,6 +2,7 @@
 package sync
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -40,19 +41,16 @@ func (s *Service) Push(c *gin.Context) {
 		return
 	}
 
-	// Validate object type
-	validTypes := map[string]bool{
-		"settings": true, "workspace": true, "task": true,
-		"artifact": true, "knowledge": true, "plugin": true,
-		"mcp_config": true, "chat_summary": true,
-	}
-	if !validTypes[req.ObjectType] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid object type"})
+	if !isValidObjectType(req.ObjectType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid object type: %s", req.ObjectType)})
 		return
 	}
 
-	s.store.Mu.Lock()
-	key := user.ID + "_" + req.ObjectType + "_" + req.ObjectID
+	if !isValidPayload(req.ObjectType, req.Data) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "payload contains prohibited data"})
+		return
+	}
+
 	record := &storage.SyncRecord{
 		ID:         generateID(),
 		UserID:     user.ID,
@@ -60,10 +58,12 @@ func (s *Service) Push(c *gin.Context) {
 		ObjectID:   req.ObjectID,
 		Data:       req.Data,
 		Cursor:     time.Now().UnixNano(),
-		CreatedAt:  time.Now(),
 	}
-	s.store.SyncRecords[key] = record
-	s.store.Mu.Unlock()
+
+	if err := s.store.UpsertSyncRecord(record); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to push sync"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "synced",
@@ -82,38 +82,54 @@ func (s *Service) Pull(c *gin.Context) {
 	cursorStr := c.Query("cursor")
 	var cursor int64
 	if cursorStr != "" {
-		for _, r := range cursorStr {
-			if r >= '0' && r <= '9' {
-				cursor = cursor*10 + int64(r-'0')
-			}
-		}
+		fmt.Sscanf(cursorStr, "%d", &cursor)
 	}
 
-	s.store.Mu.RLock()
-	var result []gin.H
-	for _, record := range s.store.SyncRecords {
-		if record.UserID != user.ID {
-			continue
-		}
-		if record.Cursor > cursor {
-			result = append(result, gin.H{
-				"id":          record.ID,
-				"object_type": record.ObjectType,
-				"object_id":   record.ObjectID,
-				"data":        record.Data,
-				"cursor":      record.Cursor,
-				"created_at":  record.CreatedAt,
-			})
-		}
+	records, err := s.store.GetSyncRecordsAfter(user.ID, cursor)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
 	}
-	s.store.Mu.RUnlock()
+	if records == nil {
+		records = []*storage.SyncRecord{}
+	}
 
-	if result == nil {
-		result = []gin.H{}
+	result := make([]gin.H, 0, len(records))
+	for _, r := range records {
+		result = append(result, gin.H{
+			"id":          r.ID,
+			"object_type": r.ObjectType,
+			"object_id":   r.ObjectID,
+			"data":        r.Data,
+			"cursor":      r.Cursor,
+			"created_at":  r.CreatedAt,
+		})
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"records": result,
 		"cursor":  time.Now().UnixNano(),
+	})
+}
+
+// GetState handles GET /api/sync/state
+func (s *Service) GetState(c *gin.Context) {
+	user := getUserFromContext(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	cursor, err := s.store.GetSyncState(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":  user.ID,
+		"cursor":   cursor,
+		"modified": time.Unix(cursor, 0).UTC().Format(time.RFC3339),
 	})
 }
 
@@ -128,7 +144,7 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 	var req struct {
 		ObjectType string `json:"object_type" binding:"required"`
 		ObjectID   string `json:"object_id" binding:"required"`
-		Winner     string `json:"winner" binding:"required"` // local | remote
+		Winner     string `json:"winner" binding:"required"`
 		Data       string `json:"data" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -136,8 +152,21 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.Lock()
-	key := user.ID + "_" + req.ObjectType + "_" + req.ObjectID
+	if !isValidObjectType(req.ObjectType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid object type"})
+		return
+	}
+
+	if !isValidPayload(req.ObjectType, req.Data) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "payload contains prohibited data"})
+		return
+	}
+
+	if req.Winner != "local" && req.Winner != "remote" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "winner must be 'local' or 'remote'"})
+		return
+	}
+
 	record := &storage.SyncRecord{
 		ID:         generateID(),
 		UserID:     user.ID,
@@ -145,15 +174,38 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 		ObjectID:   req.ObjectID,
 		Data:       req.Data,
 		Cursor:     time.Now().UnixNano(),
-		CreatedAt:  time.Now(),
 	}
-	s.store.SyncRecords[key] = record
-	s.store.Mu.Unlock()
+
+	if err := s.store.UpsertSyncRecord(record); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve conflict"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "conflict resolved (winner: " + req.Winner + ")",
 		"cursor":  record.Cursor,
 	})
+}
+
+func isValidObjectType(typ string) bool {
+	valid := map[string]bool{
+		"settings": true, "workspace": true, "task": true,
+		"artifact": true, "knowledge": true, "plugin": true,
+		"mcp_config": true, "chat_summary": true,
+	}
+	return valid[typ]
+}
+
+func isValidPayload(typ string, data string) bool {
+	// Prohibited data types — never sync these
+	if strings.Contains(data, "API_KEY=") || strings.Contains(data, "api_key=") {
+		return false
+	}
+	// Block large binary data (raw遥感, logs, raw workspace files)
+	if len(data) > 5_000_000 { // 5MB limit
+		return false
+	}
+	return true
 }
 
 func getUserFromContext(c *gin.Context) *storage.User {
@@ -170,10 +222,4 @@ func getUserFromContext(c *gin.Context) *storage.User {
 
 func generateID() string {
 	return "sync_" + time.Now().Format("20060102150405")
-}
-
-// Helper to extract object ID from path
-func extractObjectID(c *gin.Context) string {
-	id := c.Param("id")
-	return strings.TrimPrefix(id, "sync/")
 }

@@ -20,7 +20,6 @@ func NewService(store *storage.Store) *Service {
 
 // Report handles POST /api/crash/report
 func (s *Service) Report(c *gin.Context) {
-	// Check opt-in
 	if !isOptIn(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "crash reporting disabled by user"})
 		return
@@ -47,12 +46,12 @@ func (s *Service) Report(c *gin.Context) {
 		Stacktrace:  req.Stacktrace,
 		HasMinidump: req.HasMinidump,
 		HasLogs:     req.HasLogs,
-		Timestamp:   time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.CrashReports = append(s.store.CrashReports, report)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendCrashReport(report); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save crash report"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "crash report received"})
 }

@@ -3,7 +3,6 @@ package collaboration
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"server/internal/storage"
@@ -19,32 +18,34 @@ func NewService(store *storage.Store) *Service {
 	return &Service{store: store}
 }
 
-// GetActivity handles GET /api/workspaces/{id}/activity
+// GetActivity handles GET /api/workspaces/:id/activity
 func (s *Service) GetActivity(c *gin.Context) {
 	workspaceID := c.Param("id")
 
-	s.store.Mu.RLock()
-	var result []gin.H
-	for _, record := range s.store.CollabRecords {
-		if record.WorkspaceID == workspaceID {
-			result = append(result, gin.H{
-				"id":        record.ID,
-				"type":      record.Type,
-				"user_id":   record.UserID,
-				"data":      record.Data,
-				"timestamp": record.Timestamp,
-			})
-		}
+	records, err := s.store.GetCollabRecordsByWorkspace(workspaceID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
 	}
-	s.store.Mu.RUnlock()
+	if records == nil {
+		records = []*storage.CollabRecord{}
+	}
 
-	if result == nil {
-		result = []gin.H{}
+	result := make([]gin.H, 0, len(records))
+	for _, r := range records {
+		result = append(result, gin.H{
+			"id":        r.ID,
+			"type":      r.Type,
+			"user_id":   r.UserID,
+			"data":      r.Data,
+			"timestamp": r.Timestamp,
+		})
 	}
+
 	c.JSON(http.StatusOK, result)
 }
 
-// Share handles POST /api/workspaces/{id}/share
+// Share handles POST /api/workspaces/:id/share
 func (s *Service) Share(c *gin.Context) {
 	workspaceID := c.Param("id")
 	user := getUserFromContext(c)
@@ -68,12 +69,12 @@ func (s *Service) Share(c *gin.Context) {
 		Type:        "share",
 		UserID:      user.ID,
 		Data:        `{"shared_with": "` + req.UserID + `", "role": "` + req.Role + `"}`,
-		Timestamp:   time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.CollabRecords = append(s.store.CollabRecords, record)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendCollabRecord(record); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to share"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":     "workspace shared",
@@ -82,7 +83,7 @@ func (s *Service) Share(c *gin.Context) {
 	})
 }
 
-// AddComment handles POST /api/tasks/{id}/comments
+// AddComment handles POST /api/tasks/:id/comments
 func (s *Service) AddComment(c *gin.Context) {
 	taskID := c.Param("id")
 	user := getUserFromContext(c)
@@ -104,19 +105,17 @@ func (s *Service) AddComment(c *gin.Context) {
 		Type:      "comment",
 		UserID:    user.ID,
 		Data:      `{"task_id": "` + taskID + `", "content": "` + req.Content + `"}`,
-		Timestamp: time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.CollabRecords = append(s.store.CollabRecords, record)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendCollabRecord(record); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add comment"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "comment added",
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "comment added"})
 }
 
-// AssignTask handles POST /api/tasks/{id}/assign
+// AssignTask handles POST /api/tasks/:id/assign
 func (s *Service) AssignTask(c *gin.Context) {
 	taskID := c.Param("id")
 	user := getUserFromContext(c)
@@ -138,12 +137,12 @@ func (s *Service) AssignTask(c *gin.Context) {
 		Type:      "assign",
 		UserID:    user.ID,
 		Data:      `{"task_id": "` + taskID + `", "assigned_to": "` + req.UserID + `"}`,
-		Timestamp: time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.CollabRecords = append(s.store.CollabRecords, record)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendCollabRecord(record); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to assign task"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":     "task assigned",
@@ -165,10 +164,4 @@ func getUserFromContext(c *gin.Context) *storage.User {
 
 func generateID() string {
 	return "collab_" + time.Now().Format("20060102150405")
-}
-
-// Helper to extract ID from path
-func extractID(c *gin.Context, prefix string) string {
-	id := c.Param("id")
-	return strings.TrimPrefix(id, prefix+"/")
 }

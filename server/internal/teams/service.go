@@ -3,7 +3,6 @@ package teams
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"server/internal/storage"
@@ -30,7 +29,7 @@ type InviteMemberRequest struct {
 	Role   string `json:"role" binding:"oneof=admin member viewer"`
 }
 
-// CreateTeam handles POST /api/Teams
+// CreateTeam handles POST /api/teams
 func (s *Service) CreateTeam(c *gin.Context) {
 	user := getUserFromContext(c)
 	if user == nil {
@@ -52,14 +51,19 @@ func (s *Service) CreateTeam(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 
-	s.store.Mu.Lock()
-	s.store.Teams[teamID] = team
-	s.store.TeamMembers[teamID+"_"+user.ID] = &storage.TeamMember{
+	if err := s.store.CreateTeam(team); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create team"})
+		return
+	}
+
+	if err := s.store.AddTeamMember(&storage.TeamMember{
 		TeamID: teamID,
 		UserID: user.ID,
 		Role:   "owner",
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add owner"})
+		return
 	}
-	s.store.Mu.Unlock()
 
 	c.JSON(http.StatusCreated, team)
 }
@@ -72,23 +76,40 @@ func (s *Service) ListTeams(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	var result []*storage.Team
-	for _, team := range s.store.Teams {
-		memberKey := team.ID + "_" + user.ID
-		if _, ok := s.store.TeamMembers[memberKey]; ok {
-			result = append(result, team)
-		}
+	teams, err := s.store.ListTeamsByUser(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
 	}
-	s.store.Mu.RUnlock()
-
-	if result == nil {
-		result = []*storage.Team{}
+	if teams == nil {
+		teams = []*storage.Team{}
 	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, teams)
 }
 
-// InviteMember handles POST /api/Teams/{id}/invite
+// GetTeamWorkspaces handles GET /api/teams/{id}/workspaces
+func (s *Service) GetTeamWorkspaces(c *gin.Context) {
+	user := getUserFromContext(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	teamID := c.Param("id")
+	if !isTeamMemberStore(s.store, teamID, user.ID, "owner", "admin", "member", "viewer") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
+		return
+	}
+
+	// Return workspace list for the team (in v0.5.0, just metadata)
+	c.JSON(http.StatusOK, gin.H{
+		"team_id":     teamID,
+		"workspaces":  []gin.H{},
+		"message":     "team workspaces list",
+	})
+}
+
+// InviteMember handles POST /api/teams/{id}/invite
 func (s *Service) InviteMember(c *gin.Context) {
 	user := getUserFromContext(c)
 	if user == nil {
@@ -97,7 +118,7 @@ func (s *Service) InviteMember(c *gin.Context) {
 	}
 
 	teamID := c.Param("id")
-	if !isTeamMember(s.store, teamID, user.ID, "owner", "admin") {
+	if !isTeamMemberStore(s.store, teamID, user.ID, "owner", "admin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "permission denied"})
 		return
 	}
@@ -113,25 +134,27 @@ func (s *Service) InviteMember(c *gin.Context) {
 		role = "member"
 	}
 
-	s.store.Mu.Lock()
-	s.store.TeamMembers[teamID+"_"+req.UserID] = &storage.TeamMember{
+	if err := s.store.AddTeamMember(&storage.TeamMember{
 		TeamID: teamID,
 		UserID: req.UserID,
 		Role:   role,
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to invite member"})
+		return
 	}
-	s.store.Mu.Unlock()
 
-	// Record invite event for audit log
-	s.store.Mu.Lock()
-	s.store.TelemetryEvents = append(s.store.TelemetryEvents, &storage.TelemetryEvent{
-		ID:        generateID(),
-		UserID:    user.ID,
-		Type:      "team_invite",
-		Value:     1,
-		Metadata:  map[string]interface{}{"team_id": teamID, "target_user_id": req.UserID, "role": role},
-		Timestamp: time.Now(),
+	// Record team invite event
+	s.store.AppendTelemetryEvent(&storage.TelemetryEvent{
+		ID:   generateID(),
+		UserID: user.ID,
+		Type: "team_invite",
+		Value: 1,
+		Metadata: map[string]interface{}{
+			"team_id": teamID,
+			"target_user_id": req.UserID,
+			"role": role,
+		},
 	})
-	s.store.Mu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{
 		"team_id":    teamID,
@@ -142,7 +165,7 @@ func (s *Service) InviteMember(c *gin.Context) {
 	})
 }
 
-// UpdateMember handles PATCH /api/Teams/{id}/members/{userId}
+// UpdateMember handles PATCH /api/teams/{id}/members/{userid}
 func (s *Service) UpdateMember(c *gin.Context) {
 	user := getUserFromContext(c)
 	if user == nil {
@@ -152,7 +175,7 @@ func (s *Service) UpdateMember(c *gin.Context) {
 
 	teamID := c.Param("id")
 	targetUserID := c.Param("userid")
-	if !isTeamMember(s.store, teamID, user.ID, "owner") {
+	if !isTeamMemberStore(s.store, teamID, user.ID, "owner") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "only team owner can modify members"})
 		return
 	}
@@ -165,12 +188,10 @@ func (s *Service) UpdateMember(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.Lock()
-	key := teamID + "_" + targetUserID
-	if m, ok := s.store.TeamMembers[key]; ok {
-		m.Role = req.Role
+	if err := s.store.UpdateTeamMemberRole(teamID, targetUserID, req.Role); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update member"})
+		return
 	}
-	s.store.Mu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{
 		"team_id": teamID,
@@ -191,10 +212,9 @@ func getUserFromContext(c *gin.Context) *storage.User {
 	return u
 }
 
-func isTeamMember(store *storage.Store, teamID, userID string, roles ...string) bool {
-	key := teamID + "_" + userID
-	member, ok := store.TeamMembers[key]
-	if !ok {
+func isTeamMemberStore(store *storage.Store, teamID, userID string, roles ...string) bool {
+	member, err := store.GetTeamMember(teamID, userID)
+	if err != nil || member == nil {
 		return false
 	}
 	for _, r := range roles {
@@ -207,10 +227,4 @@ func isTeamMember(store *storage.Store, teamID, userID string, roles ...string) 
 
 func generateID() string {
 	return "team_" + time.Now().Format("20060102150405")
-}
-
-// Helper to extract team ID from path
-func extractTeamID(c *gin.Context) string {
-	id := c.Param("id")
-	return strings.TrimPrefix(id, "Teams/")
 }

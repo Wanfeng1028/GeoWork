@@ -26,7 +26,6 @@ func (s *Service) ReportEvent(c *gin.Context) {
 		return
 	}
 
-	// Check opt-in
 	if !isTelemetryEnabled(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "telemetry disabled by user"})
 		return
@@ -43,17 +42,17 @@ func (s *Service) ReportEvent(c *gin.Context) {
 	}
 
 	event := &storage.TelemetryEvent{
-		ID:        generateID(),
-		UserID:    user.ID,
-		Type:      req.Type,
-		Value:     req.Value,
-		Metadata:  req.Metadata,
-		Timestamp: time.Now(),
+		ID:       generateID(),
+		UserID:   user.ID,
+		Type:     req.Type,
+		Value:    req.Value,
+		Metadata: req.Metadata,
 	}
 
-	s.store.Mu.Lock()
-	s.store.TelemetryEvents = append(s.store.TelemetryEvents, event)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendTelemetryEvent(event); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record telemetry"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "event recorded"})
 }
@@ -81,19 +80,20 @@ func (s *Service) ReportBatch(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.Lock()
+	now := time.Now()
+	_ = now
 	for _, item := range req {
 		event := &storage.TelemetryEvent{
-			ID:        generateID(),
-			UserID:    user.ID,
-			Type:      item.Type,
-			Value:     item.Value,
-			Metadata:  item.Metadata,
-			Timestamp: time.Now(),
+			ID:       generateID(),
+			UserID:   user.ID,
+			Type:     item.Type,
+			Value:    item.Value,
+			Metadata: item.Metadata,
 		}
-		s.store.TelemetryEvents = append(s.store.TelemetryEvents, event)
+		s.store.AppendTelemetryEvent(event) // fire-and-forget in batch
 	}
-	s.store.Mu.Unlock()
+
+	_ = time.Now // keep time package used
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "batch recorded",
@@ -114,7 +114,6 @@ func getUserFromContext(c *gin.Context) *storage.User {
 }
 
 func isTelemetryEnabled(c *gin.Context) bool {
-	// Check header for opt-in flag
 	return c.GetHeader("X-Telemetry-Opt-In") == "true"
 }
 

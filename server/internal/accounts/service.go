@@ -48,15 +48,17 @@ func (s *Service) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.Lock()
 	if req.Name != "" {
 		user.Name = req.Name
 	}
 	if req.AvatarURL != "" {
 		user.AvatarURL = req.AvatarURL
 	}
-	user.UpdatedAt = time.Now()
-	s.store.Mu.Unlock()
+
+	if err := s.store.UpdateUser(user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		return
+	}
 
 	c.JSON(http.StatusOK, user)
 }
@@ -69,10 +71,23 @@ func (s *Service) GetSubscription(c *gin.Context) {
 		return
 	}
 
+	billing, err := s.store.GetBillingData(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
+
+	credits := 0.0
+	plan := user.Plan
+	if billing != nil {
+		credits = billing.Credits
+		plan = billing.Plan
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"plan":     user.Plan,
-		"credits":  0.0,
-		"features": getPlanFeatures(user.Plan),
+		"plan":     plan,
+		"credits":  credits,
+		"features": getPlanFeatures(plan),
 	})
 }
 
@@ -104,5 +119,6 @@ func getPlanFeatures(plan string) map[string]bool {
 		features["team_collab"] = true
 		features["priority_support"] = true
 	}
+	_ = time.Now // avoid unused import if file gets trimmed
 	return features
 }

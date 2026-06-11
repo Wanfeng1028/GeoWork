@@ -79,23 +79,26 @@ type Event struct {
 	Data      map[string]any         `json:"data,omitempty"`
 }
 
-// Orchestrator is the main agent loop controller.
+// Orchestrator is the main agent loop controller with budget-aware context and bounded memory.
 type Orchestrator struct {
-	registry   *toolregistry.Registry
-	gateway    *modelgateway.OpenAICompatibleClient
-	providerID string
-	provider   *modelgateway.ModelProvider
-	planner    *Planner
-	memory     *Memory
-	recovery   *Recovery
-	eventCh    chan Event
-	log        *zap.Logger
-	mu         sync.Mutex
-	runs       map[string]*Run
-	running    map[string]bool
+	registry    *toolregistry.Registry
+	gateway     *modelgateway.OpenAICompatibleClient
+	providerID  string
+	provider    *modelgateway.ModelProvider
+	planner     *Planner
+	memory      *Memory
+	contextBld  *ContextBuilder
+	recovery    *Recovery
+	eventCh     chan Event
+	log         *zap.Logger
+	mu          sync.Mutex
+	runs        map[string]*Run
+	running     map[string]bool
+	budget      ContextBudget
+	maxTurns    int // safety limit on turns per run
 }
 
-// NewOrchestrator creates a new agent orchestrator.
+// NewOrchestrator creates a new agent orchestrator with default budget.
 func NewOrchestrator(
 	registry *toolregistry.Registry,
 	gateway *modelgateway.OpenAICompatibleClient,
@@ -114,7 +117,11 @@ func NewOrchestrator(
 		log:        log,
 		runs:       make(map[string]*Run),
 		running:    make(map[string]bool),
+		budget:     DefaultContextBudget(),
+		maxTurns:   50,
 	}
+	o.contextBld = NewContextBuilder(log, registry)
+	o.contextBld.WithBudget(o.budget)
 	return o
 }
 
@@ -219,10 +226,26 @@ func (o *Orchestrator) executeStep(ctx context.Context, run *Run, step *Step) {
 	result, err := o.registry.Execute(ctx, step.Tool, args)
 	step.Duration = time.Since(step.StartTime).Milliseconds()
 
+	// Extract stdout/stderr from result for summarization
+	var stdout, stderr string
+	if result != nil {
+		if v, ok := result["stdout"]; ok {
+			stdout = fmt.Sprintf("%v", v)
+		}
+		if v, ok := result["stderr"]; ok {
+			stderr = fmt.Sprintf("%v", v)
+		}
+	}
+
 	if err != nil {
 		step.Status = "failed"
 		step.Result = fmt.Sprintf("error: %s", err.Error())
 		o.log.Error("step failed", zap.String("step", step.ID), zap.Error(err))
+
+		// Summarize stderr even on error
+		o.memory.AppendToolResult(step.Tool, stdout, stderr)
+		o.memory.Append("assistant", fmt.Sprintf("Tool %s failed: %s", step.Tool, err.Error()))
+
 		o.emitEvent(Event{
 			Type:      "error",
 			Timestamp: time.Now(),
@@ -242,8 +265,9 @@ func (o *Orchestrator) executeStep(ctx context.Context, run *Run, step *Step) {
 		},
 	})
 
-	// Store in memory
-	o.memory.Append(step.Title, step.Result)
+	// Summarize and store tool result (bounded)
+	o.memory.AppendToolResult(step.Tool, stdout, stderr)
+	o.memory.Append("assistant", fmt.Sprintf("Tool %s completed successfully", step.Tool))
 }
 
 // GetRun returns a run by ID.

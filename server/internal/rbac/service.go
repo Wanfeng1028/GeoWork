@@ -3,7 +3,6 @@ package rbac
 
 import (
 	"net/http"
-	"strings"
 
 	"server/internal/storage"
 
@@ -18,17 +17,7 @@ func NewService(store *storage.Store) *Service {
 	return &Service{store: store}
 }
 
-// CheckPermission handles checking if a user has a specific permission.
-// RBAC implementation for v0.4.0 — plan-based and team-based permissions.
-//
-// Supported permissions:
-// - workspace:owner - workspace owner
-// - task:owner - task owner
-// - artifact:viewer - can view artifacts
-// - billing:admin - billing administration
-// - plugin:admin - plugin marketplace administration
-// - mcp:admin - MCP server administration
-// - team:admin - team administration
+// CheckPermissionRequest represents a permission check request.
 type CheckPermissionRequest struct {
 	Permission string `json:"permission" binding:"required"`
 	ObjectID   string `json:"object_id"`
@@ -72,17 +61,20 @@ func (s *Service) GetRoles(c *gin.Context) {
 		roles = append(roles, "team")
 	}
 
-	// Check team membership
-	s.store.Mu.RLock()
+	// Check team membership for additional roles
 	var teamRoles []string
-	for key := range s.store.TeamMembers {
-		if strings.HasSuffix(key, "_"+user.ID) {
-			member := s.store.TeamMembers[key]
-			teamRoles = append(teamRoles, "team:"+member.Role)
+	// Iterate over all teams to find user's roles
+	rows, err := s.store.DB().Query(`
+		SELECT tm.role FROM team_members tm WHERE tm.user_id=?`, user.ID)
+	if err == nil {
+		for rows.Next() {
+			var role string
+			if err := rows.Scan(&role); err == nil {
+				teamRoles = append(teamRoles, "team:"+role)
+			}
 		}
+		rows.Close()
 	}
-	s.store.Mu.RUnlock()
-
 	roles = append(roles, teamRoles...)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -90,31 +82,58 @@ func (s *Service) GetRoles(c *gin.Context) {
 	})
 }
 
+// GetPermissions handles GET /api/account/permissions
+func (s *Service) GetPermissions(c *gin.Context) {
+	user := getUserFromContext(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	permissions := s.getAllPermissions(user)
+
+	c.JSON(http.StatusOK, gin.H{
+		"permissions": permissions,
+		"roles":       []string{"user", user.Plan},
+	})
+}
+
 func (s *Service) checkPermission(user *storage.User, permission, objectID string) bool {
 	// Owner always has access
-	if strings.HasSuffix(permission, ":owner") {
+	if len(permission) > 6 && permission[len(permission)-6:] == ":owner" {
 		return true
 	}
 
-	// Plan-based permissions
 	switch permission {
 	case "billing:admin":
 		return user.Plan != "free"
 	case "plugin:admin", "mcp:admin":
 		return user.Plan == "team"
 	case "artifact:viewer":
-		return true // all authenticated Users can view
+		return true
 	case "team:admin":
-		// Check if user is team owner/admin
-		for _, m := range s.store.TeamMembers {
-			if m.UserID == user.ID && (m.Role == "owner" || m.Role == "admin") {
-				return true
-			}
+		member, err := s.store.GetTeamMember(objectID, user.ID)
+		if err == nil && member != nil {
+			return member.Role == "owner" || member.Role == "admin"
 		}
 		return false
 	default:
 		return false
 	}
+}
+
+func (s *Service) getAllPermissions(user *storage.User) []string {
+	var perms []string
+	perms = append(perms, "workspace:read", "task:read", "task:write")
+
+	switch user.Plan {
+	case "pro":
+		perms = append(perms, "cloud_sync", "billing:read")
+	case "team":
+		perms = append(perms, "cloud_sync", "billing:admin", "team:write", "plugin:admin")
+	}
+
+	return perms
 }
 
 func getUserFromContext(c *gin.Context) *storage.User {

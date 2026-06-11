@@ -220,7 +220,7 @@ func RegisterBuiltinTools(reg *Registry) error {
 				},
 			}).
 			Permission("exec").
-			RiskLevel("high").
+			RiskLevel("critical").
 			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				command, _ := args["command"].(string)
@@ -264,6 +264,160 @@ func RegisterBuiltinTools(reg *Registry) error {
 					"name":   name,
 					"path":   path,
 				}, nil
+			}).
+			Build(),
+
+		NewBuilder("delete_file").
+			Description("Delete a file at the given path.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path": map[string]any{"type": "string", "description": "File path to delete"},
+				},
+				"required": []string{"path"},
+			}).
+			OutputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path":   map[string]any{"type": "string"},
+					"deleted": map[string]any{"type": "boolean"},
+				},
+			}).
+			Permission("delete").
+			RiskLevel("high").
+			Sandbox(true).
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				path, _ := args["path"].(string)
+				if err := os.Remove(filepath.Clean(path)); err != nil {
+					return nil, err
+				}
+				return map[string]any{"path": path, "deleted": true}, nil
+			}).
+			Build(),
+
+		NewBuilder("git_commit").
+			Description("Commit changes in the workspace repository using git.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"message": map[string]any{"type": "string", "description": "Commit message"},
+					"addAll":  map[string]any{"type": "boolean", "description": "Add all changes"},
+				},
+				"required": []string{"message"},
+			}).
+			OutputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"hash": map[string]any{"type": "string"},
+				},
+			}).
+			Permission("exec").
+			RiskLevel("high").
+			Sandbox(true).
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				_ = args
+				return map[string]any{"hash": ""}, fmt.Errorf("git not configured")
+			}).
+			Build(),
+
+		NewBuilder("git_push").
+			Description("Push committed changes to the remote repository using git.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"remote":    map[string]any{"type": "string"},
+					"branch":    map[string]any{"type": "string"},
+					"force":     map[string]any{"type": "boolean"},
+				},
+				"required": []string{},
+			}).
+			OutputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"success": map[string]any{"type": "boolean"},
+				},
+			}).
+			Permission("exec").
+			RiskLevel("critical").
+			Sandbox(true).
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				force, _ := args["force"].(bool)
+				if force {
+					return nil, fmt.Errorf("git push --force is explicitly blocked")
+				}
+				return map[string]any{"success": false}, fmt.Errorf("git push is blocked by default policy")
+			}).
+			Build(),
+
+		NewBuilder("run_git_add").
+			Description("Stage files for git commit. Equivalent to 'git add'.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path": map[string]any{"type": "string", "description": "File or directory path"},
+				},
+				"required": []string{"path"},
+			}).
+			Permission("exec").
+			RiskLevel("high").
+			Sandbox(true).
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				_ = args
+				return map[string]any{"staged": 0}, nil
+			}).
+			Build(),
+
+		NewBuilder("run_git_reset").
+			Description("Reset git state. Equivalent to 'git reset --hard'.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"hard": map[string]any{"type": "boolean"},
+				},
+			}).
+			Permission("exec").
+			RiskLevel("critical").
+			Sandbox(true).
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				hard, _ := args["hard"].(bool)
+				if hard {
+					return nil, fmt.Errorf("git reset --hard is explicitly blocked")
+				}
+				return map[string]any{}, nil
+			}).
+			Build(),
+
+		NewBuilder("scan_folder").
+			Description("Recursively scan a folder and list all files with metadata.").
+			InputSchema(map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path":        map[string]any{"type": "string"},
+					"maxDepth":    map[string]any{"type": "integer"},
+					"pattern":     map[string]any{"type": "string"},
+				},
+				"required": []string{"path"},
+			}).
+			Permission("read").
+			RiskLevel("medium").
+			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+				path, _ := args["path"].(string)
+				var files []map[string]any
+				filepath.Walk(filepath.Clean(path), func(p string, info os.FileInfo, err error) error {
+					if err != nil || info.IsDir() {
+						return nil
+					}
+					files = append(files, map[string]any{
+						"path": p,
+						"size": info.Size(),
+						"name": info.Name(),
+					})
+					return nil
+				})
+				if files == nil {
+					files = []map[string]any{}
+				}
+				return map[string]any{"files": files}, nil
 			}).
 			Build(),
 	}

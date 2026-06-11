@@ -17,7 +17,7 @@ import (
 type Service struct {
 	store     *storage.Store
 	providers map[string]*ProviderConfig
-	Mu        sync.RWMutex
+	mu        sync.RWMutex
 }
 
 type ProviderConfig struct {
@@ -53,23 +53,23 @@ func (s *Service) AddProvider(c *gin.Context) {
 	req.ID = user.ID + "_" + req.ID
 	req.Enabled = true
 
-	s.Mu.Lock()
+	s.mu.Lock()
 	s.providers[req.ID] = &req
-	s.Mu.Unlock()
+	s.mu.Unlock()
 
 	c.JSON(http.StatusCreated, req)
 }
 
 // ListProviders handles GET /api/model/providers
 func (s *Service) ListProviders(c *gin.Context) {
-	s.Mu.RLock()
+	s.mu.RLock()
 	result := make([]ProviderConfig, 0, len(s.providers))
 	for _, p := range s.providers {
 		pCopy := *p
-		pCopy.APIKey = "***" // mask key
+		pCopy.APIKey = "***"
 		result = append(result, pCopy)
 	}
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
 
 	c.JSON(http.StatusOK, result)
 }
@@ -82,16 +82,15 @@ func (s *Service) ListModels(c *gin.Context) {
 		return
 	}
 
-	s.Mu.RLock()
+	s.mu.RLock()
 	provider, ok := s.providers[providerID]
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
 		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
 		return
 	}
 
-	// Proxy model list to upstream
 	resp, err := http.Get(provider.BaseURL + "/v1/models")
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
@@ -123,16 +122,15 @@ func (s *Service) Chat(c *gin.Context) {
 		return
 	}
 
-	s.Mu.RLock()
+	s.mu.RLock()
 	provider, ok := s.providers[providerID]
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
 		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
 		return
 	}
 
-	// Proxy chat request
 	body, _ := json.Marshal(req)
 	upstreamURL := provider.BaseURL + "/v1/chat/completions"
 
@@ -144,10 +142,15 @@ func (s *Service) Chat(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	// Record usage
-	go recordUsage(s.store, c.GetString("user_id"), "model_requests", 1, req["model"].(string))
+	// Record usage asynchronously
+	userID := ""
+	if u, ok := c.Get("user"); ok {
+		if user, ok := u.(*storage.User); ok {
+			userID = user.ID
+		}
+	}
+	go recordUsage(s.store, userID, "model_requests", 1, req["model"].(string))
 
-	// Proxy response
 	respBody, _ := io.ReadAll(resp.Body)
 	var proxyResp gin.H
 	json.Unmarshal(respBody, &proxyResp)
@@ -169,16 +172,15 @@ func (s *Service) Stream(c *gin.Context) {
 		return
 	}
 
-	s.Mu.RLock()
+	s.mu.RLock()
 	provider, ok := s.providers[providerID]
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
 		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
 		return
 	}
 
-	// Proxy streaming request
 	body, _ := json.Marshal(req)
 	upstreamURL := provider.BaseURL + "/v1/chat/completions"
 
@@ -211,17 +213,17 @@ func getUserFromContext(c *gin.Context) *storage.User {
 }
 
 func recordUsage(store *storage.Store, userID string, eventType string, amount int64, model string) {
+	if userID == "" {
+		return
+	}
 	event := &storage.UsageEvent{
 		ID:        generateID(),
 		UserID:    userID,
 		Type:      eventType,
 		Amount:    amount,
 		Model:     model,
-		Timestamp: time.Now(),
 	}
-	store.Mu.Lock()
-	store.UsageEvents = append(store.UsageEvents, event)
-	store.Mu.Unlock()
+	store.AppendUsageEvent(event)
 }
 
 func generateID() string {

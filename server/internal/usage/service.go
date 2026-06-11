@@ -20,9 +20,9 @@ func NewService(store *storage.Store) *Service {
 
 // ReportEventRequest represents a usage event.
 type ReportEventRequest struct {
-	Type   string `json:"type" binding:"required"`
-	Amount int64  `json:"amount"`
-	Model  string `json:"model"`
+	Type   string  `json:"type" binding:"required"`
+	Amount int64   `json:"amount"`
+	Model  string  `json:"model"`
 }
 
 // ReportEvents handles POST /api/usage/events
@@ -40,17 +40,18 @@ func (s *Service) ReportEvents(c *gin.Context) {
 	}
 
 	event := &storage.UsageEvent{
-		ID:        generateID(),
-		UserID:    user.ID,
-		Type:      req.Type,
-		Amount:    req.Amount,
-		Model:     req.Model,
-		Timestamp: time.Now(),
+		ID:              generateID(),
+		UserID:          user.ID,
+		Type:            req.Type,
+		Amount:          req.Amount,
+		Model:           req.Model,
+		SpeedMultiplier: getSpeedMultiplier(user.Plan),
 	}
 
-	s.store.Mu.Lock()
-	s.store.UsageEvents = append(s.store.UsageEvents, event)
-	s.store.Mu.Unlock()
+	if err := s.store.AppendUsageEvent(event); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record usage"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "event recorded"})
 }
@@ -63,39 +64,20 @@ func (s *Service) GetSummary(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	var summary gin.H
-	totalTokens := int64(0)
-	totalRequests := int64(0)
-	totalToolCalls := int64(0)
-	totalBrowserUsage := int64(0)
-
-	for _, e := range s.store.UsageEvents {
-		if e.UserID != user.ID {
-			continue
-		}
-		switch e.Type {
-		case "model_tokens":
-			totalTokens += e.Amount
-		case "model_requests":
-			totalRequests += e.Amount
-		case "tool_calls":
-			totalToolCalls += e.Amount
-		case "browser_usage":
-			totalBrowserUsage += e.Amount
-		}
-	}
-	s.store.Mu.RUnlock()
-
-	summary = gin.H{
-		"model_tokens":     totalTokens,
-		"model_requests":   totalRequests,
-		"tool_calls":       totalToolCalls,
-		"browser_usage":    totalBrowserUsage,
-		"speed_multiplier": 1.0,
+	summary, err := s.store.GetUsageSummary(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
 	}
 
-	c.JSON(http.StatusOK, summary)
+	c.JSON(http.StatusOK, gin.H{
+		"model_tokens":     summary["model_tokens"],
+		"model_requests":   summary["model_requests"],
+		"tool_calls":       summary["tool_calls"],
+		"browser_usage":    summary["browser_usage"],
+		"sync_storage":     summary["sync_storage"],
+		"speed_multiplier": getSpeedMultiplier(user.Plan),
+	})
 }
 
 // GetModels handles GET /api/usage/models
@@ -106,25 +88,30 @@ func (s *Service) GetModels(c *gin.Context) {
 		return
 	}
 
-	s.store.Mu.RLock()
-	modelUsage := make(map[string]int64)
-	for _, e := range s.store.UsageEvents {
-		if e.UserID != user.ID || e.Model == "" {
-			continue
-		}
-		modelUsage[e.Model] += e.Amount
+	modelUsage, err := s.store.GetUsageByModel(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
 	}
-	s.store.Mu.RUnlock()
 
 	result := make([]gin.H, 0, len(modelUsage))
-	for model, Tokens := range modelUsage {
+	for model, tokens := range modelUsage {
 		result = append(result, gin.H{
 			"model":  model,
-			"Tokens": Tokens,
+			"tokens": tokens,
 		})
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func getSpeedMultiplier(plan string) float64 {
+	switch plan {
+	case "pro", "team":
+		return 2.0
+	default:
+		return 1.0
+	}
 }
 
 func getUserFromContext(c *gin.Context) *storage.User {

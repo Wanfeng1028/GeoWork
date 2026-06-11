@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -24,17 +25,21 @@ type Tool interface {
 	Execute(ctx context.Context, args map[string]any) (map[string]any, error)
 }
 
-// Registry manages tool registration and lookup.
+// Registry manages tool registration and lookup with governance support.
 type Registry struct {
-	mu      sync.RWMutex
-	tools   map[string]Tool
-	log     *zap.Logger
+	mu         sync.RWMutex
+	tools      map[string]Tool
+	log        *zap.Logger
+	governor   *Governor
+	auditLog   *AuditLog
+	policies   map[string]*GovernorPolicy // cached governor policies
 }
 
 func NewRegistry(log *zap.Logger) *Registry {
 	return &Registry{
-		tools: make(map[string]Tool),
-		log:   log,
+		tools:    make(map[string]Tool),
+		log:      log,
+		policies: make(map[string]*GovernorPolicy),
 	}
 }
 
@@ -80,11 +85,76 @@ func (r *Registry) Remove(name string) error {
 	return nil
 }
 
-// Execute calls a registered tool with the given arguments.
+// WithGovernor attaches a Governor to the registry for runtime governance.
+func (r *Registry) WithGovernor(g *Governor) *Registry {
+	r.mu.Lock()
+	r.governor = g
+	r.mu.Unlock()
+	return r
+}
+
+// WithAuditLog attaches an AuditLog to the registry.
+func (r *Registry) WithAuditLog(a *AuditLog) *Registry {
+	r.mu.Lock()
+	r.auditLog = a
+	r.mu.Unlock()
+	return r
+}
+
+// GetGovernor returns the attached Governor, if any.
+func (r *Registry) GetGovernor() *Governor {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.governor
+}
+
+// GetAuditLog returns the attached AuditLog, if any.
+func (r *Registry) GetAuditLog() *AuditLog {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.auditLog
+}
+
+// Execute calls a registered tool with the given arguments, enforcing governance.
 func (r *Registry) Execute(ctx context.Context, name string, args map[string]any) (map[string]any, error) {
 	t, ok := r.Get(name)
 	if !ok {
 		return nil, fmt.Errorf("tool %s not found", name)
+	}
+
+	// Check governance
+	r.mu.RLock()
+	governor := r.governor
+	auditLog := r.auditLog
+	r.mu.RUnlock()
+
+	if governor != nil {
+		if err := governor.RecordCall(name); err != nil {
+			// Record failed governance check
+			if auditLog != nil {
+				argsJSON, _ := json.Marshal(args)
+				auditLog.Record(AuditEntry{
+					TaskID:   governor.taskID,
+					ToolName: name,
+					Args:     string(argsJSON),
+					Success:  false,
+					Error:    err.Error(),
+				})
+			}
+			return nil, fmt.Errorf("governance denied: %w", err)
+		}
+
+		// Record successful call
+		if auditLog != nil {
+			argsJSON, _ := json.Marshal(args)
+			auditLog.Record(AuditEntry{
+				TaskID:   governor.taskID,
+				ToolName: name,
+				Args:     string(argsJSON),
+				Success:  true,
+				Approved: governor.IsGoverned(name),
+			})
+		}
 	}
 
 	// Check permissions
@@ -99,7 +169,22 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 		// Sandbox enforcement would go here
 	}
 
+	start := time.Now()
 	result, err := t.Execute(ctx, args)
+	duration := time.Since(start).Milliseconds()
+
+	if err != nil && auditLog != nil && governor != nil {
+		argsJSON, _ := json.Marshal(args)
+		auditLog.Record(AuditEntry{
+			TaskID:     governor.taskID,
+			ToolName:   name,
+			Args:       string(argsJSON),
+			Success:    false,
+			Error:      err.Error(),
+			DurationMs: duration,
+		})
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("tool %s execution failed: %w", name, err)
 	}

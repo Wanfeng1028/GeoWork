@@ -862,6 +862,16 @@ func (a *App) RequestSecurityApproval(taskID, tool, risk, reason string) Securit
 	return decision
 }
 
+func (a *App) riskForTool(tool string) string {
+	if strings.Contains(tool, "process") || strings.Contains(tool, "processing") {
+		return "high"
+	}
+	if strings.Contains(tool, "write") || strings.Contains(tool, "delete") || strings.Contains(tool, "export") {
+		return "medium"
+	}
+	return "low"
+}
+
 func (a *App) FileDiff(path, content string) (map[string]any, error) {
 	if !a.isPathAllowed(path) {
 		return nil, errors.New("path is outside workspace whitelist")
