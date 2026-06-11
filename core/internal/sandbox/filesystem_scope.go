@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 // FilesystemScope defines allowed and blocked filesystem paths.
@@ -130,7 +128,7 @@ func (v *Validator) ValidatePath(path string) error {
 			if dirInfo, dirErr := filepath.EvalSymlinks(filepath.Dir(info)); dirErr == nil {
 				if resolvedInfo, infoErr := filepath.EvalSymlinks(dirInfo); infoErr == nil {
 					if filepath.Clean(resolvedInfo) != filepath.Clean(cleanPath) {
-						v.log.Warn("symlink detected and denied", zap.String("path", cleanPath))
+						v.log.Warn("symlink detected and denied", "path", cleanPath)
 						return &ErrPathBlocked{Reason: "symlinks are disabled"}
 					}
 				}
