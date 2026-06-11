@@ -176,9 +176,9 @@ func (d *DiffResult) ToUnifiedFormat(contextLines int) string {
 
 // PatchSet contains multiple patches for a single commit/operation.
 type PatchSet struct {
-	ID          string           `json:"id"`
-	Description string           `json:"description"`
-	CreatedAt   time.Time        `json:"createdAt"`
+	ID          string            `json:"id"`
+	Description string            `json:"description"`
+	CreatedAt   time.Time         `json:"createdAt"`
 	Patches     map[string]*Patch `json:"patches"`
 }
 
@@ -238,8 +238,9 @@ func (ps *PatchSet) Validate() error {
 // ToUnifiedDiffString converts the entire PatchSet to a multi-file unified diff string.
 func (ps *PatchSet) ToUnifiedDiffString() string {
 	var sb strings.Builder
-	for i, (path, patch) := range ps.Patches {
-		if i > 0 {
+	var index int
+	for path, patch := range ps.Patches {
+		if index > 0 {
 			sb.WriteString("\n")
 		}
 		sb.WriteString(fmt.Sprintf("--- a/%s\n", path))
@@ -256,6 +257,7 @@ func (ps *PatchSet) ToUnifiedDiffString() string {
 			diffResult := &DiffResult{Lines: diffLines}
 			sb.WriteString(diffResult.ToUnifiedFormat(0))
 		}
+		index++
 	}
 	return sb.String()
 }

@@ -23,6 +23,7 @@ type RecoveryManager struct {
 
 // Checkpoint holds the execution state for a task recovery point.
 type Checkpoint struct {
+	ID        string    `json:"id"`
 	TaskID    string    `json:"taskId"`
 	StepIndex int       `json:"stepIndex"`
 	EventType string    `json:"eventType"`
@@ -249,7 +250,7 @@ func (rm *RecoveryManager) RecoverTask(taskID string) (*RecoveryState, error) {
 
 	// Mark checkpoint as recovered
 	if checkpoint != nil {
-		if err := rm.MarkCheckpointRecovered(checkpoint.TaskID); err != nil {
+		if err := rm.MarkCheckpointRecovered(checkpoint.ID); err != nil {
 			rm.log.Warn("failed to mark checkpoint as recovered", "task_id", taskID, "error", err)
 		}
 	}
@@ -451,6 +452,7 @@ func (rm *RecoveryManager) scanCheckpoint(row scanner) (*Checkpoint, error) {
 	}
 
 	return &Checkpoint{
+		ID:        id,
 		TaskID:    taskID,
 		StepIndex: stepIndex,
 		EventType: eventType,

@@ -5,10 +5,13 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 
+	"geowork/core/internal/file"
+	"geowork/core/internal/knowledge"
 	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
 	"geowork/core/internal/sandbox"
@@ -44,6 +47,31 @@ func NewRouter(deps RouterDeps) http.Handler {
 	hDiagnostics := newDiagnosticsHandler(deps.LogDir)
 	hGlobal := newGlobalHandler(deps.App)
 
+	// Additional handlers with their own dependencies
+	workerClient := deps.App.WorkerClient()
+	agentEngine := deps.App.AgentEngine()
+
+	workspaceDir := deps.App.Workspace()
+
+	kbPath := filepath.Join(workspaceDir, "state", "knowledge.db")
+	kbMgr, err := knowledge.NewKnowledgeManager(logger, kbPath)
+	if err != nil {
+		logger.Error("Failed to create knowledge manager", zap.Error(err))
+		kbMgr = nil
+	}
+
+	fileMgr, err := file.NewFileManager(logger, filepath.Join(workspaceDir, "state", "files.db"))
+	if err != nil {
+		logger.Error("Failed to create file manager", zap.Error(err))
+		fileMgr = nil
+	}
+
+	hPaper := NewPaperHandler(workerClient, logger)
+	hKnowledge := NewKnowledgeHandler(kbMgr, logger)
+	hNdv := NewNdvHandler(workerClient, logger)
+	hAgent := NewAgentHandler(agentEngine, logger)
+	hFile := NewFileHandler(deps.App, fileMgr, workspaceDir)
+
 	// --- Register all handlers ---
 	hProject.registerRoutes(mux)
 	hHealth.registerRoutes(mux)
@@ -55,6 +83,13 @@ func NewRouter(deps RouterDeps) http.Handler {
 	hDiff.registerRoutes(mux)
 	hDiagnostics.registerRoutes(mux)
 	hGlobal.registerRoutes(mux)
+	hPaper.RegisterRoutes(mux)
+	hKnowledge.RegisterRoutes(mux)
+	hNdv.RegisterRoutes(mux)
+	hAgent.RegisterRoutes(mux)
+	if hFile != nil {
+		hFile.RegisterRoutes(mux)
+	}
 
 	// 404 fallback
 	mux.HandleFunc("api/", func(w http.ResponseWriter, r *http.Request) {

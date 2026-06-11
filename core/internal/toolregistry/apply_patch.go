@@ -93,7 +93,7 @@ func RollbackPatchSet(snapshots map[string]string) error {
 }
 
 // validatePatch checks if a patch can be applied to the given content.
-func validatePatch(content string, patch *Patch) error {
+func validatePatch(_ string, patch *Patch) error {
 	// A patch must contain at least one non-keep operation
 	hasChange := false
 	for _, line := range patch.Lines {
@@ -114,7 +114,6 @@ func applyPatch(oldContent string, patch *Patch) (string, error) {
 		return "", err
 	}
 
-	oldLines := splitLines(oldContent)
 	var newLines []string
 
 	for _, line := range patch.Lines {

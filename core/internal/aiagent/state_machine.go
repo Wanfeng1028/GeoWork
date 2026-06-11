@@ -43,7 +43,7 @@ const (
 type Transition struct {
 	From    State
 	To      State
-	OnEvent Event
+	OnEvent MachineEvent
 }
 
 // AllowedToolSet holds tool names allowed in a given state.

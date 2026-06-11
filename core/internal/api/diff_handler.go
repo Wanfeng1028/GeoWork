@@ -43,10 +43,12 @@ func (h *diffHandler) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/diffs/{id}", h.handleGet)
 	mux.HandleFunc("POST /api/diffs/{id}/accept", h.handleAccept)
 	mux.HandleFunc("POST /api/diffs/{id}/reject", h.handleReject)
+	mux.HandleFunc("POST /api/diffs/{id}/rollback", h.handleDiffRollback)
 	mux.HandleFunc("POST /api/diffs/accept-all", h.handleAcceptAll)
 	mux.HandleFunc("POST /api/diffs/reject-all", h.handleRejectAll)
 	mux.HandleFunc("POST /api/security/diff", h.handleCreateDiff)
 	mux.HandleFunc("POST /api/security/rollback", h.handleRollback)
+	mux.HandleFunc("POST /api/security/recycle-delete", h.handleRecycleDelete)
 }
 
 // POST /api/security/diff
@@ -192,6 +194,40 @@ func (h *diffHandler) handleReject(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// POST /api/diffs/{id}/rollback
+func (h *diffHandler) handleDiffRollback(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	h.mu.Lock()
+	d, ok := h.diffs[id]
+	if ok {
+		d.Accepted = false
+	}
+	h.mu.Unlock()
+
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
+	if h.bridge != nil {
+		h.bridge.Publish(TaskEventPayload{
+			Type:    StepDelta,
+			Message: "Diff rolled back: " + d.Path,
+			Data: map[string]any{
+				"id":     id,
+				"path":   d.Path,
+				"action": "rollback",
+			},
+		})
+	}
+
+	writeJSON(w, map[string]any{
+		"status": "rolled_back",
+		"id":     id,
+		"path":   d.Path,
+	})
+}
+
 // POST /api/diffs/accept-all
 func (h *diffHandler) handleAcceptAll(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
@@ -256,4 +292,14 @@ func (h *diffHandler) handleRejectAll(w http.ResponseWriter, r *http.Request) {
 func hashString(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
+}
+
+// POST /api/security/recycle-delete
+func (h *diffHandler) handleRecycleDelete(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Path string `json:"path"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&in)
+	target, err := h.app.RecycleDelete(in.Path)
+	writeResult(w, target, err)
 }

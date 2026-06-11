@@ -81,21 +81,23 @@ type Event struct {
 
 // Orchestrator is the main agent loop controller with budget-aware context and bounded memory.
 type Orchestrator struct {
-	registry    *toolregistry.Registry
-	gateway     *modelgateway.OpenAICompatibleClient
-	providerID  string
-	provider    *modelgateway.ModelProvider
-	planner     *Planner
-	memory      *Memory
-	contextBld  *ContextBuilder
-	recovery    *Recovery
-	eventCh     chan Event
-	log         *zap.Logger
-	mu          sync.Mutex
-	runs        map[string]*Run
-	running     map[string]bool
-	budget      ContextBudget
-	maxTurns    int // safety limit on turns per run
+	registry      *toolregistry.Registry
+	gateway       *modelgateway.OpenAICompatibleClient
+	providerID    string
+	provider      *modelgateway.ModelProvider
+	planner       *Planner
+	memory        *Memory
+	contextBld    *ContextBuilder
+	recovery      *Recovery
+	stateMachine  *StateMachine
+	eventCh       chan Event
+	log           *zap.Logger
+	mu            sync.Mutex
+	runs          map[string]*Run
+	running       map[string]bool
+	currentState  State
+	budget        ContextBudget
+	maxTurns      int
 }
 
 // NewOrchestrator creates a new agent orchestrator with default budget.
@@ -106,19 +108,21 @@ func NewOrchestrator(
 	log *zap.Logger,
 ) *Orchestrator {
 	o := &Orchestrator{
-		registry:   registry,
-		gateway:    gateway,
-		providerID: provider.ID,
-		provider:   provider,
-		planner:    NewPlanner(log),
-		memory:     NewMemory(),
-		recovery:   NewRecovery(log),
-		eventCh:    make(chan Event, 128),
-		log:        log,
-		runs:       make(map[string]*Run),
-		running:    make(map[string]bool),
-		budget:     DefaultContextBudget(),
-		maxTurns:   50,
+		registry:     registry,
+		gateway:      gateway,
+		providerID:   provider.ID,
+		provider:     provider,
+		planner:      NewPlanner(log),
+		memory:       NewMemory(),
+		recovery:     NewRecovery(log),
+		stateMachine: NewStateMachine(),
+		eventCh:      make(chan Event, 128),
+		log:          log,
+		runs:         make(map[string]*Run),
+		running:      make(map[string]bool),
+		currentState: StateIdle,
+		budget:       DefaultContextBudget(),
+		maxTurns:     50,
 	}
 	o.contextBld = NewContextBuilder(log, registry)
 	o.contextBld.WithBudget(o.budget)
@@ -141,18 +145,25 @@ func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run,
 	o.running[run.ID] = true
 	o.mu.Unlock()
 
-	// Step 1: Plan
+	// Transition: idle -> planning
+	if _, _, err := o.stateMachine.Next(StateIdle, MachineEventStart); err != nil {
+		o.log.Error("state machine transition failed", zap.Error(err))
+	} else {
+		o.currentState = StatePlanning
+	}
+
 	run.Status = StatusRunning
 	o.emitEvent(Event{
 		Type:      "plan",
 		Timestamp: time.Now(),
-		Data:      map[string]any{"prompt": prompt, "mode": mode},
+		Data:      map[string]any{"prompt": prompt, "mode": mode, "state": string(o.currentState)},
 	})
 
 	plan, err := o.planner.Plan(mode, prompt)
 	if err != nil {
 		run.Status = StatusFailed
 		run.UpdatedAt = time.Now()
+		o.currentState = StateFailed
 		o.log.Error("planning failed", zap.Error(err))
 		o.emitEvent(Event{
 			Type:      "error",
@@ -168,7 +179,9 @@ func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run,
 	run.Plan = plan
 	run.UpdatedAt = time.Now()
 
-	// Step 2: Execute plan
+	// Transition: planning -> inspecting (plan is ready)
+	o.transitionState(MachineEventPlanReady, "planning complete")
+
 	go o.executePlan(ctx, run)
 
 	return run, nil
@@ -184,14 +197,14 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		o.emitEvent(Event{
 			Type:      "done",
 			Timestamp: time.Now(),
-			Data:      map[string]any{"runId": run.ID},
+			Data:      map[string]any{"runId": run.ID, "state": string(o.currentState)},
 		})
-		// Save checkpoint
 		o.saveCheckpoint(run)
+		o.currentState = StateCompleted
 	}()
 
+	turnCount := 0
 	for i, step := range run.Plan {
-		// Check if cancelled
 		o.mu.Lock()
 		if !o.running[run.ID] {
 			run.Status = StatusCompleted
@@ -200,21 +213,48 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		}
 		o.mu.Unlock()
 
+		if turnCount >= o.maxTurns {
+			o.log.Warn("max turns reached, stopping", zap.Int("maxTurns", o.maxTurns))
+			o.currentState = StateFailed
+			return
+		}
+
 		run.StepIndex = i
 		run.UpdatedAt = time.Now()
+		turnCount++
 
-		// Execute step
 		o.executeStep(ctx, run, &step)
+
+		// Auto-advance state based on step completion
+		if step.Status == "completed" {
+			o.advanceStateForStep(&step)
+		}
 	}
 }
 
 func (o *Orchestrator) executeStep(ctx context.Context, run *Run, step *Step) {
+	// Check if tool is allowed in current state
+	if !o.stateMachine.ToolIsAllowed(o.currentState, step.Tool) {
+		step.Status = "rejected"
+		step.Result = fmt.Sprintf("tool %q not allowed in state %s", step.Tool, o.currentState)
+		o.log.Warn("tool rejected by state machine",
+			zap.String("tool", step.Tool),
+			zap.String("state", string(o.currentState)),
+		)
+		o.emitEvent(Event{
+			Type:      "error",
+			Timestamp: time.Now(),
+			Data:      map[string]any{"stepId": step.ID, "error": step.Result},
+		})
+		return
+	}
+
 	step.Status = "running"
 	step.StartTime = time.Now()
 	o.emitEvent(Event{
 		Type:      "step_start",
 		Timestamp: time.Now(),
-		Data:      map[string]any{"stepId": step.ID, "title": step.Title, "tool": step.Tool},
+		Data:      map[string]any{"stepId": step.ID, "title": step.Title, "tool": step.Tool, "state": string(o.currentState)},
 	})
 
 	var args map[string]any
@@ -315,10 +355,69 @@ func (o *Orchestrator) saveCheckpoint(run *Run) {
 		"messages":   run.Messages,
 		"plan":       run.Plan,
 		"memory":     o.memory.Export(),
+		"state":      string(o.currentState),
 		"checkpoint": time.Now().UTC().Format(time.RFC3339),
 	})
 	run.Checkpoint = data
 	o.recovery.Save(run.ID, data)
+}
+
+// transitionState attempts a state machine transition and logs the result.
+func (o *Orchestrator) transitionState(event MachineEvent, reason string) {
+	nextState, allowed, err := o.stateMachine.Next(o.currentState, event)
+	if err != nil {
+		o.log.Warn("state transition failed",
+			zap.String("from", string(o.currentState)),
+			zap.String("event", string(event)),
+			zap.Error(err),
+		)
+		return
+	}
+	o.currentState = nextState
+	o.log.Info("state transition",
+		zap.String("to", string(nextState)),
+		zap.String("event", string(event)),
+		zap.String("reason", reason),
+		zap.Bool("readAllowed", allowed.ReadAllowed),
+		zap.Bool("writeAllowed", allowed.WriteAllowed),
+		zap.Bool("shellAllowed", allowed.ShellAllowed),
+	)
+	o.emitEvent(Event{
+		Type:      "state_change",
+		Timestamp: time.Now(),
+		Data: map[string]any{
+			"state":  string(nextState),
+			"event":  string(event),
+			"reason": reason,
+		},
+	})
+}
+
+// advanceStateForStep auto-advances the state machine based on step tool type.
+func (o *Orchestrator) advanceStateForStep(step *Step) {
+	switch {
+	case step.Tool == "planner" || step.Tool == "model":
+		o.transitionState(MachineEventInspectDone, "planning step done")
+	case step.Tool == "read_file" || step.Tool == "list_files" || step.Tool == "search_workspace":
+		if o.currentState == StateInspecting {
+			o.transitionState(MachineEventInspectDone, "inspection step done")
+		}
+	case step.Tool == "apply_patch" || step.Tool == "write_file" || step.Tool == "edit_by_anchor":
+		if o.currentState == StateEditing {
+			o.transitionState(MachineEventEditDone, "editing step done")
+		}
+	case step.Tool == "test" || step.Tool == "build" || step.Tool == "lint":
+		if o.currentState == StateVerifying {
+			o.transitionState(MachineEventVerifyPass, "verification step done")
+		}
+	}
+}
+
+// GetCurrentState returns the current state machine state.
+func (o *Orchestrator) GetCurrentState() State {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return o.currentState
 }
 
 func generateID() string {

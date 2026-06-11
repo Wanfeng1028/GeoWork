@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"sync"
 	"time"
 
@@ -24,7 +25,7 @@ func NewService() *Service {
 	return &Service{
 		procs: make(map[string]*SandboxProcess),
 		policy: &SandboxPolicy{
-			AllowedPaths:  []string{"/workspace"},
+			AllowedPaths:  []string{}, // empty = allow all paths in dev
 			BlockedCmds:   []string{"rm", "sudo", "mkfs", "fdisk"},
 			NetworkAccess: false,
 			Timeout:       300,
@@ -62,7 +63,14 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 	s.procs[proc.ID] = proc
 	s.mu.Unlock()
 
-	cmd := exec.CommandContext(context.Background(), "bash", "-c", command)
+	// Select shell based on platform
+	var shell, shellArg string
+	if runtime.GOOS == "windows" {
+		shell, shellArg = "cmd", "/C"
+	} else {
+		shell, shellArg = "bash", "-c"
+	}
+	cmd := exec.CommandContext(proc.ctx, shell, shellArg, command)
 	cmd.Dir = workspace
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -100,7 +108,7 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 	s.procs[proc.ID] = proc
 	s.mu.Unlock()
 
-	cmd := exec.CommandContext(context.Background(), "python", scriptPath)
+	cmd := exec.CommandContext(proc.ctx, "python", scriptPath)
 	cmd.Dir = workspace
 
 	for _, k := range s.policy.EnvWhitelist {
