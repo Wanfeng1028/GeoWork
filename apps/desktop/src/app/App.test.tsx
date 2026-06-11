@@ -38,8 +38,9 @@ describe('App', () => {
       </ConfigProvider>
     )
     expect(await screen.findByText('GeoWork')).toBeInTheDocument()
-    expect(screen.getByText('工作台')).toBeInTheDocument()
-    expect(screen.getByText('插件市场')).toBeInTheDocument()
-    expect(screen.getByText('模型与 API')).toBeInTheDocument()
+    expect(screen.getByText('智能体')).toBeInTheDocument()
+    expect(screen.getByText('扩展能力')).toBeInTheDocument()
+    expect(screen.getByText('知识资料')).toBeInTheDocument()
+    expect(screen.getByText('地理空间')).toBeInTheDocument()
   })
 })

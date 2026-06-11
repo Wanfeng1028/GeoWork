@@ -33,6 +33,14 @@ func NewEngine(store *Store, logger *zap.Logger, workerClient *worker.Client) *E
 	}
 }
 
+// Close releases the underlying database connection.
+func (e *Engine) Close() error {
+	if e.db != nil {
+		return e.db.Close()
+	}
+	return nil
+}
+
 // generateID creates a simple random hex ID.
 func generateID() string {
 	b := make([]byte, 8)

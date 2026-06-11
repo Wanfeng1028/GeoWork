@@ -29,11 +29,36 @@ type RouterDeps struct {
 	SandboxSvc   *sandbox.Service
 }
 
+// Router wraps http.Handler and holds resources that need explicit cleanup.
+type Router struct {
+	handler http.Handler
+	closers []func() error
+}
+
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r.handler.ServeHTTP(w, req)
+}
+
+// Close releases all resources held by the router.
+func (r *Router) Close() error {
+	var errs []error
+	for _, closer := range r.closers {
+		if err := closer(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	return nil
+}
+
 // NewRouter builds a new handler using http.ServeMux with separated handlers.
-func NewRouter(deps RouterDeps) http.Handler {
+func NewRouter(deps RouterDeps) *Router {
 	mux := http.NewServeMux()
 	bridge := NewEventBridge()
 	logger := zap.NewNop()
+	router := &Router{handler: cors(mux)}
 
 	// --- Separate handlers ---
 	hProject := newProjectHandler(deps.App)
@@ -58,12 +83,16 @@ func NewRouter(deps RouterDeps) http.Handler {
 	if err != nil {
 		logger.Error("Failed to create knowledge manager", zap.Error(err))
 		kbMgr = nil
+	} else {
+		router.closers = append(router.closers, kbMgr.Close)
 	}
 
 	fileMgr, err := file.NewFileManager(logger, filepath.Join(workspaceDir, "state", "files.db"))
 	if err != nil {
 		logger.Error("Failed to create file manager", zap.Error(err))
 		fileMgr = nil
+	} else {
+		router.closers = append(router.closers, fileMgr.Close)
 	}
 
 	hPaper := NewPaperHandler(workerClient, logger)
@@ -96,7 +125,7 @@ func NewRouter(deps RouterDeps) http.Handler {
 		http.NotFound(w, r)
 	})
 
-	return cors(mux)
+	return router
 }
 
 func cors(next http.Handler) http.Handler {

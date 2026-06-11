@@ -1,6 +1,6 @@
 // GeoWork App Providers
 
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, theme as antdTheme } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode } from 'react'
 import useSettingsStore from '../stores/settingsStore'
@@ -30,7 +30,7 @@ export function AppProviders({ children }: AppProvidersProps) {
             borderRadius: 10,
             fontFamily: '"Microsoft YaHei", "Segoe UI", system-ui, sans-serif'
           },
-          algorithm: theme === 'light-geo' ? undefined : ('darkAlgorithm' as any)
+          algorithm: theme === 'light-geo' ? undefined : antdTheme.darkAlgorithm
         }}
       >
         <div data-theme={theme}>{children}</div>

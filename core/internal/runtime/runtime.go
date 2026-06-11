@@ -215,6 +215,25 @@ func New(workspace string, workerBaseURL string) *App {
 
 func (a *App) Workspace() string { return a.workspace }
 
+// Close releases all resources held by the App, including database connections.
+func (a *App) Close() error {
+	var errs []error
+	if a.knowledgeMgr != nil {
+		if err := a.knowledgeMgr.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("close knowledge manager: %w", err))
+		}
+	}
+	if a.agentEngine != nil {
+		if err := a.agentEngine.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("close agent engine: %w", err))
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
 // WorkerClient returns the underlying Python worker client.
 func (a *App) WorkerClient() *worker.Client { return a.worker }
 

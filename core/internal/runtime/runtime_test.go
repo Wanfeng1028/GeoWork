@@ -24,6 +24,7 @@ func TestProjectTaskSkillPluginUsageFlow(t *testing.T) {
 	defer worker.Close()
 
 	app := New(t.TempDir(), worker.URL)
+	defer app.Close()
 	project, err := app.CreateProject("Course NDVI", "Analysis")
 	if err != nil {
 		t.Fatal(err)

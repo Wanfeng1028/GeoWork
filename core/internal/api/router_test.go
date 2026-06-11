@@ -21,7 +21,9 @@ func TestRouterV1Endpoints(t *testing.T) {
 	defer worker.Close()
 
 	app := gruntime.New(t.TempDir(), worker.URL)
+	defer app.Close()
 	router := NewRouter(RouterDeps{App: app})
+	defer router.Close()
 
 	projectID := postJSON(t, router, "/api/projects", `{"name":"Router Project","mode":"Research"}`, "id")
 	taskID := postJSON(t, router, "/api/tasks", `{"projectId":"`+projectID+`","prompt":"论文 NDVI 综述","mode":"Research"}`, "id")
