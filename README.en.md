@@ -21,6 +21,14 @@
 
 ---
 
+## Current Version Status
+
+> **v0.4.x-dev** — GeoWork is currently in a development release stage, suitable for developers to start locally, test, and continue development. Some capabilities remain in dev state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. Please do not treat the current version as production-ready.
+>
+> See [Dev Version Checklist](docs/DEV_VERSION_CHECKLIST.md) for details.
+
+---
+
 ## What GeoWork Can Do
 
 Tackle complex geospatial and scientific workflows through conversation — empowering anyone to analyze the planet 🌏, produce professional maps, and automate research pipelines.

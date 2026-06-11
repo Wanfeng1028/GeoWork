@@ -110,3 +110,134 @@ select {
 .gw-animate-glow {
   animation: gw-glow 2s ease-in-out infinite;
 }
+
+// === DevBadge ===
+.dev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  user-select: none;
+
+  &--short {
+    padding: 1px 6px;
+    background: var(--gw-accent-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &--full {
+    padding: 4px 10px;
+    background: var(--gw-accent-primary);
+    color: #fff;
+    font-weight: 600;
+
+    .dev-badge__version {
+      font-size: 11px;
+    }
+
+    .dev-badge__label {
+      font-size: 10px;
+      opacity: 0.85;
+    }
+  }
+}
+
+// === EmptyState ===
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-24);
+  color: var(--gw-text-tertiary);
+
+  .empty-state__icon {
+    font-size: 40px;
+    opacity: 0.45;
+  }
+
+  .empty-state__title {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gw-text-secondary);
+  }
+
+  .empty-state__desc {
+    margin: 0;
+    font-size: 12px;
+    text-align: center;
+    max-width: 280px;
+  }
+}
+
+// === ErrorState ===
+.error-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-space-8);
+  padding: var(--gw-space-24);
+  color: var(--gw-text-secondary);
+
+  .error-state__icon {
+    font-size: 36px;
+    opacity: 0.7;
+  }
+
+  .error-state__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gw-text-primary);
+  }
+
+  .error-state__message {
+    margin: 0;
+    font-size: 12px;
+    text-align: center;
+    max-width: 320px;
+  }
+
+  .error-state__retry {
+    margin-top: var(--gw-space-8);
+    padding: 4px 16px;
+    border: 1px solid var(--gw-border-subtle);
+    border-radius: 4px;
+    background: var(--gw-bg-subtle);
+    color: var(--gw-text-primary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--gw-bg-hover);
+    }
+  }
+}
+
+// === DevNotice (inline banner) ===
+.dev-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--gw-bg-subtle);
+  border-bottom: 1px solid var(--gw-border-subtle);
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+
+  .dev-notice__badge {
+    padding: 1px 5px;
+    background: var(--gw-accent-primary);
+    color: #fff;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+}
