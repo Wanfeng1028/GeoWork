@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+// scanTime converts an int64 unix timestamp to time.Time, returning the zero time on error.
+func scanTime(val interface{}) time.Time {
+	if v, ok := val.(int64); ok {
+		return time.Unix(v, 0)
+	}
+	return time.Time{}
+}
+
 // ===========================
 // User repository
 // ===========================
@@ -21,37 +29,49 @@ func (s *Store) CreateUser(u *User) error {
 	_, err := s.db.Exec(`
 		INSERT INTO users (id, email, name, avatar_url, plan, password_hash, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		u.ID, u.Email, u.Name, u.AvatarURL, u.Plan, u.PasswordHash, u.CreatedAt.Unix(), u.UpdatedAt.Unix(),
+		u.ID, u.Email, u.Name, u.AvatarURL, u.Plan, u.PasswordHash, now, now,
 	)
 	return err
 }
 
 func (s *Store) GetUserByEmail(email string) (*User, error) {
 	u := &User{}
+	var created, updated int64
 	err := s.db.QueryRow(`
 		SELECT id, email, name, avatar_url, plan, password_hash, created_at, updated_at
 		FROM users WHERE email = ?`, email).Scan(
 		&u.ID, &u.Email, &u.Name, &u.AvatarURL, &u.Plan, &u.PasswordHash,
-		&u.CreatedAt, &u.UpdatedAt,
+		&created, &updated,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return u, err
+	if err != nil {
+		return nil, err
+	}
+	u.CreatedAt = scanTime(created)
+	u.UpdatedAt = scanTime(updated)
+	return u, nil
 }
 
 func (s *Store) GetUserByID(id string) (*User, error) {
 	u := &User{}
+	var created, updated int64
 	err := s.db.QueryRow(`
 		SELECT id, email, name, avatar_url, plan, password_hash, created_at, updated_at
 		FROM users WHERE id = ?`, id).Scan(
 		&u.ID, &u.Email, &u.Name, &u.AvatarURL, &u.Plan, &u.PasswordHash,
-		&u.CreatedAt, &u.UpdatedAt,
+		&created, &updated,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return u, err
+	if err != nil {
+		return nil, err
+	}
+	u.CreatedAt = scanTime(created)
+	u.UpdatedAt = scanTime(updated)
+	return u, nil
 }
 
 func (s *Store) UpdateUser(u *User) error {
@@ -78,14 +98,20 @@ func (s *Store) CreateToken(t *Token) error {
 
 func (s *Store) GetToken(id string) (*Token, error) {
 	t := &Token{}
+	var expiresAt, createdAt int64
 	err := s.db.QueryRow(`
 		SELECT id, user_id, type, expires_at, created_at FROM tokens WHERE id = ?`, id).Scan(
-		&t.ID, &t.UserID, &t.Type, &t.ExpiresAt, &t.CreatedAt,
+		&t.ID, &t.UserID, &t.Type, &expiresAt, &createdAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
-	return t, err
+	if err != nil {
+		return nil, err
+	}
+	t.ExpiresAt = scanTime(expiresAt)
+	t.CreatedAt = scanTime(createdAt)
+	return t, nil
 }
 
 func (s *Store) DeleteToken(id string) error {
