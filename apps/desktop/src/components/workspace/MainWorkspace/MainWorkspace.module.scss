@@ -1,8 +1,8 @@
 // GeoWork MainWorkspace Styles
 
 .main {
-  grid-column: 2;
-  grid-row: 2;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;

@@ -1,9 +1,8 @@
 // GeoWork RightDock Styles
 
 .dock {
-  grid-column: 4;
-  grid-row: 2;
   width: var(--right-dock-width);
+  min-width: var(--right-dock-width);
   border-left: 1px solid var(--gw-border-subtle);
   background: var(--gw-bg-sidebar);
   display: flex;

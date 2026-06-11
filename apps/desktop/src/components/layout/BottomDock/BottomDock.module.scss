@@ -1,8 +1,8 @@
 // GeoWork BottomDock Styles
 
 .dock {
-  grid-column: 1 / -1;
   height: var(--bottom-height);
+  max-height: 40vh;
   border-top: 1px solid var(--gw-border-subtle);
   background: var(--gw-bg-sidebar);
   display: flex;

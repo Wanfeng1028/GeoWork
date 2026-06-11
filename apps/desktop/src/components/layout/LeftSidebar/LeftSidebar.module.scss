@@ -1,7 +1,8 @@
 // GeoWork LeftSidebar Styles
 
 .sidebar {
-  grid-row: 2 / 4;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
   background: var(--gw-bg-sidebar);
   border-right: 1px solid var(--gw-border-subtle);
   display: flex;
@@ -11,8 +12,8 @@
 }
 
 .sidebarCollapsed {
-  grid-row: 2 / 4;
   width: var(--sidebar-collapsed-width);
+  min-width: var(--sidebar-collapsed-width);
   background: var(--gw-bg-sidebar);
   border-right: 1px solid var(--gw-border-subtle);
   display: flex;

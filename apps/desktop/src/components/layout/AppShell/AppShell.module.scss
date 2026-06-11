@@ -3,32 +3,30 @@
 .shell {
   --topbar-height: 48px;
   --sidebar-width: 232px;
-  --sidebar-collapsed-width: 48px;
+  --sidebar-collapsed-width: 56px;
   --bottom-height: 220px;
   --minimap-width: 4px;
   --minimap-expanded-width: 200px;
   --right-dock-width: 320px;
   
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--minimap-width) var(--right-dock-width);
-  grid-template-rows: var(--topbar-height) 1fr var(--bottom-height);
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--gw-bg-window);
   color: var(--gw-text-primary);
+  overflow: hidden;
 }
 
 .body {
-  display: grid;
-  grid-template-columns: 1fr var(--minimap-width) var(--right-dock-width);
+  flex: 1;
+  display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
 @media (max-width: 1400px) {
   .shell {
-    grid-template-columns: var(--sidebar-width) 1fr var(--right-dock-width);
-  }
-  
-  .body {
-    grid-template-columns: 1fr var(--right-dock-width);
+    --right-dock-width: 280px;
   }
 }
