@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -214,14 +215,27 @@ func (s *Service) isPathAllowed(path string) bool {
 		return true // dev mode: allow caller-provided workspace
 	}
 
+	// Clean and resolve the path
+	cleanPath := filepath.Clean(path)
+
 	for _, allowed := range s.policy.AllowedPaths {
-		if path == allowed {
+		// Clean the allowed path too
+		cleanAllowed := filepath.Clean(allowed)
+
+		// Exact match after cleaning
+		if cleanPath == cleanAllowed {
 			return true
 		}
-		// support both / and \ as path separators
-		prefix := allowed + "/"
-		prefixWin := allowed + "\\"
-		if strings.HasPrefix(path, prefix) || strings.HasPrefix(path, prefixWin) {
+
+		// Use filepath.Rel to safely check if path is under allowed directory
+		rel, err := filepath.Rel(cleanAllowed, cleanPath)
+		if err != nil {
+			continue // paths on different drives on Windows
+		}
+
+		// rel must not start with ".." (meaning path is under allowed dir)
+		// and must not be "." (which would mean they're the same, already handled above)
+		if !strings.HasPrefix(rel, "..") && rel != "." {
 			return true
 		}
 	}
