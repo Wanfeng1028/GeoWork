@@ -221,9 +221,11 @@ func (s *Store) GetUsageByUser(userID string) ([]*UsageEvent, error) {
 	var events []*UsageEvent
 	for rows.Next() {
 		e := &UsageEvent{}
-		if err := rows.Scan(&e.ID, &e.UserID, &e.TeamID, &e.Type, &e.Amount, &e.Model, &e.Timestamp, &e.SpeedMultiplier); err != nil {
+		var timestamp int64
+		if err := rows.Scan(&e.ID, &e.UserID, &e.TeamID, &e.Type, &e.Amount, &e.Model, &timestamp, &e.SpeedMultiplier); err != nil {
 			return nil, err
 		}
+		e.Timestamp = scanTime(timestamp)
 		events = append(events, e)
 	}
 	return events, rows.Err()
