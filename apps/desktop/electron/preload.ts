@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('geowork', {
     revealInFileExplorer: (filePath: string) => ipcRenderer.invoke('desktop:revealInFileExplorer', filePath),
     openExternal: (url: string) => ipcRenderer.invoke('desktop:openExternal', url),
     openLocalApp: (appName: string) => ipcRenderer.invoke('desktop:openLocalApp', appName),
+    minimizeWindow: () => ipcRenderer.invoke('windows:minimize'),
+    toggleMaximizeWindow: () => ipcRenderer.invoke('windows:maximize'),
+    closeWindow: () => ipcRenderer.invoke('windows:close'),
+    isWindowMaximized: () => ipcRenderer.invoke('windows:isMaximized'),
   },
 
   // Runtime (Go Core API via Electron IPC)

@@ -139,7 +139,7 @@ export function TopBar() {
       <div className="h-full [-webkit-app-region:drag]" />
 
       {/* Right cluster */}
-      <div className="flex items-center justify-end h-full min-w-0 [-webkit-app-region:no-drag]">
+      <div className="flex items-center justify-end h-full flex-shrink-0 [-webkit-app-region:no-drag]">
         {/* Feature buttons group - can shrink */}
         <div className="flex items-center gap-2 min-w-0 mr-1">
           {/* GitHub Star */}

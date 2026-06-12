@@ -6,6 +6,7 @@ import { registerRuntimeIPC } from './ipc/runtimeIpc'
 import { registerSystemIPC } from './ipc/systemIpc'
 import { registerClipboardIPC } from './ipc/clipboardIpc'
 import { registerNotificationIPC } from './ipc/notificationIpc'
+import registerWindows from './ipc/windows'
 import { registerPermissionForwarder } from './security/permission-forwarder'
 import { initTray } from './local/tray'
 import { buildMenu, getDefaultMenu } from './local/menu'
@@ -55,6 +56,7 @@ async function createWindow() {
   registerSystemIPC(mainWindow)
   registerClipboardIPC()
   registerNotificationIPC()
+  registerWindows(mainWindow)
   registerPermissionForwarder(mainWindow)
   registerLoggingIPC()
 
