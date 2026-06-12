@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Card, Descriptions, Empty, Spin, Tag } from 'antd'
-import { DownloadOutlined, FileImageOutlined, FileTextOutlined } from '@ant-design/icons'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Spinner } from '../../components/ui/spinner'
+import { Empty } from '../../components/ui/empty'
+import { Download, FileImage, FileText } from 'lucide-react'
 import type { FileNode } from '../../services/fileService'
 import { fileService } from '../../services/fileService'
 import styles from './FilePreview.module.scss'
 
-// Image extensions
 const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.tif', '.tiff']
-// Text/code extensions
 const TEXT_EXTS = ['.txt', '.md', '.py', '.js', '.jsx', '.ts', '.tsx', '.html', '.css', '.json', '.xml', '.csv', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.sh', '.bat', '.ps1', '.sql', '.r', '.R', '.log']
-// Geo extensions
 const GEO_EXTS = ['.geojson', '.json', '.shp', '.shx', '.dbf', '.prj', '.kml', '.kmz', '.gpx', '.osm']
 
 interface FilePreviewProps {
@@ -21,7 +22,6 @@ export function FilePreview({ file }: FilePreviewProps) {
   const [textContent, setTextContent] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (!file) {
@@ -33,8 +33,6 @@ export function FilePreview({ file }: FilePreviewProps) {
 
     setLoading(true)
     setError(null)
-
-    const ext = getFileExtension(file.name)
 
     if (isImageFile(file)) {
       loadFileContent(file)
@@ -77,7 +75,6 @@ export function FilePreview({ file }: FilePreviewProps) {
       if (!res.ok) throw new Error(`Failed to load file: ${res.statusText}`)
       return await res.blob()
     } catch {
-      // Fallback: if the file is already available locally, use it
       throw new Error('Unable to load file content')
     }
   }
@@ -102,7 +99,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (loading) {
     return (
       <div className={styles.previewLoading}>
-        <Spin size="large" tip="加载中..." />
+        <Spinner className="w-8 h-8" />
       </div>
     )
   }
@@ -117,24 +114,22 @@ export function FilePreview({ file }: FilePreviewProps) {
 
   return (
     <div className={styles.previewContainer}>
-      {/* File info header */}
       <div className={styles.previewHeader}>
         <div className={styles.previewFileInfo}>
           {getFileIcon(file)}
           <span className={styles.previewFileName}>{file.name}</span>
-          {file.mimeType && <Tag>{file.mimeType}</Tag>}
+          {file.mimeType && <Badge variant="outline">{file.mimeType}</Badge>}
           {file.type === 'file' && file.size !== undefined && (
-            <Tag color="blue">{formatFileSize(file.size)}</Tag>
+            <Badge variant="secondary">{formatFileSize(file.size)}</Badge>
           )}
         </div>
         {file.type === 'file' && (
-          <Button icon={<DownloadOutlined />} onClick={handleDownload}>
-            下载
+          <Button size="sm" variant="outline" onClick={handleDownload}>
+            <Download className="w-4 h-4 mr-1" /> 下载
           </Button>
         )}
       </div>
 
-      {/* Preview area */}
       <div className={styles.previewBody}>
         {imageSrc && <img src={imageSrc} alt={file.name} className={styles.previewImage} />}
         {textContent !== null && (
@@ -145,22 +140,20 @@ export function FilePreview({ file }: FilePreviewProps) {
         {!imageSrc && textContent === null && (
           <div className={styles.previewBinary}>
             <Empty description="该文件类型暂不支持预览" />
-            <Descriptions size="small" column={1} bordered>
-              <Descriptions.Item label="文件名">{file.name}</Descriptions.Item>
-              <Descriptions.Item label="类型">{file.type}</Descriptions.Item>
-              {file.mimeType && <Descriptions.Item label="MIME">{file.mimeType}</Descriptions.Item>}
-              {file.size !== undefined && <Descriptions.Item label="大小">{formatFileSize(file.size)}</Descriptions.Item>}
-              {file.modifiedAt && <Descriptions.Item label="修改时间">{new Date(file.modifiedAt).toLocaleString()}</Descriptions.Item>}
-              {file.path && <Descriptions.Item label="路径">{file.path}</Descriptions.Item>}
-            </Descriptions>
+            <div className="grid grid-cols-1 gap-1 border rounded p-3 mt-4 text-sm">
+              <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">文件名</span><span>{file.name}</span></div>
+              <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">类型</span><span>{file.type}</span></div>
+              {file.mimeType && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">MIME</span><span>{file.mimeType}</span></div>}
+              {file.size !== undefined && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">大小</span><span>{formatFileSize(file.size)}</span></div>}
+              {file.modifiedAt && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">修改时间</span><span>{new Date(file.modifiedAt).toLocaleString()}</span></div>}
+              {file.path && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">路径</span><span>{file.path}</span></div>}
+            </div>
           </div>
         )}
       </div>
     </div>
   )
 }
-
-// --- Helpers ---
 
 function getFileExtension(name: string): string {
   const dot = name.lastIndexOf('.')
@@ -187,13 +180,13 @@ function isGeoFile(node: FileNode): boolean {
 
 function getFileIcon(node: FileNode) {
   if (node.type === 'folder') {
-    return <FileTextOutlined className={styles.iconFolder} />
+    return <FileText className={styles.iconFolder} />
   }
   const ext = getFileExtension(node.name)
   if (IMAGE_EXTS.includes(ext)) {
-    return <FileImageOutlined className={styles.iconImage} />
+    return <FileImage className={styles.iconImage} />
   }
-  return <FileTextOutlined className={styles.iconFile} />
+  return <FileText className={styles.iconFile} />
 }
 
 function formatFileSize(bytes: number): string {

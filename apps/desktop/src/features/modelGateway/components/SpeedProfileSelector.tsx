@@ -1,8 +1,9 @@
 // GeoWork Model Gateway - Speed Profile Selector
 // Visual selector for speed/rate-limit profiles
 
-import { Tag, Tooltip } from 'antd'
-import { WarningOutlined } from '@ant-design/icons'
+import { Badge } from '../../../components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
+import { AlertTriangle } from 'lucide-react'
 import useModelGatewayStore from '../modelGatewayStore'
 import styles from './SpeedProfileSelector.module.scss'
 
@@ -30,32 +31,33 @@ export function SpeedProfileSelector() {
           const isTurbo = profile.tokenBudgetMultiplier >= 2
 
           return (
-            <Tooltip
-              key={profile.id}
-              title={PROFILE_DESCRIPTIONS[profile.id] || profile.name}
-              overlayInnerStyle={{ maxWidth: 240 }}
-            >
-              <div
-                className={`${styles.option} ${isSelected ? styles.selected : ''} ${isTurbo ? styles.turbo : ''}`}
-                onClick={() => setSelectedSpeedProfile(profile.id)}
-              >
-                <div className={styles.optionHeader}>
-                  <span className={styles.profileName}>
-                    {profile.name}
-                  </span>
-                  {isHighCost && !isSelected && (
-                    <WarningOutlined className={styles.warnIcon} />
-                  )}
+            <Tooltip key={profile.id}>
+              <TooltipTrigger asChild>
+                <div
+                  className={`${styles.option} ${isSelected ? styles.selected : ''} ${isTurbo ? styles.turbo : ''}`}
+                  onClick={() => setSelectedSpeedProfile(profile.id)}
+                >
+                  <div className={styles.optionHeader}>
+                    <span className={styles.profileName}>
+                      {profile.name}
+                    </span>
+                    {isHighCost && !isSelected && (
+                      <AlertTriangle className={styles.warnIcon} />
+                    )}
+                  </div>
+                  <div className={styles.optionMeta}>
+                    <span className={styles.metaItem}>
+                      {profile.maxParallelRequests} 并发
+                    </span>
+                    <span className={`${styles.costBadge} ${isHighCost ? styles.costHigh : ''}`}>
+                      ×{profile.tokenBudgetMultiplier.toFixed(1)}
+                    </span>
+                  </div>
                 </div>
-                <div className={styles.optionMeta}>
-                  <span className={styles.metaItem}>
-                    {profile.maxParallelRequests} 并发
-                  </span>
-                  <span className={`${styles.costBadge} ${isHighCost ? styles.costHigh : ''}`}>
-                    ×{profile.tokenBudgetMultiplier.toFixed(1)}
-                  </span>
-                </div>
-              </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[240px]">
+                {PROFILE_DESCRIPTIONS[profile.id] || profile.name}
+              </TooltipContent>
             </Tooltip>
           )
         })}

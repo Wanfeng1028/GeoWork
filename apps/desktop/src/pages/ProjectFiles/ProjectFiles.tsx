@@ -1,30 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
+import { toast } from 'sonner'
 import {
-  Button,
-  Breadcrumb,
-  Card,
-  Input,
-  message,
-  Modal,
-  Popconfirm,
-  Space,
-  Tree,
+  FolderPlus,
+  FolderOpen,
+  Folder,
+  RefreshCw,
+  Search,
   Upload
-} from 'antd'
-import {
-  FolderAddOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  UploadOutlined
-} from '@ant-design/icons'
+} from 'lucide-react'
 import type { FileNode } from '../../services/fileService'
 import { useProjectFilesStore } from './store'
 import { FilePreview } from './FilePreview'
 import styles from './ProjectFiles.module.scss'
-
-const { Dragger } = Upload
 
 export function ProjectFiles() {
   const {
@@ -33,7 +25,6 @@ export function ProjectFiles() {
     breadcrumbs,
     isLoading,
     error,
-    setTreeData,
     setSelectedFile,
     setBreadcrumbs,
     createFolder,
@@ -43,9 +34,8 @@ export function ProjectFiles() {
     refreshTree
   } = useProjectFilesStore()
 
-  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
   const [searchValue, setSearchValue] = useState('')
-  const [autoExpandParent, setAutoExpandParent] = useState(true)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode | null } | null>(null)
   const [renameModal, setRenameModal] = useState<{ open: boolean; node: FileNode | null; newName: string }>({
     open: false,
@@ -60,18 +50,16 @@ export function ProjectFiles() {
   const dragCounterRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Initial load
   useEffect(() => {
-    refreshTree().catch(() => message.error('Failed to load project files'))
+    refreshTree().catch(() => toast.error('Failed to load project files'))
   }, [])
 
-  // Build expanded keys from tree data
   useEffect(() => {
-    const keys: React.Key[] = []
+    const keys = new Set<string>()
     const collectKeys = (nodes: FileNode[]) => {
       for (const node of nodes) {
         if (node.children && node.children.length > 0) {
-          keys.push(node.id)
+          keys.add(node.id)
           collectKeys(node.children)
         }
       }
@@ -80,7 +68,6 @@ export function ProjectFiles() {
     setExpandedKeys(keys)
   }, [treeData])
 
-  // Filter tree data by search value
   const filteredTreeData = useMemo(() => {
     if (!searchValue) return treeData
     const filterNodes = (nodes: FileNode[]): FileNode[] => {
@@ -96,35 +83,17 @@ export function ProjectFiles() {
     return filterNodes(treeData)
   }, [treeData, searchValue])
 
-  // Handle tree select
-  const handleTreeSelect = (_selectedKeys: React.Key[], info: any) => {
-    const node = findNodeById(treeData, String(info.node.key))
-    setSelectedFile(node || null)
-    if (node) {
-      updateBreadcrumbs(node)
-    }
+  const handleTreeSelect = (node: FileNode) => {
+    setSelectedFile(node)
+    updateBreadcrumbs(node)
   }
 
-  // Handle tree expand
-  const handleTreeExpand = (keys: React.Key[]) => {
-    setExpandedKeys(keys)
-    setAutoExpandParent(false)
-  }
-
-  // Handle context menu
-  const handleTreeContextMenu = (e: React.MouseEvent, node: FileNode) => {
-    e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY, node })
-  }
-
-  // Close context menu on click
   useEffect(() => {
     const closeMenu = () => setContextMenu(null)
     document.addEventListener('click', closeMenu)
     return () => document.removeEventListener('click', closeMenu)
   }, [])
 
-  // Context menu actions
   const handleContextAction = useCallback((action: string) => {
     if (!contextMenu?.node) return
     const node = contextMenu.node
@@ -134,63 +103,45 @@ export function ProjectFiles() {
     } else if (action === 'rename') {
       setRenameModal({ open: true, node, newName: node.name })
     } else if (action === 'delete') {
-      Modal.confirm({
-        title: '确认删除',
-        content: `确定要删除 "${node.name}" 吗？此操作不可撤销。`,
-        okText: '删除',
-        okButtonProps: { danger: true },
-        cancelText: '取消',
-        onOk: async () => {
-          try {
-            await deleteNode(node.id)
-            message.success('删除成功')
-          } catch {
-            message.error('删除失败')
-          }
-        }
-      })
+      if (window.confirm(`确定要删除 "${node.name}" 吗？此操作不可撤销。`)) {
+        deleteNode(node.id).then(() => toast.success('删除成功')).catch(() => toast.error('删除失败'))
+      }
     }
     setContextMenu(null)
   }, [contextMenu, deleteNode])
 
-  // Handle rename submit
   const handleRenameSubmit = useCallback(async () => {
     if (!renameModal.node || !renameModal.newName.trim()) return
     try {
       await renameNode(renameModal.node.id, renameModal.newName.trim())
-      message.success('重命名成功')
+      toast.success('重命名成功')
       setRenameModal({ open: false, node: null, newName: '' })
     } catch {
-      message.error('重命名失败')
+      toast.error('重命名失败')
     }
   }, [renameModal, renameNode])
 
-  // Handle create folder submit
   const handleCreateFolderSubmit = useCallback(async () => {
-    // We need a name input - use a simple prompt for now
     const name = prompt('请输入文件夹名称:')
     if (!name || !name.trim()) return
     try {
       await createFolder(createFolderModal.parentId, name.trim())
-      message.success('创建成功')
+      toast.success('创建成功')
       setCreateFolderModal({ open: false, parentId: '' })
     } catch {
-      message.error('创建失败')
+      toast.error('创建失败')
     }
   }, [createFolder, createFolderModal.parentId])
 
-  // Handle file upload
   const handleFileUpload = useCallback(async (file: File) => {
     try {
       await uploadFile('', file)
-      message.success(`文件 "${file.name}" 上传成功`)
+      toast.success(`文件 "${file.name}" 上传成功`)
     } catch {
-      message.error(`文件 "${file.name}" 上传失败`)
+      toast.error(`文件 "${file.name}" 上传失败`)
     }
-    return false // prevent default upload
   }, [uploadFile])
 
-  // Handle drag and drop
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -202,9 +153,7 @@ export function ProjectFiles() {
     e.preventDefault()
     e.stopPropagation()
     dragCounterRef.current--
-    if (dragCounterRef.current === 0) {
-      setDragOver(false)
-    }
+    if (dragCounterRef.current === 0) setDragOver(false)
   }, [])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -217,26 +166,16 @@ export function ProjectFiles() {
     e.stopPropagation()
     setDragOver(false)
     dragCounterRef.current = 0
-
-    const files = Array.from(e.dataTransfer.files)
-    for (const file of files) {
-      handleFileUpload(file)
-    }
+    Array.from(e.dataTransfer.files).forEach(handleFileUpload)
   }, [handleFileUpload])
 
-  // Build breadcrumbs
   const updateBreadcrumbs = (node: FileNode) => {
     const crumbs: string[] = []
     const collectPath = (nodes: FileNode[], targetId: string, path: string[]): boolean => {
       for (const n of nodes) {
         const currentPath = path.length > 0 ? `${path[path.length - 1]} / ${n.name}` : n.name
-        if (n.id === targetId) {
-          crumbs.push(...path, n.name)
-          return true
-        }
-        if (n.children && collectPath(n.children, targetId, [...path, n.name])) {
-          return true
-        }
+        if (n.id === targetId) { crumbs.push(...path, n.name); return true }
+        if (n.children && collectPath(n.children, targetId, [...path, n.name])) return true
       }
       return false
     }
@@ -244,7 +183,6 @@ export function ProjectFiles() {
     setBreadcrumbs(crumbs)
   }
 
-  // Find node by ID in tree
   const findNodeById = (nodes: FileNode[], id: string): FileNode | null => {
     for (const node of nodes) {
       if (node.id === id) return node
@@ -256,49 +194,51 @@ export function ProjectFiles() {
     return null
   }
 
-  // Render tree node title
-  const renderTreeNode = (node: FileNode) => (
-    <div className={styles.treeNode} onContextMenu={(e) => handleTreeContextMenu(e, node)}>
-      {node.type === 'folder' ? <FolderOutlined className={styles.treeIcon} /> : <FolderOpenOutlined className={styles.treeIcon} />}
-      <span>{node.name}</span>
-    </div>
-  )
+  const renderTreeNode = (node: FileNode, depth: number = 0) => {
+    const isExpanded = expandedKeys.has(node.id)
+    const hasChildren = node.children && node.children.length > 0
 
-  // Convert tree data to Ant Design Tree format
-  const transformTreeData = (nodes: FileNode[]): Array<{key: string; title: React.ReactNode; isLeaf: boolean; children?: Array<{key: string; title: React.ReactNode; isLeaf: boolean; children?: Array<any>}>}> => {
-    return nodes.map((node) => ({
-      key: node.id,
-      title: renderTreeNode(node),
-      isLeaf: node.type === 'file',
-      children: node.children ? transformTreeData(node.children) : undefined
-    }))
+    return (
+      <div key={node.id}>
+        <div
+          className={`${styles.treeNode} cursor-pointer hover:bg-muted/50 px-2 py-1 rounded`}
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          onClick={() => handleTreeSelect(node)}
+          onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, node }) }}
+        >
+          {hasChildren && (
+            <span className="mr-1 text-xs" onClick={(e) => { e.stopPropagation(); setExpandedKeys(prev => { const next = new Set(prev); if (next.has(node.id)) next.delete(node.id); else next.add(node.id); return next }) }}>
+              {isExpanded ? '▼' : '▶'}
+            </span>
+          )}
+          {node.type === 'folder' ? <Folder className={styles.treeIcon} /> : <FolderOpen className={styles.treeIcon} />}
+          <span>{node.name}</span>
+        </div>
+        {hasChildren && isExpanded && (
+          <div>
+            {node.children!.map(child => renderTreeNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
     <div className={styles.container}>
       {/* Top toolbar */}
       <div className={styles.toolbar}>
-        <Space>
-          <Button
-            type="primary"
-            icon={<FolderAddOutlined />}
-            onClick={() => setCreateFolderModal({ open: true, parentId: '' })}
-            disabled={isLoading}
-          >
-            新建文件夹
+        <div className="flex gap-2">
+          <Button onClick={() => setCreateFolderModal({ open: true, parentId: '' })} disabled={isLoading}>
+            <FolderPlus className="w-4 h-4 mr-1" /> 新建文件夹
           </Button>
-          <Button
-            icon={<UploadOutlined />}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-          >
-            上传文件
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
+            <Upload className="w-4 h-4 mr-1" /> 上传文件
           </Button>
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={(e) => {
               if (e.target.files) {
                 Array.from(e.target.files).forEach(handleFileUpload)
@@ -306,30 +246,29 @@ export function ProjectFiles() {
               }
             }}
           />
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => refreshTree()}
-            loading={isLoading}
-          >
-            刷新
+          <Button variant="outline" onClick={() => refreshTree()} disabled={isLoading}>
+            <RefreshCw className="w-4 h-4 mr-1" /> 刷新
           </Button>
-        </Space>
-        <Space>
-          <Input
-            placeholder="搜索文件..."
-            prefix={<SearchOutlined />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            style={{ width: 200 }}
-            allowClear
-          />
-        </Space>
+        </div>
+        <Input
+          placeholder="搜索文件..."
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          className="w-[200px]"
+        />
       </div>
 
       {/* Breadcrumb */}
       {breadcrumbs.length > 0 && (
         <div className={styles.breadcrumb}>
-          <Breadcrumb items={breadcrumbs.map((crumb, i) => ({ title: crumb }))} />
+          <div className="flex items-center gap-1 text-sm">
+            {breadcrumbs.map((crumb, i) => (
+              <span key={i}>
+                {i > 0 && <span className="mx-1 text-muted-foreground">/</span>}
+                {crumb}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -341,31 +280,32 @@ export function ProjectFiles() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {/* Drag overlay */}
         {dragOver && (
           <div className={styles.dragOverlay}>
-            <UploadOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+            <Upload className="w-12 h-12 text-blue-500" />
             <p>拖放文件到此处上传</p>
           </div>
         )}
 
         <div className={styles.leftPanel}>
-          <Card size="small" title="项目文件树" className={styles.treeCard}>
-            <Tree
-              treeData={transformTreeData(filteredTreeData)}
-              expandedKeys={expandedKeys}
-              autoExpandParent={autoExpandParent}
-              onSelect={handleTreeSelect}
-              onExpand={handleTreeExpand}
-              showLine
-              showIcon
-            />
+          <Card>
+            <CardHeader>
+              <CardTitle>项目文件树</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {filteredTreeData.map(node => renderTreeNode(node))}
+            </CardContent>
           </Card>
         </div>
 
         <div className={styles.rightPanel}>
-          <Card size="small" title="文件预览" className={styles.previewCard}>
-            <FilePreview file={selectedFile} />
+          <Card>
+            <CardHeader>
+              <CardTitle>文件预览</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FilePreview file={selectedFile} />
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -376,89 +316,67 @@ export function ProjectFiles() {
           className={styles.contextMenu}
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <div
-            className={styles.contextMenuItem}
-            onClick={() => handleContextAction('createFolder')}
-          >
+          <div className={styles.contextMenuItem} onClick={() => handleContextAction('createFolder')}>
             新建文件夹
           </div>
-          {contextMenu.node && contextMenu.node.type === 'folder' && (
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => handleContextAction('createFolder')}
-            >
-              在此处新建文件夹
-            </div>
-          )}
           {contextMenu.node && contextMenu.node.type === 'file' && (
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <div className={styles.contextMenuItem} onClick={() => fileInputRef.current?.click()}>
               上传文件到此文件夹
             </div>
           )}
           {contextMenu.node && (
             <>
               <div className={styles.contextMenuDivider} />
-              <div
-                className={styles.contextMenuItem}
-                onClick={() => handleContextAction('rename')}
-              >
+              <div className={styles.contextMenuItem} onClick={() => handleContextAction('rename')}>
                 重命名
               </div>
-              <Popconfirm
-                title="确认删除"
-                description={`确定要删除 "${contextMenu.node.name}" 吗？`}
-                onConfirm={() => handleContextAction('delete')}
-                okText="删除"
-                okButtonProps={{ danger: true }}
-                cancelText="取消"
-              >
-                <div className={`${styles.contextMenuItem} ${styles.contextMenuDelete}`}>
-                  删除
-                </div>
-              </Popconfirm>
+              <div className={`${styles.contextMenuItem} ${styles.contextMenuDelete}`} onClick={() => handleContextAction('delete')}>
+                删除
+              </div>
             </>
           )}
         </div>
       )}
 
       {/* Rename modal */}
-      <Modal
-        title="重命名"
-        open={renameModal.open}
-        onOk={handleRenameSubmit}
-        onCancel={() => setRenameModal({ open: false, node: null, newName: '' })}
-        okText="确定"
-        cancelText="取消"
-      >
-        <Input
-          value={renameModal.newName}
-          onChange={(e) => setRenameModal({ ...renameModal, newName: e.target.value })}
-          onPressEnter={handleRenameSubmit}
-          autoFocus
-        />
-      </Modal>
+      <Dialog open={renameModal.open} onOpenChange={(open) => setRenameModal({ ...renameModal, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重命名</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={renameModal.newName}
+            onChange={(e) => setRenameModal({ ...renameModal, newName: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSubmit() }}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameModal({ open: false, node: null, newName: '' })}>取消</Button>
+            <Button onClick={handleRenameSubmit}>确定</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create folder modal */}
-      <Modal
-        title="新建文件夹"
-        open={createFolderModal.open}
-        onOk={handleCreateFolderSubmit}
-        onCancel={() => setCreateFolderModal({ open: false, parentId: '' })}
-        okText="确定"
-        cancelText="取消"
-      >
-        <p>文件夹将创建在: {createFolderModal.parentId ? '指定位置' : '项目根目录'}</p>
-        <p>请在右键菜单中输入文件夹名称</p>
-      </Modal>
+      <Dialog open={createFolderModal.open} onOpenChange={(open) => setCreateFolderModal({ ...createFolderModal, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建文件夹</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">文件夹将创建在: {createFolderModal.parentId ? '指定位置' : '项目根目录'}</p>
+          <p className="text-sm text-muted-foreground">请在右键菜单中输入文件夹名称</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateFolderModal({ open: false, parentId: '' })}>取消</Button>
+            <Button onClick={handleCreateFolderSubmit}>确定</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Error display */}
       {error && (
         <div className={styles.errorBanner}>
           <span>{error}</span>
-          <Button size="small" onClick={() => refreshTree()}>重试</Button>
+          <Button size="sm" variant="outline" onClick={() => refreshTree()}>重试</Button>
         </div>
       )}
     </div>

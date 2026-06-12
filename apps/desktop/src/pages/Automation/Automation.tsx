@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Button, Card, Input, Space, Table, Tag, Popconfirm, message, Badge, Typography } from 'antd'
-import { PlusOutlined, PlayCircleOutlined, DeleteOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { toast } from 'sonner'
+import { Plus, Play, Trash2, Edit, RefreshCw } from 'lucide-react'
 import { useAutomationStore, AutomationRule, CronJob, TriggerType } from './store'
 import { RuleEditor } from './RuleEditor'
 import { CronEditor } from './CronEditor'
@@ -23,13 +27,6 @@ export function Automation() {
   const [editingJob, setEditingJob] = useState<CronJob | null>(null)
   const [searchText, setSearchText] = useState('')
 
-  // Fetch data on mount
-  useCallback(() => {
-    fetchRules()
-    fetchJobs()
-    fetchRuns()
-  }, [fetchRules, fetchJobs, fetchRuns])
-
   const filteredRules = useMemo(() => {
     if (!searchText) return rules
     const lower = searchText.toLowerCase()
@@ -44,297 +41,179 @@ export function Automation() {
     return jobs.filter((j) => j.name.toLowerCase().includes(lower))
   }, [jobs, searchText])
 
-  // ── Rule columns ─────────────────────────────────────────────────────────
-
-  const ruleColumns = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <strong>{text}</strong>
-    },
-    {
-      title: '触发条件',
-      dataIndex: 'trigger',
-      key: 'trigger',
-      width: 120,
-      render: (trigger: TriggerType) => <Tag color="blue">{TRIGGER_LABELS[trigger]}</Tag>
-    },
-    {
-      title: '执行目标',
-      dataIndex: 'target',
-      key: 'target',
-      width: 140
-    },
-    {
-      title: '状态',
-      dataIndex: 'enabled',
-      key: 'enabled',
-      width: 90,
-      render: (enabled: boolean) => (
-        <Badge status={enabled ? 'success' : 'default'} text={enabled ? '启用' : '禁用'} className={styles.statusTag} />
-      )
-    },
-    {
-      title: '最后执行',
-      dataIndex: 'lastRunAt',
-      key: 'lastRunAt',
-      width: 160,
-      render: (val: string | undefined, record: AutomationRule) => (
-        <span>
-          {val ? new Date(val).toLocaleString('zh-CN') : '-'}
-          {record.lastRunStatus && (
-            <Tag color={record.lastRunStatus === 'success' ? 'green' : 'red'} className={styles.runTag}>
-              {record.lastRunStatus === 'success' ? '成功' : '失败'}
-            </Tag>
-          )}
-        </span>
-      )
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 160,
-      render: (_: unknown, record: AutomationRule) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<PlayCircleOutlined />}
-            onClick={() => useAutomationStore.getState().triggerRule(record.id)}
-            disabled={loading}
-          >
-            触发
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => { setEditingRule(record); setRuleEditorOpen(true) }}
-          >
-            编辑
-          </Button>
-          <Popconfirm title="确认删除此规则？" onConfirm={() => useAutomationStore.getState().deleteRule(record.id)}>
-            <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
-          </Popconfirm>
-        </Space>
-      )
-    }
-  ]
-
-  // ── Job columns ──────────────────────────────────────────────────────────
-
-  const jobColumns = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string) => <strong>{text}</strong>
-    },
-    {
-      title: 'Cron 表达式',
-      dataIndex: 'cronExpression',
-      key: 'cronExpression',
-      width: 180,
-      render: (expr: string) => (
-        <code className={styles.cronCode}>{expr}</code>
-      )
-    },
-    {
-      title: '下次执行',
-      dataIndex: 'nextRunAt',
-      key: 'nextRunAt',
-      width: 180,
-      render: (val: string | undefined) => (
-        val ? new Date(val).toLocaleString('zh-CN') : '-'
-      )
-    },
-    {
-      title: '状态',
-      dataIndex: 'enabled',
-      key: 'enabled',
-      width: 90,
-      render: (enabled: boolean) => (
-        <Badge status={enabled ? 'success' : 'default'} text={enabled ? '启用' : '禁用'} className={styles.statusTag} />
-      )
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 160,
-      render: (_: unknown, record: CronJob) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<PlayCircleOutlined />}
-            onClick={() => useAutomationStore.getState().triggerJob(record.id)}
-            disabled={loading}
-          >
-            执行
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => { setEditingJob(record); setCronEditorOpen(true) }}
-          >
-            编辑
-          </Button>
-          <Popconfirm title="确认删除此定时任务？" onConfirm={() => useAutomationStore.getState().deleteJob(record.id)}>
-            <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
-          </Popconfirm>
-        </Space>
-      )
-    }
-  ]
-
-  // ── Run history columns ──────────────────────────────────────────────────
-
-  const runColumns = [
-    {
-      title: '类型',
-      key: 'type',
-      width: 80,
-      render: (_: unknown, record: { ruleId?: string; jobId?: string }) => (
-        <Tag>{record.ruleId ? '规则' : '定时任务'}</Tag>
-      )
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status: string) => {
-        const colorMap: Record<string, string> = { running: 'processing', completed: 'success', failed: 'error' }
-        const labelMap: Record<string, string> = { running: '运行中', completed: '已完成', failed: '失败' }
-        return <Tag color={colorMap[status] || 'default'}>{labelMap[status] || status}</Tag>
-      }
-    },
-    {
-      title: '开始时间',
-      dataIndex: 'startedAt',
-      key: 'startedAt',
-      width: 170,
-      render: (val: string) => new Date(val).toLocaleString('zh-CN')
-    },
-    {
-      title: '完成时间',
-      dataIndex: 'completedAt',
-      key: 'completedAt',
-      width: 170,
-      render: (val: string | undefined) => val ? new Date(val).toLocaleString('zh-CN') : '-'
-    },
-    {
-      title: '消息',
-      dataIndex: 'message',
-      key: 'message'
-    }
-  ]
-
   return (
     <div className={styles.container}>
       {/* Tabs */}
-      <Card
-        className={styles.toolbar}
-        size="small"
-        extra={
-          <Space>
-            <Input.Search
-              className={styles.searchInput}
-              placeholder="搜索..."
-              allowClear
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onSearch={(val) => setSearchText(val)}
-              style={{ width: 240 }}
-              size="small"
-            />
-            <Button size="small" icon={<ReloadOutlined />} onClick={() => { fetchRules(); fetchJobs(); fetchRuns() }}>
-              刷新
-            </Button>
-            {activeTab === 'rules' ? (
-              <Button
-                size="small"
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => { setEditingRule(null); setRuleEditorOpen(true) }}
-              >
-                新建规则
+      <Card className={styles.toolbar}>
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <Button size="sm" variant={activeTab === 'rules' ? 'default' : 'outline'} onClick={() => setActiveTab('rules')}>
+                自动化规则 ({filteredRules.length} 条)
               </Button>
-            ) : (
-              <Button
-                size="small"
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => { setEditingJob(null); setCronEditorOpen(true) }}
-              >
-                新建定时任务
+              <Button size="sm" variant={activeTab === 'jobs' ? 'default' : 'outline'} onClick={() => setActiveTab('jobs')}>
+                定时任务 ({filteredJobs.length} 个)
               </Button>
-            )}
-          </Space>
-        }
-      >
-        <Typography.Text type="secondary">
-          {activeTab === 'rules'
-            ? `自动化规则 (${filteredRules.length} 条)`
-            : `定时任务 (${filteredJobs.length} 个)`}
-        </Typography.Text>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                className="w-[240px]"
+                placeholder="搜索..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              <Button size="sm" variant="outline" onClick={() => { fetchRules(); fetchJobs(); fetchRuns() }}>
+                <RefreshCw className="w-4 h-4 mr-1" /> 刷新
+              </Button>
+              {activeTab === 'rules' ? (
+                <Button size="sm" onClick={() => { setEditingRule(null); setRuleEditorOpen(true) }}>
+                  <Plus className="w-4 h-4 mr-1" /> 新建规则
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => { setEditingJob(null); setCronEditorOpen(true) }}>
+                  <Plus className="w-4 h-4 mr-1" /> 新建定时任务
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Tab content */}
-      <Card size="small" style={{ flex: 1, overflow: 'auto' }}>
-        {activeTab === 'rules' ? (
-          <Table
-            rowKey="id"
-            dataSource={filteredRules}
-            columns={ruleColumns}
-            pagination={{ pageSize: 10 }}
-            size="small"
-            locale={{ emptyText: '暂无自动化规则' }}
-          />
-        ) : (
-          <Table
-            rowKey="id"
-            dataSource={filteredJobs}
-            columns={jobColumns}
-            pagination={{ pageSize: 10 }}
-            size="small"
-            locale={{ emptyText: '暂无定时任务' }}
-          />
-        )}
+      <Card className="flex-1 overflow-auto">
+        <CardContent className="p-0">
+          {activeTab === 'rules' ? (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3">名称</th>
+                  <th className="text-left p-3 w-[120px]">触发条件</th>
+                  <th className="text-left p-3 w-[140px]">执行目标</th>
+                  <th className="text-left p-3 w-[90px]">状态</th>
+                  <th className="text-left p-3 w-[160px]">最后执行</th>
+                  <th className="text-left p-3 w-[160px]">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRules.map((record) => (
+                  <tr key={record.id} className="border-b">
+                    <td className="p-3 font-medium">{record.name}</td>
+                    <td className="p-3"><Badge variant="secondary">{TRIGGER_LABELS[record.trigger]}</Badge></td>
+                    <td className="p-3">{record.target}</td>
+                    <td className="p-3">
+                      <Badge variant={record.enabled ? 'default' : 'outline'}>{record.enabled ? '启用' : '禁用'}</Badge>
+                    </td>
+                    <td className="p-3">
+                      <span>{record.lastRunAt ? new Date(record.lastRunAt).toLocaleString('zh-CN') : '-'}</span>
+                      {record.lastRunStatus && (
+                        <Badge variant={record.lastRunStatus === 'success' ? 'default' : 'destructive'} className="ml-1">
+                          {record.lastRunStatus === 'success' ? '成功' : '失败'}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => useAutomationStore.getState().triggerRule(record.id)} disabled={loading}>
+                          <Play className="w-3 h-3 mr-1" /> 触发
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => { setEditingRule(record); setRuleEditorOpen(true) }}>
+                          <Edit className="w-3 h-3 mr-1" /> 编辑
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => useAutomationStore.getState().deleteRule(record.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3">名称</th>
+                  <th className="text-left p-3 w-[180px]">Cron 表达式</th>
+                  <th className="text-left p-3 w-[180px]">下次执行</th>
+                  <th className="text-left p-3 w-[90px]">状态</th>
+                  <th className="text-left p-3 w-[160px]">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredJobs.map((record) => (
+                  <tr key={record.id} className="border-b">
+                    <td className="p-3 font-medium">{record.name}</td>
+                    <td className="p-3"><code className="text-xs bg-muted px-1 py-0.5 rounded">{record.cronExpression}</code></td>
+                    <td className="p-3">{record.nextRunAt ? new Date(record.nextRunAt).toLocaleString('zh-CN') : '-'}</td>
+                    <td className="p-3">
+                      <Badge variant={record.enabled ? 'default' : 'outline'}>{record.enabled ? '启用' : '禁用'}</Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => useAutomationStore.getState().triggerJob(record.id)} disabled={loading}>
+                          <Play className="w-3 h-3 mr-1" /> 执行
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => { setEditingJob(record); setCronEditorOpen(true) }}>
+                          <Edit className="w-3 h-3 mr-1" /> 编辑
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => useAutomationStore.getState().deleteJob(record.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
       </Card>
 
       {/* Run history */}
-      <Card
-        title="执行记录"
-        size="small"
-        className={styles.runsPanel}
-        extra={
-          <Button size="small" icon={<ReloadOutlined />} onClick={fetchRuns}>
-            刷新
-          </Button>
-        }
-      >
-        <Table
-          rowKey="id"
-          dataSource={runs}
-          columns={runColumns}
-          pagination={{ pageSize: 8 }}
-          size="small"
-          locale={{ emptyText: '暂无执行记录' }}
-        />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>执行记录</CardTitle>
+            <Button size="sm" variant="outline" onClick={fetchRuns}>
+              <RefreshCw className="w-4 h-4 mr-1" /> 刷新
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-3 w-[80px]">类型</th>
+                <th className="text-left p-3 w-[100px]">状态</th>
+                <th className="text-left p-3 w-[170px]">开始时间</th>
+                <th className="text-left p-3 w-[170px]">完成时间</th>
+                <th className="text-left p-3">消息</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run) => (
+                <tr key={run.id} className="border-b">
+                  <td className="p-3"><Badge variant="outline">{run.ruleId ? '规则' : '定时任务'}</Badge></td>
+                  <td className="p-3">
+                    <Badge variant={run.status === 'completed' ? 'default' : run.status === 'running' ? 'secondary' : 'destructive'}>
+                      {run.status === 'running' ? '运行中' : run.status === 'completed' ? '已完成' : '失败'}
+                    </Badge>
+                  </td>
+                  <td className="p-3">{new Date(run.startedAt).toLocaleString('zh-CN')}</td>
+                  <td className="p-3">{run.completedAt ? new Date(run.completedAt).toLocaleString('zh-CN') : '-'}</td>
+                  <td className="p-3">{run.message}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
       </Card>
 
-      {/* Rule Editor Drawer */}
-      <RuleEditor
-        open={ruleEditorOpen}
-        onClose={() => { setRuleEditorOpen(false); setEditingRule(null) }}
-        editingRule={editingRule}
-      />
+      {/* Rule Editor */}
+      <RuleEditor open={ruleEditorOpen} onClose={() => { setRuleEditorOpen(false); setEditingRule(null) }} editingRule={editingRule} />
 
-      {/* Cron Editor Drawer */}
-      <CronEditor
-        open={cronEditorOpen}
-        onClose={() => { setCronEditorOpen(false); setEditingJob(null) }}
-        editingJob={editingJob}
-      />
+      {/* Cron Editor */}
+      <CronEditor open={cronEditorOpen} onClose={() => { setCronEditorOpen(false); setEditingJob(null) }} editingJob={editingJob} />
     </div>
   )
 }

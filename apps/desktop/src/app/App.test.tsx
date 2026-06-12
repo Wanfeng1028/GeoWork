@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { ConfigProvider } from 'antd'
 import { describe, expect, it, vi } from 'vitest'
 import { App } from './App'
-import { antdTheme } from '../styles/antd-theme'
 
 globalThis.fetch = vi.fn((url: string) => {
   const data: any = url.includes('/api/health') ? { status: 'ok' } :
@@ -32,11 +30,7 @@ globalThis.fetch = vi.fn((url: string) => {
 
 describe('App', () => {
   it('renders GeoWork workbench navigation', async () => {
-    render(
-      <ConfigProvider theme={antdTheme}>
-        <App />
-      </ConfigProvider>
-    )
+    render(<App />)
     expect((await screen.findAllByRole('heading', { name: 'GeoWork' })).length).toBeGreaterThan(0)
     expect(screen.getByText('主能力')).toBeInTheDocument()
     expect(screen.getByText('专家系统')).toBeInTheDocument()

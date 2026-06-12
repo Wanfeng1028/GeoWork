@@ -1,4 +1,4 @@
-import { message } from 'antd'
+import { toast } from 'sonner'
 import type { BottomPanelType, RightPanelType } from '../types/shell'
 import useShellStore from '../stores/shellStore'
 
@@ -45,7 +45,7 @@ function switchMainModule(key: string) {
   }
 
   if (devModules.has(key)) {
-    message.warning(`${navLabels[key] ?? '该能力'}仍在开发中`)
+    toast.warning(`${navLabels[key] ?? '该能力'}仍在开发中`)
   }
 }
 
@@ -195,28 +195,28 @@ export const actionRegistry: Record<string, ShellAction> = {
     label: '添加文件',
     status: 'implemented',
     fallbackMessage: '',
-    handler: () => message.info('请选择要附加的文件'),
+    handler: () => { toast.info('请选择要附加的文件') },
   },
   selectModel: {
     id: 'selectModel',
     label: '选择模型',
     status: 'implemented',
     fallbackMessage: '',
-    handler: () => message.info('请从模型菜单选择模型'),
+    handler: () => { toast.info('请从模型菜单选择模型') },
   },
   selectPermission: {
     id: 'selectPermission',
     label: '选择权限',
     status: 'implemented',
     fallbackMessage: '',
-    handler: () => message.info('请从权限菜单选择权限'),
+    handler: () => { toast.info('请从权限菜单选择权限') },
   },
   selectMode: {
     id: 'selectMode',
     label: '选择模式',
     status: 'implemented',
     fallbackMessage: '',
-    handler: () => message.info('请选择任务模式'),
+    handler: () => { toast.info('请选择任务模式') },
   },
   sendMessage: {
     id: 'sendMessage',
@@ -230,12 +230,12 @@ export const actionRegistry: Record<string, ShellAction> = {
 export function runAction(id: string, payload?: unknown) {
   const action = actionRegistry[id]
   if (!action) {
-    message.warning('该能力仍在开发中')
+    toast.warning('该能力仍在开发中')
     return
   }
 
   if (action.status === 'disabled') {
-    message.warning(action.fallbackMessage || '该能力暂不可用')
+    toast.warning(action.fallbackMessage || '该能力暂不可用')
     return
   }
 

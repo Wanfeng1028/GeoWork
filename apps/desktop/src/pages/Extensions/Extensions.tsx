@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Layout, Card, Row, Col, Tag, Button, Input, Empty, Space, Typography, List, Avatar, Switch, message, Badge } from 'antd'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Switch } from '../../components/ui/switch'
+import { Empty } from '../../components/ui/empty'
+import { toast } from 'sonner'
 import {
-  SettingOutlined,
-  DownloadOutlined,
-  StarOutlined,
-  CheckCircleOutlined,
-  CloudOutlined,
-  ThunderboltOutlined,
-  GlobalOutlined,
-  CodeOutlined,
-  SearchOutlined,
-  AppstoreOutlined
-} from '@ant-design/icons'
+  Settings,
+  Download,
+  Star,
+  CheckCircle,
+  Cloud,
+  Zap,
+  Globe,
+  Code,
+  Search,
+  LayoutGrid
+} from 'lucide-react'
 import styles from './Extensions.module.scss'
-
-const { Content } = Layout
-const { Title, Text, Paragraph } = Typography
-
-// ─── Mock Plugin Data ───────────────────────────────────────────────
 
 interface Plugin {
   id: string
@@ -108,56 +109,56 @@ const MOCK_PLUGINS: Plugin[] = [
 ]
 
 const CATEGORIES = [
-  { key: 'all', label: '全部', icon: <CloudOutlined /> },
-  { key: 'remote-sensing', label: '遥感', icon: <ThunderboltOutlined /> },
-  { key: 'gis', label: 'GIS', icon: <GlobalOutlined /> },
-  { key: 'office', label: '办公', icon: <CodeOutlined /> },
-  { key: 'knowledge', label: '知识', icon: <StarOutlined /> },
-  { key: 'analysis', label: '分析', icon: <AppstoreOutlined /> },
+  { key: 'all', label: '全部', icon: <Cloud /> },
+  { key: 'remote-sensing', label: '遥感', icon: <Zap /> },
+  { key: 'gis', label: 'GIS', icon: <Globe /> },
+  { key: 'office', label: '办公', icon: <Code /> },
+  { key: 'knowledge', label: '知识', icon: <Star /> },
+  { key: 'analysis', label: '分析', icon: <LayoutGrid /> },
 ]
-
-// ─── Plugin Card ────────────────────────────────────────────────────
 
 function PluginCard({ plugin, onToggle }: { plugin: Plugin; onToggle: (id: string) => void }) {
   return (
-    <Card className={styles.pluginCard} hoverable>
-      <div className={styles.pluginHeader}>
-        <Avatar size={40} icon={<AppstoreOutlined />} style={{ background: '#1677ff' }} />
-        <div className={styles.pluginInfo}>
-          <Text strong>{plugin.name}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}> v{plugin.version}</Text>
+    <Card className={styles.pluginCard}>
+      <CardContent>
+        <div className={styles.pluginHeader}>
+          <div className="flex items-center justify-center rounded-full w-10 h-10" style={{ background: '#1677ff' }}>
+            <LayoutGrid className="text-white w-5 h-5" />
+          </div>
+          <div className={styles.pluginInfo}>
+            <span className="font-semibold">{plugin.name}</span>
+            <span className="text-xs text-muted-foreground"> v{plugin.version}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {plugin.enabled && <div className="w-2 h-2 rounded-full bg-green-500" />}
+            <Switch
+              checked={plugin.enabled}
+              onCheckedChange={() => onToggle(plugin.id)}
+            />
+          </div>
         </div>
-        <Badge dot={plugin.enabled} offset={[0, 10]}>
-          <Switch
-            size="small"
-            checked={plugin.enabled}
-            onChange={() => onToggle(plugin.id)}
-          />
-        </Badge>
-      </div>
 
-      <Paragraph ellipsis={{ rows: 2 }} type="secondary" style={{ marginTop: 12, marginBottom: 8 }}>
-        {plugin.description}
-      </Paragraph>
+        <p className="text-sm text-muted-foreground mt-3 mb-2 line-clamp-2">
+          {plugin.description}
+        </p>
 
-      <div className={styles.pluginTags}>
-        {plugin.tags.map((tag) => (
-          <Tag key={tag} color="blue">{tag}</Tag>
-        ))}
-      </div>
+        <div className={styles.pluginTags}>
+          {plugin.tags.map((tag) => (
+            <Badge key={tag} variant="secondary">{tag}</Badge>
+          ))}
+        </div>
 
-      <div className={styles.pluginFooter}>
-        <Space size="large">
-          <span><StarOutlined style={{ color: '#f59e0b' }} /> {plugin.rating}</span>
-          <span><DownloadOutlined /> {plugin.downloads > 1000 ? `${(plugin.downloads / 1000).toFixed(1)}k` : plugin.downloads}</span>
-          <span style={{ color: 'secondary' }}>{plugin.author}</span>
-        </Space>
-      </div>
+        <div className={styles.pluginFooter}>
+          <div className="flex gap-4">
+            <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500" /> {plugin.rating}</span>
+            <span className="flex items-center gap-1"><Download className="w-3.5 h-3.5" /> {plugin.downloads > 1000 ? `${(plugin.downloads / 1000).toFixed(1)}k` : plugin.downloads}</span>
+            <span className="text-muted-foreground">{plugin.author}</span>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   )
 }
-
-// ─── Main Page ──────────────────────────────────────────────────────
 
 export default function Extensions() {
   const [search, setSearch] = useState('')
@@ -168,7 +169,7 @@ export default function Extensions() {
     setPlugins((prev) =>
       prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p))
     )
-    message.success('插件状态已更新')
+    toast.success('插件状态已更新')
   }
 
   const filtered = plugins.filter((p) => {
@@ -178,74 +179,78 @@ export default function Extensions() {
   })
 
   return (
-    <Layout className={styles.extensions}>
-      <Content className={styles.content}>
+    <div className={styles.extensions}>
+      <div className={styles.content}>
         {/* Header */}
         <div className={styles.header}>
           <div>
-            <Title level={3} style={{ margin: 0 }}>扩展中心</Title>
-            <Text type="secondary">管理和安装 GeoWork 扩展插件</Text>
+            <h3 className="text-xl font-semibold m-0">扩展中心</h3>
+            <p className="text-sm text-muted-foreground">管理和安装 GeoWork 扩展插件</p>
           </div>
-          <Space>
-            <Button icon={<SettingOutlined />}>插件设置</Button>
-            <Button type="primary" icon={<DownloadOutlined />}>从市场安装</Button>
-          </Space>
+          <div className="flex gap-2">
+            <Button variant="outline"><Settings className="w-4 h-4 mr-1" /> 插件设置</Button>
+            <Button><Download className="w-4 h-4 mr-1" /> 从市场安装</Button>
+          </div>
         </div>
 
         {/* Search and Filter */}
         <div className={styles.filterBar}>
           <Input
             placeholder="搜索插件..."
-            prefix={<SearchOutlined />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            allowClear
-            style={{ maxWidth: 320 }}
+            className="max-w-[320px]"
           />
-          <Space wrap>
+          <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
-              <Tag
+              <Badge
                 key={cat.key}
-                color={category === cat.key ? 'blue' : 'default'}
-                style={{ cursor: 'pointer', padding: '2px 12px', fontSize: 13 }}
+                variant={category === cat.key ? 'default' : 'outline'}
+                className="cursor-pointer px-3 py-1 text-xs"
                 onClick={() => setCategory(cat.key)}
               >
                 {cat.icon} {cat.label}
-              </Tag>
+              </Badge>
             ))}
-          </Space>
+          </div>
         </div>
 
         {/* Plugin Grid */}
         {filtered.length > 0 ? (
-          <Row gutter={[16, 16]}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((plugin) => (
-              <Col xs={24} sm={12} lg={8} key={plugin.id}>
-                <PluginCard plugin={plugin} onToggle={handleToggle} />
-              </Col>
+              <PluginCard key={plugin.id} plugin={plugin} onToggle={handleToggle} />
             ))}
-          </Row>
+          </div>
         ) : (
-          <Empty description="没有找到匹配的插件" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty description="没有找到匹配的插件" />
         )}
 
         {/* Installed Plugins List */}
-        <Card title="已安装的插件" size="small">
-          <List
-            dataSource={plugins.filter((p) => p.enabled)}
-            renderItem={(plugin) => (
-              <List.Item className={styles.installedItem}>
-                <List.Item.Meta
-                  avatar={<Avatar size="small" icon={<AppstoreOutlined />} style={{ background: '#1677ff' }} />}
-                  title={plugin.name}
-                  description={`v${plugin.version} — ${plugin.description}`}
-                />
-                <Tag color="green"><CheckCircleOutlined /> 已启用</Tag>
-              </List.Item>
-            )}
-          />
+        <Card>
+          <CardHeader>
+            <CardTitle>已安装的插件</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col">
+              {plugins.filter((p) => p.enabled).map((plugin) => (
+                <div key={plugin.id} className={styles.installedItem}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center rounded-full w-8 h-8" style={{ background: '#1677ff' }}>
+                      <LayoutGrid className="text-white w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{plugin.name}</div>
+                      <div className="text-xs text-muted-foreground">v{plugin.version} — {plugin.description}</div>
+                    </div>
+                  </div>
+                  <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> 已启用</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
-      </Content>
-    </Layout>
+      </div>
+    </div>
   )
 }

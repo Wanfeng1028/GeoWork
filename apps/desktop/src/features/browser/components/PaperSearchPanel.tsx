@@ -2,17 +2,15 @@
 // Search input and results list for academic paper discovery
 
 import { useState } from 'react'
-import { Input, Button, Card, List, Typography, Spin, Empty } from 'antd'
-import {
-  SearchOutlined,
-  GlobalOutlined,
-  ThunderboltOutlined,
-} from '@ant-design/icons'
+import { Input } from '../../../components/ui/input'
+import { Button } from '../../../components/ui/button'
+import { Card } from '../../../components/ui/card'
+import { Spinner } from '../../../components/ui/spinner'
+import { Empty } from '../../../components/ui/empty'
+import { Search, Globe, Zap } from 'lucide-react'
 import type { PaperSearchResult } from '../browserBridgeClient'
 import { useBrowserStore } from '../browserStore'
 import styles from './PaperSearchPanel.module.scss'
-
-const { Title, Text } = Typography
 
 interface PaperSearchPanelProps {
   className?: string
@@ -47,83 +45,77 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onPressEnter={handleSearch}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search academic papers..."
-          prefix={<SearchOutlined />}
-          suffix={
-            <Button
-              type="primary"
-              size="small"
-              loading={isLoading}
-              onClick={handleSearch}
-              icon={<SearchOutlined />}
-            >
-              Search
-            </Button>
-          }
           className={styles.searchInput}
         />
+        <Button
+          size="sm"
+          disabled={isLoading}
+          onClick={handleSearch}
+        >
+          {isLoading ? <Spinner size="sm" className="mr-1" /> : <Search className="h-4 w-4 mr-1" />}
+          Search
+        </Button>
       </div>
 
       {/* Results list */}
       <div className={styles.resultsArea}>
         {isLoading ? (
           <div className={styles.loadingState}>
-            <Spin size="large" />
-            <Text type="secondary">Searching papers...</Text>
+            <Spinner size="lg" />
+            <span className="text-[13px] text-[var(--gw-text-secondary)]">Searching papers...</span>
           </div>
         ) : paperResults.length > 0 ? (
-          <List
-            dataSource={paperResults}
-            locale={{ emptyText: '' }}
-            renderItem={(item: PaperSearchResult, index: number) => (
-              <List.Item className={styles.resultItem}>
+          <div className="flex flex-col">
+            {paperResults.map((item: PaperSearchResult, index: number) => (
+              <div key={index} className={styles.resultItem}>
                 <div className={styles.resultContent}>
-                  <Title level={5} className={styles.resultTitle}>
-                    <GlobalOutlined className={styles.resultUrlIcon} />
+                  <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+                    <Globe className={styles.resultUrlIcon} />
                     {item.title}
-                  </Title>
+                  </h3>
 
                   <div className={styles.resultMeta}>
                     {item.authors.length > 0 && (
-                      <Text type="secondary">{item.authors.join(', ')}</Text>
+                      <span className="text-[13px] text-[var(--gw-text-secondary)]">{item.authors.join(', ')}</span>
                     )}
                     {item.year && (
                       <>
-                        <Text className={styles.metaSeparator}> · </Text>
-                        <Text type="secondary">{item.year}</Text>
+                        <span className={styles.metaSeparator}> · </span>
+                        <span className="text-[13px] text-[var(--gw-text-secondary)]">{item.year}</span>
                       </>
                     )}
                   </div>
 
                   {item.snippet && (
-                    <Text type="secondary" className={styles.resultSnippet}>
+                    <span className="text-[13px] text-[var(--gw-text-secondary)]">
                       {item.snippet}
-                    </Text>
+                    </span>
                   )}
                 </div>
 
                 <div className={styles.resultActions}>
                   <Button
-                    size="small"
-                    type="link"
-                    icon={<GlobalOutlined />}
+                    size="sm"
+                    variant="link"
                   >
+                    <Globe className="h-4 w-4 mr-1" />
                     Open
                   </Button>
                   <Button
-                    size="small"
-                    type="text"
-                    loading={isLoading}
-                    icon={<ThunderboltOutlined />}
+                    size="sm"
+                    variant="ghost"
+                    disabled={isLoading}
                     title="Add to context"
                   >
+                    <Zap className="h-4 w-4 mr-1" />
                     To Agent
                   </Button>
                 </div>
-              </List.Item>
-            )}
-          />
+              </div>
+            ))}
+          </div>
         ) : (
           <Empty
             description={

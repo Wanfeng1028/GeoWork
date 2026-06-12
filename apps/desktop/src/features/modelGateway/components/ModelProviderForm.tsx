@@ -2,8 +2,12 @@
 // Form for adding and editing model providers
 
 import { useState, useEffect } from 'react'
-import { Form, Input, Select, Button, message, Space, Tag } from 'antd'
-import { LinkOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { Input } from '../../../components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../../components/ui/select'
+import { Button } from '../../../components/ui/button'
+import { Badge } from '../../../components/ui/badge'
+import { Link, CheckCircle, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import modelGatewayClient, { type ModelProvider } from '../modelGatewayClient'
 import useModelGatewayStore from '../modelGatewayStore'
 import styles from './ModelProviderForm.module.scss'
@@ -22,22 +26,29 @@ export interface ModelProviderFormProps {
 }
 
 export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProviderFormProps) {
-  const [form] = Form.useForm<Partial<ModelProvider>>()
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean } | null>(null)
   const { loadProviders, loadUsage } = useModelGatewayStore()
+  const [formValues, setFormValues] = useState<Partial<ModelProvider>>({
+    name: '',
+    kind: 'openai_compatible',
+    baseUrl: '',
+    apiKeyRef: '',
+    defaultModel: '',
+    enabled: true,
+  })
 
   useEffect(() => {
     if (provider) {
-      form.setFieldsValue(provider)
+      setFormValues(provider)
     } else {
-      form.setFieldsValue({ kind: 'openai_compatible', enabled: true })
+      setFormValues({ kind: 'openai_compatible', enabled: true })
     }
-  }, [provider, form])
+  }, [provider])
 
   const handleTestConnection = async () => {
     if (!provider?.id) {
-      message.warning('请先保存提供商')
+      toast.warning('请先保存提供商')
       return
     }
     setTesting(true)
@@ -46,102 +57,124 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
       const result = await modelGatewayClient.testConnection(provider.id)
       setTestResult({ ok: result.success })
       if (result.success) {
-        message.success(`连接成功，发现 ${result.modelCount ?? '?'} 个模型`)
+        toast.success(`连接成功，发现 ${result.modelCount ?? '?'} 个模型`)
       } else {
-        message.error('连接失败')
+        toast.error('连接失败')
       }
     } catch {
       setTestResult({ ok: false })
-      message.error('连接测试出错')
+      toast.error('连接测试出错')
     } finally {
       setTesting(false)
     }
   }
 
-  const handleSubmit = async (values: Partial<ModelProvider>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
       if (provider?.id) {
-        await modelGatewayClient.updateProvider(provider.id, values)
-        message.success('已更新')
+        await modelGatewayClient.updateProvider(provider.id, formValues)
+        toast.success('已更新')
       } else {
-        await modelGatewayClient.addProvider(values)
-        message.success('已添加')
+        await modelGatewayClient.addProvider(formValues)
+        toast.success('已添加')
       }
       await loadProviders()
       await loadUsage()
       onSuccess?.()
     } catch {
-      message.error(provider?.id ? '更新失败' : '添加失败')
+      toast.error(provider?.id ? '更新失败' : '添加失败')
     }
   }
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleSubmit}
-      className={styles.form}
-    >
-      <Form.Item
-        label="名称"
-        name="name"
-        rules={[{ required: true, message: '请输入名称' }]}
-      >
-        <Input placeholder="例如: OpenAI API, Local Ollama" />
-      </Form.Item>
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <div className="space-y-1">
+        <label className="text-[13px] text-[var(--gw-text-secondary)]">名称</label>
+        <Input
+          placeholder="例如: OpenAI API, Local Ollama"
+          value={formValues.name || ''}
+          onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
+        />
+      </div>
 
-      <Form.Item
-        label="类型"
-        name="kind"
-        rules={[{ required: true, message: '请选择类型' }]}
-      >
-        <Select options={PROVIDER_KINDS} />
-      </Form.Item>
+      <div className="space-y-1">
+        <label className="text-[13px] text-[var(--gw-text-secondary)]">类型</label>
+        <Select
+          value={formValues.kind || 'openai_compatible'}
+          onValueChange={(val) => setFormValues((v) => ({ ...v, kind: val }))}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PROVIDER_KINDS.map((kind) => (
+              <SelectItem key={kind.value} value={kind.value}>
+                {kind.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Form.Item
-        label="Base URL"
-        name="baseUrl"
-        rules={[{ required: true, message: '请输入 Base URL' }]}
-      >
-        <Input placeholder="https://api.openai.com" />
-      </Form.Item>
+      <div className="space-y-1">
+        <label className="text-[13px] text-[var(--gw-text-secondary)]">Base URL</label>
+        <Input
+          placeholder="https://api.openai.com"
+          value={formValues.baseUrl || ''}
+          onChange={(e) => setFormValues((v) => ({ ...v, baseUrl: e.target.value }))}
+        />
+      </div>
 
-      <Form.Item label="API Key" name="apiKeyRef">
-        <Input.Password placeholder="sk-... (可选)" />
-      </Form.Item>
+      <div className="space-y-1">
+        <label className="text-[13px] text-[var(--gw-text-secondary)]">API Key</label>
+        <Input
+          type="password"
+          placeholder="sk-... (可选)"
+          value={formValues.apiKeyRef || ''}
+          onChange={(e) => setFormValues((v) => ({ ...v, apiKeyRef: e.target.value }))}
+        />
+      </div>
 
-      <Form.Item label="默认模型" name="defaultModel">
-        <Input placeholder="gpt-4, llama3 等 (可选)" />
-      </Form.Item>
+      <div className="space-y-1">
+        <label className="text-[13px] text-[var(--gw-text-secondary)]">默认模型</label>
+        <Input
+          placeholder="gpt-4, llama3 等 (可选)"
+          value={formValues.defaultModel || ''}
+          onChange={(e) => setFormValues((v) => ({ ...v, defaultModel: e.target.value }))}
+        />
+      </div>
 
       {provider?.id && (
-        <Form.Item className={styles.testRow}>
+        <div className={styles.testRow}>
           <Button
-            icon={<LinkOutlined />}
-            loading={testing}
+            type="button"
+            variant="ghost"
+            disabled={testing}
             onClick={handleTestConnection}
             className={styles.testBtn}
           >
+            <Link className="h-4 w-4 mr-1" />
             测试连接
           </Button>
           {testResult && (
-            <Tag color={testResult.ok ? 'success' : 'error'} className={styles.testTag}>
-              {testResult.ok ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+            <Badge className={testResult.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+              {testResult.ok ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
               {testResult.ok ? '连接成功' : '连接失败'}
-            </Tag>
+            </Badge>
           )}
-        </Form.Item>
+        </div>
       )}
 
-      <Form.Item className={styles.actions}>
-        <Space>
-          <Button onClick={onCancel}>取消</Button>
-          <Button type="primary" htmlType="submit">
+      <div className={styles.actions}>
+        <div className="flex gap-2">
+          <Button type="button" variant="ghost" onClick={onCancel}>取消</Button>
+          <Button type="submit">
             {provider?.id ? '保存' : '添加'}
           </Button>
-        </Space>
-      </Form.Item>
-    </Form>
+        </div>
+      </div>
+    </form>
   )
 }
 

@@ -1,14 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Slider, Switch, Tooltip } from 'antd'
-import {
-  AimOutlined,
-  GlobalOutlined,
-  LineChartOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined
-} from '@ant-design/icons'
+import { Target, Globe, Ruler, PanelLeftClose, PanelLeft, ZoomIn, ZoomOut } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
 import maplibregl from 'maplibre-gl'
 import DeckGlOverlay from './DeckGlOverlay'
 import type { DeckGeoJsonFeature, MapLayerItem } from './layers'
@@ -166,6 +158,7 @@ const MapLibreMap = memo(function MapLibreMap({
   )
 
   return (
+    <TooltipProvider>
     <div className={styles.mapContainer}>
       {/* Collapse toggle */}
       <button
@@ -173,7 +166,7 @@ const MapLibreMap = memo(function MapLibreMap({
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? '展开图层面板' : '折叠图层面板'}
       >
-        {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+        {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </button>
 
       {/* Layer panel */}
@@ -198,20 +191,21 @@ const MapLibreMap = memo(function MapLibreMap({
                   onClick={() => onLayerToggle?.(layer.id)}
                   title={layer.visible ? '隐藏图层' : '显示图层'}
                 >
-                  {layer.visible ? <GlobalOutlined /> : <AimOutlined />}
+                  {layer.visible ? <Globe className="h-3.5 w-3.5" /> : <Target className="h-3.5 w-3.5" />}
                 </button>
                 <span className={styles.layerName} title={layer.name}>
                   {layer.name}
                 </span>
                 <span className={styles.layerKind}>{layer.kind}</span>
-                <Slider
+                <input
+                  type="range"
                   className={styles.layerOpacity}
                   value={layer.opacity}
                   min={0}
                   max={1}
                   step={0.01}
-                  onChange={(value) => onLayerOpacityChange?.(layer.id, value)}
-                  tooltip={{ formatter: (v) => `${Math.round((v ?? 0) * 100)}%` }}
+                  onChange={(e) => onLayerOpacityChange?.(layer.id, parseFloat(e.target.value))}
+                  title={`${Math.round((layer.opacity ?? 0) * 100)}%`}
                 />
               </div>
             ))}
@@ -221,35 +215,44 @@ const MapLibreMap = memo(function MapLibreMap({
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
-        <Tooltip title="放大">
-          <button
-            className={styles.toolbarButton}
-            onClick={() => mapInstanceRef.current?.zoomIn()}
-          >
-            <ZoomInOutlined />
-          </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={styles.toolbarButton}
+              onClick={() => mapInstanceRef.current?.zoomIn()}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>放大</TooltipContent>
         </Tooltip>
-        <Tooltip title="缩小">
-          <button
-            className={styles.toolbarButton}
-            onClick={() => mapInstanceRef.current?.zoomOut()}
-          >
-            <ZoomOutOutlined />
-          </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={styles.toolbarButton}
+              onClick={() => mapInstanceRef.current?.zoomOut()}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>缩小</TooltipContent>
         </Tooltip>
-        <Tooltip title={measuring ? '停止测距' : '测距工具'}>
-          <button
-            className={`${styles.toolbarButton} ${measuring ? styles.toolbarButtonActive : ''}`}
-            onClick={() => {
-              setMeasuring(!measuring)
-              if (!measuring) {
-                measurePointsRef.current = []
-                setMeasureDistance('')
-              }
-            }}
-          >
-            <LineChartOutlined />
-          </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={`${styles.toolbarButton} ${measuring ? styles.toolbarButtonActive : ''}`}
+              onClick={() => {
+                setMeasuring(!measuring)
+                if (!measuring) {
+                  measurePointsRef.current = []
+                  setMeasureDistance('')
+                }
+              }}
+            >
+              <Ruler className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{measuring ? '停止测距' : '测距工具'}</TooltipContent>
         </Tooltip>
       </div>
 
@@ -284,6 +287,7 @@ const MapLibreMap = memo(function MapLibreMap({
         </div>
       )}
     </div>
+    </TooltipProvider>
   )
 })
 

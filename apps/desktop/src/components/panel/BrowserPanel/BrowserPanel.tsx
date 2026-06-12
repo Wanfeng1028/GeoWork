@@ -4,16 +4,12 @@
 // Browser bridge panel for controlling headless browser via Playwright/Puppeteer
 
 import { useState } from "react";
-import { Button, Input, Space, Tag, Empty, Spin, Select } from "antd";
-import {
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  ReloadOutlined,
-  StopOutlined,
-  FullscreenOutlined,
-  DesktopOutlined,
-  PlayCircleOutlined,
-} from "@ant-design/icons";
+import { ArrowLeft, ArrowRight, RotateCw, Square, Maximize, Monitor, Play } from "lucide-react";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Badge } from "../../ui/badge";
+import { Empty } from "../../ui/empty";
+import { Spinner } from "../../ui/spinner";
 import styles from "./BrowserPanel.module.scss";
 
 interface BrowserState {
@@ -189,82 +185,87 @@ export function BrowserPanel() {
     setShowConsole(!showConsole);
   };
 
-  const logColors: Record<string, string> = {
-    navigation: "#1890ff",
-    error: "#f5222d",
-    info: "#8c8c8c",
-    resource: "#faad14",
-  };
-
   return (
     <div className={styles.panel}>
       {/* Navigation bar */}
       <div className={styles.navBar}>
-        <Space size="small">
+        <div className="flex gap-1">
           <Button
-            size="small"
-            icon={<ArrowLeftOutlined />}
+            size="sm"
+            variant="ghost"
             disabled
             onClick={handleGoBack}
-          />
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+          </Button>
           <Button
-            size="small"
-            icon={<ArrowRightOutlined />}
+            size="sm"
+            variant="ghost"
             disabled
             onClick={handleGoForward}
-          />
+          >
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
           <Button
-            size="small"
-            icon={<ReloadOutlined />}
+            size="sm"
+            variant="ghost"
             loading={state.isNavigating}
             onClick={handleReload}
-          />
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+          </Button>
           <Button
-            size="small"
-            icon={<StopOutlined />}
+            size="sm"
+            variant="ghost"
             disabled={!state.isNavigating}
             onClick={handleStop}
-          />
-        </Space>
-        <div className={styles.urlBar}>
-          <Input
-            size="small"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            onPressEnter={handleNavigate}
-            placeholder="输入 URL 并回车"
-            suffix={
-              <Button
-                size="small"
-                type="primary"
-                icon={<PlayCircleOutlined />}
-                onClick={handleNavigate}
-              >
-                访问
-              </Button>
-            }
-          />
+          >
+            <Square className="h-3.5 w-3.5" />
+          </Button>
         </div>
-        <Space size="small">
+        <div className={styles.urlBar}>
+          <div className="flex gap-1">
+            <Input
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleNavigate()}
+              placeholder="输入 URL 并回车"
+              className="flex-1"
+            />
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleNavigate}
+            >
+              <Play className="h-3.5 w-3.5 mr-1" />
+              访问
+            </Button>
+          </div>
+        </div>
+        <div className="flex gap-1">
           <Button
-            size="small"
-            icon={<DesktopOutlined />}
+            size="sm"
+            variant="ghost"
             title="视图"
             onClick={handleTakeScreenshot}
-          />
+          >
+            <Monitor className="h-3.5 w-3.5" />
+          </Button>
           <Button
-            size="small"
-            icon={<FullscreenOutlined />}
+            size="sm"
+            variant="ghost"
             title="全屏"
-          />
-        </Space>
+          >
+            <Maximize className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Page content area */}
       <div className={styles.browserContent}>
         {state.isNavigating ? (
           <div className={styles.loadingOverlay}>
-            <Spin size="large" />
+            <Spinner size="lg" />
             <span style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
               正在加载...
             </span>
@@ -273,10 +274,10 @@ export function BrowserPanel() {
           <div className={styles.iframeArea}>
             {/* Placeholder: In production this would show the actual browser content */}
             <div className={styles.screenshotPlaceholder}>
-              <DesktopOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
+              <Monitor className="h-12 w-12 text-[#d9d9d9]" />
               <p>页面内容预览</p>
               <span>{state.url}</span>
-              <Tag color="blue">{state.title}</Tag>
+              <Badge variant="accent">{state.title}</Badge>
               <span className={styles.viewportSize}>
                 {state.width} × {state.height}
               </span>
@@ -284,10 +285,7 @@ export function BrowserPanel() {
           </div>
         ) : (
           <div className={styles.emptyBrowser}>
-            <Empty
-              description="输入 URL 开始浏览"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            <Empty description="输入 URL 开始浏览" />
           </div>
         )}
       </div>
@@ -298,8 +296,8 @@ export function BrowserPanel() {
           <div className={styles.consoleHeader}>
             <span className={styles.consoleTitle}>控制台</span>
             <Button
-              size="small"
-              type="text"
+              size="sm"
+              variant="ghost"
               onClick={() => setShowConsole(false)}
             >
               收起
@@ -319,12 +317,12 @@ export function BrowserPanel() {
                       className={styles.logEntry}
                     >
                       <span className={styles.logTime}>{log.timestamp}</span>
-                      <Tag
-                        color={logColors[log.type]}
-                        style={{ fontSize: 9, margin: "0 4px" }}
+                      <Badge
+                        variant={log.type === "error" ? "danger" : log.type === "navigation" ? "accent" : "default"}
+                        className="text-[9px] mx-1"
                       >
                         {log.type}
-                      </Tag>
+                      </Badge>
                       <span className={styles.logMessage}>{log.message}</span>
                     </div>
                   ))}
@@ -340,7 +338,7 @@ export function BrowserPanel() {
           className={styles.consoleToggle}
           onClick={handleConsoleToggle}
         >
-          <StopOutlined style={{ transform: "rotate(45deg)", fontSize: 12 }} />
+          <Square className="h-3 w-3 rotate-45" />
           控制台
         </button>
       )}

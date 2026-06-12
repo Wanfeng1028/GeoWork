@@ -1,19 +1,12 @@
 // GeoWork Browser Control Bar
 // Toolbar for screenshot, extract, send-to-agent, close session
 
-import { Button, Space, Tag, Tooltip, Typography } from 'antd'
-import {
-  CameraOutlined,
-  FileTextOutlined,
-  ThunderboltOutlined,
-  CloseOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-} from '@ant-design/icons'
+import { Button } from '../../../components/ui/button'
+import { Badge } from '../../../components/ui/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
+import { Camera, FileText, Zap, X, CheckCircle, Square } from 'lucide-react'
 import { useBrowserStore } from '../browserStore'
 import styles from './BrowserControlBar.module.scss'
-
-const { Text } = Typography
 
 interface BrowserControlBarProps {
   className?: string
@@ -55,58 +48,78 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
     <div className={`${styles.container} ${className}`}>
       <div className={styles.status}>
         {isRunning ? (
-          <Tag color="green" icon={<CheckCircleOutlined />}>
+          <Badge variant="default" className="bg-green-500/20 text-green-400">
+            <CheckCircle className="h-3 w-3 mr-1" />
             Active
-          </Tag>
+          </Badge>
         ) : (
-          <Tag color="default" icon={<StopOutlined />}>
+          <Badge variant="secondary">
+            <Square className="h-3 w-3 mr-1" />
             Closed
-          </Tag>
+          </Badge>
         )}
       </div>
 
-      <Space.Compact className={styles.toolbar}>
-        <Tooltip title="Screenshot">
-          <Button
-            size="small"
-            disabled={!isRunning || isLoading}
-            onClick={handleTakeScreenshot}
-            icon={<CameraOutlined />}
-          />
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!isRunning || isLoading}
+              onClick={handleTakeScreenshot}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Screenshot</TooltipContent>
         </Tooltip>
 
-        <Tooltip title="Extract Text">
-          <Button
-            size="small"
-            disabled={!isRunning || isLoading}
-            onClick={handleExtractText}
-            icon={<FileTextOutlined />}
-          />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!isRunning || isLoading}
+              onClick={handleExtractText}
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Extract Text</TooltipContent>
         </Tooltip>
 
-        <Tooltip title="Send to Agent">
-          <Button
-            size="small"
-            disabled={!isRunning || isLoading}
-            onClick={handleAddToContext}
-            icon={<ThunderboltOutlined />}
-          >
-            <Text className={styles.toolbarLabel}>Agent</Text>
-          </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={!isRunning || isLoading}
+              onClick={handleAddToContext}
+            >
+              <Zap className="h-4 w-4" />
+              <span className={styles.toolbarLabel}>Agent</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Send to Agent</TooltipContent>
         </Tooltip>
 
         <div className={styles.toolbarDivider} />
 
-        <Tooltip title="Close Session">
-          <Button
-            size="small"
-            disabled={!isRunning}
-            onClick={handleCloseSession}
-            danger
-            icon={<CloseOutlined />}
-          />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={!isRunning}
+              onClick={handleCloseSession}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Close Session</TooltipContent>
         </Tooltip>
-      </Space.Compact>
+      </div>
     </div>
   )
 }

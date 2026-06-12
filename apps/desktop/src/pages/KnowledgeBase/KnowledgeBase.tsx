@@ -1,35 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
+import { Spinner } from '../../components/ui/spinner'
+import { Empty } from '../../components/ui/empty'
+import { toast } from 'sonner'
 import {
-  Breadcrumb,
-  Button,
-  Drawer,
-  Empty,
-  Form,
-  Input,
-  message,
-  Modal,
-  Space,
-  Spin,
-  Table,
-  Tag,
-  Tree,
+  FolderPlus,
+  Folder,
+  File,
+  FileText,
+  Download,
+  Plus,
   Upload,
-} from 'antd'
-import {
-  FolderAddOutlined,
-  FolderOutlined,
-  FileOutlined,
-  FilePdfOutlined,
-  ImportOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from '@ant-design/icons'
-import type { UploadFile } from 'antd/es/upload/interface'
+  Search
+} from 'lucide-react'
 import { useKnowledgeBaseStore, type KnowledgeCategory, type KnowledgeEntry } from './store'
 import { KnowledgeDetail } from './KnowledgeDetail'
 import styles from './KnowledgeBase.module.scss'
-
-const { Dragger } = Upload
 
 export function KnowledgeBase() {
   const {
@@ -40,35 +30,30 @@ export function KnowledgeBase() {
     searchQuery,
     isLoading,
     error,
-    setCategories,
-    setEntries,
     setSelectedCategory,
     setSelectedEntry,
     setSearchQuery,
     createCategory,
-    addEntry,
     indexFromPaper,
     importFromFile,
     deleteEntry,
     search,
-    loadCategories,
     loadEntries,
     refresh,
   } = useKnowledgeBaseStore()
 
   const [detailVisible, setDetailVisible] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [createForm] = Form.useForm()
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatParent, setNewCatParent] = useState('')
   const [uploading, setUploading] = useState(false)
   const [paperIndexModalOpen, setPaperIndexModalOpen] = useState(false)
-  const [paperIndexForm] = Form.useForm()
+  const [paperForm, setPaperForm] = useState({ paperId: '', title: '', content: '', tags: '' })
 
-  // Load data on mount
   useEffect(() => {
     refresh()
   }, [refresh])
 
-  // Load entries when category changes
   useEffect(() => {
     if (searchQuery) {
       search(searchQuery)
@@ -89,136 +74,70 @@ export function KnowledgeBase() {
 
   const handleCreateCategory = useCallback(async () => {
     try {
-      const values = await createForm.validateFields()
-      await createCategory(values.name, values.parentId || undefined)
-      createForm.resetFields()
+      await createCategory(newCatName, newCatParent || undefined)
+      setNewCatName('')
+      setNewCatParent('')
       setCreateModalOpen(false)
-      message.success('分类创建成功')
+      toast.success('分类创建成功')
     } catch {
-      message.error('分类创建失败')
+      toast.error('分类创建失败')
     }
-  }, [createForm, createCategory])
+  }, [newCatName, newCatParent, createCategory])
 
   const handleImportFile = useCallback(async (file: File) => {
     setUploading(true)
     try {
       await importFromFile(file)
-      message.success('文件导入成功')
+      toast.success('文件导入成功')
     } catch {
-      message.error('文件导入失败')
+      toast.error('文件导入失败')
     } finally {
       setUploading(false)
     }
-    return false // prevent default upload
   }, [importFromFile])
 
   const handleIndexFromPaper = useCallback(async () => {
     try {
-      const values = await paperIndexForm.validateFields()
-      await indexFromPaper(values.paperId, values.title, values.content, values.tags?.split(',').map((t: string) => t.trim()) || [])
-      paperIndexForm.resetFields()
+      await indexFromPaper(paperForm.paperId, paperForm.title, paperForm.content, paperForm.tags?.split(',').map((t: string) => t.trim()) || [])
+      setPaperForm({ paperId: '', title: '', content: '', tags: '' })
       setPaperIndexModalOpen(false)
-      message.success('论文索引成功')
+      toast.success('论文索引成功')
     } catch {
-      message.error('论文索引失败')
+      toast.error('论文索引失败')
     }
-  }, [paperIndexForm, indexFromPaper])
+  }, [paperForm, indexFromPaper])
 
   const handleDeleteEntry = useCallback(async (id: string) => {
     try {
       await deleteEntry(id)
-      message.success('已删除')
+      toast.success('已删除')
     } catch {
-      message.error('删除失败')
+      toast.error('删除失败')
     }
   }, [deleteEntry])
 
-  // Build tree data from categories
   const treeData = useMemo(() => {
-    const buildTree = (cats: KnowledgeCategory[]): any[] => {
-      return cats.map((cat) => ({
-        title: (
+    const buildTree = (cats: KnowledgeCategory[]): React.ReactNode[] => {
+      return cats.map((cat) => (
+        <div key={cat.id}>
           <div
             className={`${styles.treeNode} ${selectedCategory === cat.id ? styles.selected : ''}`}
             onClick={() => handleSelectCategory(cat.id)}
           >
-            <FolderOutlined className={styles.treeIcon} />
+            <Folder className={styles.treeIcon} />
             <span className={styles.treeLabel}>{cat.name}</span>
           </div>
-        ),
-        key: cat.id,
-        children: buildTree(cat.children || []),
-      }))
+          {cat.children && cat.children.length > 0 && (
+            <div className="ml-4">
+              {buildTree(cat.children)}
+            </div>
+          )}
+        </div>
+      ))
     }
     return buildTree(categories)
   }, [categories, selectedCategory, handleSelectCategory])
 
-  // Table columns
-  const columns = useMemo(() => [
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      width: '40%',
-      render: (text: string) => <span className={styles.entryTitle}>{text}</span>,
-    },
-    {
-      title: '来源',
-      dataIndex: 'source',
-      key: 'source',
-      width: 100,
-      render: (source: string) => {
-        const colors: Record<string, string> = {
-          paper_id: 'blue',
-          pdf: 'green',
-          manual: 'orange',
-        }
-        const labels: Record<string, string> = {
-          paper_id: '论文',
-          pdf: 'PDF',
-          manual: '手动',
-        }
-        return <Tag color={colors[source] || 'default'}>{labels[source] || source}</Tag>
-      },
-    },
-    {
-      title: '标签',
-      dataIndex: 'tags',
-      key: 'tags',
-      width: 200,
-      render: (tags: string[]) => (
-        <Space wrap>
-          {(tags || []).map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </Space>
-      ),
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 160,
-      render: (date: string) => new Date(date).toLocaleDateString('zh-CN'),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 100,
-      render: (_: unknown, record: KnowledgeEntry) => (
-        <Button
-          danger
-          size="small"
-          type="text"
-          onClick={() => handleDeleteEntry(record.id)}
-        >
-          删除
-        </Button>
-      ),
-    },
-  ], [handleDeleteEntry])
-
-  // Filter entries by search query
   const filteredEntries = useMemo(() => {
     if (!searchQuery) return entries
     const q = searchQuery.toLowerCase()
@@ -230,16 +149,17 @@ export function KnowledgeBase() {
     )
   }, [entries, searchQuery])
 
-  const breadcrumbItems = useMemo(() => {
-    const items: { title: string }[] = [{ title: '知识库' }]
-    if (selectedCategory) {
-      const cat = findCategory(categories, selectedCategory)
-      if (cat) {
-        items.push({ title: cat.name })
-      }
-    }
-    return items
-  }, [categories, selectedCategory])
+  const sourceColors: Record<string, string> = {
+    paper_id: 'bg-blue-100 text-blue-800',
+    pdf: 'bg-green-100 text-green-800',
+    manual: 'bg-orange-100 text-orange-800'
+  }
+
+  const sourceLabels: Record<string, string> = {
+    paper_id: '论文',
+    pdf: 'PDF',
+    manual: '手动'
+  }
 
   if (error) {
     return (
@@ -251,181 +171,182 @@ export function KnowledgeBase() {
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
-      {/* Left sidebar: category tree */}
+      {/* Left sidebar */}
       <div className={styles.sidebar} style={{ width: 260, flexShrink: 0 }}>
         <div className={styles.sidebarHeader}>
           <h3 className={styles.sidebarTitle}>知识分类</h3>
-          <Space>
-            <Button
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalOpen(true)}
-              title="新建分类"
-            />
-            <Button
-              size="small"
-              icon={<ImportOutlined />}
-              onClick={() => setPaperIndexModalOpen(true)}
-              title="从论文索引"
-            />
-          </Space>
+          <div className="flex gap-1">
+            <Button size="sm" variant="outline" onClick={() => setCreateModalOpen(true)} title="新建分类">
+              <Plus className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setPaperIndexModalOpen(true)} title="从论文索引">
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <div className={styles.sidebarContent}>
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 20 }}>
-              <Spin size="small" />
+            <div className="text-center p-5">
+              <Spinner className="w-5 h-5" />
             </div>
           ) : (
-            <Tree
-              treeData={treeData}
-              selectedKeys={selectedCategory ? [selectedCategory] : []}
-              showIcon={false}
-              defaultExpandAll
-            />
+            <div>{treeData}</div>
           )}
-          {/* "All entries" option */}
           <div
             className={`${styles.treeNode} ${!selectedCategory ? styles.selected : ''}`}
             onClick={() => handleSelectCategory(null)}
           >
-            <FileOutlined className={styles.treeIcon} />
+            <File className={styles.treeIcon} />
             <span className={styles.treeLabel}>全部条目</span>
           </div>
         </div>
       </div>
 
-      {/* Right content: entry list + detail drawer */}
+      {/* Right content */}
       <div className={styles.mainContent} style={{ flex: 1 }}>
-        {/* Toolbar */}
         <div className={styles.toolbar}>
-          <Breadcrumb items={breadcrumbItems} />
-          <Space style={{ flex: 1, minWidth: 0 }}>
-            <Input.Search
-              className={styles.toolbarSearch}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>知识库</span>
+            {selectedCategory && <><span>/</span><span>{findCategory(categories, selectedCategory)?.name}</span></>}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              className="min-w-[200px]"
               placeholder="搜索知识条目..."
-              allowClear
-              onSearch={(val: string) => search(val)}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              style={{ minWidth: 200 }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Upload
-              accept=".pdf,.txt,.md,.csv,.json"
-              showUploadList={false}
-              beforeUpload={(file) => handleImportFile(file)}
-              disabled={uploading}
-            >
-              <Button
-                icon={<UploadOutlined />}
-                loading={uploading}
-              >
-                导入文件
+            <label>
+              <Button variant="outline" disabled={uploading} asChild>
+                <span>
+                  <Upload className="w-4 h-4 mr-1" /> 导入文件
+                </span>
               </Button>
-            </Upload>
-          </Space>
+              <input
+                type="file"
+                accept=".pdf,.txt,.md,.csv,.json"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleImportFile(e.target.files[0])
+                }}
+              />
+            </label>
+          </div>
         </div>
 
-        {/* Entry list */}
         <div className={styles.entryList}>
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin size="large" />
+            <div className="text-center p-10">
+              <Spinner className="w-8 h-8" />
             </div>
           ) : filteredEntries.length === 0 ? (
-            <Empty
-              description="暂无知识条目"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            <Empty description="暂无知识条目" />
           ) : (
-            <Table
-              rowKey="id"
-              dataSource={filteredEntries}
-              columns={columns}
-              pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (total) => `共 ${total} 条` }}
-              size="small"
-              onRow={(record) => ({
-                onClick: () => handleSelectEntry(record),
-                style: { cursor: 'pointer' },
-              })}
-            />
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3">标题</th>
+                  <th className="text-left p-3 w-[100px]">来源</th>
+                  <th className="text-left p-3 w-[200px]">标签</th>
+                  <th className="text-left p-3 w-[160px]">创建时间</th>
+                  <th className="text-left p-3 w-[100px]">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="border-b cursor-pointer hover:bg-muted/50" onClick={() => handleSelectEntry(entry)}>
+                    <td className="p-3 font-medium">{entry.title}</td>
+                    <td className="p-3">
+                      <Badge variant="secondary" className={sourceColors[entry.source] || ''}>
+                        {sourceLabels[entry.source] || entry.source}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(entry.tags || []).map((tag) => (
+                          <Badge key={tag} variant="outline">{tag}</Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-3">{new Date(entry.createdAt).toLocaleDateString('zh-CN')}</td>
+                    <td className="p-3">
+                      <Button size="sm" variant="outline" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id) }}>
+                        删除
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
 
-      {/* Detail drawer */}
-      <Drawer
-        title="知识详情"
-        placement="right"
-        width={600}
-        open={detailVisible}
-        onClose={() => setDetailVisible(false)}
-        destroyOnClose
-      >
-        <KnowledgeDetail
-          visible={detailVisible}
-          onClose={() => setDetailVisible(false)}
-        />
-      </Drawer>
+      {/* Detail dialog */}
+      <Dialog open={detailVisible} onOpenChange={setDetailVisible}>
+        <DialogContent className="max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <KnowledgeDetail visible={detailVisible} onClose={() => setDetailVisible(false)} />
+        </DialogContent>
+      </Dialog>
 
       {/* Create category modal */}
-      <Modal
-        title="新建知识分类"
-        open={createModalOpen}
-        onOk={handleCreateCategory}
-        onCancel={() => { setCreateModalOpen(false); createForm.resetFields() }}
-        okText="创建"
-        cancelText="取消"
-      >
-        <Form form={createForm} layout="vertical">
-          <Form.Item
-            name="name"
-            label="分类名称"
-            rules={[{ required: true, message: '请输入分类名称' }]}
-          >
-            <Input placeholder="例如：遥感算法、NDVI 研究" />
-          </Form.Item>
-          <Form.Item name="parentId" label="父分类">
-            <Input placeholder="留空表示顶级分类" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建知识分类</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">分类名称</label>
+              <Input placeholder="例如：遥感算法、NDVI 研究" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">父分类</label>
+              <Input placeholder="留空表示顶级分类" value={newCatParent} onChange={(e) => setNewCatParent(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCreateModalOpen(false); setNewCatName(''); setNewCatParent('') }}>取消</Button>
+            <Button onClick={handleCreateCategory}>创建</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Index from paper modal */}
-      <Modal
-        title="从论文索引到知识库"
-        open={paperIndexModalOpen}
-        onOk={handleIndexFromPaper}
-        onCancel={() => { setPaperIndexModalOpen(false); paperIndexForm.resetFields() }}
-        okText="索引"
-        cancelText="取消"
-        width={600}
-      >
-        <Form form={paperIndexForm} layout="vertical">
-          <Form.Item
-            name="paperId"
-            label="论文 ID"
-            rules={[{ required: true, message: '请输入论文 ID' }]}
-          >
-            <Input placeholder="例如：paper_ndvi_review" />
-          </Form.Item>
-          <Form.Item
-            name="title"
-            label="标题"
-            rules={[{ required: true, message: '请输入标题' }]}
-          >
-            <Input placeholder="知识条目标题" />
-          </Form.Item>
-          <Form.Item
-            name="content"
-            label="内容"
-            rules={[{ required: true, message: '请输入内容' }]}
-          >
-            <Input.TextArea rows={6} placeholder="知识条目的正文内容" />
-          </Form.Item>
-          <Form.Item name="tags" label="标签">
-            <Input placeholder="多个标签用逗号分隔" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <Dialog open={paperIndexModalOpen} onOpenChange={setPaperIndexModalOpen}>
+        <DialogContent className="max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>从论文索引到知识库</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">论文 ID</label>
+              <Input placeholder="例如：paper_ndvi_review" value={paperForm.paperId} onChange={(e) => setPaperForm({ ...paperForm, paperId: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">标题</label>
+              <Input placeholder="知识条目标题" value={paperForm.title} onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">内容</label>
+              <textarea
+                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="知识条目的正文内容"
+                value={paperForm.content}
+                onChange={(e) => setPaperForm({ ...paperForm, content: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">标签</label>
+              <Input placeholder="多个标签用逗号分隔" value={paperForm.tags} onChange={(e) => setPaperForm({ ...paperForm, tags: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPaperIndexModalOpen(false); setPaperForm({ paperId: '', title: '', content: '', tags: '' }) }}>取消</Button>
+            <Button onClick={handleIndexFromPaper}>索引</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

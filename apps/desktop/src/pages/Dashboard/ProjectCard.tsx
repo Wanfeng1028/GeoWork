@@ -1,12 +1,13 @@
 import React from 'react'
-import { Card, Tag, Tooltip } from 'antd'
+import { Card, CardContent } from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
 import {
-  FolderOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  LoadingOutlined,
-  PauseCircleOutlined
-} from '@ant-design/icons'
+  Folder,
+  Clock,
+  CheckCircle,
+  Loader2,
+  PauseCircle
+} from 'lucide-react'
 import styles from './ProjectCard.module.scss'
 
 export interface ProjectItem {
@@ -25,23 +26,22 @@ export interface ProjectCardProps {
 }
 
 const STATUS_MAP: Record<ProjectItem['status'], { color: string; icon: React.ReactNode; text: string }> = {
-  active: { color: 'green', icon: <CheckCircleOutlined />, text: '进行中' },
-  paused: { color: 'orange', icon: <PauseCircleOutlined />, text: '已暂停' },
-  completed: { color: 'blue', icon: <CheckCircleOutlined />, text: '已完成' },
-  error: { color: 'red', icon: <PauseCircleOutlined />, text: '异常' }
+  active: { color: 'bg-green-500', icon: <CheckCircle />, text: '进行中' },
+  paused: { color: 'bg-orange-500', icon: <PauseCircle />, text: '已暂停' },
+  completed: { color: 'bg-blue-500', icon: <CheckCircle />, text: '已完成' },
+  error: { color: 'bg-red-500', icon: <PauseCircle />, text: '异常' }
 }
 
 const MODE_COLORS: Record<string, string> = {
-  Research: 'blue',
-  Data: 'green',
-  GeoCode: 'purple',
-  Analysis: 'orange',
-  Write: 'cyan'
+  Research: 'bg-blue-100 text-blue-800',
+  Data: 'bg-green-100 text-green-800',
+  GeoCode: 'bg-purple-100 text-purple-800',
+  Analysis: 'bg-orange-100 text-orange-800',
+  Write: 'bg-cyan-100 text-cyan-800'
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   const statusInfo = STATUS_MAP[project.status] ?? STATUS_MAP.active
-  const modeColor = MODE_COLORS[project.mode] ?? 'default'
 
   const handleClick = () => {
     if (onClick) {
@@ -52,10 +52,10 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <Card
       className={styles.card}
-      hoverable
       onClick={handleClick}
-      cover={
-        project.thumbnail ? (
+    >
+      <CardContent>
+        {project.thumbnail ? (
           <img
             alt={project.name}
             src={project.thumbnail}
@@ -63,29 +63,26 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           />
         ) : (
           <div className={styles.placeholder}>
-            <FolderOutlined className={styles.placeholderIcon} />
+            <Folder className={styles.placeholderIcon} />
           </div>
-        )
-      }
-    >
-      <div className={styles.cardBody}>
-        <div className={styles.cardHeader}>
-          <span className={styles.projectName}>{project.name}</span>
-          <Tag color={modeColor}>{project.mode}</Tag>
-        </div>
-        <p className={styles.description}>{project.description}</p>
-        <div className={styles.cardFooter}>
-          <Tooltip title={project.lastModified}>
+        )}
+        <div className={styles.cardBody}>
+          <div className={styles.cardHeader}>
+            <span className={styles.projectName}>{project.name}</span>
+            <Badge variant="secondary" className={MODE_COLORS[project.mode] || ''}>{project.mode}</Badge>
+          </div>
+          <p className={styles.description}>{project.description}</p>
+          <div className={styles.cardFooter}>
             <span className={styles.time}>
-              <ClockCircleOutlined />
+              <Clock className="w-3.5 h-3.5" />
               {formatRelativeTime(project.lastModified)}
             </span>
-          </Tooltip>
-          <Tag color={statusInfo.color} icon={statusInfo.icon}>
-            {statusInfo.text}
-          </Tag>
+            <Badge variant="secondary" className={statusInfo.color}>
+              {statusInfo.icon} {statusInfo.text}
+            </Badge>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   )
 }

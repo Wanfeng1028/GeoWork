@@ -4,14 +4,10 @@
 // Displays diagnostics: errors, warnings, and info messages from build and runtime
 
 import { useState } from "react";
-import { Table, Tag, Input, Space, Badge, Button } from "antd";
-import {
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
-  FilterOutlined,
-  ClearOutlined,
-} from "@ant-design/icons";
+import { XCircle, AlertCircle, Info, Filter, Trash2 } from "lucide-react";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Badge } from "../../ui/badge";
 import useShellStore from "../../../stores/shellStore";
 import styles from "./ProblemsPanel.module.scss";
 
@@ -82,17 +78,17 @@ export function ProblemsPanel() {
         const config = {
           error: {
             color: "#f5222d",
-            icon: <CloseCircleOutlined />,
+            icon: <XCircle className="h-3.5 w-3.5" />,
             label: "错误",
           },
           warning: {
             color: "#faad14",
-            icon: <ExclamationCircleOutlined />,
+            icon: <AlertCircle className="h-3.5 w-3.5" />,
             label: "警告",
           },
           info: {
             color: "#1890ff",
-            icon: <InfoCircleOutlined />,
+            icon: <Info className="h-3.5 w-3.5" />,
             label: "信息",
           },
         };
@@ -105,13 +101,12 @@ export function ProblemsPanel() {
       dataIndex: "source",
       key: "source",
       width: 80,
-      render: (source: string) => <Tag style={{ fontSize: 10 }}>{source}</Tag>,
+      render: (source: string) => <Badge variant="default" className="text-[10px]">{source}</Badge>,
     },
     {
       title: "消息",
       dataIndex: "message",
       key: "message",
-      ellipsis: true,
     },
     {
       title: "位置",
@@ -132,76 +127,96 @@ export function ProblemsPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.badges}>
-          <Badge
-            count={errorCount}
-            style={{ backgroundColor: "#f5222d", marginRight: 12 }}
-          >
+          <span className="inline-flex items-center gap-1.5 mr-3">
+            <span className="inline-flex items-center justify-center rounded-full bg-[#f5222d] text-white text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+              {errorCount}
+            </span>
             <span className={styles.badgeLabel}>错误</span>
-          </Badge>
-          <Badge
-            count={warningCount}
-            style={{ backgroundColor: "#faad14" }}
-          >
+          </span>
+          <span className="inline-flex items-center gap-1.5 mr-3">
+            <span className="inline-flex items-center justify-center rounded-full bg-[#faad14] text-white text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+              {warningCount}
+            </span>
             <span className={styles.badgeLabel}>警告</span>
-          </Badge>
+          </span>
           <span className={styles.totalCount}>
             共 {filteredProblems.length} 项
           </span>
         </div>
         <Button
-          size="small"
-          icon={<ClearOutlined />}
-          type="text"
+          size="sm"
+          variant="ghost"
         >
+          <Trash2 className="h-3.5 w-3.5 mr-1" />
           清除
         </Button>
       </div>
 
       <div className={styles.filterSection}>
-        <Input
-          size="small"
-          placeholder="搜索问题..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          prefix={<FilterOutlined style={{ color: "#bfbfbf" }} />}
-        />
-        <Space size="small">
+        <div className="relative">
+          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#bfbfbf]" />
+          <Input
+            placeholder="搜索问题..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div className="flex gap-1">
           <Button
-            size="small"
-            type={severityFilter === "all" ? "primary" : "default"}
+            size="sm"
+            variant={severityFilter === "all" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("all")}
           >
             全部
           </Button>
           <Button
-            size="small"
-            type={severityFilter === "error" ? "primary" : "default"}
+            size="sm"
+            variant={severityFilter === "error" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("error")}
-            danger
+            className="text-[#f5222d] border-[#f5222d]"
           >
             错误
           </Button>
           <Button
-            size="small"
-            type={severityFilter === "warning" ? "primary" : "default"}
+            size="sm"
+            variant={severityFilter === "warning" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("warning")}
-            style={{ color: "#faad14", borderColor: "#faad14" }}
+            className="text-[#faad14] border-[#faad14]"
           >
             警告
           </Button>
-        </Space>
+        </div>
       </div>
 
       <div className={styles.tableContainer}>
-        <Table
-          dataSource={filteredProblems}
-          columns={columns}
-          rowKey="id"
-          size="small"
-          pagination={false}
-          className={styles.problemTable}
-          scroll={{ y: "100%" }}
-        />
+        <div className="flex flex-col text-[12px]">
+          <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium text-[var(--gw-text-tertiary)] border-b border-[var(--gw-border-soft)]">
+            {columns.map((col) => (
+              <span key={col.key} style={{ width: col.width, flex: col.width ? undefined : 1 }}>
+                {col.title}
+              </span>
+            ))}
+          </div>
+          {filteredProblems.map((record) => (
+            <div
+              key={record.id}
+              className="flex items-center gap-2 px-2 py-1.5 hover:bg-[var(--gw-bg-hover)] border-b border-[var(--gw-border-soft)]"
+            >
+              {columns.map((col) => (
+                <span
+                  key={col.key}
+                  style={{ width: col.width, flex: col.width ? undefined : 1 }}
+                  className="truncate"
+                >
+                  {col.render
+                    ? col.render(record[col.dataIndex as keyof Problem] as any, record)
+                    : (record[col.dataIndex as keyof Problem] as any)}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

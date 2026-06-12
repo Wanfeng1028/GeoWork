@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Button, Form, Input, Select, Switch, message, Tag, Space } from 'antd'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
+import { Switch } from '../../components/ui/switch'
+import { Badge } from '../../components/ui/badge'
+import { toast } from 'sonner'
 import { useAutomationStore, CronJob } from './store'
 import styles from './CronEditor.module.scss'
 
@@ -17,27 +22,30 @@ const COMMON_PRESETS: { label: string; value: string }[] = [
 const FIELD_LABELS = ['分钟 (0-59)', '小时 (0-23)', '日 (1-31)', '月 (1-12)', '星期 (0-6)']
 
 export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClose: () => void; editingJob?: CronJob | null }) {
-  const [form] = Form.useForm<Partial<CronJob>>()
   const [expression, setExpression] = useState('')
   const [nextRunPreview, setNextRunPreview] = useState<string | null>(null)
   const { createJob, updateJob, loading, toggleJob } = useAutomationStore()
+  const [formState, setFormState] = useState({
+    name: '',
+    target: '',
+    params: '',
+    enabled: true
+  })
 
   useEffect(() => {
     if (open) {
       const expr = editingJob?.cronExpression ?? '0 0 * * *'
       setExpression(expr)
-      form.setFieldsValue({
+      setFormState({
         name: editingJob?.name ?? '',
-        cronExpression: expr,
         target: editingJob?.target ?? '',
-        params: (editingJob?.params ?? {}) as Record<string, any>,
+        params: editingJob?.params ? JSON.stringify(editingJob.params) : '',
         enabled: editingJob?.enabled ?? true
       })
       setNextRunPreview(calculateNextRun(expr))
     }
-  }, [open, editingJob, form])
+  }, [open, editingJob])
 
-  // Live preview when expression changes
   useEffect(() => {
     if (expression.trim()) {
       setNextRunPreview(calculateNextRun(expression.trim()))
@@ -46,30 +54,29 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
     }
   }, [expression])
 
-  const handleFinish = useCallback(async (values: Partial<CronJob>) => {
+  const handleFinish = useCallback(async () => {
     try {
+      let params = {}
+      try { params = formState.params ? JSON.parse(formState.params) : {} } catch {}
+
       if (editingJob) {
-        await updateJob({ ...editingJob, ...values, cronExpression: expression, params: values.params ?? {} })
-        message.success('定时任务已更新')
+        await updateJob({ ...editingJob, ...formState, cronExpression: expression, params })
+        toast.success('定时任务已更新')
       } else {
         await createJob({
-          name: values.name!,
+          name: formState.name,
           cronExpression: expression,
-          target: values.target ?? '',
-          params: values.params ?? {},
-          enabled: values.enabled ?? true
+          target: formState.target,
+          params,
+          enabled: formState.enabled
         })
-        message.success('定时任务已创建')
+        toast.success('定时任务已创建')
       }
       onClose()
     } catch {
-      message.error('保存失败')
+      toast.error('保存失败')
     }
-  }, [editingJob, expression, updateJob, createJob, onClose])
-
-  const handlePreset = useCallback((value: string) => {
-    setExpression(value)
-  }, [])
+  }, [editingJob, expression, updateJob, createJob, onClose, formState])
 
   return (
     <div className={styles.drawer} style={{ display: open ? 'flex' : 'none' }}>
@@ -80,25 +87,21 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           <button className={styles.closeBtn} onClick={onClose}>×</button>
         </div>
 
-        <Form<Partial<CronJob>>
-          form={form}
-          layout="vertical"
-          onFinish={handleFinish}
-          initialValues={{ enabled: true }}
-        >
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入任务名称' }]}>
-            <Input placeholder="例如：每日数据备份" />
-          </Form.Item>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">名称</label>
+            <Input placeholder="例如：每日数据备份" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
+          </div>
 
-          {/* Cron expression */}
-          <Form.Item label="Cron 表达式" rules={[{ required: true, message: '请输入 Cron 表达式' }]}>
+          <div>
+            <label className="text-sm font-medium">Cron 表达式</label>
             <Input
               value={expression}
               onChange={(e) => setExpression(e.target.value)}
               placeholder="分 时 日 月 星期"
               className={styles.cronInput}
             />
-          </Form.Item>
+          </div>
 
           {/* Visual field breakdown */}
           <div className={styles.cronFields}>
@@ -118,74 +121,70 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           )}
 
           {/* Common presets */}
-          <Form.Item label="常用表达式">
-            <Space wrap className={styles.presets}>
+          <div>
+            <label className="text-sm font-medium">常用表达式</label>
+            <div className="flex flex-wrap gap-2 mt-2">
               {COMMON_PRESETS.map((preset) => (
-                <Tag
+                <Badge
                   key={preset.value}
-                  color="blue"
-                  className={styles.presetTag}
-                  onClick={() => handlePreset(preset.value)}
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={() => setExpression(preset.value)}
                 >
                   {preset.label}
-                </Tag>
+                </Badge>
               ))}
-            </Space>
-          </Form.Item>
+            </div>
+          </div>
 
-          <Form.Item name="target" label="执行目标" rules={[{ required: true, message: '请选择执行目标' }]}>
-            <Select options={[
-              { label: 'Research 专家', value: 'Research' },
-              { label: 'Data 专家', value: 'Data' },
-              { label: 'GeoCode 专家', value: 'GeoCode' },
-              { label: 'Analysis 专家', value: 'Analysis' },
-              { label: 'Write 专家', value: 'Write' },
-              { label: '自定义 Skill', value: 'skill' },
-              { label: '自定义脚本', value: 'script' }
-            ]} />
-          </Form.Item>
+          <div>
+            <label className="text-sm font-medium">执行目标</label>
+            <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择执行目标" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Research">Research 专家</SelectItem>
+                <SelectItem value="Data">Data 专家</SelectItem>
+                <SelectItem value="GeoCode">GeoCode 专家</SelectItem>
+                <SelectItem value="Analysis">Analysis 专家</SelectItem>
+                <SelectItem value="Write">Write 专家</SelectItem>
+                <SelectItem value="skill">自定义 Skill</SelectItem>
+                <SelectItem value="script">自定义脚本</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Form.Item label="参数配置">
-            <Input.TextArea
-              rows={3}
+          <div>
+            <label className="text-sm font-medium">参数配置</label>
+            <textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               placeholder='{"band": "NIR"}'
-              {...{
-                onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  try {
-                    const parsed = e.target.value ? JSON.parse(e.target.value) : {}
-                    form.setFieldValue('params', parsed)
-                  } catch {
-                    // invalid JSON
-                  }
-                }
-              }}
+              value={formState.params}
+              onChange={(e) => setFormState({ ...formState, params: e.target.value })}
             />
-          </Form.Item>
+          </div>
 
-          <Form.Item label="启用" valuePropName="checked" style={{ marginBottom: 0 }}>
-            <Form.Item name="enabled" valuePropName="checked" noStyle>
-              <Switch checked={editingJob ? editingJob.enabled : undefined} onChange={(checked) => {
-                if (editingJob) toggleJob(editingJob.id)
-              }} />
-            </Form.Item>
-          </Form.Item>
+          <div className="flex items-center gap-2">
+            <Switch checked={formState.enabled} onCheckedChange={(v) => {
+              setFormState({ ...formState, enabled: v })
+              if (editingJob) toggleJob(editingJob.id)
+            }} />
+            <label className="text-sm font-medium">启用</label>
+          </div>
 
           <div className={styles.actions}>
-            <Button onClick={onClose}>取消</Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button variant="outline" onClick={onClose}>取消</Button>
+            <Button onClick={handleFinish} disabled={loading}>
               {editingJob ? '保存' : '创建'}
             </Button>
           </div>
-        </Form>
+        </div>
       </div>
     </div>
   )
 }
 
-/**
- * Simple next-run calculator for cron expressions.
- * This is a best-effort approximation — not a full cron parser.
- */
 function calculateNextRun(expression: string): string | null {
   const parts = expression.trim().split(/\s+/)
   if (parts.length !== 5) return null
@@ -198,11 +197,9 @@ function calculateNextRun(expression: string): string | null {
     const month = parseCronField(parts[3], 1, 12)
     const dow = parseCronField(parts[4], 0, 6)
 
-    // Find next matching time
     const candidate = new Date(now)
     candidate.setSeconds(0, 0)
 
-    // Increment by one minute and search up to 7 days
     for (let i = 0; i < 7 * 24 * 60; i++) {
       candidate.setMinutes(candidate.getMinutes() + 1)
       const cm = candidate.getMinutes()
@@ -234,10 +231,8 @@ function calculateNextRun(expression: string): string | null {
 }
 
 function parseCronField(field: string, min: number, max: number): number[] {
-  // Handle wildcard
   if (field === '*') return Array.from({ length: max - min + 1 }, (_, i) => i + min)
 
-  // Handle step: */N or N-M/S
   if (field.includes('/')) {
     const [range, stepStr] = field.split('/')
     const step = parseInt(stepStr, 10)
@@ -248,18 +243,15 @@ function parseCronField(field: string, min: number, max: number): number[] {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i).filter((v) => v % step === 0)
   }
 
-  // Handle range: N-M
   if (field.includes('-')) {
     const [start, end] = field.split('-').map(Number)
     return Array.from({ length: end - start + 1 }, (_, i) => start + i)
   }
 
-  // Handle comma-separated values
   if (field.includes(',')) {
     return field.split(',').map(Number)
   }
 
-  // Single value
   const val = parseInt(field, 10)
   if (!isNaN(val)) return [val]
 

@@ -10,7 +10,7 @@ export default function GeoCodeWorkspace() {
       <div className={styles.content}>
         <div className={styles.header}>
           <h2 className="text-lg font-semibold flex items-center gap-2"><Code className="h-5 w-5" /> 编码模式</h2>
-          <span className="text-sm text-[var(--gw-text-tertiary)]">地理编码、脚本生成和 GEE 集成</span>
+          <span className="text-sm text-(--gw-text-tertiary)">地理编码、脚本生成和 GEE 集成</span>
         </div>
 
         <div className={styles.panels}>

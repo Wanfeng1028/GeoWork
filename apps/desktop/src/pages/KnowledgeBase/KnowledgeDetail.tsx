@@ -1,16 +1,19 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Button, Descriptions, Empty, Input, message, Modal, Space, Tag, Typography } from 'antd'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
+import { Empty } from '../../components/ui/empty'
+import { toast } from 'sonner'
 import {
-  DeleteOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  SearchOutlined,
-} from '@ant-design/icons'
+  Trash2,
+  Download,
+  Edit,
+  FileText,
+  Search,
+} from 'lucide-react'
 import { useKnowledgeBaseStore } from './store'
 import styles from './KnowledgeDetail.module.scss'
-
-const { Title, Paragraph, Text } = Typography
 
 interface KnowledgeDetailProps {
   visible: boolean
@@ -25,22 +28,14 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
 
   const handleDelete = useCallback(() => {
     if (!selectedEntry) return
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除 "${selectedEntry.title}" 吗？此操作不可撤销。`,
-      okText: '删除',
-      okButtonProps: { danger: true },
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await deleteEntry(selectedEntry.id)
-          message.success('已删除')
-          onClose()
-        } catch {
-          message.error('删除失败')
-        }
-      },
-    })
+    if (window.confirm(`确定要删除 "${selectedEntry.title}" 吗？此操作不可撤销。`)) {
+      deleteEntry(selectedEntry.id).then(() => {
+        toast.success('已删除')
+        onClose()
+      }).catch(() => {
+        toast.error('删除失败')
+      })
+    }
   }, [selectedEntry, deleteEntry, onClose])
 
   const handleExport = useCallback(() => {
@@ -52,7 +47,7 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
     a.download = `${selectedEntry.title}.txt`
     a.click()
     URL.revokeObjectURL(url)
-    message.success('导出成功')
+    toast.success('导出成功')
   }, [selectedEntry])
 
   const handleEdit = useCallback(() => {
@@ -66,24 +61,24 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
     try {
       await updateEntry(selectedEntry.id, { content: editContent })
       setEditing(false)
-      message.success('保存成功')
+      toast.success('保存成功')
     } catch {
-      message.error('保存失败')
+      toast.error('保存失败')
     }
   }, [editContent, selectedEntry, updateEntry])
 
   const handleCiteInPaper = useCallback(() => {
     if (!selectedEntry) return
-    message.info(`已在论文中引用: ${selectedEntry.title}`)
+    toast.info(`已在论文中引用: ${selectedEntry.title}`)
   }, [selectedEntry])
 
   const sourceTagColor = useMemo(() => {
-    if (!selectedEntry) return 'default'
+    if (!selectedEntry) return ''
     switch (selectedEntry.source) {
-      case 'paper_id': return 'blue'
-      case 'pdf': return 'green'
-      case 'manual': return 'orange'
-      default: return 'default'
+      case 'paper_id': return 'bg-blue-100 text-blue-800'
+      case 'pdf': return 'bg-green-100 text-green-800'
+      case 'manual': return 'bg-orange-100 text-orange-800'
+      default: return ''
     }
   }, [selectedEntry])
 
@@ -97,7 +92,6 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
     }
   }, [selectedEntry])
 
-  // Highlight matching text in content
   const highlightedContent = useMemo(() => {
     if (!selectedEntry || !searchText) return selectedEntry?.content || ''
     const content = selectedEntry.content
@@ -120,82 +114,87 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
   return (
     <div className={styles.detailPanel}>
       <div className={styles.detailHeader}>
-        <Title level={4} className={styles.detailTitle}>
+        <h4 className={styles.detailTitle}>
           {selectedEntry.title}
-        </Title>
-        <Space>
-          <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>编辑</Button>
-          <Button icon={<DownloadOutlined />} size="small" onClick={handleExport}>导出</Button>
-          <Button icon={<FileTextOutlined />} size="small" onClick={handleCiteInPaper}>在论文中引用</Button>
-          <Button danger icon={<DeleteOutlined />} size="small" onClick={handleDelete}>删除</Button>
-        </Space>
+        </h4>
+        <div className="flex gap-1">
+          <Button size="sm" variant="outline" onClick={handleEdit}><Edit className="w-3 h-3 mr-1" /> 编辑</Button>
+          <Button size="sm" variant="outline" onClick={handleExport}><Download className="w-3 h-3 mr-1" /> 导出</Button>
+          <Button size="sm" variant="outline" onClick={handleCiteInPaper}><FileText className="w-3 h-3 mr-1" /> 在论文中引用</Button>
+          <Button size="sm" variant="outline" className="text-destructive" onClick={handleDelete}><Trash2 className="w-3 h-3 mr-1" /> 删除</Button>
+        </div>
       </div>
 
       <div className={styles.detailMeta}>
-        <Descriptions size="small" column={2} bordered>
-          <Descriptions.Item label="来源">
-            <Tag color={sourceTagColor}>{sourceLabel}</Tag>
-            <Text type="secondary" style={{ marginLeft: 8 }}>{selectedEntry.source}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="分类">
-            {selectedEntry.category || '未分类'}
-          </Descriptions.Item>
-          <Descriptions.Item label="创建时间">
-            {new Date(selectedEntry.createdAt).toLocaleString('zh-CN')}
-          </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
-            {new Date(selectedEntry.updatedAt).toLocaleString('zh-CN')}
-          </Descriptions.Item>
-          <Descriptions.Item label="标签" span={2}>
-            <Space wrap>
+        <div className="grid grid-cols-2 gap-2 border rounded p-3 text-sm">
+          <div className="flex gap-2">
+            <span className="text-muted-foreground min-w-[80px]">来源</span>
+            <div>
+              <Badge variant="secondary" className={sourceTagColor}>{sourceLabel}</Badge>
+              <span className="text-muted-foreground ml-2">{selectedEntry.source}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-muted-foreground min-w-[80px]">分类</span>
+            <span>{selectedEntry.category || '未分类'}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-muted-foreground min-w-[80px]">创建时间</span>
+            <span>{new Date(selectedEntry.createdAt).toLocaleString('zh-CN')}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-muted-foreground min-w-[80px]">更新时间</span>
+            <span>{new Date(selectedEntry.updatedAt).toLocaleString('zh-CN')}</span>
+          </div>
+          <div className="flex gap-2 col-span-2">
+            <span className="text-muted-foreground min-w-[80px]">标签</span>
+            <div className="flex flex-wrap gap-1">
               {selectedEntry.tags?.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
+                <Badge key={tag} variant="outline">{tag}</Badge>
               ))}
               {(!selectedEntry.tags || selectedEntry.tags.length === 0) && (
-                <Text type="secondary">暂无标签</Text>
+                <span className="text-muted-foreground">暂无标签</span>
               )}
-            </Space>
-          </Descriptions.Item>
-        </Descriptions>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className={styles.detailSearch}>
         <Input
           placeholder="在内容中搜索..."
-          prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          size="small"
         />
       </div>
 
       <div className={styles.detailContent}>
         {isLoading ? (
-          <Text>加载中...</Text>
+          <span className="text-sm text-muted-foreground">加载中...</span>
         ) : (
-          <Paragraph className={styles.contentText}>
+          <p className={styles.contentText}>
             {highlightedContent}
-          </Paragraph>
+          </p>
         )}
       </div>
 
-      {/* Edit modal */}
-      <Modal
-        title="编辑知识条目"
-        open={editing}
-        onOk={handleSaveEdit}
-        onCancel={() => setEditing(false)}
-        okText="保存"
-        cancelText="取消"
-        width={700}
-      >
-        <Input.TextArea
-          rows={16}
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-        />
-      </Modal>
+      {/* Edit dialog */}
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>编辑知识条目</DialogTitle>
+          </DialogHeader>
+          <textarea
+            className="flex min-h-[300px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(false)}>取消</Button>
+            <Button onClick={handleSaveEdit}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

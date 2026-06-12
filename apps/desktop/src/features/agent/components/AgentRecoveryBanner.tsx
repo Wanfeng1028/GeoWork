@@ -2,8 +2,8 @@
 // Banner shown when task needs recovery
 
 import React from 'react'
-import { Alert, Button } from 'antd'
-import { ExclamationCircleOutlined, SyncOutlined } from '@ant-design/icons'
+import { Button } from '../../../components/ui/button'
+import { ExclamationCircle, RefreshCw } from 'lucide-react'
 import useAgentStore from '../agentStore'
 import styles from './AgentRecoveryBanner.module.scss'
 
@@ -24,7 +24,7 @@ export const AgentRecoveryBanner: React.FC<{ taskId: string }> = ({ taskId }) =>
   return (
     <div className={`${styles.banner} ${styles[stateType]}`}>
       <div className={styles.content}>
-        <ExclamationCircleOutlined className={styles.warningIcon} style={{ color: config.color }} />
+        <ExclamationCircle className={styles.warningIcon} style={{ color: config.color }} />
         <div className={styles.text}>
           <span className={styles.title}>{config.title}</span>
           <span className={styles.description}>{config.description}</span>
@@ -33,16 +33,15 @@ export const AgentRecoveryBanner: React.FC<{ taskId: string }> = ({ taskId }) =>
       <div className={styles.actions}>
         {stateType !== 'failed' && (
           <Button
-            type="primary"
-            icon={<SyncOutlined spin={isRecovering} />}
-            loading={isRecovering}
             onClick={() => recoverTask(taskId)}
             className={styles.recoverBtn}
+            disabled={isRecovering}
           >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRecovering ? 'animate-spin' : ''}`} />
             恢复任务
           </Button>
         )}
-        <Button onClick={() => console.log('查看只读快照', recoveryState)}>
+        <Button variant="ghost" onClick={() => console.log('查看只读快照', recoveryState)}>
           查看只读快照
         </Button>
       </div>

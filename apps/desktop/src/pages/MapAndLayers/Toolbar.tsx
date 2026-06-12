@@ -1,13 +1,16 @@
 import React from 'react'
-import { Button, Tooltip, Popconfirm, message } from 'antd'
+import { Button } from '../../components/ui/button'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip'
+import { toast } from 'sonner'
 import {
-  BorderOutlined,
-  HighlightOutlined,
-  ScissorOutlined,
-  SwapOutlined,
-  MergeCellsOutlined,
-  PartitionOutlined
-} from '@ant-design/icons'
+  Maximize,
+  Highlighter,
+  Scissors,
+  ArrowLeftRight,
+  Merge,
+  SplitSquareVertical
+} from 'lucide-react'
 import { useMapViewStore, AVAILABLE_TOOLS } from './store'
 import styles from './Toolbar.module.scss'
 
@@ -18,7 +21,7 @@ export function Toolbar() {
 
   const handleToolClick = (tool: (typeof AVAILABLE_TOOLS)[0]) => {
     if (!selectedLayer) {
-      message.warning('请先选择一个图层')
+      toast.warning('请先选择一个图层')
       return
     }
     setActiveTool(activeTool?.id === tool.id ? null : tool)
@@ -29,22 +32,18 @@ export function Toolbar() {
       <span className={styles.label}>工具</span>
       <div className={styles.tools}>
         {AVAILABLE_TOOLS.map((tool) => (
-          <Tooltip key={tool.id} title={tool.name}>
-            <Popconfirm
-              title={`确定使用${tool.name}工具？`}
-              description={getToolDescription(tool.action)}
-              onConfirm={() => handleToolClick(tool)}
-              okText="确定"
-              cancelText="取消"
-            >
+          <Tooltip key={tool.id}>
+            <TooltipTrigger asChild>
               <Button
-                size="small"
-                type={activeTool?.id === tool.id ? 'primary' : 'default'}
-                icon={<span style={{ fontSize: 16 }}>{tool.icon}</span>}
+                size="sm"
+                variant={activeTool?.id === tool.id ? 'default' : 'outline'}
+                onClick={() => handleToolClick(tool)}
               >
+                <span style={{ fontSize: 16 }}>{tool.icon}</span>
                 {tool.name}
               </Button>
-            </Popconfirm>
+            </TooltipTrigger>
+            <TooltipContent>{getToolDescription(tool.action)}</TooltipContent>
           </Tooltip>
         ))}
       </div>

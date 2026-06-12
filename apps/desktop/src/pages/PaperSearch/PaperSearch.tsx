@@ -1,53 +1,34 @@
-/**
- * Paper Search Panel
- *
- * Main paper search interface with keyword search, advanced filters,
- * results table, detail view, and export functionality.
- */
-
 import React, { useCallback, useMemo, useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
+import { Spinner } from '../../components/ui/spinner'
+import { toast } from 'sonner'
 import {
-  Layout,
-  Card,
-  Input,
-  Button,
-  Table,
-  Tag,
-  Space,
-  Modal,
-  Form,
-  Select,
-  DatePicker,
-  Pagination,
-  Typography,
-  Collapse,
-  Spin,
-  message,
-} from 'antd'
-import {
-  SearchOutlined,
-  FilterOutlined,
-  ExportOutlined,
-  FileTextOutlined,
-  DatabaseOutlined,
-  StarOutlined,
-  StarFilled,
-  LinkOutlined,
-  ReloadOutlined,
-  CloseOutlined
-} from '@ant-design/icons'
+  Search,
+  Filter,
+  Download,
+  FileText,
+  Database,
+  Star,
+  Link,
+  RefreshCw,
+  X
+} from 'lucide-react'
 import { usePaperSearchStore, PaperResult } from './store'
 import { PaperCard } from './PaperCard'
 import { validateSearchParams } from '../../services/paperService'
 import styles from './PaperSearch.module.scss'
 
-const { RangePicker } = DatePicker
-const { Text, Title, Paragraph } = Typography
-const { Panel } = Collapse
-
 export function PaperSearch() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table')
-  const [form] = Form.useForm()
+  const [showDetail, setShowDetail] = useState(false)
+  const [favoritedPapers, setFavoritedPapers] = useState<Set<string>>(new Set())
+  const [formState, setFormState] = useState({ author: '', yearFrom: '', yearTo: '', topic: '' })
+
   const {
     query,
     results,
@@ -67,144 +48,50 @@ export function PaperSearch() {
     clearResults
   } = usePaperSearchStore()
 
-  const [showDetail, setShowDetail] = useState(false)
-  const [favoritedPapers, setFavoritedPapers] = useState<Set<string>>(new Set())
-
-  // Handle search on form submit
   const handleSearch = useCallback(async () => {
     const validationError = validateSearchParams({ query })
     if (validationError) {
-      message.warning(validationError)
+      toast.warning(validationError)
       return
     }
 
-    const values = form.getFieldsValue()
-    const yearRange = values.yearRange as [Date, Date] | undefined
-
     await search({
       query,
-      author: values.author || undefined,
-      yearFrom: yearRange ? yearRange[0].getFullYear() : undefined,
-      yearTo: yearRange ? yearRange[1].getFullYear() : undefined,
-      topic: values.topic || undefined,
+      author: formState.author || undefined,
+      yearFrom: formState.yearFrom ? parseInt(formState.yearFrom) : undefined,
+      yearTo: formState.yearTo ? parseInt(formState.yearTo) : undefined,
+      topic: formState.topic || undefined,
       page: 1,
       pageSize,
     })
-  }, [query, form, search, pageSize])
+  }, [query, formState, search, pageSize])
 
-  // Handle page change
   const handlePageChange = useCallback((p: number) => {
-    const yearRange = form.getFieldValue('yearRange') as [Date, Date] | undefined
     search({
       query,
-      author: form.getFieldValue('author') || undefined,
-      yearFrom: yearRange ? yearRange[0].getFullYear() : undefined,
-      yearTo: yearRange ? yearRange[1].getFullYear() : undefined,
-      topic: form.getFieldValue('topic') || undefined,
+      author: formState.author || undefined,
+      yearFrom: formState.yearFrom ? parseInt(formState.yearFrom) : undefined,
+      yearTo: formState.yearTo ? parseInt(formState.yearTo) : undefined,
+      topic: formState.topic || undefined,
       page: p,
       pageSize,
     })
-  }, [query, form, search, pageSize])
+  }, [query, formState, search, pageSize])
 
-  // Handle row click to show detail
   const handleRowClick = useCallback((paper: PaperResult) => {
     selectPaper(paper)
     setShowDetail(true)
   }, [selectPaper])
 
-  // Toggle favorite
   const toggleFavorite = useCallback((paperId: string) => {
     setFavoritedPapers((prev) => {
       const next = new Set(prev)
-      if (next.has(paperId)) {
-        next.delete(paperId)
-      } else {
-        next.add(paperId)
-      }
+      if (next.has(paperId)) next.delete(paperId)
+      else next.add(paperId)
       return next
     })
   }, [])
 
-  // Table columns
-  const tableColumns = useMemo(() => [
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      width: '40%',
-      ellipsis: true,
-      render: (text: string) => <Text strong>{text}</Text>,
-    },
-    {
-      title: '作者',
-      dataIndex: 'authors',
-      key: 'authors',
-      width: '20%',
-      render: (authors: string[]) => (
-        <Text type="secondary" ellipsis title={authors.join(', ')}>
-          {authors.slice(0, 3).join(', ')}{authors.length > 3 ? '...' : ''}
-        </Text>
-      ),
-    },
-    {
-      title: '期刊',
-      dataIndex: 'journal',
-      key: 'journal',
-      width: '15%',
-      ellipsis: true,
-      render: (text: string) => <Text italic type="secondary">{text}</Text>,
-    },
-    {
-      title: '年份',
-      dataIndex: 'year',
-      key: 'year',
-      width: 70,
-      align: 'center' as const,
-      render: (year: number) => <Text strong>{year}</Text>,
-    },
-    {
-      title: '引用',
-      dataIndex: 'citations',
-      key: 'citations',
-      width: 80,
-      align: 'center' as const,
-      sorter: (a: PaperResult, b: PaperResult) => a.citations - b.citations,
-      render: (citations: number) => (
-        <Tag color={citations > 100 ? 'gold' : citations > 10 ? 'blue' : 'default'}>
-          {citations}
-        </Tag>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 120,
-      render: (_: unknown, record: PaperResult) => (
-        <Space size="small">
-          <Button
-            type="text"
-            size="small"
-            icon={favoritedPapers.has(record.id) ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleFavorite(record.id)
-            }}
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<ExportOutlined />}
-            onClick={(e) => {
-              e.stopPropagation()
-              exportBibtex(record)
-            }}
-          />
-        </Space>
-      ),
-    },
-  ], [favoritedPapers, exportBibtex, toggleFavorite])
-
-  // Detail panel content
   const detailContent = useMemo(() => {
     if (!selectedPaper) return null
     const paper = selectedPaper
@@ -212,97 +99,86 @@ export function PaperSearch() {
     return (
       <div className={styles.detailPanel}>
         <div className={styles.detailHeader}>
-          <Title level={5} style={{ margin: 0, flex: 1 }}>{paper.title}</Title>
-          <Space>
+          <h5 className="font-semibold m-0 flex-1">{paper.title}</h5>
+          <div className="flex gap-1">
             <Button
-              size="small"
-              icon={favoritedPapers.has(paper.id) ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+              size="sm"
+              variant="outline"
               onClick={() => toggleFavorite(paper.id)}
             >
+              <Star className={`w-4 h-4 mr-1 ${favoritedPapers.has(paper.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
               {favoritedPapers.has(paper.id) ? '已收藏' : '收藏'}
             </Button>
-            <Button
-              size="small"
-              icon={<ExportOutlined />}
-              onClick={() => exportBibtex(paper)}
-            >
-              导出 BibTeX
+            <Button size="sm" variant="outline" onClick={() => exportBibtex(paper)}>
+              <Download className="w-4 h-4 mr-1" /> 导出 BibTeX
             </Button>
             <Button
-              size="small"
-              icon={<DatabaseOutlined />}
-              loading={isLoading}
+              size="sm"
+              variant="outline"
+              disabled={isLoading}
               onClick={async () => {
                 try {
                   await indexToKnowledge(paper)
-                  message.success('已成功索引到知识库')
+                  toast.success('已成功索引到知识库')
                 } catch {
-                  message.error('索引失败')
+                  toast.error('索引失败')
                 }
               }}
             >
-              索引到知识库
+              <Database className="w-4 h-4 mr-1" /> 索引到知识库
             </Button>
             {paper.doi && (
-              <Button
-                size="small"
-                icon={<LinkOutlined />}
-                onClick={() => window.open(`https://doi.org/${paper.doi}`, '_blank')}
-              >
-                DOI
+              <Button size="sm" variant="outline" onClick={() => window.open(`https://doi.org/${paper.doi}`, '_blank')}>
+                <Link className="w-4 h-4 mr-1" /> DOI
               </Button>
             )}
-            <Button
-              size="small"
-              icon={<CloseOutlined />}
-              onClick={() => setShowDetail(false)}
-            >
-              关闭
+            <Button size="sm" variant="outline" onClick={() => setShowDetail(false)}>
+              <X className="w-4 h-4 mr-1" /> 关闭
             </Button>
-          </Space>
+          </div>
         </div>
 
         <div className={styles.detailMeta}>
-          <Space size="large">
+          <div className="flex gap-6">
             <div>
-              <Text type="secondary">作者：</Text>
-              <Text>{paper.authors.join(', ')}</Text>
+              <span className="text-muted-foreground">作者：</span>
+              <span>{paper.authors.join(', ')}</span>
             </div>
             <div>
-              <Text type="secondary">期刊：</Text>
-              <Text italic>{paper.journal}</Text>
+              <span className="text-muted-foreground">期刊：</span>
+              <span className="italic">{paper.journal}</span>
             </div>
             <div>
-              <Text type="secondary">年份：</Text>
-              <Text strong>{paper.year}</Text>
+              <span className="text-muted-foreground">年份：</span>
+              <span className="font-semibold">{paper.year}</span>
             </div>
             <div>
-              <Text type="secondary">引用：</Text>
-              <Tag color={paper.citations > 100 ? 'gold' : paper.citations > 10 ? 'blue' : 'default'}>
+              <span className="text-muted-foreground">引用：</span>
+              <Badge variant="secondary" className={paper.citations > 100 ? 'bg-amber-100 text-amber-800' : paper.citations > 10 ? 'bg-blue-100 text-blue-800' : ''}>
                 {paper.citations}
-              </Tag>
+              </Badge>
             </div>
-          </Space>
+          </div>
         </div>
 
         {paper.keywords.length > 0 && (
           <div className={styles.detailKeywords}>
-            <Text type="secondary">关键词：</Text>
-            <Space wrap>
+            <span className="text-muted-foreground">关键词：</span>
+            <div className="flex flex-wrap gap-1">
               {paper.keywords.map((kw) => (
-                <Tag key={kw} color="blue">{kw}</Tag>
+                <Badge key={kw} variant="secondary">{kw}</Badge>
               ))}
-            </Space>
+            </div>
           </div>
         )}
 
         <div className={styles.detailAbstract}>
-          <Text strong>摘要：</Text>
-          <Paragraph>{paper.abstract}</Paragraph>
+          <span className="font-semibold">摘要：</span>
+          <p>{paper.abstract}</p>
         </div>
 
         <div className={styles.detailBibtex}>
-          <Text strong>BibTeX：</Text>
+          <span className="font-semibold">BibTeX：</span>
           <pre className={styles.bibtexCode}>{paper.bibtex}</pre>
         </div>
       </div>
@@ -310,99 +186,80 @@ export function PaperSearch() {
   }, [selectedPaper, favoritedPapers, isLoading, exportBibtex, indexToKnowledge, toggleFavorite])
 
   return (
-    <Layout className={styles.paperSearchLayout}>
+    <div className={styles.paperSearchLayout}>
       {/* Search Bar */}
       <div className={styles.searchBar}>
-        <Card size="small" className={styles.searchCard}>
-          <Space.Compact style={{ width: '100%' }}>
-            <Input
-              placeholder="搜索论文关键词（如：NDVI remote sensing）"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onPressEnter={handleSearch}
-              allowClear
-              size="large"
-              prefix={<SearchOutlined />}
-            />
-            <Button
-              type="primary"
-              size="large"
-              icon={<SearchOutlined />}
-              onClick={handleSearch}
-              loading={isLoading}
-            >
-              搜索
-            </Button>
-            <Button
-              size="large"
-              icon={<FilterOutlined />}
-              onClick={toggleAdvanced}
-              className={isAdvancedOpen ? styles.advancedActive : ''}
-            >
-              高级
-            </Button>
-          </Space.Compact>
-
-          {/* Advanced Search Panel */}
-          {isAdvancedOpen && (
-            <div className={styles.advancedPanel}>
-              <Form form={form} layout="vertical" className={styles.advancedForm}>
-                <div className={styles.advancedRow}>
-                  <Form.Item label="作者" name="author" className={styles.advancedField}>
-                    <Input placeholder="作者姓名" allowClear />
-                  </Form.Item>
-                  <Form.Item label="年份范围" name="yearRange" className={styles.advancedField}>
-                    <RangePicker
-                      picker="year"
-                      format="YYYY"
-                      allowClear
-                      placeholder={['起始年', '结束年']}
-                    />
-                  </Form.Item>
-                </div>
-                <div className={styles.advancedRow}>
-                  <Form.Item label="主题分类" name="topic" className={styles.advancedField}>
-                    <Select
-                      placeholder="选择主题分类"
-                      allowClear
-                      options={[
-                        { label: '遥感技术', value: 'remote sensing' },
-                        { label: '植被指数', value: 'vegetation index' },
-                        { label: '气候变化', value: 'climate change' },
-                        { label: '土地利用', value: 'land use' },
-                        { label: '水文学', value: 'hydrology' },
-                        { label: '土壤科学', value: 'soil science' },
-                        { label: '海洋学', value: 'oceanography' },
-                        { label: '大气科学', value: 'atmospheric science' },
-                      ]}
-                    />
-                  </Form.Item>
-                  <Form.Item className={styles.advancedField}>
-                    <Space>
-                      <Button
-                        type="primary"
-                        icon={<SearchOutlined />}
-                        onClick={handleSearch}
-                        loading={isLoading}
-                      >
-                        搜索
-                      </Button>
-                      <Button
-                        icon={<ReloadOutlined />}
-                        onClick={() => {
-                          form.resetFields()
-                          setQuery('')
-                          clearResults()
-                        }}
-                      >
-                        重置
-                      </Button>
-                    </Space>
-                  </Form.Item>
-                </div>
-              </Form>
+        <Card>
+          <CardContent className="p-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="搜索论文关键词（如：NDVI remote sensing）"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }}
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} disabled={isLoading}>
+                <Search className="w-4 h-4 mr-1" /> 搜索
+              </Button>
+              <Button
+                variant="outline"
+                onClick={toggleAdvanced}
+                className={isAdvancedOpen ? styles.advancedActive : ''}
+              >
+                <Filter className="w-4 h-4 mr-1" /> 高级
+              </Button>
             </div>
-          )}
+
+            {/* Advanced Search Panel */}
+            {isAdvancedOpen && (
+              <div className={styles.advancedPanel}>
+                <div className={styles.advancedRow}>
+                  <div className={styles.advancedField}>
+                    <label className="text-sm font-medium">作者</label>
+                    <Input placeholder="作者姓名" value={formState.author} onChange={(e) => setFormState({ ...formState, author: e.target.value })} />
+                  </div>
+                  <div className={styles.advancedField}>
+                    <label className="text-sm font-medium">年份范围</label>
+                    <div className="flex gap-2">
+                      <Input placeholder="起始年" value={formState.yearFrom} onChange={(e) => setFormState({ ...formState, yearFrom: e.target.value })} />
+                      <Input placeholder="结束年" value={formState.yearTo} onChange={(e) => setFormState({ ...formState, yearTo: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.advancedRow}>
+                  <div className={styles.advancedField}>
+                    <label className="text-sm font-medium">主题分类</label>
+                    <Select value={formState.topic} onValueChange={(v) => setFormState({ ...formState, topic: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择主题分类" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="remote sensing">遥感技术</SelectItem>
+                        <SelectItem value="vegetation index">植被指数</SelectItem>
+                        <SelectItem value="climate change">气候变化</SelectItem>
+                        <SelectItem value="land use">土地利用</SelectItem>
+                        <SelectItem value="hydrology">水文学</SelectItem>
+                        <SelectItem value="soil science">土壤科学</SelectItem>
+                        <SelectItem value="oceanography">海洋学</SelectItem>
+                        <SelectItem value="atmospheric science">大气科学</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className={styles.advancedField}>
+                    <div className="flex gap-2 mt-6">
+                      <Button onClick={handleSearch} disabled={isLoading}>
+                        <Search className="w-4 h-4 mr-1" /> 搜索
+                      </Button>
+                      <Button variant="outline" onClick={() => { setFormState({ author: '', yearFrom: '', yearTo: '', topic: '' }); setQuery(''); clearResults() }}>
+                        <RefreshCw className="w-4 h-4 mr-1" /> 重置
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
 
@@ -410,65 +267,78 @@ export function PaperSearch() {
       <div className={styles.resultsArea}>
         {isLoading && results.length === 0 ? (
           <div className={styles.loadingContainer}>
-            <Spin size="large" tip="正在搜索论文..." />
+            <Spinner className="w-8 h-8" />
+            <span className="mt-2 text-sm text-muted-foreground">正在搜索论文...</span>
           </div>
         ) : results.length === 0 && !isLoading ? (
           <div className={styles.emptyContainer}>
-            <Typography.Text type="secondary">
+            <span className="text-muted-foreground">
               {query ? '未找到相关论文，请尝试其他关键词' : '输入关键词开始搜索 OpenAlex 学术数据库'}
-            </Typography.Text>
+            </span>
           </div>
         ) : (
           <>
             {/* Results Header */}
             <div className={styles.resultsHeader}>
-              <Space>
-                <Text type="secondary">
-                  找到 <Text strong>{total}</Text> 篇论文
-                </Text>
-                <Space size="small">
-                  <Button
-                    size="small"
-                    type={viewMode === 'table' ? 'primary' : 'default'}
-                    onClick={() => setViewMode('table')}
-                  >
-                    表格
-                  </Button>
-                  <Button
-                    size="small"
-                    type={viewMode === 'card' ? 'primary' : 'default'}
-                    onClick={() => setViewMode('card')}
-                  >
-                    卡片
-                  </Button>
-                </Space>
+              <div className="flex items-center gap-4">
+                <span className="text-muted-foreground">
+                  找到 <span className="font-semibold text-foreground">{total}</span> 篇论文
+                </span>
+                <div className="flex gap-1">
+                  <Button size="sm" variant={viewMode === 'table' ? 'default' : 'outline'} onClick={() => setViewMode('table')}>表格</Button>
+                  <Button size="sm" variant={viewMode === 'card' ? 'default' : 'outline'} onClick={() => setViewMode('card')}>卡片</Button>
+                </div>
                 {results.length > 0 && (
-                  <Button
-                    size="small"
-                    icon={<ExportOutlined />}
-                    onClick={() => exportCsv(results)}
-                  >
-                    导出 CSV
+                  <Button size="sm" variant="outline" onClick={() => exportCsv(results)}>
+                    <Download className="w-4 h-4 mr-1" /> 导出 CSV
                   </Button>
                 )}
-              </Space>
+              </div>
             </div>
 
             {/* Table View */}
             {viewMode === 'table' && (
-              <Table
-                rowKey="id"
-                dataSource={results}
-                columns={tableColumns}
-                pagination={false}
-                rowClassName={(record) => selectedPaper?.id === record.id ? styles.selectedRow : ''}
-                onRow={(record) => ({
-                  className: styles.clickableRow,
-                  onClick: () => handleRowClick(record),
-                })}
-                scroll={{ y: 400 }}
-                size="small"
-              />
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3">标题</th>
+                    <th className="text-left p-3 w-[20%]">作者</th>
+                    <th className="text-left p-3 w-[15%]">期刊</th>
+                    <th className="text-center p-3 w-[70px]">年份</th>
+                    <th className="text-center p-3 w-[80px]">引用</th>
+                    <th className="text-left p-3 w-[120px]">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((paper) => (
+                    <tr
+                      key={paper.id}
+                      className={`border-b cursor-pointer hover:bg-muted/50 ${selectedPaper?.id === paper.id ? styles.selectedRow : ''}`}
+                      onClick={() => handleRowClick(paper)}
+                    >
+                      <td className="p-3 font-medium truncate max-w-[40%]">{paper.title}</td>
+                      <td className="p-3 text-muted-foreground truncate">{paper.authors.slice(0, 3).join(', ')}{paper.authors.length > 3 ? '...' : ''}</td>
+                      <td className="p-3 text-muted-foreground italic truncate">{paper.journal}</td>
+                      <td className="p-3 text-center font-semibold">{paper.year}</td>
+                      <td className="p-3 text-center">
+                        <Badge variant="secondary" className={paper.citations > 100 ? 'bg-amber-100 text-amber-800' : paper.citations > 10 ? 'bg-blue-100 text-blue-800' : ''}>
+                          {paper.citations}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); toggleFavorite(paper.id) }}>
+                            <Star className={`w-4 h-4 ${favoritedPapers.has(paper.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); exportBibtex(paper) }}>
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
 
             {/* Card View */}
@@ -490,15 +360,19 @@ export function PaperSearch() {
             {/* Pagination */}
             {total > pageSize && (
               <div className={styles.paginationContainer}>
-                <Pagination
-                  current={page}
-                  total={total}
-                  pageSize={pageSize}
-                  onChange={handlePageChange}
-                  showSizeChanger
-                  showTotal={(t) => `共 ${t} 篇`}
-                  size="small"
-                />
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.ceil(total / pageSize) }, (_, i) => i + 1).slice(0, 10).map((p) => (
+                    <Button
+                      key={p}
+                      size="sm"
+                      variant={p === page ? 'default' : 'outline'}
+                      onClick={() => handlePageChange(p)}
+                    >
+                      {p}
+                    </Button>
+                  ))}
+                  <span className="flex items-center text-sm text-muted-foreground ml-2">共 {total} 篇</span>
+                </div>
               </div>
             )}
           </>
@@ -506,16 +380,14 @@ export function PaperSearch() {
       </div>
 
       {/* Detail Modal */}
-      <Modal
-        title="论文详情"
-        open={showDetail}
-        onCancel={() => setShowDetail(false)}
-        footer={null}
-        width={720}
-        className={styles.detailModal}
-      >
-        {detailContent}
-      </Modal>
-    </Layout>
+      <Dialog open={showDetail} onOpenChange={setShowDetail}>
+        <DialogContent className="max-w-[720px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>论文详情</DialogTitle>
+          </DialogHeader>
+          {detailContent}
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

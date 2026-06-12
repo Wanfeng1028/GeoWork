@@ -4,13 +4,10 @@
 // General output panel showing build output, compilation results, and command output
 
 import { useState } from "react";
-import { Select, Button, Space, Input } from "antd";
-import {
-  PlayCircleOutlined,
-  StopOutlined,
-  ClearOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { Play, Square, Trash2, Download } from "lucide-react";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../ui/select";
 import styles from "./OutputPanel.module.scss";
 
 type OutputChannel =
@@ -192,32 +189,42 @@ export function OutputPanel() {
         <div className={styles.headerLeft}>
           <Select
             value={activeChannel}
-            onChange={handleChannelChange}
-            size="small"
-            options={channels}
-            className={styles.channelSelect}
-          />
+            onValueChange={(value) => handleChannelChange(value as OutputChannel)}
+          >
+            <SelectTrigger className={styles.channelSelect}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {channels.map((ch) => (
+                <SelectItem key={ch.value} value={ch.value}>
+                  {ch.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className={styles.headerRight}>
           <Button
-            size="small"
-            type={isAutoScroll ? "primary" : "text"}
+            size="sm"
+            variant={isAutoScroll ? "primary" : "ghost"}
             onClick={() => setIsAutoScroll(!isAutoScroll)}
           >
             自动滚动
           </Button>
           <Button
-            size="small"
-            icon={<ClearOutlined />}
+            size="sm"
+            variant="ghost"
             onClick={handleClear}
           >
+            <Trash2 className="h-3.5 w-3.5 mr-1" />
             清除
           </Button>
           <Button
-            size="small"
-            icon={<DownloadOutlined />}
+            size="sm"
+            variant="ghost"
             onClick={handleDownload}
           >
+            <Download className="h-3.5 w-3.5 mr-1" />
             导出
           </Button>
         </div>

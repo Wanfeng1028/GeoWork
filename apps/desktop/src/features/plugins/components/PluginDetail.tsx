@@ -2,20 +2,17 @@
 // Detailed view for a single plugin with actions, permissions, and reviews
 
 import { useState } from 'react'
-import { Card, Button, Tag, Space, Typography, Divider, Badge, Switch, Alert, Empty } from 'antd'
-import {
-  CheckCircleOutlined,
-  DownloadOutlined,
-  UserOutlined,
-  GlobalOutlined,
-  SafetyOutlined,
-  StarOutlined,
-} from '@ant-design/icons'
+import { Card } from '../../../components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Badge } from '../../../components/ui/badge'
+import { Separator } from '../../../components/ui/separator'
+import { Switch } from '../../../components/ui/switch'
+import { Empty } from '../../../components/ui/empty'
+import { Spinner } from '../../../components/ui/spinner'
+import { CheckCircle, Download, User, Globe, Shield, Star, AlertTriangle } from 'lucide-react'
 import type { Plugin } from '../../pluginClient'
 import usePluginStore from '../../pluginStore'
 import styles from './PluginDetail.module.scss'
-
-const { Text, Title, Paragraph } = Typography
 
 interface PluginDetailProps {
   plugin: Plugin
@@ -80,6 +77,18 @@ const PERMISSION_RISK: Record<string, { level: string; color: string; descriptio
   },
 }
 
+const getBadgeClass = (color: string): string => {
+  const map: Record<string, string> = {
+    magenta: 'bg-pink-500/20 text-pink-400',
+    orange: 'bg-orange-500/20 text-orange-400',
+    blue: 'bg-blue-500/20 text-blue-400',
+    green: 'bg-green-500/20 text-green-400',
+    red: 'bg-red-500/20 text-red-400',
+    default: 'bg-gray-500/20 text-gray-400',
+  }
+  return map[color] || map.default
+}
+
 export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
   const { install, uninstall, toggle, isLoading } = usePluginStore()
   const [showConfirm, setShowConfirm] = useState<'install' | 'uninstall' | null>(null)
@@ -121,43 +130,42 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
       <div className={styles.header}>
         <div className={styles.headerMain}>
           <div className={styles.pluginIcon}>
-            <DownloadOutlined />
+            <Download className="h-5 w-5" />
           </div>
           <div className={styles.headerInfo}>
             <div className={styles.headerTitle}>
-              <Title level={4} style={{ margin: 0 }}>
+              <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
                 {plugin.name}
-              </Title>
+              </h3>
               {plugin.installed && (
-                <Badge
-                  status={plugin.enabled ? 'success' : 'default'}
-                  text={plugin.enabled ? '已启用' : '已禁用'}
-                />
+                <Badge className={plugin.enabled ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}>
+                  {plugin.enabled ? '已启用' : '已禁用'}
+                </Badge>
               )}
             </div>
-            <Space size="large">
-              <Space>
-                <UserOutlined />
-                <Text type="secondary">{plugin.author}</Text>
-              </Space>
-              <Space>
-                <StarOutlined />
-                <Text type="secondary">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">{plugin.author}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4" />
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">
                   {plugin.rating !== undefined ? `${plugin.rating.toFixed(1)} 分` : '暂无评分'}
-                </Text>
-              </Space>
+                </span>
+              </div>
               {plugin.installCount !== undefined && (
-                <Space>
-                  <DownloadOutlined />
-                  <Text type="secondary">
+                <div className="flex items-center gap-1">
+                  <Download className="h-4 w-4" />
+                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
                     {getInstallCountText(plugin.installCount)} 次安装
-                  </Text>
-                </Space>
+                  </span>
+                </div>
               )}
-            </Space>
+            </div>
           </div>
         </div>
-        <Button type="text" onClick={onClose} className={styles.closeBtn}>
+        <Button variant="ghost" onClick={onClose} className={styles.closeBtn}>
           关闭
         </Button>
       </div>
@@ -166,40 +174,40 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
       <div className={styles.body}>
         {/* Description */}
         <section className={styles.section}>
-          <Title level={5} className={styles.sectionTitle}>
+          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
             简介
-          </Title>
-          <Paragraph className={styles.description}>
+          </h4>
+          <p className="text-[13px] text-[var(--gw-text-secondary)]">
             {plugin.description || '暂无描述'}
-          </Paragraph>
+          </p>
         </section>
 
         {/* Info */}
         <section className={styles.section}>
-          <Title level={5} className={styles.sectionTitle}>
+          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
             信息
-          </Title>
+          </h4>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
-              <Text type="secondary">版本</Text>
-              <Text>v{plugin.version}</Text>
+              <span className="text-[13px] text-[var(--gw-text-secondary)]">版本</span>
+              <span className="text-[13px] text-[var(--gw-text)]">v{plugin.version}</span>
             </div>
             {plugin.category && (
               <div className={styles.infoItem}>
-                <Text type="secondary">分类</Text>
-                <Text>{plugin.category}</Text>
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">分类</span>
+                <span className="text-[13px] text-[var(--gw-text)]">{plugin.category}</span>
               </div>
             )}
             {plugin.license && (
               <div className={styles.infoItem}>
-                <Text type="secondary">许可证</Text>
-                <Text>{plugin.license}</Text>
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">许可证</span>
+                <span className="text-[13px] text-[var(--gw-text)]">{plugin.license}</span>
               </div>
             )}
             {plugin.homepage && (
               <div className={styles.infoItem}>
-                <GlobalOutlined />
-                <Text type="secondary">官网</Text>
+                <Globe className="h-4 w-4" />
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">官网</span>
                 <a href={plugin.homepage} target="_blank" rel="noreferrer">
                   访问
                 </a>
@@ -210,19 +218,19 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
 
         {/* Permissions */}
         <section className={styles.section}>
-          <Title level={5} className={styles.sectionTitle}>
-            <SafetyOutlined />
+          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
+            <Shield className="h-4 w-4 inline mr-1" />
             权限要求
-          </Title>
+          </h4>
 
           {hasHighRisk && (
-            <Alert
-              message="此插件需要访问高风险权限"
-              description="安装前请仔细检查以下权限的必要性"
-              type="warning"
-              showIcon
-              className={styles.permissionAlert}
-            />
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10">
+              <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5 shrink-0" />
+              <div>
+                <span className="text-[13px] font-medium text-[var(--gw-text)]">此插件需要访问高风险权限</span>
+                <span className="text-[13px] text-[var(--gw-text-secondary)] block">安装前请仔细检查以下权限的必要性</span>
+              </div>
+            </div>
           )}
 
           <div className={styles.permissionsList}>
@@ -232,58 +240,53 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                 <div key={perm} className={styles.permissionItem}>
                   <div className={styles.permissionRow}>
                     <span className={styles.permissionName}>{perm}</span>
-                    <Tag color={info.color}>{info.level}</Tag>
+                    <Badge className={getBadgeClass(info.color)}>{info.level}</Badge>
                   </div>
-                  <Text type="secondary" className={styles.permissionDesc}>
+                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
                     {info.description}
-                  </Text>
+                  </span>
                 </div>
               )
             })}
             {plugin.permissions.length === 0 && (
-              <Text type="secondary">此插件不需要额外权限</Text>
+              <span className="text-[13px] text-[var(--gw-text-secondary)]">此插件不需要额外权限</span>
             )}
           </div>
         </section>
 
         {/* Actions */}
         <section className={styles.section}>
-          <Divider />
+          <Separator />
           <div className={styles.actions}>
             {plugin.installed ? (
-              <>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <div className={styles.actionRow}>
-                    <Text>启用/禁用</Text>
-                    <Switch
-                      checked={plugin.enabled}
-                      onChange={handleToggle}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button
-                    danger
-                    block
-                    onClick={handleUninstall}
-                    loading={isLoading}
-                    disabled={showConfirm !== 'uninstall' && showConfirm !== null}
-                  >
-                    {showConfirm === 'uninstall'
-                      ? '确认卸载...'
-                      : '卸载插件'}
-                  </Button>
-                </Space>
-              </>
+              <div className="flex flex-col w-full gap-3">
+                <div className={styles.actionRow}>
+                  <span className="text-[13px] text-[var(--gw-text)]">启用/禁用</span>
+                  <Switch
+                    checked={plugin.enabled}
+                    onCheckedChange={handleToggle}
+                    disabled={isLoading}
+                  />
+                </div>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={handleUninstall}
+                  disabled={isLoading || (showConfirm !== 'uninstall' && showConfirm !== null)}
+                >
+                  {showConfirm === 'uninstall'
+                    ? '确认卸载...'
+                    : '卸载插件'}
+                </Button>
+              </div>
             ) : (
               <Button
-                type="primary"
-                block
-                size="large"
-                icon={<DownloadOutlined />}
+                className="w-full"
+                size="lg"
                 onClick={handleInstall}
-                loading={isLoading}
-                disabled={showConfirm !== null}
+                disabled={isLoading || showConfirm !== null}
               >
+                {isLoading ? <Spinner className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
                 {showConfirm === 'install'
                   ? '安装中...'
                   : '安装插件'}
@@ -294,17 +297,16 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
 
         {/* Reviews placeholder */}
         <section className={styles.section}>
-          <Divider />
-          <Title level={5} className={styles.sectionTitle}>
+          <Separator />
+          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
             用户评价
-          </Title>
+          </h4>
           <Empty
             description="暂无评价"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
             评价功能即将上线
-          </Text>
+          </span>
         </section>
       </div>
     </div>

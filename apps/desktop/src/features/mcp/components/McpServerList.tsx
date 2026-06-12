@@ -2,24 +2,23 @@
 // Displays configured MCP servers with status, tool count, and management controls
 
 import { useState, useEffect } from 'react'
-import { Button, Switch, Card, Typography, Input, Modal, Form, Space, Tag, message, Collapse } from 'antd'
-import { PlusOutlined, DeleteOutlined, ToolOutlined, DownOutlined, UpOutlined } from '@ant-design/icons'
+import { Button } from '../../../components/ui/button'
+import { Switch } from '../../../components/ui/switch'
+import { Card } from '../../../components/ui/card'
+import { Input } from '../../../components/ui/input'
+import { Badge } from '../../../components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog'
+import { Plus, Trash, Tool } from 'lucide-react'
+import { toast } from 'sonner'
 import useMcpStore from '../mcpStore'
 import type { McpServer } from '../mcpClient'
 import styles from './McpServerList.module.scss'
-
-const { Text, Title } = Typography
-const { Panel } = Collapse
 
 export function McpServerList() {
   const { servers, isLoading, loadServers, removeServer, toggleServer } = useMcpStore()
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set())
-  const [form] = Form.useForm<Omit<McpServer, 'id' | 'tools' | 'enabled'>>({
-    name: '',
-    command: '',
-    args: [],
-  })
+  const [formValues, setFormValues] = useState({ name: '', command: '', args: '' })
 
   useEffect(() => {
     loadServers()
@@ -37,23 +36,31 @@ export function McpServerList() {
     })
   }
 
-  const handleAdd = async (values: Omit<McpServer, 'id' | 'tools' | 'enabled'>) => {
+  const handleAdd = async () => {
+    if (!formValues.name.trim() || !formValues.command.trim()) {
+      toast.error('Name and command are required')
+      return
+    }
     try {
-      await useMcpStore.getState().addServer(values)
+      await useMcpStore.getState().addServer({
+        name: formValues.name,
+        command: formValues.command,
+        args: formValues.args ? formValues.args.split(',').map((s) => s.trim()) : [],
+      })
       setAddModalOpen(false)
-      form.resetFields()
-      message.success('MCP server added')
+      setFormValues({ name: '', command: '', args: '' })
+      toast.success('MCP server added')
     } catch {
-      message.error('Failed to add MCP server')
+      toast.error('Failed to add MCP server')
     }
   }
 
   const handleRemove = async (id: string) => {
     try {
       await removeServer(id)
-      message.success('Server removed')
+      toast.success('Server removed')
     } catch {
-      message.error('Failed to remove server')
+      toast.error('Failed to remove server')
     }
   }
 
@@ -62,89 +69,80 @@ export function McpServerList() {
   }
 
   const getRiskTag = (toolCount: number) => {
-    if (toolCount === 0) return <Tag color="default">0 tools</Tag>
-    if (toolCount <= 3) return <Tag color="blue">{toolCount} tool{toolCount > 1 ? 's' : ''}</Tag>
-    return <Tag color="cyan">{toolCount} tools</Tag>
+    if (toolCount === 0) return <Badge variant="secondary">0 tools</Badge>
+    if (toolCount <= 3) return <Badge className="bg-blue-500/20 text-blue-400">{toolCount} tool{toolCount > 1 ? 's' : ''}</Badge>
+    return <Badge className="bg-cyan-500/20 text-cyan-400">{toolCount} tools</Badge>
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <Title level={4} className={styles.title}>
+        <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
           MCP Servers
-        </Title>
+        </h3>
         <Button
-          type="primary"
-          icon={<PlusOutlined />}
           onClick={() => setAddModalOpen(true)}
         >
+          <Plus className="h-4 w-4 mr-1" />
           Add Server
         </Button>
       </div>
 
-      <Collapse
-        accordion
-        className={styles.collapse}
-        activeKey={Array.from(expandedServers)}
-        onChange={(keys) => {
-          const newKeys = new Set(keys as string[])
-          setExpandedServers(newKeys)
-        }}
-      >
+      <div className="flex flex-col">
         {servers.length === 0 && !isLoading && (
           <div className={styles.empty}>
-            <ToolOutlined className={styles.emptyIcon} />
-            <Text type="secondary">No MCP servers configured. Add one to get started.</Text>
+            <Tool className={styles.emptyIcon} />
+            <span className="text-[13px] text-[var(--gw-text-secondary)]">No MCP servers configured. Add one to get started.</span>
           </div>
         )}
 
         {servers.map((server) => (
-          <Panel
-            header={
-              <div className={styles.serverHeader}>
-                <div className={styles.serverInfo}>
-                  <span
-                    className={`${styles.statusDot} ${server.enabled ? styles.statusConnected : styles.statusDisconnected}`}
-                  />
-                  <span className={styles.serverName}>{server.name}</span>
-                  <span className={styles.serverCommand}>{server.command}</span>
-                </div>
-                <Space>
-                  {getRiskTag(server.tools.length)}
-                  <Switch
-                    checked={server.enabled}
-                    onChange={(checked) => handleToggle(server.id, checked)}
-                    size="small"
-                  />
-                  <Button
-                    type="text"
-                    danger
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRemove(server.id)
-                    }}
-                  />
-                </Space>
-              </div>
-            }
+          <details
             key={server.id}
             className={styles.serverPanel}
+            open={expandedServers.has(server.id)}
+            onToggle={() => toggleExpand(server.id)}
           >
+            <summary className={styles.serverHeader}>
+              <div className={styles.serverInfo}>
+                <span
+                  className={`${styles.statusDot} ${server.enabled ? styles.statusConnected : styles.statusDisconnected}`}
+                />
+                <span className={styles.serverName}>{server.name}</span>
+                <span className={styles.serverCommand}>{server.command}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getRiskTag(server.tools.length)}
+                <Switch
+                  checked={server.enabled}
+                  onCheckedChange={(checked) => handleToggle(server.id, checked)}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[var(--gw-danger)]"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemove(server.id)
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            </summary>
             <div className={styles.toolsSection}>
-              <Title level={5} className={styles.toolsTitle}>
-                <ToolOutlined /> Available Tools
-              </Title>
+              <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
+                <Tool className="h-4 w-4 inline mr-1" /> Available Tools
+              </h4>
               {server.tools.length === 0 ? (
-                <Text type="secondary" className={styles.noTools}>No tools available</Text>
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">No tools available</span>
               ) : (
                 <div className={styles.toolsGrid}>
                   {server.tools.map((tool) => (
                     <div key={tool.id} className={styles.toolItem}>
-                      <Text className={styles.toolName}>{tool.name}</Text>
+                      <span className="text-[13px] text-[var(--gw-text)]">{tool.name}</span>
                       {tool.description && (
-                        <Text type="secondary" className={styles.toolDesc}>{tool.description}</Text>
+                        <span className="text-[13px] text-[var(--gw-text-secondary)]">{tool.description}</span>
                       )}
                     </div>
                   ))}
@@ -153,49 +151,63 @@ export function McpServerList() {
             </div>
             {server.env && Object.keys(server.env).length > 0 && (
               <div className={styles.envSection}>
-                <Title level={5} className={styles.envTitle}>Environment</Title>
+                <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">Environment</h4>
                 <div className={styles.envGrid}>
                   {Object.entries(server.env).map(([key, value]) => (
                     <div key={key} className={styles.envItem}>
-                      <Text strong className={styles.envKey}>{key}</Text>
-                      <Text type="secondary">{value}</Text>
+                      <span className="text-[13px] font-semibold text-[var(--gw-text)]">{key}</span>
+                      <span className="text-[13px] text-[var(--gw-text-secondary)]">{value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
             {server.lastConnected && (
-              <Text type="secondary" className={styles.lastConnected}>
+              <span className="text-[13px] text-[var(--gw-text-secondary)]">
                 Last connected: {server.lastConnected}
-              </Text>
+              </span>
             )}
-          </Panel>
+          </details>
         ))}
-      </Collapse>
+      </div>
 
-      <Modal
-        title="Add MCP Server"
-        open={addModalOpen}
-        onCancel={() => {
-          setAddModalOpen(false)
-          form.resetFields()
-        }}
-        onOk={() => form.submit()}
-        okText="Add"
-        cancelText="Cancel"
-      >
-        <Form form={form} layout="vertical" onFinish={handleAdd}>
-          <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Name is required' }]}>
-            <Input placeholder="My MCP Server" />
-          </Form.Item>
-          <Form.Item label="Command" name="command" rules={[{ required: true, message: 'Command is required' }]}>
-            <Input placeholder="node" />
-          </Form.Item>
-          <Form.Item label="Arguments" name="args">
-            <Input placeholder="comma-separated args (e.g. server1.js, --port=3000)" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add MCP Server</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[13px] text-[var(--gw-text-secondary)]">Name</label>
+              <Input
+                placeholder="My MCP Server"
+                value={formValues.name}
+                onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[13px] text-[var(--gw-text-secondary)]">Command</label>
+              <Input
+                placeholder="node"
+                value={formValues.command}
+                onChange={(e) => setFormValues((v) => ({ ...v, command: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[13px] text-[var(--gw-text-secondary)]">Arguments</label>
+              <Input
+                placeholder="comma-separated args (e.g. server1.js, --port=3000)"
+                value={formValues.args}
+                onChange={(e) => setFormValues((v) => ({ ...v, args: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setAddModalOpen(false); setFormValues({ name: '', command: '', args: '' }) }}>Cancel</Button>
+            <Button onClick={handleAdd}>Add</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

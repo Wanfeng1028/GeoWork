@@ -2,18 +2,14 @@
 // Displays and manages permission requests for MCP tool calls
 
 import { useState } from 'react'
-import { Button, Typography, Card, Space, Checkbox, Alert, Tag, Collapse } from 'antd'
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  WarningOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons'
+import { Button } from '../../../components/ui/button'
+import { Card } from '../../../components/ui/card'
+import { Badge } from '../../../components/ui/badge'
+import { Input } from '../../../components/ui/input'
+import { Spinner } from '../../../components/ui/spinner'
+import { CheckCircle, XCircle, AlertTriangle, Info, ChevronDown, ChevronUp } from 'lucide-react'
 import type { McpPermissionRequest } from '../mcpClient'
 import styles from './McpPermissionPanel.module.scss'
-
-const { Text } = Typography
-const { Panel } = Collapse
 
 // Risk-level metadata for common tool categories
 const RISK_RULES: Record<string, { level: 'low' | 'medium' | 'high'; label: string; color: string }> = {
@@ -53,13 +49,13 @@ function classifyRisk(toolName: string, args: Record<string, unknown>): { level:
 }
 
 function getRiskTag(level: 'low' | 'medium' | 'high') {
-  const config: Record<string, { color: string; icon: JSX.Element; text: string }> = {
-    low: { color: 'blue', icon: <InfoCircleOutlined />, text: 'Low Risk' },
-    medium: { color: 'orange', icon: <WarningOutlined />, text: 'Medium Risk' },
-    high: { color: 'red', icon: <WarningOutlined />, text: 'High Risk' },
+  const config: Record<string, { className: string; icon: React.ReactNode; text: string }> = {
+    low: { className: 'bg-blue-500/20 text-blue-400', icon: <Info className="h-3 w-3" />, text: 'Low Risk' },
+    medium: { className: 'bg-orange-500/20 text-orange-400', icon: <AlertTriangle className="h-3 w-3" />, text: 'Medium Risk' },
+    high: { className: 'bg-red-500/20 text-red-400', icon: <AlertTriangle className="h-3 w-3" />, text: 'High Risk' },
   }
   const c = config[level]
-  return <Tag color={c.color}>{c.icon} {c.text}</Tag>
+  return <Badge className={c.className}>{c.icon} {c.text}</Badge>
 }
 
 export interface McpPermissionPanelProps {
@@ -111,28 +107,29 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
   return (
     <Card className={styles.container}>
       <div className={styles.header}>
-        <Space className={styles.headerSpace}>
+        <div className="flex items-center gap-2">
           <span className={styles.serverBadge}>{request.serverName}</span>
           {riskTag}
-        </Space>
+        </div>
       </div>
 
       <div className={styles.content}>
         <div className={styles.toolInfo}>
-          <Text strong className={styles.toolName}>
+          <span className="text-[13px] font-semibold text-[var(--gw-text)]">
             {request.toolName}
-          </Text>
-          <Text type="secondary" className={styles.argSummary}>
+          </span>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
             Args: {summarizeArgs(request.args)}
-          </Text>
+          </span>
         </div>
 
         <Button
-          type="link"
-          size="small"
+          variant="link"
+          size="sm"
           className={styles.expandBtn}
           onClick={() => setExpanded(!expanded)}
         >
+          {expanded ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
           {expanded ? 'Hide details' : 'Show details'}
         </Button>
 
@@ -144,38 +141,50 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
           </div>
         )}
 
-        <Alert
-          message={`Category: ${risk.category}`}
-          description={
-            risk.level === 'high'
-              ? 'This tool has access to sensitive system resources. Review carefully before approving.'
-              : risk.level === 'medium'
-                ? 'This tool performs operations that may affect system state.'
-                : 'This tool performs read-only or non-destructive operations.'
-          }
-          type={risk.level === 'high' ? 'warning' : risk.level === 'medium' ? 'info' : 'success'}
-          icon={risk.level === 'high' ? <WarningOutlined /> : <InfoCircleOutlined />}
-          showIcon
-          className={styles.riskAlert}
-        />
+        <div className={`flex items-start gap-3 p-3 rounded-lg border ${
+          risk.level === 'high' ? 'border-red-500/30 bg-red-500/10' :
+          risk.level === 'medium' ? 'border-blue-500/30 bg-blue-500/10' :
+          'border-green-500/30 bg-green-500/10'
+        } ${styles.riskAlert}`}>
+          {risk.level === 'high' ? (
+            <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+          ) : (
+            <Info className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+          )}
+          <div>
+            <span className="text-[13px] font-medium text-[var(--gw-text)]">
+              Category: {risk.category}
+            </span>
+            <span className="text-[13px] text-[var(--gw-text-secondary)] block">
+              {risk.level === 'high'
+                ? 'This tool has access to sensitive system resources. Review carefully before approving.'
+                : risk.level === 'medium'
+                  ? 'This tool performs operations that may affect system state.'
+                  : 'This tool performs read-only or non-destructive operations.'}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className={styles.actions}>
-        <Checkbox
-          checked={remember}
-          onChange={(e) => setRemember(e.target.checked)}
-        >
+        <label className="flex items-center gap-2 text-[13px] text-[var(--gw-text-secondary)]">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="rounded border-[var(--gw-border)]"
+          />
           Remember this decision
-        </Checkbox>
+        </label>
 
         <div className={styles.actionButtons}>
           <Button
-            danger
-            loading={denying}
-            disabled={!denyReason.trim()}
+            variant="destructive"
+            disabled={!denyReason.trim() || denying}
             onClick={handleDeny}
           >
-            <CloseCircleOutlined /> Deny
+            {denying ? <Spinner className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+            Deny
           </Button>
           <Input
             value={denyReason}
@@ -184,12 +193,11 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
             className={styles.denyInput}
           />
           <Button
-            type="primary"
-            color="green"
-            loading={approving}
+            disabled={approving}
             onClick={handleApprove}
           >
-            <CheckCircleOutlined /> Approve
+            {approving ? <Spinner className="h-4 w-4 mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+            Approve
           </Button>
         </div>
       </div>

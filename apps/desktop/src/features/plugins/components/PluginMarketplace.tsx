@@ -2,13 +2,15 @@
 // Displays installed and available plugins as a searchable, filterable grid
 
 import { useState, useMemo, useCallback } from 'react'
-import { Card, Tag, Rate, Input, Select, Badge, Tooltip, Typography, Empty, Space } from 'antd'
-import { SearchOutlined, DownloadOutlined, CheckCircleOutlined, SettingOutlined } from '@ant-design/icons'
+import { Card } from '../../../components/ui/card'
+import { Badge } from '../../../components/ui/badge'
+import { Input } from '../../../components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../../components/ui/select'
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
+import { Empty } from '../../../components/ui/empty'
+import { Search, Download, CheckCircle, Settings } from 'lucide-react'
 import usePluginStore from '../../pluginStore'
 import styles from './PluginMarketplace.module.scss'
-
-const { Text, Title } = Typography
-const { Search } = Input
 
 interface PluginMarketplaceProps {
   onSelectPlugin?: (plugin: { id: string; name: string; description: string; version: string; author: string; permissions: string[]; installed: boolean; enabled: boolean }) => void
@@ -24,6 +26,18 @@ const CATEGORIES = [
 ]
 
 const RATING_COLORS = ['#ff2400', '#ff8c00', '#ffd700', '#9acd32', '#00c853']
+
+const getBadgeClass = (color: string): string => {
+  const map: Record<string, string> = {
+    magenta: 'bg-pink-500/20 text-pink-400',
+    orange: 'bg-orange-500/20 text-orange-400',
+    blue: 'bg-blue-500/20 text-blue-400',
+    green: 'bg-green-500/20 text-green-400',
+    red: 'bg-red-500/20 text-red-400',
+    default: 'bg-gray-500/20 text-gray-400',
+  }
+  return map[color] || map.default
+}
 
 export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
   const { plugins, isLoading } = usePluginStore()
@@ -91,9 +105,9 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
             ★
           </span>
         ))}
-        <Text type="secondary" style={{ fontSize: 12, marginLeft: 4 }}>
+        <span className="text-[13px] text-[var(--gw-text-secondary)] ml-1">
           {rating.toFixed(1)}
-        </Text>
+        </span>
       </div>
     )
   }
@@ -110,33 +124,35 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <Title level={4} style={{ margin: 0 }}>
+          <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
             插件市场
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+          </h3>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
             {filteredPlugins.length} 个插件
-          </Text>
+          </span>
         </div>
         <div className={styles.headerFilters}>
-          <Select
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-            options={CATEGORIES}
-            className={styles.categorySelect}
-            allowClear
-            placeholder="分类"
-            size="middle"
-          />
-          <Search
-            placeholder="搜索插件..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onSearch={(val) => setSearchText(val)}
-            allowClear
-            prefix={<SearchOutlined />}
-            className={styles.searchInput}
-            size="middle"
-          />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className={styles.categorySelect}>
+              <SelectValue placeholder="分类" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--gw-text-tertiary)]" />
+            <Input
+              placeholder="搜索插件..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className={`pl-8 ${styles.searchInput}`}
+            />
+          </div>
         </div>
       </div>
 
@@ -149,23 +165,21 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
           filteredPlugins.map((plugin) => (
             <Card
               key={plugin.id}
-              hoverable
               className={`${styles.pluginCard} ${plugin.installed ? styles.pluginCardInstalled : ''}`}
               onClick={() => handleCardClick(plugin)}
-              bodyStyle={{ padding: '12px 16px' }}
             >
               <div className={styles.pluginHeader}>
                 <div className={styles.pluginIcon}>
                   {plugin.installed ? (
-                    <CheckCircleOutlined />
+                    <CheckCircle className="h-5 w-5" />
                   ) : (
-                    <SettingOutlined />
+                    <Settings className="h-5 w-5" />
                   )}
                 </div>
                 <div className={styles.pluginTitleWrap}>
                   <span className={styles.pluginName}>{plugin.name}</span>
                   {plugin.installed && (
-                    <Badge status="success" text="已安装" />
+                    <Badge className="bg-green-500/20 text-green-400">已安装</Badge>
                   )}
                 </div>
               </div>
@@ -174,21 +188,24 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
 
               <div className={styles.pluginMeta}>
                 <div className={styles.metaLeft}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
+                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
                     v{plugin.version}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                  </span>
+                  <span className="text-[13px] text-[var(--gw-text-secondary)] ml-2">
                     {plugin.author}
-                  </Text>
+                  </span>
                 </div>
                 <div className={styles.metaRight}>
                   {getRatingStars(plugin.rating)}
                   {plugin.installCount !== undefined && (
-                    <Tooltip title="安装次数">
-                      <Space style={{ fontSize: 12, color: '#8899aa' }}>
-                        <DownloadOutlined />
-                        <span>{getInstallCountText(plugin.installCount)}</span>
-                      </Space>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-[13px] text-[var(--gw-text-tertiary)]">
+                          <Download className="h-3 w-3" />
+                          <span>{getInstallCountText(plugin.installCount)}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>安装次数</TooltipContent>
                     </Tooltip>
                   )}
                 </div>
@@ -197,18 +214,17 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
               {plugin.permissions.length > 0 && (
                 <div className={styles.pluginPermissions}>
                   {plugin.permissions.slice(0, 3).map((perm) => (
-                    <Tag
+                    <Badge
                       key={perm}
-                      color={getPermissionTagColor(perm)}
-                      style={{ margin: 0, fontSize: 11 }}
+                      className={getBadgeClass(getPermissionTagColor(perm))}
                     >
                       {perm}
-                    </Tag>
+                    </Badge>
                   ))}
                   {plugin.permissions.length > 3 && (
-                    <Tag style={{ margin: 0, fontSize: 11, background: '#1a2030', color: '#8899aa', border: 'none' }}>
+                    <Badge variant="secondary">
                       +{plugin.permissions.length - 3}
-                    </Tag>
+                    </Badge>
                   )}
                 </div>
               )}

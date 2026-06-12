@@ -4,52 +4,30 @@
 // Monitors running tasks with streaming status, progress, steps, and error display
 
 import { useState, useEffect } from "react";
-import { Progress, Tag, Button, Collapse, Timeline, Spin, Alert } from "antd";
-import {
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  StopOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LoadingOutlined,
-  ThunderboltOutlined,
-} from "@ant-design/icons";
+import { Play, Pause, Square, CheckCircle, XCircle, Loader2, Zap, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { Spinner } from "../../../ui/spinner";
 import useTaskStore from "../../../../stores/taskStore";
 import useChatStore from "../../../../stores/chatStore";
 import styles from "./TaskMonitorPanel.module.scss";
 
-const { Panel } = Collapse;
-
 const STATUS_CONFIG = {
-  pending: { color: "#faad14", icon: <PauseCircleOutlined />, label: "等待中" },
-  running: { color: "#1890ff", icon: <PlayCircleOutlined />, label: "运行中" },
+  pending: { color: "#faad14", icon: <Pause className="h-3.5 w-3.5" />, label: "等待中" },
+  running: { color: "#1890ff", icon: <Play className="h-3.5 w-3.5" />, label: "运行中" },
   waiting_approval: {
     color: "#fa8c16",
-    icon: <ThunderboltOutlined />,
+    icon: <Zap className="h-3.5 w-3.5" />,
     label: "等待审批",
   },
   completed: {
     color: "#52c41a",
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     label: "已完成",
   },
-  failed: { color: "#f5222d", icon: <CloseCircleOutlined />, label: "失败" },
-  recovered: { color: "#13c2c2", icon: <ReloadOutlined />, label: "已恢复" },
+  failed: { color: "#f5222d", icon: <XCircle className="h-3.5 w-3.5" />, label: "失败" },
+  recovered: { color: "#13c2c2", icon: <RefreshCw className="h-3.5 w-3.5" />, label: "已恢复" },
 };
-
-function ReloadOutlined() {
-  return (
-    <svg
-      width="1em"
-      height="1em"
-      viewBox="0 0 1024 1024"
-      fill="currentColor"
-    >
-      <path d="M831.872 340.864A448 448 0 1 0 850.88 512h-63.488a384 384 0 1 1 112-171.136h-67.52z"></path>
-      <path d="M850.88 512A448 448 0 0 0 512 173.248V96A544 544 0 1 1 928 512h-77.12z"></path>
-    </svg>
-  );
-}
 
 export function TaskMonitorPanel() {
   const { tasks, currentTask, events, isLoading, error } = useTaskStore();
@@ -95,7 +73,7 @@ export function TaskMonitorPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>
-          <ThunderboltOutlined /> 任务监控
+          <Zap className="h-4 w-4" /> 任务监控
         </span>
         <button
           className={styles.collapseBtn}
@@ -119,16 +97,21 @@ export function TaskMonitorPanel() {
                 </span>
                 {currentTask.id}
               </span>
-              <Tag color={statusConfig.color}>{statusConfig.label}</Tag>
+              <Badge
+                variant={currentTaskStatus === "completed" ? "success" : currentTaskStatus === "failed" ? "danger" : "warning"}
+              >
+                {statusConfig.label}
+              </Badge>
             </div>
 
             {currentTaskStatus === "running" && (
               <div className={styles.progressSection}>
-                <Progress
-                  percent={progressPercent}
-                  status={totalSteps === 0 ? "active" : "normal"}
-                  size="small"
-                />
+                <div className="w-full h-1.5 rounded-full bg-[var(--gw-bg-active)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[var(--gw-accent)] transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
                 <span className={styles.progressText}>
                   {completedSteps}/{totalSteps} 步骤完成
                 </span>
@@ -137,15 +120,13 @@ export function TaskMonitorPanel() {
 
             {/* Task Steps */}
             {currentTask?.plan && currentTask.plan.length > 0 && (
-              <Collapse
-                defaultActiveKey={[]}
-                bordered={false}
-                size="small"
-                className={styles.stepsCollapse}
-              >
+              <div className={styles.stepsCollapse}>
                 {currentTask.plan.map((step: any, index: number) => (
-                  <Panel
-                    header={
+                  <details
+                    key={step.id}
+                    className="border-b border-[var(--gw-border-soft)]"
+                  >
+                    <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[var(--gw-bg-hover)]">
                       <span className={styles.stepItem}>
                         <span className={styles.stepIndex}>{index + 1}</span>
                         <span className={styles.stepTitle}>{step.title}</span>
@@ -153,60 +134,57 @@ export function TaskMonitorPanel() {
                           {step.toolName || ""}
                         </span>
                       </span>
-                    }
-                    key={step.id}
-                  >
-                    {step.status === "running" && (
-                      <Spin
-                        size="small"
-                        style={{ marginLeft: 8 }}
-                      />
-                    )}
-                    {step.status === "completed" && (
-                      <span className={styles.stepCompleted}>✓ 已完成</span>
-                    )}
-                    {step.status === "failed" && (
-                      <span className={styles.stepFailed}>✗ 失败</span>
-                    )}
-                    {step.startedAt && (
-                      <span className={styles.stepTime}>
-                        开始: {new Date(step.startedAt).toLocaleTimeString()}
-                      </span>
-                    )}
-                  </Panel>
+                    </summary>
+                    <div className="px-3 py-2">
+                      {step.status === "running" && (
+                        <Spinner size="sm" className="ml-2" />
+                      )}
+                      {step.status === "completed" && (
+                        <span className={styles.stepCompleted}>&#10003; 已完成</span>
+                      )}
+                      {step.status === "failed" && (
+                        <span className={styles.stepFailed}>&#10007; 失败</span>
+                      )}
+                      {step.startedAt && (
+                        <span className={styles.stepTime}>
+                          开始: {new Date(step.startedAt).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                  </details>
                 ))}
-              </Collapse>
+              </div>
             )}
 
             {/* Error Display */}
             {error && (
-              <Alert
-                message="任务错误"
-                description={error}
-                type="error"
-                showIcon
-                className={styles.errorAlert}
-              />
+              <div className="flex items-start gap-2 p-3 rounded-[var(--gw-radius-sm)] bg-[var(--gw-danger-soft)] border border-[var(--gw-danger)]/20 text-[var(--gw-danger)] text-[12px]">
+                <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium">任务错误</div>
+                  <div className="mt-1 opacity-80">{error}</div>
+                </div>
+              </div>
             )}
 
             {/* Actions */}
             <div className={styles.actions}>
               {currentTaskStatus === "running" && (
                 <Button
-                  size="small"
-                  danger
-                  icon={<StopOutlined />}
+                  size="sm"
+                  variant="danger"
                   onClick={handleCancel}
                 >
+                  <Square className="h-3.5 w-3.5 mr-1" />
                   取消任务
                 </Button>
               )}
               {currentTaskStatus === "failed" && (
                 <Button
-                  size="small"
-                  type="primary"
-                  icon={<ReloadOutlined />}
+                  size="sm"
+                  variant="primary"
                 >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
                   恢复任务
                 </Button>
               )}
@@ -225,25 +203,28 @@ export function TaskMonitorPanel() {
       {recentEvents.length > 0 && (
         <div className={styles.eventsSection}>
           <span className={styles.eventsTitle}>最近事件</span>
-          <Timeline
-            className={styles.eventTimeline}
-            items={recentEvents.map((evt) => ({
-              dot: evt.type?.includes("error") ? (
-                <CloseCircleOutlined style={{ color: "#f5222d" }} />
-              ) : (
-                <LoadingOutlined />
-              ),
-              color: evt.type?.includes("error") ? "red" : "blue",
-              children: (
+          <div className={styles.eventTimeline}>
+            {recentEvents.map((evt, index) => (
+              <div key={evt.id || index} className="flex gap-3 pb-3">
+                <div className="flex flex-col items-center">
+                  {evt.type?.includes("error") ? (
+                    <XCircle className="h-4 w-4 text-[#f5222d]" />
+                  ) : (
+                    <Loader2 className="h-4 w-4 text-[#1890ff] animate-spin" />
+                  )}
+                  {index < recentEvents.length - 1 && (
+                    <div className="w-px flex-1 bg-[var(--gw-border-soft)] mt-1" />
+                  )}
+                </div>
                 <div>
                   <div className={styles.eventMessage}>{evt.message}</div>
                   <div className={styles.eventTime}>
                     {new Date(evt.timestamp).toLocaleTimeString()}
                   </div>
                 </div>
-              ),
-            }))}
-          />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

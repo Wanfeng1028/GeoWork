@@ -1,49 +1,35 @@
 import React, { useState, useCallback } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Input } from '../../components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs'
+import { Empty } from '../../components/ui/empty'
+import { toast } from 'sonner'
 import {
-  Layout,
-  Card,
-  Row,
-  Col,
-  Avatar,
-  Tag,
-  Button,
-  Modal,
-  Input,
-  Tabs,
-  Descriptions,
-  Collapse,
-  Badge,
-  message
-} from 'antd'
-import {
-  RobotOutlined,
-  BookOutlined,
-  DatabaseOutlined,
-  CloudOutlined,
-  DesktopOutlined,
-  ScanOutlined,
-  AppstoreOutlined,
-  PictureOutlined,
-  FileDoneOutlined,
-  EditOutlined,
-  CheckSquareOutlined,
-  CodeOutlined,
-  SearchOutlined
-} from '@ant-design/icons'
+  Bot,
+  BookOpen,
+  Database,
+  Cloud,
+  Monitor,
+  ScanLine,
+  LayoutGrid,
+  Image,
+  FileCheck,
+  Edit,
+  CheckSquare,
+  Code,
+  Search
+} from 'lucide-react'
 import ExpertCard, { type ExpertItem, type ExpertSkill } from './ExpertCard'
 import styles from './ExpertPanel.module.scss'
-
-const { Content } = Layout
-
-// ─── Type Definitions ───────────────────────────────────────────────
 
 export interface ExpertPanelProps {
   experts?: ExpertItem[]
   loading?: boolean
   onExpertCall?: (expert: ExpertItem) => void
 }
-
-// ─── Mock Data ──────────────────────────────────────────────────────
 
 const DEFAULT_SKILLS: Record<string, ExpertSkill[]> = {
   '总控专家': [
@@ -111,29 +97,27 @@ const DEFAULT_SKILLS: Record<string, ExpertSkill[]> = {
 const EXPERT_CATEGORIES = ['全部', '核心', '数据处理', '分析', '写作', '工程']
 
 const CATEGORY_COLORS: Record<string, string> = {
-  核心: 'gold',
-  '数据处理': 'blue',
-  分析: 'green',
-  写作: 'purple',
-  工程: 'orange'
+  核心: 'bg-yellow-100 text-yellow-800',
+  '数据处理': 'bg-blue-100 text-blue-800',
+  分析: 'bg-green-100 text-green-800',
+  写作: 'bg-purple-100 text-purple-800',
+  工程: 'bg-orange-100 text-orange-800'
 }
 
 const EXPERT_CONFIGS: Omit<ExpertItem, 'skills'>[] = [
-  { id: 'e1', name: '总控专家', description: '任务规划和协调，负责将复杂任务拆解为可执行的子任务，协调多个专家协同工作', icon: <RobotOutlined />, color: '#1677ff', category: '核心' },
-  { id: 'e2', name: '论文专家', description: '论文搜索和综述，在 OpenAlex 等数据库中搜索相关论文，生成文献综述报告', icon: <BookOutlined />, color: '#722ed1', category: '写作' },
-  { id: 'e3', name: '数据专家', description: '遥感数据处理，负责数据下载、预处理、格式转换等全流程数据处理', icon: <DatabaseOutlined />, color: '#10b981', category: '数据处理' },
-  { id: 'e4', name: 'GEE 专家', description: 'Google Earth Engine 专家，生成 GEE 脚本，处理影像数据，进行时间序列分析', icon: <CloudOutlined />, color: '#0ea5e9', category: '数据处理' },
-  { id: 'e5', name: 'QGIS 专家', description: 'QGIS 自动化，使用 PyQGIS 自动化处理流程，管理图层和空间处理', icon: <DesktopOutlined />, color: '#f59e0b', category: '工程' },
-  { id: 'e6', name: '遥感分析专家', description: '遥感算法专家，执行 NDVI 分析、地表温度反演、变化检测等遥感分析', icon: <ScanOutlined />, color: '#ef4444', category: '分析' },
-  { id: 'e7', name: 'GIS 工程专家', description: '空间分析专家，执行叠加分析、缓冲区分析、空间统计和三维可视化', icon: <AppstoreOutlined />, color: '#8b5cf6', category: '工程' },
-  { id: 'e8', name: '地图制图专家', description: '地图输出专家，生成专题地图，设计专业图例，导出高分辨率地图', icon: <PictureOutlined />, color: '#ec4899', category: '工程' },
-  { id: 'e9', name: '实验报告专家', description: '实验报告生成，自动生成 DOCX 报告，插入分析图表，生成结果讨论', icon: <FileDoneOutlined />, color: '#14b8a6', category: '写作' },
-  { id: 'e10', name: '论文写作专家', description: '论文撰写专家，根据实验结果撰写论文，按期刊格式调整，生成中英文摘要', icon: <EditOutlined />, color: '#a855f7', category: '写作' },
-  { id: 'e11', name: '质量检查专家', description: '结果验证专家，验证分析结果正确性，进行精度验证和误差分析', icon: <CheckSquareOutlined />, color: '#f97316', category: '分析' },
-  { id: 'e12', name: '代码审查专家', description: '代码质量专家，检查代码质量和规范，优化代码性能，审查安全隐患', icon: <CodeOutlined />, color: '#6366f1', category: '分析' }
+  { id: 'e1', name: '总控专家', description: '任务规划和协调，负责将复杂任务拆解为可执行的子任务，协调多个专家协同工作', icon: <Bot />, color: '#1677ff', category: '核心' },
+  { id: 'e2', name: '论文专家', description: '论文搜索和综述，在 OpenAlex 等数据库中搜索相关论文，生成文献综述报告', icon: <BookOpen />, color: '#722ed1', category: '写作' },
+  { id: 'e3', name: '数据专家', description: '遥感数据处理，负责数据下载、预处理、格式转换等全流程数据处理', icon: <Database />, color: '#10b981', category: '数据处理' },
+  { id: 'e4', name: 'GEE 专家', description: 'Google Earth Engine 专家，生成 GEE 脚本，处理影像数据，进行时间序列分析', icon: <Cloud />, color: '#0ea5e9', category: '数据处理' },
+  { id: 'e5', name: 'QGIS 专家', description: 'QGIS 自动化，使用 PyQGIS 自动化处理流程，管理图层和空间处理', icon: <Monitor />, color: '#f59e0b', category: '工程' },
+  { id: 'e6', name: '遥感分析专家', description: '遥感算法专家，执行 NDVI 分析、地表温度反演、变化检测等遥感分析', icon: <ScanLine />, color: '#ef4444', category: '分析' },
+  { id: 'e7', name: 'GIS 工程专家', description: '空间分析专家，执行叠加分析、缓冲区分析、空间统计和三维可视化', icon: <LayoutGrid />, color: '#8b5cf6', category: '工程' },
+  { id: 'e8', name: '地图制图专家', description: '地图输出专家，生成专题地图，设计专业图例，导出高分辨率地图', icon: <Image />, color: '#ec4899', category: '工程' },
+  { id: 'e9', name: '实验报告专家', description: '实验报告生成，自动生成 DOCX 报告，插入分析图表，生成结果讨论', icon: <FileCheck />, color: '#14b8a6', category: '写作' },
+  { id: 'e10', name: '论文写作专家', description: '论文撰写专家，根据实验结果撰写论文，按期刊格式调整，生成中英文摘要', icon: <Edit />, color: '#a855f7', category: '写作' },
+  { id: 'e11', name: '质量检查专家', description: '结果验证专家，验证分析结果正确性，进行精度验证和误差分析', icon: <CheckSquare />, color: '#f97316', category: '分析' },
+  { id: 'e12', name: '代码审查专家', description: '代码质量专家，检查代码质量和规范，优化代码性能，审查安全隐患', icon: <Code />, color: '#6366f1', category: '分析' }
 ]
-
-// ─── Component ──────────────────────────────────────────────────────
 
 export default function ExpertPanel({
   experts = EXPERT_CONFIGS.map((config) => ({
@@ -174,7 +158,7 @@ export default function ExpertPanel({
       if (onExpertCall) {
         onExpertCall(expert)
       } else {
-        message.success(`正在调用 ${expert.name}...`)
+        toast.success(`正在调用 ${expert.name}...`)
       }
     },
     [onExpertCall]
@@ -188,7 +172,7 @@ export default function ExpertPanel({
   }, [selectedExpert, handleExpertCall])
 
   return (
-    <Content className={styles.panel}>
+    <div className={styles.panel}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerText}>
@@ -197,46 +181,32 @@ export default function ExpertPanel({
             {experts.length} 位内置专家，覆盖遥感分析、GIS 工程、论文写作等全链路任务
           </p>
         </div>
-        <Badge count={experts.length} offset={[10, 0]}>
-          <Button type="primary" icon={<RobotOutlined />}>
-            专家团队
-          </Button>
+        <Badge variant="default" className="px-3 py-1">
+          <Bot className="w-4 h-4 mr-1" /> 专家团队 ({experts.length})
         </Badge>
       </div>
 
       {/* Search and Filter */}
-      <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
-        <Row gutter={12} align="middle">
-          <Col flex="auto">
-            <Input
-              placeholder="搜索专家名称、描述或技能..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              size="middle"
-            />
-          </Col>
-        </Row>
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {EXPERT_CATEGORIES.map((cat) => (
-            <Tag
-              key={cat}
-              color={cat === '全部' ? 'blue' : CATEGORY_COLORS[cat]}
-              style={{
-                cursor: 'pointer',
-                padding: '2px 12px',
-                fontSize: 13,
-                border: activeCategory === cat ? '2px solid' : undefined,
-                borderColor: activeCategory === cat ? '#1677ff' : undefined,
-                fontWeight: activeCategory === cat ? 600 : 400
-              }}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat}
-            </Tag>
-          ))}
-        </div>
+      <Card>
+        <CardContent className="p-4">
+          <Input
+            placeholder="搜索专家名称、描述或技能..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            {EXPERT_CATEGORIES.map((cat) => (
+              <Badge
+                key={cat}
+                variant={activeCategory === cat ? 'default' : 'outline'}
+                className={`cursor-pointer px-3 py-1 ${activeCategory === cat ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
       </Card>
 
       {/* Expert Grid */}
@@ -252,82 +222,68 @@ export default function ExpertPanel({
         </div>
       ) : (
         <Card>
-          <Descriptions
-            bordered
-            size="small"
-            column={1}
-            items={[
-              { key: 'msg', label: '提示', span: 1, children: '没有找到匹配的专家，请调整搜索条件' }
-            ]}
-          />
+          <CardContent>
+            <div className="text-center p-4 text-muted-foreground">
+              没有找到匹配的专家，请调整搜索条件
+            </div>
+          </CardContent>
         </Card>
       )}
 
       {/* Expert Detail Modal */}
-      <Modal
-        title={null}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={560}
-        destroyOnClose
-      >
-        {selectedExpert && (
-          <div className={styles.modalContent}>
-            <div className={styles.expertAvatar}>
-              <Avatar
-                size={64}
-                icon={selectedExpert.icon}
-                style={{ background: selectedExpert.color }}
-              />
-              <div className={styles.avatarInfo}>
-                <h3 className={styles.avatarName}>{selectedExpert.name}</h3>
-                <span className={styles.avatarCategory}>
-                  <Tag color={CATEGORY_COLORS[selectedExpert.category] || 'default'}>
-                    {selectedExpert.category}
-                  </Tag>
-                </span>
+      <Dialog open={modalVisible} onOpenChange={setModalVisible}>
+        <DialogContent className="max-w-[560px]">
+          {selectedExpert && (
+            <div className={styles.modalContent}>
+              <div className={styles.expertAvatar}>
+                <div
+                  className="flex items-center justify-center rounded-full w-16 h-16"
+                  style={{ background: selectedExpert.color }}
+                >
+                  <span className="text-white text-2xl">{selectedExpert.icon}</span>
+                </div>
+                <div className={styles.avatarInfo}>
+                  <h3 className={styles.avatarName}>{selectedExpert.name}</h3>
+                  <span className={styles.avatarCategory}>
+                    <Badge variant="secondary">
+                      {selectedExpert.category}
+                    </Badge>
+                  </span>
+                </div>
               </div>
+
+              <div className="rounded-md border p-3">
+                <div className="text-sm font-medium mb-1">描述</div>
+                <div className="text-sm text-muted-foreground">{selectedExpert.description}</div>
+              </div>
+
+              <div className={styles.skillsSection}>
+                <h4 className={styles.sectionTitle}>可用技能</h4>
+                <div className="space-y-2">
+                  {selectedExpert.skills.map((skill) => (
+                    <details key={skill.id} className="rounded border">
+                      <summary className="cursor-pointer p-2">
+                        <Badge variant="secondary" style={{ borderColor: selectedExpert.color }}>
+                          {skill.name}
+                        </Badge>
+                      </summary>
+                      <p className="p-2 m-0 text-sm text-muted-foreground">{skill.description}</p>
+                    </details>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleModalCall}
+              >
+                <Bot className="w-4 h-4 mr-2" /> 调用 {selectedExpert.name}
+              </Button>
             </div>
-
-            <Descriptions
-              bordered
-              size="small"
-              column={1}
-              items={[
-                { key: 'desc', label: '描述', span: 1, children: selectedExpert.description }
-              ]}
-            />
-
-            <div className={styles.skillsSection}>
-              <h4 className={styles.sectionTitle}>可用技能</h4>
-              <Collapse
-                defaultActiveKey={[]}
-                items={selectedExpert.skills.map((skill) => ({
-                  key: skill.id,
-                  label: (
-                    <Tag color={selectedExpert.color}>
-                      {skill.name}
-                    </Tag>
-                  ),
-                  children: <p style={{ margin: 0, color: '#47606d' }}>{skill.description}</p>
-                }))}
-              />
-            </div>
-
-            <Button
-              type="primary"
-              block
-              size="large"
-              icon={<RobotOutlined />}
-              className={styles.callButton}
-              onClick={handleModalCall}
-            >
-              调用 {selectedExpert.name}
-            </Button>
-          </div>
-        )}
-      </Modal>
-    </Content>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

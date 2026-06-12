@@ -2,16 +2,16 @@
 // Visual timeline of agent execution steps
 
 import React from 'react'
-import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
 import { GwCard } from '../../../components/foundation/GwCard/GwCard'
 import useAgentStore from '../agentStore'
 import styles from './AgentStepTimeline.module.scss'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  completed: <CheckCircleOutlined className={`${styles.icon} ${styles.completed}`} />,
-  running: <LoadingOutlined className={`${styles.icon} ${styles.running}`} />,
-  failed: <CloseCircleOutlined className={`${styles.icon} ${styles.failed}`} />,
-  pending: <ClockCircleOutlined className={`${styles.icon} ${styles.pending}`} />,
+  completed: <CheckCircle className={`${styles.icon} ${styles.completed}`} />,
+  running: <Loader2 className={`${styles.icon} ${styles.running} animate-spin`} />,
+  failed: <XCircle className={`${styles.icon} ${styles.failed}`} />,
+  pending: <Clock className={`${styles.icon} ${styles.pending}`} />,
 }
 
 function formatDuration(startedAt?: string, completedAt?: string): string {

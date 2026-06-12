@@ -1,5 +1,10 @@
-import { useCallback, useEffect } from 'react'
-import { Button, Form, Input, Select, Switch, message } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
+
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
+import { Switch } from '../../components/ui/switch'
+import { toast } from 'sonner'
 import { useAutomationStore, AutomationRule, TriggerType } from './store'
 import styles from './RuleEditor.module.scss'
 
@@ -28,51 +33,61 @@ interface RuleEditorProps {
 }
 
 export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
-  const [form] = Form.useForm<Partial<AutomationRule>>()
   const { createRule, updateRule, loading, triggerRule } = useAutomationStore()
+  const [formState, setFormState] = useState({
+    name: '',
+    description: '',
+    trigger: 'manual' as TriggerType,
+    target: '',
+    params: '',
+    enabled: true
+  })
 
   useEffect(() => {
     if (open) {
-      form.setFieldsValue({
+      setFormState({
         name: editingRule?.name ?? '',
         description: editingRule?.description ?? '',
         trigger: editingRule?.trigger ?? 'manual',
         target: editingRule?.target ?? '',
-        params: (editingRule?.params ?? {}) as Record<string, any>,
+        params: editingRule?.params ? JSON.stringify(editingRule.params) : '',
         enabled: editingRule?.enabled ?? true
       })
     }
-  }, [open, editingRule, form])
+  }, [open, editingRule])
 
-  const handleFinish = useCallback(async (values: Partial<AutomationRule>) => {
+  const handleFinish = useCallback(async () => {
     try {
+      let params = {}
+      try { params = formState.params ? JSON.parse(formState.params) : {} } catch {}
+
       if (editingRule) {
-        await updateRule({ ...editingRule, ...values, params: values.params ?? {} })
-        message.success('规则已更新')
+        await updateRule({ ...editingRule, ...formState, params })
+        toast.success('规则已更新')
       } else {
         await createRule({
-          name: values.name!,
-          description: values.description ?? '',
-          trigger: values.trigger ?? 'manual',
-          target: values.target ?? '',
-          params: values.params ?? {},
-          enabled: values.enabled ?? true
+          name: formState.name,
+          description: formState.description,
+          trigger: formState.trigger,
+          target: formState.target,
+          params,
+          enabled: formState.enabled
         })
-        message.success('规则已创建')
+        toast.success('规则已创建')
       }
       onClose()
     } catch {
-      message.error('保存失败')
+      toast.error('保存失败')
     }
-  }, [editingRule, updateRule, createRule, onClose])
+  }, [editingRule, updateRule, createRule, onClose, formState])
 
   const handleTest = useCallback(async () => {
     if (!editingRule) return
     try {
       await triggerRule(editingRule.id)
-      message.success('规则测试触发成功')
+      toast.success('规则测试触发成功')
     } catch {
-      message.error('规则测试触发失败')
+      toast.error('规则测试触发失败')
     }
   }, [editingRule, triggerRule])
 
@@ -85,64 +100,76 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
           <button className={styles.closeBtn} onClick={onClose}>×</button>
         </div>
 
-        <Form<Partial<AutomationRule>>
-          form={form}
-          layout="vertical"
-          onFinish={handleFinish}
-          initialValues={{ enabled: true }}
-        >
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入规则名称' }]}>
-            <Input placeholder="例如：每日 NDVI 监测" />
-          </Form.Item>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">名称</label>
+            <Input placeholder="例如：每日 NDVI 监测" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
+          </div>
 
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} placeholder="规则描述（可选）" />
-          </Form.Item>
-
-          <Form.Item name="trigger" label="触发条件" rules={[{ required: true, message: '请选择触发条件' }]}>
-            <Select options={TRIGGER_OPTIONS} />
-          </Form.Item>
-
-          <Form.Item name="target" label="执行目标" rules={[{ required: true, message: '请选择执行目标' }]}>
-            <Select options={TARGET_OPTIONS} />
-          </Form.Item>
-
-          <Form.Item label="参数配置">
-            <Input.TextArea
-              rows={4}
-              placeholder='{"band": "NIR", "threshold": 0.3}'
-              {...{
-                onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  try {
-                    const parsed = e.target.value ? JSON.parse(e.target.value) : {}
-                    form.setFieldValue('params', parsed)
-                  } catch {
-                    // invalid JSON — leave as-is
-                  }
-                }
-              }}
+          <div>
+            <label className="text-sm font-medium">描述</label>
+            <textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="规则描述（可选）"
+              value={formState.description}
+              onChange={(e) => setFormState({ ...formState, description: e.target.value })}
             />
-            <span className={styles.hint}>JSON 格式，例如：{'{"band": "NIR"}'}</span>
-          </Form.Item>
+          </div>
 
-          <Form.Item label="启用" valuePropName="checked" style={{ marginBottom: 0 }}>
-            <Form.Item name="enabled" valuePropName="checked" noStyle>
-              <Switch />
-            </Form.Item>
-          </Form.Item>
+          <div>
+            <label className="text-sm font-medium">触发条件</label>
+            <Select value={formState.trigger} onValueChange={(v) => setFormState({ ...formState, trigger: v as TriggerType })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TRIGGER_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">执行目标</label>
+            <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择执行目标" />
+              </SelectTrigger>
+              <SelectContent>
+                {TARGET_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">参数配置</label>
+            <textarea
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder='{"band": "NIR", "threshold": 0.3}'
+              value={formState.params}
+              onChange={(e) => setFormState({ ...formState, params: e.target.value })}
+            />
+            <span className="text-xs text-muted-foreground">JSON 格式，例如：{'{"band": "NIR"}'}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch checked={formState.enabled} onCheckedChange={(v) => setFormState({ ...formState, enabled: v })} />
+            <label className="text-sm font-medium">启用</label>
+          </div>
 
           <div className={styles.actions}>
-            <Button onClick={onClose}>取消</Button>
+            <Button variant="outline" onClick={onClose}>取消</Button>
             {editingRule && (
-              <Button onClick={handleTest} disabled={loading}>
-                测试运行
-              </Button>
+              <Button variant="outline" onClick={handleTest} disabled={loading}>测试运行</Button>
             )}
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button onClick={handleFinish} disabled={loading}>
               {editingRule ? '保存' : '创建'}
             </Button>
           </div>
-        </Form>
+        </div>
       </div>
     </div>
   )

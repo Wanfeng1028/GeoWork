@@ -1,16 +1,9 @@
 // GeoWork ContextPanel - Shows current Agent context
 
-import { List, Tag, Typography, Empty } from 'antd'
-import {
-  FileTextOutlined,
-  FileImageOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-  DatabaseOutlined,
-} from '@ant-design/icons'
+import { FileText, Image, FileSpreadsheet, Database } from 'lucide-react'
+import { Badge } from '../../ui/badge'
+import { Empty } from '../../ui/empty'
 import styles from './ContextPanel.module.scss'
-
-const { Text, Title } = Typography
 
 interface ContextItem {
   id: string;
@@ -34,19 +27,19 @@ const mockContext: ContextItem[] = [
 ]
 
 const typeIcons: Record<string, React.ReactNode> = {
-  file: <FileTextOutlined />,
-  layer: <FileImageOutlined />,
-  paper: <FilePdfOutlined />,
-  knowledge: <DatabaseOutlined />,
-  mcp: <DatabaseOutlined />,
+  file: <FileText className="h-3.5 w-3.5" />,
+  layer: <Image className="h-3.5 w-3.5" />,
+  paper: <FileText className="h-3.5 w-3.5" />,
+  knowledge: <Database className="h-3.5 w-3.5" />,
+  mcp: <Database className="h-3.5 w-3.5" />,
 }
 
 const typeColors: Record<string, string> = {
-  file: 'blue',
-  layer: 'purple',
-  paper: 'orange',
-  knowledge: 'cyan',
-  mcp: 'magenta',
+  file: 'accent',
+  layer: 'info',
+  paper: 'warning',
+  knowledge: 'success',
+  mcp: 'danger',
 }
 
 export function ContextPanel() {
@@ -70,19 +63,17 @@ export function ContextPanel() {
         <div key={type} className={styles.group}>
           <div className={styles.groupHeader}>
             <span className={styles.groupLabel}>{typeLabels[type] || type}</span>
-            <Tag color={typeColors[type]}>{items.length}</Tag>
+            <Badge variant={typeColors[type] as any}>{items.length}</Badge>
           </div>
-          <List
-            size="small"
-            dataSource={items}
-            renderItem={(item) => (
-              <List.Item className={styles.contextItem}>
+          <div className="flex flex-col">
+            {items.map((item) => (
+              <div key={item.id} className={styles.contextItem}>
                 <span className={styles.contextIcon}>{typeIcons[item.type]}</span>
                 <span className={styles.contextName}>{item.name}</span>
                 {item.size && <span className={styles.contextSize}>{item.size}</span>}
-              </List.Item>
-            )}
-          />
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>

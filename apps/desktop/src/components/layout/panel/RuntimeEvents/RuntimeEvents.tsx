@@ -4,15 +4,11 @@
 // Displays streaming runtime events from the task engine with real-time update
 
 import { useEffect, useState, useCallback } from "react";
-import { Badge, Tag, Button, Empty, Input } from "antd";
-import {
-  PlayCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LoadingOutlined,
-  SyncOutlined,
-  FilterOutlined,
-} from "@ant-design/icons";
+import { Play, CheckCircle, XCircle, Loader2, RefreshCw, Filter } from "lucide-react";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { Empty } from "../../../ui/empty";
+import { Input } from "../../../ui/input";
 import useTaskStore from "../../../../stores/taskStore";
 import useChatStore from "../../../../stores/chatStore";
 import sseClient from "../../../../services/sseClient";
@@ -23,57 +19,57 @@ const EVENT_TYPE_CONFIG: Record<
   { icon: React.ReactNode; color: string; label: string }
 > = {
   "task.started": {
-    icon: <PlayCircleOutlined />,
+    icon: <Play className="h-3.5 w-3.5" />,
     color: "#1890ff",
     label: "任务启动",
   },
   "task.progress": {
-    icon: <SyncOutlined spin />,
+    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     color: "#722ed1",
     label: "任务进度",
   },
   "task.completed": {
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     color: "#52c41a",
     label: "任务完成",
   },
   "task.failed": {
-    icon: <CloseCircleOutlined />,
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: "#f5222d",
     label: "任务失败",
   },
   "task.cancelled": {
-    icon: <CloseCircleOutlined />,
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: "#fa8c16",
     label: "任务取消",
   },
   "tool.call.started": {
-    icon: <LoadingOutlined />,
+    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     color: "#13c2c2",
     label: "工具调用",
   },
   "tool.call.completed": {
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     color: "#52c41a",
     label: "工具完成",
   },
   "tool.call.failed": {
-    icon: <CloseCircleOutlined />,
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: "#f5222d",
     label: "工具失败",
   },
   "permission.request": {
-    icon: <FilterOutlined />,
+    icon: <Filter className="h-3.5 w-3.5" />,
     color: "#faad14",
     label: "权限请求",
   },
   "permission.approved": {
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     color: "#52c41a",
     label: "权限通过",
   },
   "permission.denied": {
-    icon: <CloseCircleOutlined />,
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: "#f5222d",
     label: "权限拒绝",
   },
@@ -128,12 +124,14 @@ export function RuntimeEvents() {
         className={styles.collapsedBtn}
         onClick={() => setCollapsed(false)}
       >
-        <Badge
-          count={events.length}
-          style={{ backgroundColor: connected ? "#52c41a" : "#d9d9d9" }}
-        >
-          <span className={styles.collapsedIcon}>⚡</span>
-        </Badge>
+        <span className="relative inline-flex">
+          <span className={styles.collapsedIcon}>&#9889;</span>
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full text-[9px] font-medium px-1 py-0 min-w-[14px]"
+            style={{ backgroundColor: connected ? "#52c41a" : "#d9d9d9", color: "#fff" }}
+          >
+            {events.length}
+          </span>
+        </span>
       </button>
     );
   }
@@ -142,16 +140,19 @@ export function RuntimeEvents() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>⚡ 运行时事件</span>
-          <Badge
-            status={connected ? "success" : "default"}
-            text={connected ? "已连接" : "未连接"}
-            style={{ fontSize: 11 }}
-          />
+          <span className={styles.title}>&#9889; 运行时事件</span>
+          <span className="inline-flex items-center gap-1.5 text-[11px]">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: connected ? "#52c41a" : "#d9d9d9" }}
+            />
+            {connected ? "已连接" : "未连接"}
+          </span>
         </div>
         <div className={styles.headerRight}>
           <Button
-            size="small"
+            size="sm"
+            variant="ghost"
             onClick={handleClear}
           >
             清空
@@ -167,18 +168,19 @@ export function RuntimeEvents() {
 
       {/* Filter section */}
       <div className={styles.filterSection}>
-        <Input
-          size="small"
-          placeholder="搜索事件消息..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          prefix={<FilterOutlined style={{ color: "#bfbfbf" }} />}
-          className={styles.searchInput}
-        />
+        <div className="relative">
+          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#bfbfbf]" />
+          <Input
+            placeholder="搜索事件消息..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="pl-8"
+          />
+        </div>
         <div className={styles.typeFilters}>
           <Button
-            size="small"
-            type={eventTypeFilter === "all" ? "primary" : "default"}
+            size="sm"
+            variant={eventTypeFilter === "all" ? "primary" : "ghost"}
             onClick={() => setEventTypeFilter("all")}
           >
             全部
@@ -186,22 +188,20 @@ export function RuntimeEvents() {
           {eventTypes.map((type) => {
             const config = EVENT_TYPE_CONFIG[type];
             return (
-              <Tag
+              <span
                 key={type}
-                color={config?.color || "#999"}
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-opacity"
                 style={{
-                  cursor: "pointer",
+                  backgroundColor: config?.color || "#999",
+                  color: "#fff",
                   opacity: eventTypeFilter === type ? 1 : 0.6,
-                  margin: 2,
-                  fontSize: 10,
-                  padding: "0 6px",
                 }}
                 onClick={() =>
                   setEventTypeFilter(eventTypeFilter === type ? "all" : type)
                 }
               >
                 {config?.label || type}
-              </Tag>
+              </span>
             );
           })}
         </div>
@@ -215,14 +215,13 @@ export function RuntimeEvents() {
               description={
                 events.length === 0 ? "暂无运行时事件" : "无匹配的事件"
               }
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           </div>
         ) : (
           <div className={styles.eventScrollArea}>
             {filteredEvents.map((evt) => {
               const config = EVENT_TYPE_CONFIG[evt.type] || {
-                icon: <LoadingOutlined />,
+                icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
                 color: "#999",
                 label: evt.type,
               };
@@ -245,12 +244,12 @@ export function RuntimeEvents() {
                   <div className={styles.eventBody}>
                     <div className={styles.eventMessage}>{evt.message}</div>
                     <div className={styles.eventMeta}>
-                      <Tag
-                        color={config.color}
-                        style={{ fontSize: 9, margin: 0 }}
+                      <span
+                        className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium"
+                        style={{ backgroundColor: config.color, color: "#fff" }}
                       >
                         {config.label}
-                      </Tag>
+                      </span>
                       <span className={styles.eventTime}>
                         {new Date(evt.timestamp).toLocaleTimeString("zh-CN")}
                       </span>

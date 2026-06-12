@@ -2,12 +2,13 @@
 // Displays permission requests with approve/deny actions
 
 import React, { useState } from 'react'
-import { Card, Button, Space, Tag, Input, Alert, Collapse } from 'antd'
-import { CheckOutlined, CloseOutlined, WarningOutlined, SaveOutlined } from '@ant-design/icons'
+import { AlertTriangle, Check, X, Save } from 'lucide-react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card'
+import { Button } from '../../ui/button'
+import { Badge } from '../../ui/badge'
+import { Input } from '../../ui/input'
 import usePermissionStore from '../../../stores/permissionStore'
 import type { PermissionRequest } from '../../../types/permission'
-
-const { TextArea } = Input
 
 interface ApprovalCardProps {
   request: PermissionRequest
@@ -59,87 +60,89 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
   }
 
   return (
-    <Card
-      size="small"
-      type="inner"
-      title={
-        <Space>
-          <WarningOutlined style={{ color: '#faad14' }} />
-          <span>权限审批请求</span>
-          <Tag color={riskColor[request.riskLevel as keyof typeof riskColor] || 'default'}>
-            {request.riskLevel}
-          </Tag>
-        </Space>
-      }
-      extra={
-        <Tag>{actionLabels[request.action] || request.action}</Tag>
-      }
-      style={{ marginBottom: 8, border: '1px solid #faad14' }}
-    >
-      <Alert
-        message={request.title}
-        description={request.description}
-        type="warning"
-        showIcon
-        style={{ marginBottom: 12 }}
-      />
+    <Card className="mb-2" style={{ border: '1px solid #faad14' }}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-[13px]">
+            <AlertTriangle className="h-4 w-4 text-[#faad14]" />
+            <span>权限审批请求</span>
+            <Badge
+              variant={request.riskLevel === 'critical' ? 'danger' : request.riskLevel === 'high' ? 'danger' : request.riskLevel === 'medium' ? 'warning' : 'success'}
+            >
+              {request.riskLevel}
+            </Badge>
+          </CardTitle>
+          <Badge variant="default">{actionLabels[request.action] || request.action}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex items-start gap-2 p-3 rounded-[var(--gw-radius-sm)] bg-[var(--gw-warning-soft)] border border-[var(--gw-warning)]/20 text-[var(--gw-warning)] text-[12px] mb-3">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-medium">{request.title}</div>
+            <div className="mt-1 opacity-80">{request.description}</div>
+          </div>
+        </div>
 
-      {request.command && (
-        <Collapse size="small" style={{ marginBottom: 12 }}>
-          <Collapse.Panel header="命令详情" key="command">
-            <pre style={{ background: '#f5f5f5', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
+        {request.command && (
+          <details className="mb-3">
+            <summary className="text-[12px] cursor-pointer text-[var(--gw-text-secondary)] hover:text-[var(--gw-text)]">
+              命令详情
+            </summary>
+            <pre className="mt-1 bg-[var(--gw-bg-code)] p-2 rounded-[var(--gw-radius-sm)] text-[11px] overflow-x-auto">
               {request.command}
             </pre>
-          </Collapse.Panel>
-        </Collapse>
-      )}
+          </details>
+        )}
 
-      <Space direction="vertical" style={{ width: '100%' }} size="small">
-        <TextArea
-          placeholder="审批理由（可选）"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={2}
-        />
-        <Space>
-          <input
-            type="checkbox"
-            id="remember"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
+        <div className="flex flex-col gap-2">
+          <textarea
+            placeholder="审批理由（可选）"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={2}
+            className="flex w-full rounded-[var(--gw-radius-sm)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-input)] px-2.5 py-1.5 text-[13px] text-[var(--gw-text)] placeholder:text-[var(--gw-text-disabled)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gw-accent)]/30"
           />
-          <label htmlFor="remember">记住此决定</label>
-        </Space>
-        <Space>
-          <Button
-            type="primary"
-            icon={<CheckOutlined />}
-            onClick={handleApprove}
-            loading={loading}
-          >
-            批准
-          </Button>
-          <Button
-            danger
-            icon={<CloseOutlined />}
-            onClick={handleDeny}
-            loading={loading}
-          >
-            拒绝
-          </Button>
-          <Button
-            icon={<SaveOutlined />}
-            onClick={() => {
-              // Approve for this task and remember
-              setRemember(true)
-              handleApprove()
-            }}
-            loading={loading}
-          >
-            批准并记住
-          </Button>
-        </Space>
-      </Space>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            <label htmlFor="remember" className="text-[12px]">记住此决定</label>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              loading={loading}
+              onClick={handleApprove}
+            >
+              <Check className="h-3.5 w-3.5 mr-1" />
+              批准
+            </Button>
+            <Button
+              variant="danger"
+              loading={loading}
+              onClick={handleDeny}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              拒绝
+            </Button>
+            <Button
+              variant="secondary"
+              loading={loading}
+              onClick={() => {
+                setRemember(true)
+                handleApprove()
+              }}
+            >
+              <Save className="h-3.5 w-3.5 mr-1" />
+              批准并记住
+            </Button>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   )
 }

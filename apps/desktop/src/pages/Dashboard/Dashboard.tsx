@@ -1,43 +1,27 @@
 import React, { useState, useCallback } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Spinner } from '../../components/ui/spinner'
+import { Empty } from '../../components/ui/empty'
 import {
-  Layout,
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Timeline,
-  Tag,
-  Avatar,
-  List,
-  Empty,
-  Spin,
-  Alert,
-  Space,
-  Badge,
-  Button
-} from 'antd'
-import {
-  RobotOutlined,
-  FolderOutlined,
-  ThunderboltOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  ExperimentOutlined,
-  ToolOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SyncOutlined,
-  WarningOutlined,
-  PlusOutlined
-} from '@ant-design/icons'
+  Bot,
+  Folder,
+  Zap,
+  FileText,
+  Users,
+  FlaskConical,
+  Wrench,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  AlertTriangle,
+  Plus
+} from 'lucide-react'
 import UsageChart from '../../components/common/UsageChart'
 import QuickActions from './QuickActions'
 import ProjectCard, { type ProjectItem } from './ProjectCard'
 import styles from './Dashboard.module.scss'
-
-const { Content } = Layout
-
-// ─── Type Definitions ───────────────────────────────────────────────
 
 export interface DashboardTask {
   id: string
@@ -62,8 +46,8 @@ export interface DashboardStats {
   totalProjects: number
   activeTasks: number
   monthlyApiCalls: number
-  storageUsed: number // in MB
-  storageTotal: number // in MB
+  storageUsed: number
+  storageTotal: number
 }
 
 export interface DashboardProps {
@@ -77,8 +61,6 @@ export interface DashboardProps {
   onViewReport?: () => void
   onNewProject?: () => void
 }
-
-// ─── Mock Data ──────────────────────────────────────────────────────
 
 const MOCK_PROJECTS: DashboardProject[] = [
   {
@@ -158,8 +140,6 @@ const MOCK_STATS: DashboardStats = {
   storageTotal: 10240
 }
 
-// ─── Component ──────────────────────────────────────────────────────
-
 export default function Dashboard({
   loading = false,
   error = null,
@@ -179,9 +159,7 @@ export default function Dashboard({
 
   const handleProjectClick = useCallback(
     (project: DashboardProject) => {
-      if (onProjectClick) {
-        onProjectClick(project)
-      }
+      if (onProjectClick) onProjectClick(project)
     },
     [onProjectClick]
   )
@@ -189,15 +167,9 @@ export default function Dashboard({
   const handleQuickAction = useCallback(
     (action: { key: string }) => {
       switch (action.key) {
-        case 'new-project':
-          if (onNewProject) onNewProject()
-          break
-        case 'ndvi-analysis':
-          if (onContinueAnalysis) onContinueAnalysis()
-          break
-        case 'view-report':
-          if (onViewReport) onViewReport()
-          break
+        case 'new-project': if (onNewProject) onNewProject(); break
+        case 'ndvi-analysis': if (onContinueAnalysis) onContinueAnalysis(); break
+        case 'view-report': if (onViewReport) onViewReport(); break
       }
     },
     [onNewProject, onContinueAnalysis, onViewReport]
@@ -205,25 +177,22 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <Spin size="large" tip="加载中..." />
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spinner className="w-8 h-8" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <Alert
-        message="加载失败"
-        description={error}
-        type="error"
-        showIcon
-        action={
-          <Tag icon={<SyncOutlined spin />} color="processing">
-            重试
-          </Tag>
-        }
-      />
+      <div className="rounded-md border border-destructive p-4 bg-destructive/10">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-destructive" />
+          <span className="font-semibold">加载失败</span>
+          <Button size="sm" variant="outline" className="ml-auto">重试</Button>
+        </div>
+        <p className="text-sm mt-2">{error}</p>
+      </div>
     )
   }
 
@@ -231,244 +200,204 @@ export default function Dashboard({
   const storageTotal = storageUnit === 'GB' ? +(stats.storageTotal / 1024).toFixed(0) : stats.storageTotal
 
   return (
-    <Content className={styles.dashboard}>
+    <div className={styles.dashboard}>
       {/* Welcome Section */}
       <div className={styles.welcome}>
-        <Avatar size={56} icon={<RobotOutlined />} style={{ background: '#1677ff' }} />
+        <div className="flex items-center justify-center rounded-full w-14 h-14" style={{ background: '#1677ff' }}>
+          <Bot className="text-white w-7 h-7" />
+        </div>
         <div className={styles.welcomeText}>
           <h2 className={styles.greeting}>欢迎回来，GeoWork 用户</h2>
           <p className={styles.subtitle}>
             你目前有 {stats.activeTasks} 个任务正在运行，{stats.totalProjects} 个项目已创建。
           </p>
         </div>
-        <Space>
-          <Badge count={stats.activeTasks} offset={[5, -2]}>
-            <Button icon={<ThunderboltOutlined />} onClick={onContinueAnalysis}>
-              继续分析
-            </Button>
-          </Badge>
-          <Button icon={<FileTextOutlined />} onClick={onViewReport}>
-            查看报告
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onContinueAnalysis}>
+            <Zap className="w-4 h-4 mr-1" /> 继续分析
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={onNewProject}>
-            新建项目
+          <Button variant="outline" onClick={onViewReport}>
+            <FileText className="w-4 h-4 mr-1" /> 查看报告
           </Button>
-        </Space>
+          <Button onClick={onNewProject}>
+            <Plus className="w-4 h-4 mr-1" /> 新建项目
+          </Button>
+        </div>
       </div>
 
       {/* Quick Actions */}
       <QuickActions onAction={handleQuickAction} />
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className={styles.statsCard}>
-            <Statistic
-              title="项目总数"
-              value={stats.totalProjects}
-              prefix={<FolderOutlined />}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className={styles.statsCard}>
-            <Statistic
-              title="进行中任务"
-              value={stats.activeTasks}
-              prefix={<SyncOutlined spin />}
-              valueStyle={{ color: '#10b981' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className={styles.statsCard}>
-            <Statistic
-              title="本月 API 调用"
-              value={stats.monthlyApiCalls}
-              prefix={<ThunderboltOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-              suffix={<Tag color="blue" style={{ marginLeft: 8, fontSize: 12 }}>次</Tag>}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card size="small" className={styles.statsCard}>
-            <Statistic
-              title="存储空间"
-              value={storageValue}
-              prefix={<WarningOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-              suffix={
-                <span
-                  style={{ cursor: 'pointer', fontSize: 12, color: '#1677ff' }}
-                  onClick={handleStorageToggle}
-                >
-                  {storageUnit}
-                </span>
-              }
-            />
-            <div style={{ marginTop: 4 }}>
-              <div style={{ height: 4, background: '#f0f0f0', borderRadius: 2, overflow: 'hidden' }}>
-                <div
-                  style={{
-                    width: `${(stats.storageUsed / stats.storageTotal) * 100}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #1677ff, #722ed1)',
-                    borderRadius: 2
-                  }}
-                />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Folder className="w-5 h-5 text-blue-500" />
+              <div>
+                <div className="text-sm text-muted-foreground">项目总数</div>
+                <div className="text-2xl font-bold">{stats.totalProjects}</div>
               </div>
-              <span style={{ fontSize: 11, color: '#8c97a1' }}>
-                {stats.storageUsed} / {stats.storageTotal} {storageUnit}
-              </span>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-5 h-5 text-green-500" />
+              <div>
+                <div className="text-sm text-muted-foreground">进行中任务</div>
+                <div className="text-2xl font-bold">{stats.activeTasks}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-orange-500" />
+              <div>
+                <div className="text-sm text-muted-foreground">本月 API 调用</div>
+                <div className="text-2xl font-bold">{stats.monthlyApiCalls}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-purple-500" />
+              <div className="flex-1">
+                <div className="text-sm text-muted-foreground">存储空间</div>
+                <div className="text-2xl font-bold">
+                  {storageValue}
+                  <span className="text-sm font-normal cursor-pointer text-blue-500 ml-1" onClick={handleStorageToggle}>
+                    {storageUnit}
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <div className="h-1 bg-muted rounded overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded"
+                      style={{ width: `${(stats.storageUsed / stats.storageTotal) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {stats.storageUsed} / {stats.storageTotal} {storageUnit}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Content Grid: Projects + Tasks */}
       <div className={styles.contentGrid}>
-        {/* Recent Projects */}
-        <Card
-          title={
-            <span className={styles.sectionTitle}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
               最近项目
-              <span className={styles.viewAll}>查看全部</span>
-            </span>
-          }
-          size="small"
-        >
-          {projects.length > 0 ? (
-            <List
-              grid={{ gutter: 12, column: 1 }}
-              dataSource={projects}
-              renderItem={(project) => (
-                <List.Item>
-                  <ProjectCard project={project} onClick={handleProjectClick} />
-                </List.Item>
-              )}
-            />
-          ) : (
-            <Empty description="暂无项目" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
+              <span className="text-sm font-normal text-muted-foreground ml-2 cursor-pointer">查看全部</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {projects.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {projects.map((project) => (
+                  <ProjectCard key={project.id} project={project} onClick={handleProjectClick} />
+                ))}
+              </div>
+            ) : (
+              <Empty description="暂无项目" />
+            )}
+          </CardContent>
         </Card>
 
-        {/* Task Timeline */}
-        <Card
-          title={
-            <span className={styles.sectionTitle}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
               最近任务
-              <span className={styles.viewAll}>查看全部</span>
-            </span>
-          }
-          size="small"
-          className={styles.timelineSection}
-        >
-          {tasks.length > 0 ? (
-            <Timeline
-              items={tasks.map((task) => ({
-                key: task.id,
-                color:
-                  task.status === 'completed'
-                    ? 'green'
-                    : task.status === 'running'
-                      ? 'blue'
-                      : task.status === 'failed'
-                        ? 'red'
-                        : 'gray',
-                dot:
-                  task.status === 'completed' ? (
-                    <CheckCircleOutlined />
-                  ) : task.status === 'running' ? (
-                    <SyncOutlined spin />
-                  ) : task.status === 'failed' ? (
-                    <WarningOutlined />
-                  ) : (
-                    <ClockCircleOutlined />
-                  ),
-                children: (
-                  <div>
-                    <div style={{ fontWeight: 500, marginBottom: 4 }}>
-                      {task.name}
-                      <Tag
-                        color={
-                          task.status === 'completed'
-                            ? 'green'
-                            : task.status === 'running'
-                              ? 'blue'
-                              : task.status === 'failed'
-                                ? 'red'
-                                : 'default'
-                        }
-                        style={{ marginLeft: 8 }}
-                      >
-                        {task.status === 'completed'
-                          ? '已完成'
-                          : task.status === 'running'
-                            ? '运行中'
-                            : task.status === 'failed'
-                              ? '失败'
-                              : '等待中'}
-                      </Tag>
+              <span className="text-sm font-normal text-muted-foreground ml-2 cursor-pointer">查看全部</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {tasks.length > 0 ? (
+              <div className="space-y-4">
+                {tasks.map((task) => (
+                  <div key={task.id} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      {task.status === 'completed' ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : task.status === 'running' ? (
+                        <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+                      ) : task.status === 'failed' ? (
+                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-gray-400" />
+                      )}
                     </div>
-                    {task.description && (
-                      <div style={{ fontSize: 12, color: '#60717f' }}>{task.description}</div>
-                    )}
-                    <div style={{ fontSize: 11, color: '#8c97a1', marginTop: 4 }}>
-                      {new Date(task.updatedAt).toLocaleString('zh-CN')}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{task.name}</span>
+                        <Badge variant={
+                          task.status === 'completed' ? 'default' :
+                          task.status === 'running' ? 'secondary' :
+                          task.status === 'failed' ? 'destructive' : 'outline'
+                        }>
+                          {task.status === 'completed' ? '已完成' :
+                           task.status === 'running' ? '运行中' :
+                           task.status === 'failed' ? '失败' : '等待中'}
+                        </Badge>
+                      </div>
+                      {task.description && (
+                        <div className="text-xs text-muted-foreground mt-1">{task.description}</div>
+                      )}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {new Date(task.updatedAt).toLocaleString('zh-CN')}
+                      </div>
                     </div>
                   </div>
-                )
-              }))}
-            />
-          ) : (
-            <Empty description="暂无任务" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
+                ))}
+              </div>
+            ) : (
+              <Empty description="暂无任务" />
+            )}
+          </CardContent>
         </Card>
       </div>
 
       {/* Usage Chart */}
-      <Card title="用量统计" size="small">
-        <UsageChart />
+      <Card>
+        <CardHeader>
+          <CardTitle>用量统计</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UsageChart />
+        </CardContent>
       </Card>
 
       {/* Quick Links */}
       <div>
         <h3 className={styles.sectionTitle}>快捷入口</h3>
         <div className={styles.quickLinks}>
-          <div
-            className={styles.linkCard}
-            onClick={() => {
-              // Navigate to expert panel
-            }}
-          >
-            <TeamOutlined className={styles.linkIcon} />
+          <div className={styles.linkCard}>
+            <Users className={styles.linkIcon} />
             <span className={styles.linkLabel}>专家面板</span>
             <span className={styles.linkDesc}>12 位内置专家可用</span>
           </div>
-          <div
-            className={styles.linkCard}
-            onClick={() => {
-              // Navigate to skill marketplace
-            }}
-          >
-            <ExperimentOutlined className={styles.linkIcon} />
+          <div className={styles.linkCard}>
+            <FlaskConical className={styles.linkIcon} />
             <span className={styles.linkLabel}>技能市场</span>
             <span className={styles.linkDesc}>探索更多遥感技能</span>
           </div>
-          <div
-            className={styles.linkCard}
-            onClick={() => {
-              // Navigate to automation
-            }}
-          >
-            <ToolOutlined className={styles.linkIcon} />
+          <div className={styles.linkCard}>
+            <Wrench className={styles.linkIcon} />
             <span className={styles.linkLabel}>自动化任务</span>
             <span className={styles.linkDesc}>设置定时和触发任务</span>
           </div>
         </div>
       </div>
-    </Content>
+    </div>
   )
 }

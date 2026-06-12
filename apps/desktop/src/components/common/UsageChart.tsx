@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Card, Segmented } from 'antd'
+import { Card, CardContent } from '../ui/card'
+import { Button } from '../ui/button'
 import EChartsChart, { type ChartDataItem, type ChartType } from './EChartsChart'
 import styles from './UsageChart.module.scss'
 
@@ -26,23 +27,33 @@ export default function UsageChart() {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <h3>用量统计</h3>
-        <Segmented
-          options={[
-            { label: '柱状图', value: 'bar' },
-            { label: '饼图', value: 'pie' },
-          ]}
-          value={chartType}
-          onChange={(val) => setChartType(val as ChartType)}
-        />
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant={chartType === 'bar' ? 'primary' : 'ghost'}
+            onClick={() => setChartType('bar')}
+          >
+            柱状图
+          </Button>
+          <Button
+            size="sm"
+            variant={chartType === 'pie' ? 'primary' : 'ghost'}
+            onClick={() => setChartType('pie')}
+          >
+            饼图
+          </Button>
+        </div>
       </div>
-      <Card size="small" className={styles.chartCard}>
-        <EChartsChart
-          type={chartType}
-          data={chartType === 'bar' ? MODE_TASKS : COST_DISTRIBUTION}
-          xAxisData={chartType === 'bar' ? MODE_TASKS.map((d) => d.name) : undefined}
-          title={chartType === 'bar' ? '各模式任务数' : '成本分布'}
-          height={340}
-        />
+      <Card className={styles.chartCard}>
+        <CardContent className="p-2">
+          <EChartsChart
+            type={chartType}
+            data={chartType === 'bar' ? MODE_TASKS : COST_DISTRIBUTION}
+            xAxisData={chartType === 'bar' ? MODE_TASKS.map((d) => d.name) : undefined}
+            title={chartType === 'bar' ? '各模式任务数' : '成本分布'}
+            height={340}
+          />
+        </CardContent>
       </Card>
     </div>
   )

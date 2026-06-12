@@ -2,13 +2,14 @@
 // Approval card for plugin installation with permission review
 
 import { useState } from 'react'
-import { Card, Button, Space, Tag, Input, Typography, Alert } from 'antd'
-import { CheckOutlined, CloseOutlined, WarningOutlined, SaveOutlined } from '@ant-design/icons'
+import { Card } from '../../../components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Badge } from '../../../components/ui/badge'
+import { Input } from '../../../components/ui/input'
+import { Spinner } from '../../../components/ui/spinner'
+import { Check, X, AlertTriangle, Save } from 'lucide-react'
 import type { Plugin } from '../../pluginClient'
 import styles from './PluginInstallApproval.module.scss'
-
-const { TextArea } = Input
-const { Text, Title } = Typography
 
 interface PluginInstallApprovalProps {
   plugin: Plugin
@@ -92,6 +93,18 @@ const getRiskColor = (level: string): string => {
   return colors[level] || 'default'
 }
 
+const getBadgeClass = (color: string): string => {
+  const map: Record<string, string> = {
+    magenta: 'bg-pink-500/20 text-pink-400',
+    orange: 'bg-orange-500/20 text-orange-400',
+    blue: 'bg-blue-500/20 text-blue-400',
+    green: 'bg-green-500/20 text-green-400',
+    red: 'bg-red-500/20 text-red-400',
+    default: 'bg-gray-500/20 text-gray-400',
+  }
+  return map[color] || map.default
+}
+
 export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInstallApprovalProps) {
   const [reason, setReason] = useState('')
   const [remember, setRemember] = useState(false)
@@ -130,54 +143,45 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
   }
 
   return (
-    <Card
-      size="small"
-      type="inner"
-      title={
-        <Space>
-          <WarningOutlined style={{ color: '#faad14' }} />
-          <span>插件安装审批</span>
-          <Tag color={maxRiskColor}>
-            {riskCount > 0 ? '高风险' : medRiskCount > 0 ? '中风险' : '低风险'}
-          </Tag>
-        </Space>
-      }
-      className={styles.card}
-    >
-      <Alert
-        message={plugin.name}
-        description={
-          <Space direction="vertical" size={4} style={{ width: '100%' }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {plugin.description}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              版本: v{plugin.version} | 作者: {plugin.author}
-            </Text>
-            {plugin.permissions.length > 0 && (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                请求权限: {plugin.permissions.length} 项
-              </Text>
-            )}
-          </Space>
-        }
-        type="warning"
-        showIcon
-        className={styles.alert}
-      />
+    <Card className={styles.card}>
+      <div className="flex items-center gap-2 mb-3">
+        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+        <span className="font-semibold">插件安装审批</span>
+        <Badge className={getBadgeClass(maxRiskColor)}>
+          {riskCount > 0 ? '高风险' : medRiskCount > 0 ? '中风险' : '低风险'}
+        </Badge>
+      </div>
+
+      <div className={`flex items-start gap-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 ${styles.alert}`}>
+        <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5 shrink-0" />
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] font-medium text-[var(--gw-text)]">{plugin.name}</span>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+            {plugin.description}
+          </span>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+            版本: v{plugin.version} | 作者: {plugin.author}
+          </span>
+          {plugin.permissions.length > 0 && (
+            <span className="text-[13px] text-[var(--gw-text-secondary)]">
+              请求权限: {plugin.permissions.length} 项
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Permissions list */}
       {plugin.permissions.length > 0 && (
         <div className={styles.permissionsList}>
-          <Text type="secondary" className={styles.permissionsTitle}>
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
             请求的权限及风险评估：
-          </Text>
+          </span>
           {permissionsWithRisk.map((perm) => (
             <div key={perm.name} className={styles.permissionRow}>
               <code className={styles.permissionName}>{perm.name}</code>
-              <Tag color={perm.color} className={styles.riskTag}>
+              <Badge className={getBadgeClass(perm.color)}>
                 {perm.level}
-              </Tag>
+              </Badge>
             </div>
           ))}
         </div>
@@ -185,12 +189,12 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
 
       {/* Reason input */}
       <div className={styles.reasonSection}>
-        <TextArea
+        <textarea
           placeholder="审批理由（可选）"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={2}
-          className={styles.reasonInput}
+          className={`w-full rounded-md border border-[var(--gw-border)] bg-[var(--gw-bg-secondary)] p-2 text-[13px] ${styles.reasonInput}`}
         />
         <div className={styles.rememberRow}>
           <input
@@ -204,46 +208,46 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
       </div>
 
       {/* Action buttons */}
-      <Space className={styles.actions}>
+      <div className="flex gap-2">
         <Button
-          type="primary"
-          icon={<CheckOutlined />}
           onClick={handleApprove}
-          loading={loading === 'approve'}
+          disabled={loading === 'approve'}
         >
+          {loading === 'approve' ? <Spinner className="h-4 w-4 mr-1" /> : <Check className="h-4 w-4 mr-1" />}
           批准
         </Button>
         <Button
-          danger
-          icon={<CloseOutlined />}
+          variant="destructive"
           onClick={handleDeny}
-          loading={loading === 'deny'}
+          disabled={loading === 'deny'}
         >
+          {loading === 'deny' ? <Spinner className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
           拒绝
         </Button>
         <Button
-          icon={<SaveOutlined />}
+          variant="ghost"
           onClick={() => {
             setRemember(true)
             handleApprove()
           }}
-          loading={loading === 'approve'}
+          disabled={loading === 'approve'}
         >
+          {loading === 'approve' ? <Spinner className="h-4 w-4 mr-1" /> : <Save className="h-4 w-4 mr-1" />}
           批准并记住
         </Button>
-      </Space>
+      </div>
 
       {/* Allow for this task */}
       {hasHighRisk && (
         <div className={styles.warning}>
-          <WarningOutlined />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <AlertTriangle className="h-4 w-4" />
+          <span className="text-[13px] text-[var(--gw-text-secondary)]">
             此插件需要{' '}
-            <Tag color="magenta" style={{ margin: '0 2px' }}>
+            <Badge className="bg-pink-500/20 text-pink-400">
               {riskCount}
-            </Tag>
+            </Badge>
             个高风险权限，请确认权限必要性后再批准
-          </Text>
+          </span>
         </div>
       )}
     </Card>

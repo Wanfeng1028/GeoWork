@@ -1,8 +1,7 @@
 // GeoWork E2E Test Setup
 // Shared test utilities for E2E tests
 
-import { expect } from 'vitest'
-import { Page } from 'playwright-core'
+import { expect, Page } from '@playwright/test'
 
 // Test utilities for E2E tests
 export const E2ETestHelpers = {

@@ -1,48 +1,60 @@
 import React from 'react'
-import { Layout, Card, Typography } from 'antd'
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
 import { LayerPanel } from './LayerPanel'
 import { MapView } from './MapView'
 import { Toolbar } from './Toolbar'
 import { useMapViewStore } from './store'
 import styles from './MapAndLayers.module.scss'
 
-const { Sider, Content } = Layout
-
 export function MapAndLayers() {
   const selectedLayer = useMapViewStore((s) => s.selectedLayer)
   const setSelectedLayer = useMapViewStore((s) => s.setSelectedLayer)
 
   return (
-    <Layout className="map-and-layers-layout" style={{ height: '100%', overflow: 'hidden' }}>
-      <Sider width={280} theme="dark" className="map-sider">
-        <Card size="small" title="图层控制" style={{ margin: 8 }}>
-          <LayerPanel />
-        </Card>
-      </Sider>
-      <Layout>
-        <Content style={{ position: 'relative', overflow: 'hidden' }}>
-          <MapView />
-        </Content>
-        <Toolbar />
-      </Layout>
-      {selectedLayer && (
-        <Sider width={260} theme="light" className="map-detail-sider">
-          <Card size="small" title="图层属性">
-            <Typography.Text strong>名称：</Typography.Text>
-            <Typography.Text>{selectedLayer.name}</Typography.Text>
-            <Typography.Text strong>类型：</Typography.Text>
-            <Typography.Text>{selectedLayer.type}</Typography.Text>
-            <Typography.Text strong>数据源：</Typography.Text>
-            <Typography.Text copyable style={{ wordBreak: 'break-all' }}>{selectedLayer.source}</Typography.Text>
-            <Typography.Text strong>透明度：</Typography.Text>
-            <Typography.Text>{selectedLayer.opacity}%</Typography.Text>
-            <Typography.Text strong>元数据：</Typography.Text>
-            <pre style={{ fontSize: 11, maxHeight: 200, overflow: 'auto' }}>
-              {JSON.stringify(selectedLayer.metadata, null, 2)}
-            </pre>
+    <div className="flex h-full overflow-hidden">
+      <div className="w-[280px] flex-shrink-0 bg-muted/50 border-r">
+        <div className="p-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>图层控制</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LayerPanel />
+            </CardContent>
           </Card>
-        </Sider>
+        </div>
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 relative overflow-hidden">
+          <MapView />
+        </div>
+        <Toolbar />
+      </div>
+      {selectedLayer && (
+        <div className="w-[260px] flex-shrink-0 border-l bg-background">
+          <div className="p-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>图层属性</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  <div><span className="font-semibold">名称：</span>{selectedLayer.name}</div>
+                  <div><span className="font-semibold">类型：</span>{selectedLayer.type}</div>
+                  <div><span className="font-semibold">数据源：</span><span className="break-all">{selectedLayer.source}</span></div>
+                  <div><span className="font-semibold">透明度：</span>{selectedLayer.opacity}%</div>
+                  <div>
+                    <span className="font-semibold">元数据：</span>
+                    <pre className="text-xs max-h-[200px] overflow-auto mt-1 bg-muted p-2 rounded">
+                      {JSON.stringify(selectedLayer.metadata, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
-    </Layout>
+    </div>
   )
 }

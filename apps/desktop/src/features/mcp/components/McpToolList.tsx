@@ -2,13 +2,14 @@
 // Displays and manages tools for a specific MCP server
 
 import { useState } from 'react'
-import { Button, Typography, Input, Modal, Collapse, Tag, Space, message, Card } from 'antd'
-import { CopyOutlined, PlayCircleOutlined, DownOutlined, UpOutlined, CodeOutlined } from '@ant-design/icons'
+import { Button } from '../../../components/ui/button'
+import { Input } from '../../../components/ui/input'
+import { Badge } from '../../../components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog'
+import { Copy, Play, ChevronDown, ChevronUp, Code } from 'lucide-react'
+import { toast } from 'sonner'
 import type { McpTool } from '../mcpClient'
 import styles from './McpToolList.module.scss'
-
-const { Text } = Typography
-const { Panel } = Collapse
 
 export interface McpToolListProps {
   tools: McpTool[]
@@ -22,10 +23,11 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
   const [selectedTool, setSelectedTool] = useState<McpTool | null>(null)
   const [testArgs, setTestArgs] = useState('')
   const [testResult, setTestResult] = useState<string>('')
+  const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
 
   const handleCopySchema = (tool: McpTool) => {
     navigator.clipboard.writeText(JSON.stringify(tool.inputSchema, null, 2))
-    message.success('Schema copied to clipboard')
+    toast.success('Schema copied to clipboard')
   }
 
   const handleTestClick = (tool: McpTool) => {
@@ -41,7 +43,7 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
     try {
       args = JSON.parse(testArgs)
     } catch {
-      message.error('Invalid JSON in args input')
+      toast.error('Invalid JSON in args input')
       return
     }
     setTestResult('Running...')
@@ -57,11 +59,23 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
     }
   }
 
+  const toggleTool = (toolId: string) => {
+    setExpandedTools((prev) => {
+      const next = new Set(prev)
+      if (next.has(toolId)) {
+        next.delete(toolId)
+      } else {
+        next.add(toolId)
+      }
+      return next
+    })
+  }
+
   if (tools.length === 0) {
     return (
       <div className={styles.empty}>
-        <CodeOutlined className={styles.emptyIcon} />
-        <Text type="secondary">No tools available for this server</Text>
+        <Code className={styles.emptyIcon} />
+        <span className="text-[13px] text-[var(--gw-text-secondary)]">No tools available for this server</span>
       </div>
     )
   }
@@ -70,92 +84,95 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
     <>
       <div className={styles.container}>
         <div className={styles.header}>
-          <Text strong className={styles.title}>
+          <span className="text-[13px] font-semibold text-[var(--gw-text)]">
             Tools ({tools.length})
-          </Text>
+          </span>
         </div>
 
-        <Collapse accordion className={styles.collapse}>
+        <div className="flex flex-col">
           {tools.map((tool) => (
-            <Panel
-              header={
-                <div className={styles.toolRow}>
-                  <span className={styles.toolName}>{tool.name}</span>
-                  <Space size="small">
-                    {tool.inputSchema && (
-                      <Tag color="blue">
-                        <CodeOutlined /> Schema
-                      </Tag>
-                    )}
-                  </Space>
-                </div>
-              }
+            <details
               key={tool.id}
               className={styles.toolPanel}
+              open={expandedTools.has(tool.id)}
+              onToggle={() => toggleTool(tool.id)}
             >
+              <summary className={styles.toolRow}>
+                <span className={styles.toolName}>{tool.name}</span>
+                <div className="flex items-center gap-1">
+                  {tool.inputSchema && (
+                    <Badge className="bg-blue-500/20 text-blue-400">
+                      <Code className="h-3 w-3" /> Schema
+                    </Badge>
+                  )}
+                </div>
+              </summary>
               <div className={styles.toolDetail}>
                 {tool.description && (
-                  <Text className={styles.toolDescription}>{tool.description}</Text>
+                  <span className="text-[13px] text-[var(--gw-text-secondary)]">{tool.description}</span>
                 )}
 
                 <div className={styles.toolActions}>
                   <Button
-                    size="small"
-                    icon={<CopyOutlined />}
+                    size="sm"
+                    variant="ghost"
                     onClick={() => handleCopySchema(tool)}
                   >
+                    <Copy className="h-4 w-4 mr-1" />
                     Copy Schema
                   </Button>
                   <Button
-                    type="primary"
-                    size="small"
-                    icon={<PlayCircleOutlined />}
+                    size="sm"
                     onClick={() => handleTestClick(tool)}
                   >
+                    <Play className="h-4 w-4 mr-1" />
                     Test Call
                   </Button>
                 </div>
 
                 {tool.inputSchema && Object.keys(tool.inputSchema).length > 0 && (
                   <div className={styles.schemaSection}>
-                    <Text type="secondary" className={styles.schemaTitle}>Input Schema</Text>
+                    <span className="text-[13px] text-[var(--gw-text-secondary)]">Input Schema</span>
                     <pre className={styles.schemaCode}>
                       {JSON.stringify(tool.inputSchema, null, 2)}
                     </pre>
                   </div>
                 )}
               </div>
-            </Panel>
+            </details>
           ))}
-        </Collapse>
+        </div>
       </div>
 
-      <Modal
-        title={`Test: ${selectedTool?.name}`}
-        open={testModalOpen}
-        onCancel={() => setTestModalOpen(false)}
-        onOk={handleRunTest}
-        okText="Run"
-        cancelText="Cancel"
-        width={600}
-      >
-        <Text type="secondary" className={styles.testLabel}>
-          Enter JSON arguments to pass to the tool:
-        </Text>
-        <Input.TextArea
-          value={testArgs}
-          onChange={(e) => setTestArgs(e.target.value)}
-          rows={8}
-          className={styles.testInput}
-          placeholder='{"key": "value"}'
-        />
-        {testResult && (
-          <div className={styles.testResult}>
-            <Text type="secondary" className={styles.testResultLabel}>Result:</Text>
-            <pre className={styles.testResultCode}>{testResult}</pre>
+      <Dialog open={testModalOpen} onOpenChange={setTestModalOpen}>
+        <DialogContent className="max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Test: {selectedTool?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <span className="text-[13px] text-[var(--gw-text-secondary)]">
+              Enter JSON arguments to pass to the tool:
+            </span>
+            <textarea
+              value={testArgs}
+              onChange={(e) => setTestArgs(e.target.value)}
+              rows={8}
+              className={`w-full rounded-md border border-[var(--gw-border)] bg-[var(--gw-bg-secondary)] p-2 text-[13px] font-mono ${styles.testInput}`}
+              placeholder='{"key": "value"}'
+            />
+            {testResult && (
+              <div className={styles.testResult}>
+                <span className="text-[13px] text-[var(--gw-text-secondary)]">Result:</span>
+                <pre className={styles.testResultCode}>{testResult}</pre>
+              </div>
+            )}
           </div>
-        )}
-      </Modal>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setTestModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleRunTest}>Run</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
