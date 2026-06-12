@@ -2,14 +2,21 @@
 // Displays current workspace info with actions
 
 import React from 'react'
-import { Space, Button, Dropdown, Tooltip, Badge } from 'antd'
+import { Folder, RefreshCw, FolderOpen, Cloud } from 'lucide-react'
+import { Button } from '../../ui/button'
+import { Badge } from '../../ui/badge'
 import {
-  FolderOutlined,
-  ReloadOutlined,
-  ImportOutlined,
-  FolderOpenOutlined,
-  CloudOutlined,
-} from '@ant-design/icons'
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '../../ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '../../ui/dropdown-menu'
 import useWorkspaceStore from '../../../stores/workspaceStore'
 import desktopBridge from '../../../services/desktopBridge'
 
@@ -30,49 +37,60 @@ const WorkspaceContextBar: React.FC = () => {
     }
   }
 
-  const menuProps: any = {
-    items: [
-      { key: 'open', label: '打开工作区', icon: <FolderOpenOutlined />, onClick: loadWorkspaces },
-      { key: 'import', label: '导入文件', icon: <ImportOutlined />, onClick: handleChooseFolder },
-      { type: 'divider' },
-      { key: 'cloud', label: '同步到云端', icon: <CloudOutlined />, disabled: true },
-    ],
-  }
-
   if (!currentWorkspace) {
     return (
-      <Space style={{ padding: '8px 16px', background: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
-        <FolderOutlined />
-        <span style={{ color: '#999' }}>未选择工作区</span>
-        <Button type="primary" size="small" onClick={handleChooseFolder}>
+      <div className="flex items-center gap-2 px-4 py-2 bg-[var(--gw-bg-hover)] border-b border-[var(--gw-border-soft)]">
+        <Folder className="h-4 w-4 text-[var(--gw-text-tertiary)]" />
+        <span className="text-[var(--gw-text-tertiary)]">未选择工作区</span>
+        <Button variant="primary" size="sm" onClick={handleChooseFolder}>
           选择文件夹
         </Button>
-      </Space>
+      </div>
     )
   }
 
   const fileCount = fileTree ? countFiles(fileTree) : 0
 
   return (
-    <Space
-      style={{ padding: '8px 16px', background: '#f6ffed', borderBottom: '1px solid #b7eb8f' }}
-      size="middle"
-    >
-      <Badge count={fileCount} overflowCount={999}>
-        <FolderOutlined style={{ color: '#52c41a' }} />
+    <div className="flex items-center gap-3 px-4 py-2 bg-[var(--gw-success-soft)] border-b border-[var(--gw-success)]/30">
+      <Badge variant="success">
+        <Folder className="h-3.5 w-3.5" />
+        {fileCount > 999 ? '999+' : fileCount}
       </Badge>
-      <Tooltip title={currentWorkspace.rootPath}>
-        <span style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {currentWorkspace.name}
-        </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap text-[13px]">
+            {currentWorkspace.name}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{currentWorkspace.rootPath}</TooltipContent>
       </Tooltip>
-      <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh} title="刷新文件树" />
-      <Dropdown menu={menuProps} trigger={['click']}>
-        <Button size="small" type="text">
-          更多操作
-        </Button>
-      </Dropdown>
-    </Space>
+      <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="刷新文件树">
+        <RefreshCw className="h-3.5 w-3.5" />
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            更多操作
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={loadWorkspaces}>
+            <FolderOpen className="h-3.5 w-3.5" />
+            打开工作区
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleChooseFolder}>
+            <Folder className="h-3.5 w-3.5" />
+            导入文件
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem disabled>
+            <Cloud className="h-3.5 w-3.5" />
+            同步到云端
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
 

@@ -1,15 +1,15 @@
 // GeoWork home composer
 
 import { useEffect, useRef, useState } from 'react'
-import { message } from 'antd'
+import { toast } from 'sonner'
 import {
-  AudioOutlined,
-  CloudOutlined,
-  FileAddOutlined,
-  LockOutlined,
-  SendOutlined,
-  ToolOutlined,
-} from '@ant-design/icons'
+  AudioLines,
+  Cloud,
+  FilePlus,
+  Lock,
+  Send,
+  Wrench,
+} from 'lucide-react'
 import useShellStore from '../../../../stores/shellStore'
 import useTaskStore from '../../../../stores/taskStore'
 import useChatStore from '../../../../stores/chatStore'
@@ -68,9 +68,9 @@ export function GeoComposer() {
       setPrompt('')
       openRightDock('task')
       openBottomDock('events')
-      message.success('任务已创建')
+      toast.success('任务已创建')
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '任务创建失败')
+      toast.error(error instanceof Error ? error.message : '任务创建失败')
     } finally {
       setIsSubmitting(false)
     }
@@ -113,19 +113,19 @@ export function GeoComposer() {
             hidden
             onChange={(event) => {
               const count = event.target.files?.length ?? 0
-              if (count > 0) message.info(`已选择 ${count} 个文件`)
+              if (count > 0) toast.info(`已选择 ${count} 个文件`)
             }}
           />
           <button onClick={() => fileInputRef.current?.click()} title="添加文件">
-            <FileAddOutlined />
+            <FilePlus />
             <span>添加文件</span>
           </button>
-          <button onClick={() => message.info('技能选择器开发中')} title="技能">
-            <ToolOutlined />
+          <button onClick={() => toast.info('技能选择器开发中')} title="技能">
+            <Wrench />
             <span>技能</span>
           </button>
-          <button onClick={() => message.info('权限已切换')} title="权限">
-            <LockOutlined />
+          <button onClick={() => toast.info('权限已切换')} title="权限">
+            <Lock />
             <select value={permission} onChange={(event) => setPermission(event.target.value)}>
               <option value="limited">受限</option>
               <option value="ask_every_time">询问</option>
@@ -136,18 +136,18 @@ export function GeoComposer() {
 
         <div className={styles.actions}>
           <label className={styles.modelSelect}>
-            <CloudOutlined />
+            <Cloud />
             <select value={model} onChange={(event) => setModel(event.target.value)}>
               <option value="gpt-4o">GPT-4o</option>
               <option value="qwen-max">Qwen Max</option>
               <option value="local">Local</option>
             </select>
           </label>
-          <button className={styles.iconBtn} onClick={() => message.warning('语音输入开发中')} title="语音输入">
-            <AudioOutlined />
+          <button className={styles.iconBtn} onClick={() => toast.warning('语音输入开发中')} title="语音输入">
+            <AudioLines />
           </button>
           <button className={styles.sendBtn} onClick={submit} disabled={!prompt.trim() || isSubmitting}>
-            <SendOutlined />
+            <Send />
             <span>{isSubmitting ? '发送中' : '发送'}</span>
           </button>
         </div>

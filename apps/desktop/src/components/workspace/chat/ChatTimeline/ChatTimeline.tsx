@@ -4,21 +4,22 @@
 // Renders the conversation with messages, tool calls, approvals, and delivery checklists
 
 import { useEffect, useRef, useCallback } from "react";
-import { Avatar, Collapse, Tag, Spin, Empty } from "antd";
 import {
-  UserOutlined,
-  RobotOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LoadingOutlined,
-} from "@ant-design/icons";
+  User,
+  Bot,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import useChatStore from "../../../../stores/chatStore";
 import ToolCallBlock from "../../../chat/ToolCallBlock/ToolCallBlock";
 import ApprovalCard from "../../../chat/ApprovalCard/ApprovalCard";
+import { Spinner } from "../../../ui/spinner";
+import { Empty } from "../../../ui/empty";
+import { Badge } from "../../../ui/badge";
+import { Separator } from "../../../ui/separator";
 import styles from "./ChatTimeline.module.scss";
-
-const { Panel } = Collapse;
 
 export function ChatTimeline() {
   const { messages, isLoading, clearMessages } = useChatStore();
@@ -96,19 +97,15 @@ export function ChatTimeline() {
           isUser ? styles.userMessage : isSystem ? styles.systemMessage : ""
         }`}
       >
-        <Avatar
-          size="small"
-          icon={
-            isUser ? (
-              <UserOutlined />
-            ) : isSystem ? (
-              <ExclamationCircleOutlined />
-            ) : (
-              <RobotOutlined />
-            )
-          }
-          className={styles.messageAvatar}
-        />
+        <div className={`${styles.messageAvatar} flex h-7 w-7 items-center justify-center rounded-full bg-[var(--gw-bg-active)]`}>
+          {isUser ? (
+            <User className="h-3.5 w-3.5" />
+          ) : isSystem ? (
+            <AlertCircle className="h-3.5 w-3.5" />
+          ) : (
+            <Bot className="h-3.5 w-3.5" />
+          )}
+        </div>
         <div className={styles.messageContent}>
           <div className={styles.messageHeader}>
             <span className={styles.messageRole}>
@@ -127,7 +124,7 @@ export function ChatTimeline() {
   if (isLoading && messages.length === 0) {
     return (
       <div className={styles.loadingState}>
-        <Spin size="large" />
+        <Spinner size="lg" />
         <span className={styles.loadingText}>加载对话中...</span>
       </div>
     );
@@ -138,7 +135,6 @@ export function ChatTimeline() {
       <div className={styles.emptyState}>
         <Empty
           description="暂无对话记录。在 Composer 中发送任务开始对话"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       </div>
     );
@@ -178,26 +174,20 @@ function DeliveryChecklist({ delivery }: { delivery: any }) {
   return (
     <div className={styles.deliveryChecklist}>
       <div className={styles.deliveryHeader}>
-        <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+        <CheckCircle style={{ color: "#52c41a", fontSize: 16 }} className="h-4 w-4" />
         <span className={styles.deliveryTitle}>交付物清单</span>
-        <Tag color="green">任务完成</Tag>
+        <Badge variant="success">任务完成</Badge>
       </div>
-      <Collapse
-        defaultActiveKey={[]}
-        bordered={false}
-        size="small"
-      >
+      <div className="flex flex-col gap-1">
         {categories
           .filter((cat) => cat.items && cat.items.length > 0)
           .map((cat) => (
-            <Panel
-              header={
+            <details key={cat.label}>
+              <summary className="cursor-pointer py-1">
                 <span className={styles.deliveryCategory}>
                   {cat.label} ({cat.items.length})
                 </span>
-              }
-              key={cat.label}
-            >
+              </summary>
               <ul className={styles.deliveryList}>
                 {cat.items?.map((item: string, i: number) => (
                   <li
@@ -208,9 +198,9 @@ function DeliveryChecklist({ delivery }: { delivery: any }) {
                   </li>
                 ))}
               </ul>
-            </Panel>
+            </details>
           ))}
-      </Collapse>
+      </div>
     </div>
   );
 }

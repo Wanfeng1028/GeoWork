@@ -2,18 +2,16 @@
 // Displays a checklist of delivery items grouped by category
 
 import React from 'react'
-import { Typography, Divider } from 'antd'
 import {
-  CheckCircleOutlined,
-  FileTextOutlined,
-  CodeOutlined,
-  DatabaseOutlined,
-  FolderOutlined,
-  FileDoneOutlined,
-} from '@ant-design/icons'
+  CheckCircle,
+  FileText,
+  Code,
+  Database,
+  Folder,
+  FileCheck,
+} from 'lucide-react'
+import { Separator } from '../../ui/separator'
 import styles from './DeliveryChecklist.module.scss'
-
-const { Text, Title } = Typography
 
 export interface DeliveryChecklistItem {
   maps: string[]
@@ -28,11 +26,11 @@ export interface DeliveryChecklistProps {
 }
 
 const SECTION_CONFIG = [
-  { key: 'maps', label: '地图文件', icon: <FolderOutlined />, color: 'var(--gw-accent-map)' },
-  { key: 'codes', label: '代码脚本', icon: <CodeOutlined />, color: 'var(--gw-accent-blue)' },
-  { key: 'documents', label: '文档资料', icon: <FileTextOutlined />, color: 'var(--gw-text-secondary)' },
-  { key: 'datasets', label: '数据集', icon: <DatabaseOutlined />, color: 'var(--gw-warning)' },
-  { key: 'logs', label: '运行日志', icon: <FileDoneOutlined />, color: 'var(--gw-text-tertiary)' },
+  { key: 'maps', label: '地图文件', icon: <Folder className="h-4 w-4" />, color: 'var(--gw-accent-map)' },
+  { key: 'codes', label: '代码脚本', icon: <Code className="h-4 w-4" />, color: 'var(--gw-accent-blue)' },
+  { key: 'documents', label: '文档资料', icon: <FileText className="h-4 w-4" />, color: 'var(--gw-text-secondary)' },
+  { key: 'datasets', label: '数据集', icon: <Database className="h-4 w-4" />, color: 'var(--gw-warning)' },
+  { key: 'logs', label: '运行日志', icon: <FileCheck className="h-4 w-4" />, color: 'var(--gw-text-tertiary)' },
 ] as const
 
 const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
@@ -40,8 +38,8 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
-          <FileDoneOutlined style={{ fontSize: 32, color: 'var(--gw-text-tertiary)' }} />
-          <Text type="secondary">暂无交付清单信息</Text>
+          <FileCheck style={{ fontSize: 32, color: 'var(--gw-text-tertiary)' }} />
+          <span className="text-[13px] text-[var(--gw-text-tertiary)]">暂无交付清单信息</span>
         </div>
       </div>
     )
@@ -70,19 +68,19 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             </div>
           </div>
 
-          <Divider style={{ margin: 'var(--gw-space-8) 0' }} />
+          <Separator className="my-2" />
 
           {section.items.length === 0 ? (
             <div className={styles.emptyItem}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <span className="text-[12px] text-[var(--gw-text-tertiary)]">
                 暂无{section.label}
-              </Text>
+              </span>
             </div>
           ) : (
             <div className={styles.sectionItems}>
               {section.items.map((item, index) => (
                 <div key={index} className={styles.item}>
-                  <CheckCircleOutlined className={styles.itemIcon} style={{ color: 'var(--gw-accent)' }} />
+                  <CheckCircle className={styles.itemIcon} style={{ color: 'var(--gw-accent)' }} />
                   <span className={styles.itemText}>{item}</span>
                 </div>
               ))}
@@ -93,11 +91,11 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
 
       <div className={styles.summary}>
         <div className={styles.summaryStats}>
-          <CheckCircleOutlined style={{ color: 'var(--gw-accent)', marginRight: 'var(--gw-space-8)' }} />
-          <Text strong>已完成: {totalCount} 项</Text>
-          <Text type="secondary" style={{ marginLeft: 'var(--gw-space-12)' }}>
+          <CheckCircle style={{ color: 'var(--gw-accent)', marginRight: 'var(--gw-space-8)' }} className="h-4 w-4" />
+          <span className="text-[13px] font-semibold text-[var(--gw-text-primary)]">已完成: {totalCount} 项</span>
+          <span className="text-[12px] text-[var(--gw-text-tertiary)]" style={{ marginLeft: 'var(--gw-space-12)' }}>
             (12 项)
-          </Text>
+          </span>
         </div>
         <div className={styles.progressBar}>
           <div
@@ -105,9 +103,9 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             style={{ width: `${Math.round((filledSections / sections.length) * 100)}%` }}
           />
         </div>
-        <Text type="secondary" className={styles.progressText}>
+        <span className={`${styles.progressText} text-[12px] text-[var(--gw-text-tertiary)]`}>
           {Math.round((filledSections / sections.length) * 100)}%
-        </Text>
+        </span>
       </div>
     </div>
   )

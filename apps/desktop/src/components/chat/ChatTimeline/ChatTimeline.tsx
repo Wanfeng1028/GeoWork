@@ -1,17 +1,11 @@
 // GeoWork ChatTimeline - Wired to chatStore
 
-import { List, Card, Tag, Typography, Collapse, Empty } from 'antd'
-import {
-  UserOutlined,
-  RobotOutlined,
-  ConsoleSqlOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons'
+import { AlertCircle, Terminal, User, Bot } from 'lucide-react'
 import useChatStore from '../../../stores/chatStore'
 import type { ChatMessage } from '../../../types/chat'
+import { Empty } from '../../ui/empty'
+import { Badge } from '../../ui/badge'
 import styles from './ChatTimeline.module.scss'
-
-const { Panel } = Collapse
 
 export function ChatTimeline() {
   const { messages } = useChatStore()
@@ -29,96 +23,89 @@ export function ChatTimeline() {
 
   return (
     <div className={styles.timeline}>
-      <List
-        dataSource={messages}
-        renderItem={(msg) => (
-          <List.Item className={styles.messageItem}>
-            <Card
-              className={`${styles.messageCard} ${styles[`${msg.role}Msg`]} ${styles[`${msg.type}Msg`]}`}
-              size="small"
-            >
+      <div className="flex flex-col gap-2">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`${styles.messageItem} ${styles.messageCard} ${styles[`${msg.role}Msg`]} ${styles[`${msg.type}Msg`]}`}>
+            <div className="rounded-[var(--gw-radius-md)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-surface)] p-3">
               <div className={styles.messageHeader}>
-                <Tag color={msg.role === 'user' ? 'blue' : msg.role === 'system' ? 'red' : 'green'}>
+                <Badge variant={
+                  msg.role === 'user' ? 'info' : msg.role === 'system' ? 'danger' : 'success'
+                }>
                   {msg.role === 'user' ? '用户' : msg.role === 'system' ? '系统' : 'Agent'}
-                </Tag>
+                </Badge>
                 <span className={styles.timestamp}>
                   {new Date(msg.timestamp).toLocaleTimeString()}
                 </span>
               </div>
 
-              <Typography.Paragraph className={styles.messageContent}>
+              <p className="mt-2 text-[13px] text-[var(--gw-text-primary)]">
                 {msg.content}
-              </Typography.Paragraph>
+              </p>
 
               {/* Tool Call */}
               {msg.toolCall && (
-                <Collapse
-                  size="small"
+                <details
                   className={styles.toolCall}
-                  defaultActiveKey={msg.toolCall.status === 'running' ? ['1'] : []}
+                  open={msg.toolCall.status === 'running'}
                 >
-                  <Panel
-                    header={
-                      <span>
-                        {msg.toolCall.status === 'running' ? (
-                          <span className={styles.runningIndicator}>
-                            <span className={styles.spinner} /> 运行中: {msg.toolCall.toolName}
-                          </span>
-                        ) : msg.toolCall.status === 'failed' ? (
-                          <span className={styles.failedIndicator}>
-                            <ExclamationCircleOutlined /> 失败: {msg.toolCall.toolName}
-                          </span>
-                        ) : (
-                          <span>
-                            <ConsoleSqlOutlined /> 工具调用: {msg.toolCall.toolName}
-                          </span>
-                        )}
-                      </span>
-                    }
-                    key="1"
-                  >
-                    <div className={styles.toolCallDetail}>
-                      <p><strong>输入:</strong> {JSON.stringify(msg.toolCall.input, null, 2)}</p>
-                      {msg.toolCall.output && (
-                        <p><strong>输出:</strong> <pre className={styles.toolOutput}>{msg.toolCall.output}</pre></p>
+                  <summary className="cursor-pointer py-1">
+                    <span>
+                      {msg.toolCall.status === 'running' ? (
+                        <span className={styles.runningIndicator}>
+                          <span className={styles.spinner} /> 运行中: {msg.toolCall.toolName}
+                        </span>
+                      ) : msg.toolCall.status === 'failed' ? (
+                        <span className={styles.failedIndicator}>
+                          <AlertCircle className="inline h-3.5 w-3.5" /> 失败: {msg.toolCall.toolName}
+                        </span>
+                      ) : (
+                        <span>
+                          <Terminal className="inline h-3.5 w-3.5" /> 工具调用: {msg.toolCall.toolName}
+                        </span>
                       )}
-                      {msg.toolCall.duration && (
-                        <p><strong>耗时:</strong> {msg.toolCall.duration}s</p>
-                      )}
-                      {msg.toolCall.error && (
-                        <p className={styles.toolError}><strong>错误:</strong> {msg.toolCall.error}</p>
-                      )}
-                    </div>
-                  </Panel>
-                </Collapse>
+                    </span>
+                  </summary>
+                  <div className={styles.toolCallDetail}>
+                    <p><strong>输入:</strong> {JSON.stringify(msg.toolCall.input, null, 2)}</p>
+                    {msg.toolCall.output && (
+                      <p><strong>输出:</strong> <pre className={styles.toolOutput}>{msg.toolCall.output}</pre></p>
+                    )}
+                    {msg.toolCall.duration && (
+                      <p><strong>耗时:</strong> {msg.toolCall.duration}s</p>
+                    )}
+                    {msg.toolCall.error && (
+                      <p className={styles.toolError}><strong>错误:</strong> {msg.toolCall.error}</p>
+                    )}
+                  </div>
+                </details>
               )}
 
               {/* Approval Card */}
               {msg.approval && (
-                <Card className={styles.approvalCard} size="small">
+                <div className={styles.approvalCard}>
                   <div className={styles.approvalHeader}>
-                    <Tag color={
-                      msg.approval.riskLevel === 'critical' ? 'red' :
-                      msg.approval.riskLevel === 'high' ? 'orange' :
-                      msg.approval.riskLevel === 'medium' ? 'gold' : 'blue'
+                    <Badge variant={
+                      msg.approval.riskLevel === 'critical' ? 'danger' :
+                      msg.approval.riskLevel === 'high' ? 'warning' :
+                      msg.approval.riskLevel === 'medium' ? 'warning' : 'info'
                     }>
                       {msg.approval.riskLevel}
-                    </Tag>
+                    </Badge>
                     <span className={styles.approvalTitle}>{msg.approval.title}</span>
                   </div>
                   <p className={styles.approvalDesc}>{msg.approval.description}</p>
                   <div className={styles.approvalActions}>
-                    <Tag color="green">允许一次</Tag>
-                    <Tag color="blue">允许本次任务</Tag>
-                    <Tag color="red">拒绝</Tag>
-                    <Tag>记住选择</Tag>
+                    <Badge variant="success">允许一次</Badge>
+                    <Badge variant="info">允许本次任务</Badge>
+                    <Badge variant="danger">拒绝</Badge>
+                    <Badge variant="default">记住选择</Badge>
                   </div>
-                </Card>
+                </div>
               )}
-            </Card>
-          </List.Item>
-        )}
-      />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

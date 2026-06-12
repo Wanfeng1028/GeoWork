@@ -4,19 +4,24 @@
 // Right-side narrow sidebar showing message anchors for quick navigation
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Tooltip } from "antd";
 import {
-  UserOutlined,
-  RobotOutlined,
-  ToolOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  ThunderboltOutlined,
-  PauseCircleOutlined,
-  FileSearchOutlined,
-} from "@ant-design/icons";
+  User,
+  Bot,
+  Wrench,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Zap,
+  PauseCircle,
+  FileSearch,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "../../ui/tooltip";
 import useChatStore from "../../../stores/chatStore";
 import useTaskStore from "../../../stores/taskStore";
 import type { RuntimeEvent } from "../../../types/task";
@@ -36,17 +41,17 @@ export type NavItemType =
   | "step-start";
 
 const ICON_MAP: Record<NavItemType, React.ReactNode> = {
-  "user-question": <UserOutlined />,
-  "agent-plan": <RobotOutlined />,
-  "tool-call": <ToolOutlined />,
-  artifact: <FileTextOutlined />,
-  diff: <FileSearchOutlined />,
-  error: <CloseCircleOutlined />,
-  checkpoint: <CheckCircleOutlined />,
-  permission: <WarningOutlined />,
-  "task-started": <ThunderboltOutlined />,
-  "task-completed": <CheckCircleOutlined />,
-  "step-start": <PauseCircleOutlined />,
+  "user-question": <User className="h-3.5 w-3.5" />,
+  "agent-plan": <Bot className="h-3.5 w-3.5" />,
+  "tool-call": <Wrench className="h-3.5 w-3.5" />,
+  artifact: <FileText className="h-3.5 w-3.5" />,
+  diff: <FileSearch className="h-3.5 w-3.5" />,
+  error: <XCircle className="h-3.5 w-3.5" />,
+  checkpoint: <CheckCircle className="h-3.5 w-3.5" />,
+  permission: <AlertTriangle className="h-3.5 w-3.5" />,
+  "task-started": <Zap className="h-3.5 w-3.5" />,
+  "task-completed": <CheckCircle className="h-3.5 w-3.5" />,
+  "step-start": <PauseCircle className="h-3.5 w-3.5" />,
 };
 
 const TOOLTIP_MAP: Record<NavItemType, string> = {
@@ -220,74 +225,76 @@ export function ConversationMinimap() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={styles.minimap}
-    >
-      <div className={styles.minimapHeader}>
-        <span className={styles.minimapTitle}>对话导航</span>
-        <button
-          className={styles.closeButton}
-          onClick={() => setIsOpen(false)}
-        >
-          ×
-        </button>
-      </div>
+    <TooltipProvider>
+      <div
+        ref={containerRef}
+        className={styles.minimap}
+      >
+        <div className={styles.minimapHeader}>
+          <span className={styles.minimapTitle}>对话导航</span>
+          <button
+            className={styles.closeButton}
+            onClick={() => setIsOpen(false)}
+          >
+            ×
+          </button>
+        </div>
 
-      <div className={styles.minimapBody}>
-        {builtItems.length === 0 ? (
-          <div className={styles.emptyState}>
-            <span style={{ fontSize: 12, color: "#bfbfbf" }}>暂无导航项</span>
-          </div>
-        ) : (
-          <ul className={styles.navList}>
-            {builtItems.map((item, index) => (
-              <li
-                key={item.id}
-                className={`${styles.navItem} ${
-                  hoveredIndex === index ? styles.hovered : ""
-                } ${activeIndex === index ? styles.active : ""}`}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                onClick={() => {
-                  setActiveIndex(index);
-                  scrollToMessage(item.messageId);
-                }}
-                data-minimap-id={item.id}
-              >
-                <Tooltip
-                  title={
-                    <div>
-                      <div>{TOOLTIP_MAP[item.type]}</div>
-                      {item.summary && (
-                        <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
-                          {item.summary.slice(0, 40)}
-                          {item.summary.length > 40 ? "..." : ""}
-                        </div>
-                      )}
-                    </div>
-                  }
-                  placement="left"
+        <div className={styles.minimapBody}>
+          {builtItems.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span style={{ fontSize: 12, color: "#bfbfbf" }}>暂无导航项</span>
+            </div>
+          ) : (
+            <ul className={styles.navList}>
+              {builtItems.map((item, index) => (
+                <li
+                  key={item.id}
+                  className={`${styles.navItem} ${
+                    hoveredIndex === index ? styles.hovered : ""
+                  } ${activeIndex === index ? styles.active : ""}`}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  onClick={() => {
+                    setActiveIndex(index);
+                    scrollToMessage(item.messageId);
+                  }}
+                  data-minimap-id={item.id}
                 >
-                  <span
-                    className={`${styles.navIcon} ${
-                      styles[`type-${item.type}`]
-                    }`}
-                    style={{ color: COLOR_MAP[item.type] }}
-                  >
-                    {ICON_MAP[item.type]}
-                  </span>
-                </Tooltip>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={`${styles.navIcon} ${
+                          styles[`type-${item.type}`]
+                        }`}
+                        style={{ color: COLOR_MAP[item.type] }}
+                      >
+                        {ICON_MAP[item.type]}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <div>
+                        <div>{TOOLTIP_MAP[item.type]}</div>
+                        {item.summary && (
+                          <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                            {item.summary.slice(0, 40)}
+                            {item.summary.length > 40 ? "..." : ""}
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <div className={styles.minimapFooter}>
-        <span className={styles.itemCount}>{builtItems.length} 个节点</span>
+        <div className={styles.minimapFooter}>
+          <span className={styles.itemCount}>{builtItems.length} 个节点</span>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 

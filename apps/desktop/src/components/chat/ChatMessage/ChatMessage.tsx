@@ -1,14 +1,7 @@
 import React from 'react';
-import { Tag, Avatar, Typography, Collapse } from 'antd';
-import {
-  UserOutlined,
-  RobotOutlined,
-  WarningOutlined,
-  ToolOutlined,
-} from '@ant-design/icons';
+import { User, Bot, AlertTriangle, Wrench } from 'lucide-react';
+import { Badge } from '../../ui/badge';
 import styles from './ChatMessage.module.scss';
-
-const { Text } = Typography;
 
 export interface ChatMessageData {
   id: string;
@@ -36,13 +29,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const getRoleIcon = (role: string): React.ReactNode => {
     switch (role) {
       case 'user':
-        return <UserOutlined />;
+        return <User className="h-3.5 w-3.5" />;
       case 'assistant':
-        return <RobotOutlined />;
+        return <Bot className="h-3.5 w-3.5" />;
       case 'system':
-        return <WarningOutlined />;
+        return <AlertTriangle className="h-3.5 w-3.5" />;
       default:
-        return <RobotOutlined />;
+        return <Bot className="h-3.5 w-3.5" />;
     }
   };
 
@@ -62,33 +55,23 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const getTypeTag = (type: string): React.ReactNode => {
     switch (type) {
       case 'tool_call':
-        return <Tag color="geekblue"><ToolOutlined /> Tool Call</Tag>;
+        return <Badge variant="info"><Wrench className="h-3 w-3" /> Tool Call</Badge>;
       case 'approval':
-        return <Tag color="orange">Approval</Tag>;
+        return <Badge variant="warning">Approval</Badge>;
       default:
-        return <Tag color="cyan">Text</Tag>;
+        return <Badge variant="accent">Text</Badge>;
     }
   };
 
   const renderContent = (): React.ReactNode => {
     if (message.type === 'tool_call') {
       return (
-        <Collapse
-          size="small"
-          defaultActiveKey={[]}
-          className={styles.toolCallBlock}
-          items={[
-            {
-              key: '1',
-              label: getTypeTag(message.type),
-              children: (
-                <Text type="secondary" style={{ fontSize: '0.85em' }}>
-                  {message.content}
-                </Text>
-              ),
-            },
-          ]}
-        />
+        <details className={styles.toolCallBlock}>
+          <summary>{getTypeTag(message.type)}</summary>
+          <span className="text-[12px] text-[var(--gw-text-tertiary)]">
+            {message.content}
+          </span>
+        </details>
       );
     }
 
@@ -105,17 +88,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     >
       <div className={styles.messageWrapper}>
         <div className={styles.messageHeader}>
-          <Avatar
-            size="small"
-            icon={getRoleIcon(message.role)}
-            className={styles.avatar}
-          />
-          <Text strong style={{ fontSize: '0.85em' }}>
+          <div className={`${styles.avatar} flex h-6 w-6 items-center justify-center rounded-full bg-[var(--gw-bg-active)]`}>
+            {getRoleIcon(message.role)}
+          </div>
+          <span className="text-[12px] font-semibold text-[var(--gw-text-primary)]">
             {getRoleLabel(message.role)}
-          </Text>
-          <Tag color="default" style={{ marginLeft: 'auto' }}>
+          </span>
+          <Badge variant="default" className="ml-auto">
             {message.type}
-          </Tag>
+          </Badge>
         </div>
 
         <div className={styles.bodyRow}>
@@ -123,9 +104,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         </div>
 
         <div className={styles.timestampRow}>
-          <Text type="secondary" style={{ fontSize: '0.75em' }}>
+          <span className="text-[11px] text-[var(--gw-text-tertiary)]">
             {formatTimestamp(message.timestamp)}
-          </Text>
+          </span>
         </div>
       </div>
     </div>
