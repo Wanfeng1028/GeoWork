@@ -76,7 +76,7 @@ export function TopBar() {
           <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] text-[var(--gw-text-disabled)] bg-[var(--gw-bg-subtle)] border border-[var(--gw-border-soft)] rounded pointer-events-none">⌘P</kbd>
         </div>
 
-        <div className="flex gap-0.5 p-0.5 bg-[var(--gw-bg-subtle)] rounded-lg border border-[var(--gw-border-soft)]">
+        <div className="flex gap-1.5 p-1 bg-[var(--gw-bg-subtle)] rounded-lg border border-[var(--gw-border-soft)]">
           {modes.map((mode) => (
             <button
               key={mode}
@@ -128,23 +128,23 @@ export function TopBar() {
         </span>
 
         {/* Window controls */}
-        <div className="flex items-center ml-2">
+        <div className="flex items-center h-full ml-1">
           <button
-            className="w-[46px] h-[44px] flex items-center justify-center text-[var(--gw-text-secondary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
+            className="w-[46px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer"
             onClick={handleMinimize}
             title="最小化"
           >
             <Minus size={14} />
           </button>
           <button
-            className="w-[46px] h-[44px] flex items-center justify-center text-[var(--gw-text-secondary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
+            className="w-[46px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer"
             onClick={handleMaximize}
             title={isMaximized ? '还原' : '最大化'}
           >
             {isMaximized ? <Square size={12} /> : <Maximize2 size={13} />}
           </button>
           <button
-            className="w-[46px] h-[44px] flex items-center justify-center text-[var(--gw-text-secondary)] hover:bg-[#e81123] hover:text-white transition-colors cursor-pointer"
+            className="w-[46px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[#e81123] hover:text-white transition-colors cursor-pointer"
             onClick={handleClose}
             title="关闭"
           >

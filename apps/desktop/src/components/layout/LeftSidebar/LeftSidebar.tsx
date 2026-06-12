@@ -2,9 +2,17 @@ import {
   Plug, LayoutGrid, Bell, BookOpen, Calendar, Cloud, Compass,
   FileSearch, FolderOpen, Home, PanelLeftClose, PanelLeftOpen,
   MessageSquare, Plus, Bot, Clock, Settings, Share2, Wrench, User,
+  LogOut, HelpCircle,
 } from 'lucide-react'
 import useShellStore from '../../../stores/shellStore'
 import { runAction } from '../../../services/actionRegistry'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../ui/dropdown-menu'
 
 interface LeftSidebarProps {
   collapsed?: boolean
@@ -126,23 +134,37 @@ export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
       </nav>
 
       {/* User area */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-t border-[var(--gw-border-soft)] mt-auto shrink-0">
-        <div className="w-8 h-8 rounded-full bg-[var(--gw-bg-panel)] border border-[var(--gw-border-soft)] flex items-center justify-center text-[var(--gw-accent)] shrink-0">
-          <User size={14} />
-        </div>
-        {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <div className="text-[12px] font-semibold text-[var(--gw-text)] truncate">GeoWork User</div>
-            <div className="text-[10px] text-[var(--gw-text-disabled)]">Free</div>
-          </div>
-        )}
-        <button
-          className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-tertiary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
-          onClick={() => openNav('settings')}
-          title="设置"
-        >
-          <Settings size={14} />
-        </button>
+      <div className="border-t border-[var(--gw-border-soft)] mt-auto shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-2.5 px-3 py-3 hover:bg-[var(--gw-bg-hover)] transition-colors cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-[var(--gw-bg-panel)] border border-[var(--gw-border-soft)] flex items-center justify-center text-[var(--gw-accent)] shrink-0">
+                <User size={14} />
+              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-[12px] font-semibold text-[var(--gw-text)] truncate">GeoWork User</div>
+                  <div className="text-[10px] text-[var(--gw-text-disabled)]">Free</div>
+                </div>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" sideOffset={8} collisionPadding={8} className="w-[220px]">
+            <DropdownMenuItem onClick={() => openNav('settings')}>
+              <Settings size={14} /> 设置
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openNav('workspaces')}>
+              <LayoutGrid size={14} /> 工作空间
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <HelpCircle size={14} /> 帮助与反馈
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-[var(--gw-danger)] focus:text-[var(--gw-danger)]">
+              <LogOut size={14} /> 退出登录
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   )
