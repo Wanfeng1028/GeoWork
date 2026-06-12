@@ -1,45 +1,18 @@
-import { cn } from '../../lib/cn'
+import type { ReactNode } from 'react'
 
 type StatusBarProps = {
-  left?: React.ReactNode
-  right?: React.ReactNode
+  left?: ReactNode
+  right?: ReactNode
   className?: string
 }
 
 export function StatusBar({ left, right, className }: StatusBarProps) {
   return (
     <div
-      className={cn(
-        'flex h-full items-center justify-between px-3',
-        'text-[11px] text-[var(--gw-text-tertiary)]',
-        className,
-      )}
+      className={`h-[22px] shrink-0 flex items-center justify-between px-3 bg-[var(--gw-bg-shell)] border-t border-[var(--gw-border-soft)] text-[11px] select-none ${className ?? ''}`}
     >
       <div className="flex items-center gap-3">{left}</div>
       <div className="flex items-center gap-3">{right}</div>
     </div>
-  )
-}
-
-type StatusItemProps = {
-  icon?: React.ReactNode
-  label: string
-  variant?: 'default' | 'success' | 'warning' | 'danger'
-  className?: string
-}
-
-const variantColors = {
-  default: 'text-[var(--gw-text-tertiary)]',
-  success: 'text-[var(--gw-success)]',
-  warning: 'text-[var(--gw-warning)]',
-  danger: 'text-[var(--gw-danger)]',
-}
-
-export function StatusItem({ icon, label, variant = 'default', className }: StatusItemProps) {
-  return (
-    <span className={cn('flex items-center gap-1', variantColors[variant], className)}>
-      {icon}
-      {label}
-    </span>
   )
 }

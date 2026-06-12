@@ -1,8 +1,6 @@
-// GeoWork MainWorkspace
-
-import { DevBadge } from '../../common/DevBadge'
 import { GeoComposer } from '../composer/GeoComposer/GeoComposer'
 import { GeoMascot } from '../../brand/GeoMascot'
+import { DevBadge } from '../../common/DevBadge'
 import useShellStore from '../../../stores/shellStore'
 import ExpertPanel from '../../../pages/ExpertPanel/ExpertPanel'
 import Extensions from '../../../pages/Extensions/Extensions'
@@ -12,45 +10,72 @@ import { PaperSearch } from '../../../pages/PaperSearch/PaperSearch'
 import { KnowledgeBase } from '../../../pages/KnowledgeBase/KnowledgeBase'
 import { MapAndLayers } from '../../../pages/MapAndLayers/MapAndLayers'
 import { SettingsPage } from '../../../pages/Settings/Settings'
-import styles from './MainWorkspace.module.scss'
 
 function WorkbenchHome() {
   return (
-    <div className={styles.home}>
-      <div className={styles.dotField} />
-      <section className={styles.hero}>
-        <div className={styles.mascot} aria-hidden="true">
-          <div className={styles.mascotHalo} />
-          <GeoMascot size="xl" state="idle" />
-        </div>
+    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
+      {/* Dot grid background */}
+      <div className="absolute inset-0 pointer-events-none opacity-40" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(92,184,112,0.15) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+        maskImage: 'radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent)',
+      }} />
 
-        <div className={styles.heroHeader}>
-          <DevBadge mode="short" />
-          <h1>GeoWork</h1>
-          <p>GIS、遥感、论文、GEE 与自动化的本地 AI 工作台</p>
-        </div>
+      {/* Welcome content */}
+      <div className="relative z-10 flex flex-col items-center pt-14 pb-16 px-6">
+        <div className="w-full max-w-[760px] flex flex-col items-center gap-6">
+          {/* Mascot */}
+          <div className="relative">
+            <div className="absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(92,184,112,0.2),transparent_65%)] blur-lg animate-[gw-glow_3s_ease-in-out_infinite]" />
+            <GeoMascot size="xl" state="idle" />
+          </div>
 
-        <GeoComposer />
+          {/* Header */}
+          <div className="text-center">
+            <div className="mb-2"><DevBadge mode="short" /></div>
+            <h1 className="text-[28px] font-bold text-[var(--gw-text)] tracking-tight leading-tight">
+              今天要分析什么？
+            </h1>
+            <p className="text-[14px] text-[var(--gw-text-tertiary)] mt-1.5">
+              用 GeoWork 创建任务、分析数据、运行地理工作流
+            </p>
+          </div>
 
-        <div className={styles.workspaceStrip}>
-          <button>本地工作区</button>
-          <button>遥感实验</button>
-          <button>论文资料</button>
-          <button>GEE 脚本</button>
+          {/* Composer */}
+          <div className="w-full">
+            <GeoComposer />
+          </div>
+
+          {/* Quick entries */}
+          <div className="flex flex-wrap justify-center gap-2 mt-2">
+            {['Research', 'Data', 'GeoCode', 'Analysis', 'Write'].map((mode) => (
+              <button
+                key={mode}
+                className="h-[32px] px-4 rounded-full border border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)] text-[12px] font-medium text-[var(--gw-text-secondary)] hover:text-[var(--gw-text)] hover:border-[var(--gw-border)] hover:bg-[var(--gw-bg-hover)] transition-all cursor-pointer"
+                onClick={() => useShellStore.getState().setActiveMode(mode.toLowerCase() as any)}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
 
 function ComingSoonView({ title }: { title: string }) {
   return (
-    <div className={styles.placeholder}>
-      <div className={styles.placeholderPanel}>
-        <GeoMascot size="lg" state="thinking" />
+    <div className="flex-1 min-h-0 flex items-center justify-center p-6">
+      <div className="max-w-[400px] w-full p-8 rounded-xl border border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)] shadow-[var(--gw-shadow-panel)] text-center">
+        <div className="flex justify-center mb-4">
+          <GeoMascot size="lg" state="thinking" />
+        </div>
         <DevBadge mode="short" />
-        <h2>{title}</h2>
-        <p>该能力仍在开发中。入口已保留，后续会接入真实功能。</p>
+        <h2 className="text-[18px] font-semibold text-[var(--gw-text)] mt-3 mb-2">{title}</h2>
+        <p className="text-[13px] text-[var(--gw-text-tertiary)] leading-relaxed">
+          该能力仍在开发中。入口已保留，后续会接入真实功能。
+        </p>
       </div>
     </div>
   )
@@ -98,5 +123,9 @@ export function MainWorkspace() {
     }
   }
 
-  return <main className={styles.main}>{renderContent()}</main>
+  return (
+    <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-[var(--gw-bg)]">
+      {renderContent()}
+    </main>
+  )
 }
