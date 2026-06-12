@@ -83,18 +83,14 @@ export function TopBar() {
 
   return (
     <header
-      className="h-[36px] shrink-0 w-full grid items-center bg-[var(--gw-bg-shell)] border-b border-[var(--gw-border-soft)] select-none [-webkit-app-region:drag]"
-      style={{ gridTemplateColumns: 'auto 1fr auto' }}
+      className="h-[36px] shrink-0 w-full grid items-center bg-[var(--gw-bg-shell)] border-b border-[var(--gw-border-soft)] select-none overflow-hidden"
+      style={{ gridTemplateColumns: 'auto minmax(0, 1fr) auto' }}
     >
       {/* Left cluster */}
       <div className="flex items-center gap-1.5 pl-2.5 h-full [-webkit-app-region:no-drag]">
-        {/* Hamburger menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
-              title="菜单"
-            >
+            <button className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer" title="菜单">
               <Menu size={15} />
             </button>
           </DropdownMenuTrigger>
@@ -112,7 +108,6 @@ export function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Sidebar toggle */}
         <button
           className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
           onClick={() => useShellStore.getState().toggleSidebar()}
@@ -121,7 +116,6 @@ export function TopBar() {
           {sidebarCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
         </button>
 
-        {/* New task - only when sidebar collapsed */}
         {sidebarCollapsed && (
           <button
             className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
@@ -132,7 +126,6 @@ export function TopBar() {
           </button>
         )}
 
-        {/* Search conversation - always visible */}
         <button
           className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
           onClick={() => runAction('openCommandPalette')}
@@ -146,90 +139,99 @@ export function TopBar() {
       <div className="h-full [-webkit-app-region:drag]" />
 
       {/* Right cluster */}
-      <div className="flex items-center gap-2 pr-0 h-full [-webkit-app-region:no-drag]">
-        {/* GitHub Star button */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="h-[24px] px-3 flex items-center gap-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-all bg-[rgba(92,184,112,0.14)] text-[var(--gw-accent)] border border-[rgba(92,184,112,0.22)] hover:bg-[rgba(92,184,112,0.22)] hover:border-[rgba(92,184,112,0.4)] hover:shadow-[0_0_14px_rgba(92,184,112,0.18)]">
-              <Star size={11} className="fill-current" />
-              给 GitHub 点 Star
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[340px] p-0">
-            <div className="p-5 flex flex-col items-center gap-3 text-center">
-              <GeoMascot size="md" state="idle" />
-              <div>
-                <h3 className="text-[14px] font-bold text-[var(--gw-text)] mb-1">喜欢 GeoWork？给项目点个 Star</h3>
-                <p className="text-[12px] text-[var(--gw-text-tertiary)] leading-relaxed">
-                  你的 Star 会帮助项目被更多人看到，也会鼓励后续继续完善桌面端、Agent 工作流和地理分析能力。
-                </p>
+      <div className="flex items-center justify-end h-full min-w-0 [-webkit-app-region:no-drag]">
+        {/* Feature buttons group - can shrink */}
+        <div className="flex items-center gap-2 min-w-0 mr-1">
+          {/* GitHub Star */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="h-[24px] px-3 flex items-center gap-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-all flex-shrink-0 bg-[linear-gradient(180deg,rgba(92,184,112,0.24),rgba(92,184,112,0.14))] text-[var(--gw-accent)] border border-[rgba(92,184,112,0.35)] shadow-[0_0_0_1px_rgba(92,184,112,0.08),0_0_20px_rgba(92,184,112,0.14)] hover:bg-[linear-gradient(180deg,rgba(92,184,112,0.32),rgba(92,184,112,0.2))] hover:shadow-[0_0_0_1px_rgba(92,184,112,0.12),0_0_28px_rgba(92,184,112,0.22)]">
+                <Star size={12} className="fill-current flex-shrink-0" />
+                <span className="hidden min-[880px]:inline whitespace-nowrap">给 GitHub 点 Star</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[340px] p-0">
+              <div className="p-5 flex flex-col items-center gap-3 text-center">
+                <GeoMascot size="md" state="idle" />
+                <div>
+                  <h3 className="text-[14px] font-semibold text-[var(--gw-text)] mb-1">喜欢 GeoWork？给项目点个 Star</h3>
+                  <p className="text-[12px] text-[var(--gw-text-secondary)] leading-[1.6]">
+                    你的 Star 会帮助项目被更多人看到，也会鼓励后续继续完善桌面端、Agent 工作流和地理分析能力。
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full">
+                  <Button variant="primary" size="sm" className="flex-1" onClick={() => window.open('https://github.com/Wanfeng1028/GeoWork', '_blank')}>
+                    <ExternalLink size={13} /> 打开 GitHub
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => toast.info('贡献指南开发中')}>
+                    查看项目
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 w-full">
-                <Button variant="primary" size="sm" className="flex-1" onClick={() => window.open('https://github.com/Wanfeng1028/GeoWork', '_blank')}>
-                  <ExternalLink size={13} /> 打开 GitHub
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => toast.info('贡献指南开发中')}>
-                  查看项目
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverContent>
+          </Popover>
 
-        {/* Feedback button */}
-        <button
-          className="h-7 px-2.5 flex items-center gap-1.5 rounded-md text-[12px] text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
-          onClick={() => setFeedbackOpen(true)}
-          title="问题反馈"
-        >
-          <MessageSquare size={14} />
-          <span>问题反馈</span>
-        </button>
-
-        {/* Usage button */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
-              title="用量"
-            >
-              <Gauge size={15} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[300px]">
-            <div className="flex flex-col gap-3">
-              <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">用量概览</h4>
-              <div className="flex flex-col gap-1">
-                <UsageRow label="本地任务额度" value="无限" />
-                <UsageRow label="Agent 调用额度" value="1,280 / 2,000" />
-                <UsageRow label="地理分析额度" value="45 / 100" />
-                <UsageRow label="今日剩余" value="87 次" accent />
-              </div>
-              <Button variant="ghost" size="sm" className="w-full mt-1" onClick={() => toast.info('详情页开发中')}>
-                查看详情
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Window controls */}
-        <div className="flex items-center h-full">
+          {/* Feedback */}
           <button
-            className="w-[44px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer"
+            className="h-7 px-2.5 flex items-center gap-1.5 rounded-md text-[12px] font-medium text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0"
+            onClick={() => setFeedbackOpen(true)}
+            title="问题反馈"
+          >
+            <MessageSquare size={14} className="flex-shrink-0" />
+            <span className="hidden min-[820px]:inline whitespace-nowrap">问题反馈</span>
+          </button>
+
+          {/* Usage */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0"
+                title="用量"
+              >
+                <Gauge size={15} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[300px]">
+              <div className="flex flex-col gap-3">
+                <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">用量概览</h4>
+                <div className="flex flex-col gap-1">
+                  <UsageRow label="本地任务额度" value="无限" />
+                  <UsageRow label="Agent 调用额度" value="1,280 / 2,000" />
+                  <UsageRow label="地理分析额度" value="45 / 100" />
+                  <UsageRow label="今日剩余" value="87 次" accent />
+                </div>
+                <Button variant="ghost" size="sm" className="w-full mt-1" onClick={() => toast.info('详情页开发中')}>
+                  查看详情
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Window controls - fixed 132px, never shrinks */}
+        <div
+          className="flex items-stretch flex-shrink-0 ml-1"
+          style={{ width: 132, height: 36 }}
+        >
+          <button
+            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer border-none bg-transparent rounded-none"
+            style={{ width: 44, height: 36 }}
             onClick={handleMinimize}
             title="最小化"
           >
             <Minus size={14} />
           </button>
           <button
-            className="w-[44px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer"
+            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer border-none bg-transparent rounded-none"
+            style={{ width: 44, height: 36 }}
             onClick={handleMaximize}
             title={isMaximized ? '还原' : '最大化'}
           >
             {isMaximized ? <Square size={11} /> : <Maximize2 size={12} />}
           </button>
           <button
-            className="w-[44px] h-full flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[#e81123] hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[#e81123] hover:text-white transition-colors cursor-pointer border-none bg-transparent rounded-none"
+            style={{ width: 44, height: 36 }}
             onClick={handleClose}
             title="关闭"
           >
@@ -269,17 +271,20 @@ export function TopBar() {
         <DialogContent className="max-w-[560px]">
           <DialogHeader><DialogTitle>问题反馈</DialogTitle></DialogHeader>
           <div className="flex flex-col gap-4 py-2">
-            <p className="text-[12px] text-[var(--gw-text-tertiary)]">如果您在使用过程中遇到任何问题，请告诉我们</p>
+            <p className="text-[12px] text-[var(--gw-text-secondary)] leading-[1.6]">如果您在使用过程中遇到任何问题，请告诉我们</p>
             <div className="flex justify-center py-1">
               <GeoMascot size="sm" state="thinking" />
             </div>
-            <Textarea
-              placeholder="请输入您的问题或建议..."
-              value={feedbackText}
-              onChange={(e) => setFeedbackText(e.target.value)}
-              rows={5}
-            />
-            <div className="flex items-center gap-2 h-9 px-3 rounded-lg border border-dashed border-[var(--gw-border-soft)] bg-[var(--gw-bg-subtle)] text-[12px] text-[var(--gw-text-disabled)] cursor-pointer hover:border-[var(--gw-border)] transition-colors">
+            <div className="rounded-[10px] bg-[rgba(0,0,0,0.18)] p-3.5">
+              <Textarea
+                placeholder="请输入您的问题或建议..."
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                rows={5}
+                className="bg-[#151512] border-[rgba(255,255,255,0.08)] rounded-[9px] text-[13px] focus:border-[rgba(92,184,112,0.72)] focus:shadow-[0_0_0_3px_rgba(92,184,112,0.12)]"
+              />
+            </div>
+            <div className="flex items-center gap-2 h-[96px] px-3 rounded-[10px] border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] text-[12px] text-[var(--gw-text-disabled)] cursor-pointer hover:border-[var(--gw-border)] transition-colors justify-center">
               <Camera size={14} />
               <span>支持添加截图（可选）</span>
             </div>
@@ -289,13 +294,13 @@ export function TopBar() {
                 placeholder="请输入您的邮箱地址（可选）"
                 value={feedbackEmail}
                 onChange={(e) => setFeedbackEmail(e.target.value)}
-                className="pl-9"
+                className="pl-9 h-9 bg-[#151512] border-[rgba(255,255,255,0.08)] rounded-[8px] text-[13px] focus:border-[rgba(92,184,112,0.72)] focus:shadow-[0_0_0_3px_rgba(92,184,112,0.12)]"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setFeedbackOpen(false)}>取消</Button>
-            <Button variant="primary" size="sm" onClick={() => { toast.info('反馈功能开发中'); setFeedbackOpen(false) }}>
+          <DialogFooter className="mt-4">
+            <Button variant="ghost" size="sm" onClick={() => setFeedbackOpen(false)} className="text-[var(--gw-text-secondary)]">取消</Button>
+            <Button variant="primary" size="sm" className="rounded-full h-8 px-3.5" onClick={() => { toast.info('反馈功能开发中'); setFeedbackOpen(false) }}>
               <Send size={13} /> 提交
             </Button>
           </DialogFooter>
