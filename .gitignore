@@ -9,6 +9,9 @@ out/
 # Environment
 .env
 .env.local
+.package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Python virtual env
 .venv/
