@@ -3,15 +3,15 @@
   --gw-radius-sm: 6px;
   --gw-radius-md: 8px;
   --gw-radius-lg: 12px;
-  --gw-radius-xl: 16px;
+  --gw-radius-xl: 14px;
   --gw-radius-full: 9999px;
 
   --gw-sidebar-width: 248px;
   --gw-sidebar-collapsed-width: 56px;
   --gw-right-rail-width: 44px;
   --gw-right-panel-width: 384px;
-  --gw-statusbar-height: 26px;
-  --gw-titlebar-height: 44px;
+  --gw-statusbar-height: 22px;
+  --gw-titlebar-height: 36px;
 
   --gw-space-1: 1px;
   --gw-space-2: 2px;
@@ -37,12 +37,13 @@
   --gw-z-command: 600;
 
   --gw-font-sans:
-    "Instrument Sans",
-    "Microsoft YaHei",
+    "Inter",
+    "SF Pro Text",
     "Segoe UI",
+    "PingFang SC",
+    "Microsoft YaHei UI",
     system-ui,
     -apple-system,
-    BlinkMacSystemFont,
     sans-serif;
 
   --gw-font-mono:

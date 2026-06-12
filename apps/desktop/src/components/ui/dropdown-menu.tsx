@@ -17,10 +17,11 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-[var(--gw-z-popover)] min-w-[180px] overflow-hidden',
-        'rounded-[var(--gw-radius-md)] border border-[var(--gw-border)] bg-[var(--gw-bg-popover)] p-1',
-        'shadow-[var(--gw-shadow-lg)]',
-        'data-[state=open]:animate-[gw-scale-in_150ms_var(--gw-ease-out)]',
+        'z-[var(--gw-z-popover)] min-w-[148px] overflow-hidden',
+        'rounded-xl border border-[var(--gw-popup-border,rgba(255,255,255,0.08))]',
+        'bg-[var(--gw-popup-bg,#1d1d1a)] p-1.5',
+        'shadow-[0_18px_48px_rgba(0,0,0,0.48)]',
+        'data-[state=open]:animate-[gw-scale-in_130ms_var(--gw-ease-out)]',
         'data-[state=closed]:animate-[gw-fade-out_100ms_ease-in]',
         className,
       )}
@@ -37,10 +38,10 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center gap-2 rounded-[var(--gw-radius-xs)] px-2 py-1.5',
-      'text-[13px] text-[var(--gw-text-secondary)] outline-none',
+      'relative flex cursor-pointer select-none items-center gap-2 rounded-[7px] px-2.5 h-[32px]',
+      'text-[12px] font-medium text-[var(--gw-text-secondary)] outline-none',
       'transition-colors',
-      'focus:bg-[var(--gw-bg-hover)] focus:text-[var(--gw-text)]',
+      'focus:bg-[rgba(255,255,255,0.06)] focus:text-[var(--gw-text)]',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-45',
       inset && 'pl-8',
       className,
@@ -125,7 +126,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn('my-1 h-px bg-[var(--gw-border-soft)]', className)}
+    className={cn('my-1 h-px bg-[rgba(255,255,255,0.06)]', className)}
     {...props}
   />
 ))
