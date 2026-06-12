@@ -83,11 +83,16 @@ export function TopBar() {
 
   return (
     <header
-      className="h-[36px] shrink-0 w-full grid items-center bg-[var(--gw-bg-shell)] border-b border-[var(--gw-border-soft)] select-none overflow-hidden"
-      style={{ gridTemplateColumns: 'auto minmax(0, 1fr) auto' }}
+      className="h-[36px] shrink-0 w-full bg-[var(--gw-bg-shell)] border-b border-[var(--gw-border-soft)] select-none overflow-hidden box-border"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto minmax(0, 1fr) minmax(0, auto) 132px',
+        alignItems: 'center',
+        WebkitAppRegion: 'drag',
+      }}
     >
-      {/* Left cluster */}
-      <div className="flex items-center gap-1.5 pl-2.5 h-full [-webkit-app-region:no-drag]">
+      {/* Column 1: Left cluster */}
+      <div className="flex items-center gap-1.5 pl-2.5 h-full" style={{ WebkitAppRegion: 'no-drag' }}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer" title="菜单">
@@ -135,109 +140,116 @@ export function TopBar() {
         </button>
       </div>
 
-      {/* Center drag region */}
-      <div className="h-full [-webkit-app-region:drag]" />
+      {/* Column 2: Drag region */}
+      <div className="h-full" style={{ WebkitAppRegion: 'drag', minWidth: 0 }} />
 
-      {/* Right cluster */}
-      <div className="flex items-center justify-end h-full flex-shrink-0 [-webkit-app-region:no-drag]">
-        {/* Feature buttons group - can shrink */}
-        <div className="flex items-center gap-2 min-w-0 mr-1">
-          {/* GitHub Star */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="h-[24px] px-3 flex items-center gap-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-all flex-shrink-0 bg-[linear-gradient(180deg,rgba(92,184,112,0.24),rgba(92,184,112,0.14))] text-[var(--gw-accent)] border border-[rgba(92,184,112,0.35)] shadow-[0_0_0_1px_rgba(92,184,112,0.08),0_0_20px_rgba(92,184,112,0.14)] hover:bg-[linear-gradient(180deg,rgba(92,184,112,0.32),rgba(92,184,112,0.2))] hover:shadow-[0_0_0_1px_rgba(92,184,112,0.12),0_0_28px_rgba(92,184,112,0.22)]">
-                <Star size={12} className="fill-current flex-shrink-0" />
-                <span className="hidden min-[880px]:inline whitespace-nowrap">给 GitHub 点 Star</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[340px] p-0">
-              <div className="p-5 flex flex-col items-center gap-3 text-center">
-                <GeoMascot size="md" state="idle" />
-                <div>
-                  <h3 className="text-[14px] font-semibold text-[var(--gw-text)] mb-1">喜欢 GeoWork？给项目点个 Star</h3>
-                  <p className="text-[12px] text-[var(--gw-text-secondary)] leading-[1.6]">
-                    你的 Star 会帮助项目被更多人看到，也会鼓励后续继续完善桌面端、Agent 工作流和地理分析能力。
-                  </p>
-                </div>
-                <div className="flex gap-2 w-full">
-                  <Button variant="primary" size="sm" className="flex-1" onClick={() => window.open('https://github.com/Wanfeng1028/GeoWork', '_blank')}>
-                    <ExternalLink size={13} /> 打开 GitHub
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => toast.info('贡献指南开发中')}>
-                    查看项目
-                  </Button>
-                </div>
+      {/* Column 3: Right actions */}
+      <div className="flex items-center justify-end gap-2 h-full min-w-0 max-w-full overflow-hidden pr-2" style={{ WebkitAppRegion: 'no-drag' }}>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="h-[24px] px-3 flex items-center gap-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-all flex-shrink-0 max-w-[180px] bg-[linear-gradient(180deg,rgba(92,184,112,0.24),rgba(92,184,112,0.14))] text-[var(--gw-accent)] border border-[rgba(92,184,112,0.35)] shadow-[0_0_0_1px_rgba(92,184,112,0.08),0_0_20px_rgba(92,184,112,0.14)] hover:bg-[linear-gradient(180deg,rgba(92,184,112,0.32),rgba(92,184,112,0.2))] hover:shadow-[0_0_0_1px_rgba(92,184,112,0.12),0_0_28px_rgba(92,184,112,0.22)]">
+              <Star size={12} className="fill-current flex-shrink-0" />
+              <span className="hidden min-[880px]:inline whitespace-nowrap overflow-hidden text-ellipsis">给 GitHub 点 Star</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[340px] p-0">
+            <div className="p-5 flex flex-col items-center gap-3 text-center">
+              <GeoMascot size="md" state="idle" />
+              <div>
+                <h3 className="text-[14px] font-semibold text-[var(--gw-text)] mb-1">喜欢 GeoWork？给项目点个 Star</h3>
+                <p className="text-[12px] text-[var(--gw-text-secondary)] leading-[1.6]">
+                  你的 Star 会帮助项目被更多人看到，也会鼓励后续继续完善桌面端、Agent 工作流和地理分析能力。
+                </p>
               </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Feedback */}
-          <button
-            className="h-7 px-2.5 flex items-center gap-1.5 rounded-md text-[12px] font-medium text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0"
-            onClick={() => setFeedbackOpen(true)}
-            title="问题反馈"
-          >
-            <MessageSquare size={14} className="flex-shrink-0" />
-            <span className="hidden min-[820px]:inline whitespace-nowrap">问题反馈</span>
-          </button>
-
-          {/* Usage */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0"
-                title="用量"
-              >
-                <Gauge size={15} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[300px]">
-              <div className="flex flex-col gap-3">
-                <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">用量概览</h4>
-                <div className="flex flex-col gap-1">
-                  <UsageRow label="本地任务额度" value="无限" />
-                  <UsageRow label="Agent 调用额度" value="1,280 / 2,000" />
-                  <UsageRow label="地理分析额度" value="45 / 100" />
-                  <UsageRow label="今日剩余" value="87 次" accent />
-                </div>
-                <Button variant="ghost" size="sm" className="w-full mt-1" onClick={() => toast.info('详情页开发中')}>
-                  查看详情
+              <div className="flex gap-2 w-full">
+                <Button variant="primary" size="sm" className="flex-1" onClick={() => window.open('https://github.com/Wanfeng1028/GeoWork', '_blank')}>
+                  <ExternalLink size={13} /> 打开 GitHub
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => toast.info('贡献指南开发中')}>
+                  查看项目
                 </Button>
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
-        {/* Window controls - fixed 132px, never shrinks */}
-        <div
-          className="flex items-stretch flex-shrink-0 ml-1"
-          style={{ width: 132, height: 36 }}
+        <button
+          className="h-7 px-2.5 flex items-center gap-1.5 rounded-md text-[12px] font-medium text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0 min-w-0"
+          onClick={() => setFeedbackOpen(true)}
+          title="问题反馈"
         >
-          <button
-            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer border-none bg-transparent rounded-none"
-            style={{ width: 44, height: 36 }}
-            onClick={handleMinimize}
-            title="最小化"
-          >
-            <Minus size={14} />
-          </button>
-          <button
-            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors cursor-pointer border-none bg-transparent rounded-none"
-            style={{ width: 44, height: 36 }}
-            onClick={handleMaximize}
-            title={isMaximized ? '还原' : '最大化'}
-          >
-            {isMaximized ? <Square size={11} /> : <Maximize2 size={12} />}
-          </button>
-          <button
-            className="flex items-center justify-center text-[var(--gw-text-tertiary)] hover:bg-[#e81123] hover:text-white transition-colors cursor-pointer border-none bg-transparent rounded-none"
-            style={{ width: 44, height: 36 }}
-            onClick={handleClose}
-            title="关闭"
-          >
-            <X size={14} />
-          </button>
-        </div>
+          <MessageSquare size={14} className="flex-shrink-0" />
+          <span className="hidden min-[820px]:inline whitespace-nowrap overflow-hidden text-ellipsis">问题反馈</span>
+        </button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className="w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer flex-shrink-0"
+              title="用量"
+            >
+              <Gauge size={15} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="end" sideOffset={6} className="w-[300px]">
+            <div className="flex flex-col gap-3">
+              <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">用量概览</h4>
+              <div className="flex flex-col gap-1">
+                <UsageRow label="本地任务额度" value="无限" />
+                <UsageRow label="Agent 调用额度" value="1,280 / 2,000" />
+                <UsageRow label="地理分析额度" value="45 / 100" />
+                <UsageRow label="今日剩余" value="87 次" accent />
+              </div>
+              <Button variant="ghost" size="sm" className="w-full mt-1" onClick={() => toast.info('详情页开发中')}>
+                查看详情
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Column 4: Window controls - fixed 132px grid column */}
+      <div
+        className="h-full"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '44px 44px 44px',
+          alignItems: 'stretch',
+          WebkitAppRegion: 'no-drag',
+          width: 132,
+          minWidth: 132,
+          maxWidth: 132,
+          background: 'transparent',
+          border: 'none',
+          margin: 0,
+          padding: 0,
+          position: 'static',
+        }}
+      >
+        <button
+          className="flex items-center justify-center border-none rounded-none bg-transparent cursor-pointer text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors"
+          style={{ width: 44, height: 36, minWidth: 44, maxWidth: 44 }}
+          onClick={handleMinimize}
+          title="最小化"
+        >
+          <Minus size={14} />
+        </button>
+        <button
+          className="flex items-center justify-center border-none rounded-none bg-transparent cursor-pointer text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--gw-text-secondary)] transition-colors"
+          style={{ width: 44, height: 36, minWidth: 44, maxWidth: 44 }}
+          onClick={handleMaximize}
+          title={isMaximized ? '还原' : '最大化'}
+        >
+          {isMaximized ? <Square size={11} /> : <Maximize2 size={12} />}
+        </button>
+        <button
+          className="flex items-center justify-center border-none rounded-none bg-transparent cursor-pointer text-[var(--gw-text-tertiary)] hover:bg-[#e81123] hover:text-white transition-colors"
+          style={{ width: 44, height: 36, minWidth: 44, maxWidth: 44 }}
+          onClick={handleClose}
+          title="关闭"
+        >
+          <X size={14} />
+        </button>
       </div>
 
       {/* Command palette dialog */}
