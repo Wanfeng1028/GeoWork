@@ -97,10 +97,12 @@ app.on('activate', () => {
   }
 })
 
-// Handle app crashed — graceful recovery
-app.on('renderer-process-crashed', (event, webContents, kill) => {
-  writeLog('error', `Renderer process crashed: ${webContents.getUrl()}`)
-  if (mainWindow) {
-    mainWindow.webContents.reload()
-  }
+// Handle renderer crash — graceful recovery
+app.on('web-contents-created', (_event, webContents) => {
+  webContents.on('render-process-gone', (_e, details) => {
+    writeLog('error', `Renderer process gone: ${details.reason}`)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.reload()
+    }
+  })
 })
