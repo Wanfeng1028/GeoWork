@@ -31,7 +31,7 @@ export function GeoComposer() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { activeMode, setActiveMode, composerFocusToken, openRightDock, openBottomDock } = useShellStore()
+  const { activeMode, setActiveMode, composerFocusToken, openRightDock } = useShellStore()
   const { createTask } = useTaskStore()
   const { addMessage } = useChatStore()
 
@@ -67,7 +67,6 @@ export function GeoComposer() {
       })
       setPrompt('')
       openRightDock('task')
-      openBottomDock('events')
       toast.success('任务已创建')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '任务创建失败')

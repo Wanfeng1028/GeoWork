@@ -9,22 +9,20 @@ const useShellStore = create<ShellStore>((set) => ({
   sidebarCollapsed: false,
   rightDockVisible: false,
   activeRightPanel: 'task',
-  bottomDockVisible: false,
-  activeBottomPanel: 'terminal',
   conversationMinimapEnabled: false,
   commandPaletteOpen: false,
   composerFocusToken: 0,
 
   setActiveMode: (mode) => set({ activeMode: mode }),
-  
+
   setActiveNavKey: (key) => set({ activeNavKey: key }),
-  
+
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-  
+
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-  
+
   toggleRightDock: () => set((state) => ({ rightDockVisible: !state.rightDockVisible })),
-  
+
   setActiveRightPanel: (panel) => set({ activeRightPanel: panel }),
 
   openRightDock: (panel) => set((state) => ({
@@ -33,18 +31,7 @@ const useShellStore = create<ShellStore>((set) => ({
   })),
 
   closeRightDock: () => set({ rightDockVisible: false }),
-  
-  toggleBottomDock: () => set((state) => ({ bottomDockVisible: !state.bottomDockVisible })),
-  
-  setActiveBottomPanel: (panel) => set({ activeBottomPanel: panel }),
 
-  openBottomDock: (panel) => set((state) => ({
-    bottomDockVisible: true,
-    activeBottomPanel: panel ?? state.activeBottomPanel
-  })),
-
-  closeBottomDock: () => set({ bottomDockVisible: false }),
-  
   setConversationMinimapEnabled: (enabled) => set({ conversationMinimapEnabled: enabled }),
 
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),

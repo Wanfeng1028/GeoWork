@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import type { BottomPanelType, RightPanelType } from '../types/shell'
+import type { RightPanelType } from '../types/shell'
 import useShellStore from '../stores/shellStore'
 
 export type ActionStatus = 'implemented' | 'dev' | 'disabled'
@@ -40,7 +40,6 @@ function switchMainModule(key: string) {
 
   if (key === 'workbench') {
     shell.closeRightDock()
-    shell.closeBottomDock()
     shell.focusComposer()
   }
 
@@ -77,20 +76,6 @@ export const actionRegistry: Record<string, ShellAction> = {
     status: 'implemented',
     fallbackMessage: '',
     handler: () => useShellStore.getState().setCommandPaletteOpen(true),
-  },
-  openBottomDock: {
-    id: 'openBottomDock',
-    label: '打开底部面板',
-    status: 'implemented',
-    fallbackMessage: '',
-    handler: (panel) => useShellStore.getState().openBottomDock(panel as BottomPanelType | undefined),
-  },
-  closeBottomDock: {
-    id: 'closeBottomDock',
-    label: '关闭底部面板',
-    status: 'implemented',
-    fallbackMessage: '',
-    handler: () => useShellStore.getState().closeBottomDock(),
   },
   openRightDock: {
     id: 'openRightDock',
@@ -251,7 +236,6 @@ export const commandPaletteActions = [
   actionRegistry.openPaperSearch,
   actionRegistry.openKnowledgeBase,
   actionRegistry.openMapLayers,
-  actionRegistry.openBottomDock,
   actionRegistry.openRightDock,
   actionRegistry.openSettings,
 ]

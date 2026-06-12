@@ -90,7 +90,7 @@ export function TopBar() {
       <div className={styles.right}>
         <button
           className={styles.iconBtn}
-          onClick={() => runAction('openBottomDock', 'events')}
+          onClick={() => runAction('openRightDock', 'events')}
           title="事件"
         >
           <span className="relative">
@@ -138,9 +138,7 @@ export function TopBar() {
                 className="flex w-full items-start gap-3 rounded-[var(--gw-radius-sm)] px-3 py-2.5 text-left hover:bg-[var(--gw-bg-hover)] transition-colors"
                 onClick={() => {
                   setCommandPaletteOpen(false)
-                  if (action.id === 'openBottomDock') {
-                    runAction(action.id, 'terminal')
-                  } else if (action.id === 'openRightDock') {
+                  if (action.id === 'openRightDock') {
                     runAction(action.id, 'task')
                   } else {
                     runAction(action.id)

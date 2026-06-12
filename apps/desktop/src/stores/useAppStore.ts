@@ -11,9 +11,6 @@ interface AppState {
 
   sidebarCollapsed: boolean
   toggleSidebar: () => void
-
-  bottomPanelVisible: boolean
-  toggleBottomPanel: () => void
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -27,11 +24,5 @@ export const useAppStore = create<AppState>()((set) => ({
   toggleSidebar: () =>
     set((state) => ({
       sidebarCollapsed: !state.sidebarCollapsed,
-    })),
-
-  bottomPanelVisible: false,
-  toggleBottomPanel: () =>
-    set((state) => ({
-      bottomPanelVisible: !state.bottomPanelVisible,
     })),
 }))

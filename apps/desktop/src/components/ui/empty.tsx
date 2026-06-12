@@ -1,5 +1,6 @@
 import { Inbox } from 'lucide-react'
 import { cn } from '../../lib/cn'
+import { GeoMascot } from '../brand/GeoMascot'
 
 interface EmptyProps {
   icon?: React.ReactNode
@@ -7,6 +8,7 @@ interface EmptyProps {
   description?: string
   action?: React.ReactNode
   className?: string
+  useMascot?: boolean
 }
 
 export function Empty({
@@ -15,6 +17,7 @@ export function Empty({
   description,
   action,
   className,
+  useMascot = true,
 }: EmptyProps) {
   return (
     <div
@@ -24,7 +27,7 @@ export function Empty({
       )}
     >
       <div className="text-[var(--gw-text-disabled)]">
-        {icon ?? <Inbox className="h-10 w-10" strokeWidth={1} />}
+        {icon ?? (useMascot ? <GeoMascot size="lg" state="idle" /> : <Inbox className="h-10 w-10" strokeWidth={1} />)}
       </div>
       <div className="text-center">
         <p className="text-[13px] font-medium text-[var(--gw-text-tertiary)]">{title}</p>
