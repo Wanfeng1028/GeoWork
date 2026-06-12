@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'node:path'
 import { startRuntime, stopRuntime, checkHealth, getRuntimeStatus } from './runtime'
 import { registerDesktopIPC } from './ipc/desktopIpc'
@@ -19,12 +19,23 @@ let isAppReady = false
 async function createWindow() {
   await startRuntime()
 
+  // Hide native menu bar
+  Menu.setApplicationMenu(null)
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 940,
     minWidth: 1180,
     minHeight: 760,
     title: 'GeoWork',
+    frame: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#11110f',
+      symbolColor: '#b4b4ac',
+      height: 44,
+    },
+    backgroundColor: '#080807',
     webPreferences: {
       preload: join(__dirname, '../preload/preload.mjs'),
       contextIsolation: true,
@@ -46,10 +57,6 @@ async function createWindow() {
   registerNotificationIPC()
   registerPermissionForwarder(mainWindow)
   registerLoggingIPC()
-
-  // Build default menu
-  const defaultMenu = getDefaultMenu()
-  buildMenu(defaultMenu)
 
   // Initialize tray
   initTray(mainWindow)

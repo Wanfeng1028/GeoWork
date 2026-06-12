@@ -1,6 +1,6 @@
-// GeoWork TopBar
+// GeoWork TopBar - Unified Desktop Title Bar
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Bell,
   CheckCircle,
@@ -9,10 +9,13 @@ import {
   Settings,
   LayoutGrid,
   Info,
+  Minus,
+  Square,
+  X,
+  Maximize2,
 } from 'lucide-react'
 import useShellStore from '../../../stores/shellStore'
 import { commandPaletteActions, runAction } from '../../../services/actionRegistry'
-import { Badge } from '../../ui/badge'
 import { Button } from '../../ui/button'
 import { Input } from '../../ui/input'
 import {
@@ -39,6 +42,7 @@ export function TopBar() {
     commandPaletteOpen,
     setCommandPaletteOpen
   } = useShellStore()
+  const [isMaximized, setIsMaximized] = useState(false)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -51,33 +55,60 @@ export function TopBar() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  useEffect(() => {
+    const checkMaximized = async () => {
+      if (window.geowork?.desktop?.isWindowMaximized) {
+        const maximized = await window.geowork.desktop.isWindowMaximized()
+        setIsMaximized(maximized)
+      }
+    }
+    checkMaximized()
+    const interval = setInterval(checkMaximized, 500)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleMinimize = () => {
+    window.geowork?.desktop?.minimizeWindow?.()
+  }
+
+  const handleMaximize = () => {
+    window.geowork?.desktop?.toggleMaximizeWindow?.()
+  }
+
+  const handleClose = () => {
+    window.geowork?.desktop?.closeWindow?.()
+  }
+
   return (
     <header className={styles.topbar}>
       <div className={styles.left}>
         <button className={styles.menuBtn} onClick={() => runAction('toggleSidebar')} title="折叠侧栏">
-          <Menu size={18} />
+          <Menu size={16} />
         </button>
-        <span className={styles.title}>GeoWork</span>
+        <div className={styles.brand}>
+          <span className={styles.brandText}>GeoWork</span>
+        </div>
       </div>
 
       <div className={styles.center}>
-        <div className={styles.searchInputWrapper}>
-          <Search size={14} className={styles.searchIcon} />
+        <div className={styles.searchBox}>
+          <Search size={13} className={styles.searchIcon} />
           <Input
-            placeholder="全局搜索 (Ctrl+P)"
+            placeholder="搜索命令、文件、任务..."
             className={styles.searchInput}
             readOnly
             onFocus={() => runAction('openCommandPalette')}
           />
+          <kbd className={styles.shortcut}>⌘P</kbd>
         </div>
-        <div className={styles.modeDivider} />
-        <div className={styles.modeTags}>
+
+        <div className={styles.modeNav}>
           {modes.map((mode) => (
             <button
               key={mode}
               className={cn(
-                styles.modeTag,
-                activeMode === mode.toLowerCase() && styles.activeModeTag,
+                styles.modeBtn,
+                activeMode === mode.toLowerCase() && styles.activeModeBtn,
               )}
               onClick={() => setActiveMode(mode.toLowerCase() as any)}
             >
@@ -93,15 +124,13 @@ export function TopBar() {
           onClick={() => runAction('openRightDock', 'events')}
           title="事件"
         >
-          <span className="relative">
-            <Bell size={18} />
-          </span>
+          <Bell size={15} />
         </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={styles.iconBtn} title="设置">
-              <Settings size={18} />
+              <Settings size={15} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -120,10 +149,22 @@ export function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className={styles.statusTag}>
-          <CheckCircle size={14} className="text-[var(--gw-success)]" />
+        <span className={styles.statusBadge}>
+          <CheckCircle size={12} />
           Ready
         </span>
+
+        <div className={styles.windowControls}>
+          <button className={styles.winBtn} onClick={handleMinimize} title="最小化">
+            <Minus size={14} />
+          </button>
+          <button className={styles.winBtn} onClick={handleMaximize} title={isMaximized ? '还原' : '最大化'}>
+            {isMaximized ? <Square size={12} /> : <Maximize2 size={13} />}
+          </button>
+          <button className={cn(styles.winBtn, styles.winClose)} onClick={handleClose} title="关闭">
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
       <Dialog open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen}>

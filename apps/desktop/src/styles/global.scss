@@ -1,16 +1,7 @@
 // GeoWork Global Styles
-// 导入设计 tokens 和主题
-
-@import './tokens';
-@import './themes';
 
 :root {
   font-family: "Instrument Sans", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
-  color-scheme: dark;
-}
-
-[data-theme="light"] {
-  color-scheme: light;
 }
 
 * {
@@ -35,27 +26,27 @@ select {
 
 // === Scrollbar Styling ===
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--gw-bg-panel);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gw-border);
-  border-radius: var(--gw-radius-sm);
-  
+  background: var(--gw-border-strong);
+  border-radius: 999px;
+
   &:hover {
-    background: var(--gw-border-strong);
+    background: var(--gw-text-tertiary);
   }
 }
 
 // === Selection ===
 ::selection {
-  background: var(--gw-accent);
-  color: var(--gw-bg);
+  background: rgba(var(--gw-accent-rgb), 0.3);
+  color: var(--gw-text);
 }
 
 // === Focus ===
@@ -76,168 +67,21 @@ select {
 }
 
 @keyframes gw-slide-up {
-  from { 
+  from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
 @keyframes gw-glow {
-  0%, 100% { 
+  0%, 100% {
     box-shadow: 0 0 20px rgba(var(--gw-accent-rgb), 0.15);
   }
-  50% { 
+  50% {
     box-shadow: 0 0 38px rgba(var(--gw-accent-rgb), 0.25);
-  }
-}
-
-.gw-animate-fade-in {
-  animation: gw-fade-in 0.2s ease-out;
-}
-
-.gw-animate-fade-out {
-  animation: gw-fade-out 0.2s ease-in;
-}
-
-.gw-animate-slide-up {
-  animation: gw-slide-up 0.3s ease-out;
-}
-
-.gw-animate-glow {
-  animation: gw-glow 2s ease-in-out infinite;
-}
-
-// === DevBadge ===
-.dev-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  border-radius: 4px;
-  user-select: none;
-
-  &--short {
-    padding: 1px 6px;
-    background: var(--gw-accent);
-    color: var(--gw-bg);
-    font-weight: 600;
-  }
-
-  &--full {
-    padding: 4px 10px;
-    background: var(--gw-accent);
-    color: var(--gw-bg);
-    font-weight: 600;
-
-    .dev-badge__version {
-      font-size: 11px;
-    }
-
-    .dev-badge__label {
-      font-size: 10px;
-      opacity: 0.85;
-    }
-  }
-}
-
-// === EmptyState ===
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-24);
-  color: var(--gw-text-subtle);
-
-  .empty-state__icon {
-    font-size: 40px;
-    opacity: 0.45;
-  }
-
-  .empty-state__title {
-    margin: 0;
-    font-size: 14px;
-    color: var(--gw-text-muted);
-  }
-
-  .empty-state__desc {
-    margin: 0;
-    font-size: 12px;
-    text-align: center;
-    max-width: 280px;
-  }
-}
-
-// === ErrorState ===
-.error-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-24);
-  color: var(--gw-text-secondary);
-
-  .error-state__icon {
-    font-size: 36px;
-    opacity: 0.7;
-  }
-
-  .error-state__title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--gw-text);
-  }
-
-  .error-state__message {
-    margin: 0;
-    font-size: 12px;
-    text-align: center;
-    max-width: 320px;
-  }
-
-  .error-state__retry {
-    margin-top: var(--gw-space-8);
-    padding: 4px 16px;
-    border: 1px solid var(--gw-border-subtle);
-    border-radius: 4px;
-    background: var(--gw-bg-subtle);
-    color: var(--gw-text);
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.15s;
-
-    &:hover {
-      background: var(--gw-bg-hover);
-    }
-  }
-}
-
-// === DevNotice (inline banner) ===
-.dev-notice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--gw-bg-subtle);
-  border-bottom: 1px solid var(--gw-border-subtle);
-  font-size: 11px;
-  color: var(--gw-text-subtle);
-
-  .dev-notice__badge {
-    padding: 1px 5px;
-    background: var(--gw-accent);
-    color: var(--gw-bg);
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 600;
   }
 }

@@ -2,53 +2,53 @@
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --gw-bg: #0d0b09;
-  --gw-bg-elevated: #16120f;
-  --gw-bg-shell: #110e0b;
-  --gw-bg-sidebar: #16120f;
-  --gw-bg-panel: #1d1813;
-  --gw-bg-card: #231d17;
-  --gw-bg-popover: #2a221b;
-  --gw-bg-input: rgba(24, 20, 16, 0.94);
-  --gw-bg-hover: rgba(217, 173, 124, 0.1);
-  --gw-bg-active: rgba(217, 173, 124, 0.16);
-  --gw-bg-subtle: rgba(255, 244, 226, 0.045);
-  --gw-bg-disabled: rgba(255, 244, 226, 0.03);
+  --gw-bg: #080807;
+  --gw-bg-elevated: #141413;
+  --gw-bg-shell: #11110f;
+  --gw-bg-sidebar: #141413;
+  --gw-bg-panel: #1a1a18;
+  --gw-bg-card: #1f1f1d;
+  --gw-bg-popover: #242422;
+  --gw-bg-input: rgba(26, 26, 24, 0.94);
+  --gw-bg-hover: rgba(255, 255, 252, 0.06);
+  --gw-bg-active: rgba(255, 255, 252, 0.1);
+  --gw-bg-subtle: rgba(255, 255, 252, 0.03);
+  --gw-bg-disabled: rgba(255, 255, 252, 0.02);
 
-  --gw-text: #f3eee7;
-  --gw-text-secondary: #b9aa98;
-  --gw-text-tertiary: #7d7164;
-  --gw-text-disabled: #53483f;
+  --gw-text: #eeeeeb;
+  --gw-text-secondary: #b4b4ac;
+  --gw-text-tertiary: #7d7d74;
+  --gw-text-disabled: #52524c;
 
-  --gw-border: rgba(255, 244, 226, 0.13);
-  --gw-border-soft: rgba(255, 244, 226, 0.075);
-  --gw-border-strong: rgba(255, 244, 226, 0.2);
+  --gw-border: rgba(255, 255, 252, 0.1);
+  --gw-border-soft: rgba(255, 255, 252, 0.06);
+  --gw-border-strong: rgba(255, 255, 252, 0.16);
 
-  --gw-accent: #d9ad7c;
-  --gw-accent-hover: #efc895;
-  --gw-accent-active: #f5d8ae;
-  --gw-accent-soft: rgba(217, 173, 124, 0.16);
-  --gw-accent-rgb: 217, 173, 124;
+  --gw-accent: #5cb870;
+  --gw-accent-hover: #73cd94;
+  --gw-accent-active: #8ee5a1;
+  --gw-accent-soft: rgba(92, 184, 112, 0.14);
+  --gw-accent-rgb: 92, 184, 112;
 
   --gw-danger: #ff6f61;
   --gw-danger-hover: #ff8a7f;
   --gw-danger-soft: rgba(255, 111, 97, 0.14);
   --gw-warning: #e6b85f;
   --gw-warning-soft: rgba(230, 184, 95, 0.14);
-  --gw-success: #73d99f;
-  --gw-success-soft: rgba(115, 217, 159, 0.14);
+  --gw-success: #5cb870;
+  --gw-success-soft: rgba(92, 184, 112, 0.14);
   --gw-info: #73b7ff;
   --gw-info-soft: rgba(115, 183, 255, 0.14);
 
   --gw-map-base: #101611;
-  --gw-map-grid: rgba(115, 217, 159, 0.08);
-  --gw-map-feature: #73d99f;
+  --gw-map-grid: rgba(92, 184, 112, 0.08);
+  --gw-map-feature: #5cb870;
   --gw-map-highlight: #e6b85f;
 
-  --gw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.28);
-  --gw-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32);
-  --gw-shadow-lg: 0 12px 42px rgba(0, 0, 0, 0.34);
-  --gw-shadow-panel: 0 20px 70px rgba(0, 0, 0, 0.42);
+  --gw-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --gw-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --gw-shadow-lg: 0 12px 42px rgba(0, 0, 0, 0.4);
+  --gw-shadow-panel: 0 20px 70px rgba(0, 0, 0, 0.5);
   --gw-shadow-glow: 0 0 44px rgba(var(--gw-accent-rgb), 0.18);
 }
 
@@ -77,11 +77,11 @@ html[data-theme="light"] {
   --gw-border-soft: rgba(31, 37, 34, 0.075);
   --gw-border-strong: rgba(31, 37, 34, 0.2);
 
-  --gw-accent: #0f766e;
-  --gw-accent-hover: #0b8f82;
-  --gw-accent-active: #0a7a6f;
-  --gw-accent-soft: rgba(15, 118, 110, 0.12);
-  --gw-accent-rgb: 15, 118, 110;
+  --gw-accent: #2fa851;
+  --gw-accent-hover: #258944;
+  --gw-accent-active: #1f7439;
+  --gw-accent-soft: rgba(47, 168, 81, 0.12);
+  --gw-accent-rgb: 47, 168, 81;
 
   --gw-danger: #cf3f35;
   --gw-danger-hover: #b8362e;
@@ -108,13 +108,13 @@ html[data-theme="light"] {
 html[data-theme="dark-glass"] {
   color-scheme: dark;
 
-  --gw-bg: rgba(13, 11, 9, 0.76);
-  --gw-bg-elevated: rgba(22, 18, 15, 0.72);
-  --gw-bg-shell: rgba(17, 14, 11, 0.72);
-  --gw-bg-sidebar: rgba(22, 18, 15, 0.68);
-  --gw-bg-panel: rgba(29, 24, 19, 0.72);
-  --gw-bg-card: rgba(35, 29, 23, 0.72);
-  --gw-bg-popover: rgba(42, 34, 27, 0.78);
+  --gw-bg: rgba(8, 8, 7, 0.76);
+  --gw-bg-elevated: rgba(20, 20, 19, 0.72);
+  --gw-bg-shell: rgba(17, 17, 15, 0.72);
+  --gw-bg-sidebar: rgba(20, 20, 19, 0.68);
+  --gw-bg-panel: rgba(26, 26, 24, 0.72);
+  --gw-bg-card: rgba(31, 31, 29, 0.72);
+  --gw-bg-popover: rgba(36, 36, 34, 0.78);
 }
 
 html[data-theme="light-glass"] {

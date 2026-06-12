@@ -1,13 +1,9 @@
-// GeoWork AppShell Styles
-
 .shell {
   width: 100vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(var(--gw-accent-rgb), 0.08), transparent 34%),
-    var(--gw-bg);
+  background: var(--gw-bg);
   color: var(--gw-text);
   overflow: hidden;
 }
@@ -18,10 +14,5 @@
   overflow: hidden;
   min-height: 0;
   min-width: 0;
-}
-
-@media (max-width: 1400px) {
-  .shell {
-    --gw-rightdock-width: 300px;
-  }
+  background: var(--gw-bg);
 }

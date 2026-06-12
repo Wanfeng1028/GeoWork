@@ -1,14 +1,12 @@
-// GeoWork TopBar Styles
-
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--gw-space-12);
-  background: rgba(0, 0, 0, 0.04);
+  padding: 0 12px;
+  background: var(--gw-bg-shell);
   border-bottom: 1px solid var(--gw-border-soft);
-  height: var(--gw-topbar-height);
-  min-height: var(--gw-topbar-height);
+  height: 44px;
+  min-height: 44px;
   user-select: none;
   -webkit-app-region: drag;
 }
@@ -16,18 +14,22 @@
 .left {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-12);
+  gap: 8px;
+  min-width: 180px;
   -webkit-app-region: no-drag;
 }
 
 .menuBtn {
-  background: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
+  background: transparent;
   color: var(--gw-text-secondary);
-  font-size: 16px;
-  cursor: pointer;
-  padding: var(--gw-space-4);
   border-radius: var(--gw-radius-sm);
+  cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
@@ -36,84 +38,136 @@
   }
 }
 
-.title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--gw-text);
-  -webkit-app-region: no-drag;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.subtitle {
-  color: var(--gw-text-secondary);
-  font-size: 12px;
+.brandText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gw-text);
+  letter-spacing: -0.02em;
 }
 
 .center {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-12);
+  gap: 16px;
   flex: 1;
   justify-content: center;
   -webkit-app-region: no-drag;
 }
 
-  .searchInput {
-  width: 240px;
-
-  :global(.ant-input) {
-    background: var(--gw-bg-input);
-    border-color: var(--gw-border-soft);
-    color: var(--gw-text);
-    font-size: 12px;
-    height: 24px;
-
-    &::placeholder {
-      color: var(--gw-text-subtle);
-    }
-  }
-}
-
-.modeDivider {
-  width: 1px;
-  height: 16px;
-  background: var(--gw-border-soft);
-}
-
-.modeTags {
+.searchBox {
+  position: relative;
   display: flex;
-  gap: var(--gw-space-4);
+  align-items: center;
+  width: 280px;
+  height: 30px;
 }
 
-.modeTag {
-  margin: 0;
-  font-size: 11px;
-  padding: 0 var(--gw-space-8);
-  height: 20px;
-  line-height: 18px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: var(--gw-text-disabled);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  height: 100%;
+  padding: 0 60px 0 30px;
+  background: var(--gw-bg-input);
+  border: 1px solid var(--gw-border-soft);
+  border-radius: var(--gw-radius-md);
+  font-size: 12px;
+  color: var(--gw-text);
+  transition: border-color 0.15s ease;
 
   &:hover {
-    opacity: 0.8;
+    border-color: var(--gw-border);
   }
+
+  &:focus {
+    border-color: var(--gw-accent);
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--gw-text-disabled);
+  }
+}
+
+.shortcut {
+  position: absolute;
+  right: 8px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-family: var(--gw-font-sans);
+  color: var(--gw-text-disabled);
+  background: var(--gw-bg-subtle);
+  border: 1px solid var(--gw-border-soft);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.modeNav {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--gw-bg-subtle);
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-border-soft);
+}
+
+.modeBtn {
+  height: 26px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--gw-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--gw-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--gw-text-secondary);
+    background: var(--gw-bg-hover);
+  }
+}
+
+.activeModeBtn {
+  color: var(--gw-text);
+  background: var(--gw-bg-panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .right {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-12);
+  gap: 4px;
+  min-width: 180px;
+  justify-content: flex-end;
   -webkit-app-region: no-drag;
 }
 
 .iconBtn {
-  background: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
+  background: transparent;
   color: var(--gw-text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  padding: var(--gw-space-4);
   border-radius: var(--gw-radius-sm);
+  cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
@@ -122,20 +176,46 @@
   }
 }
 
-.statusTag {
-  margin: 0;
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
   font-size: 11px;
-  padding: 0 var(--gw-space-8);
-  height: 20px;
-  line-height: 18px;
+  font-weight: 500;
+  color: var(--gw-success);
+  background: var(--gw-success-soft);
+  border-radius: var(--gw-radius-full);
 }
 
-.commandItem {
+.windowControls {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  gap: 0;
+}
+
+.winBtn {
+  width: 36px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--gw-text-secondary);
   cursor: pointer;
-  border-radius: var(--gw-radius-md);
-  padding-inline: 10px !important;
+  transition: all 0.12s ease;
 
   &:hover {
     background: var(--gw-bg-hover);
+    color: var(--gw-text);
+  }
+}
+
+.winClose {
+  &:hover {
+    background: #e81123;
+    color: #fff;
   }
 }
