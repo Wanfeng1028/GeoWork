@@ -2,6 +2,7 @@
 
 import { DevBadge } from '../../common/DevBadge'
 import { GeoComposer } from '../composer/GeoComposer/GeoComposer'
+import { GeoMascot } from '../../brand/GeoMascot'
 import useShellStore from '../../../stores/shellStore'
 import ExpertPanel from '../../../pages/ExpertPanel/ExpertPanel'
 import Extensions from '../../../pages/Extensions/Extensions'
@@ -20,10 +21,7 @@ function WorkbenchHome() {
       <section className={styles.hero}>
         <div className={styles.mascot} aria-hidden="true">
           <div className={styles.mascotHalo} />
-          <div className={styles.mascotCore}>
-            <span className={styles.mascotGrid} />
-            <span className={styles.mascotPulse} />
-          </div>
+          <GeoMascot size="xl" state="idle" />
         </div>
 
         <div className={styles.heroHeader}>
@@ -49,6 +47,7 @@ function ComingSoonView({ title }: { title: string }) {
   return (
     <div className={styles.placeholder}>
       <div className={styles.placeholderPanel}>
+        <GeoMascot size="lg" state="thinking" />
         <DevBadge mode="short" />
         <h2>{title}</h2>
         <p>该能力仍在开发中。入口已保留，后续会接入真实功能。</p>
