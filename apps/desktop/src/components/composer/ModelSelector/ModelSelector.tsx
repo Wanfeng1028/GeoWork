@@ -1,13 +1,17 @@
 // GeoWork - ModelSelector Component
-// Select model provider and model from configuration
 
 import React, { useState } from 'react'
-import { Select, Tag } from 'antd'
-import { SettingOutlined } from '@ant-design/icons'
+import { Settings } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
+import { Badge } from '../../ui/badge'
 import useSettingsStore from '../../../stores/settingsStore'
 import styles from './ModelSelector.module.scss'
-
-const { Option } = Select
 
 export const ModelSelector: React.FC = () => {
   const { settings } = useSettingsStore()
@@ -17,32 +21,34 @@ export const ModelSelector: React.FC = () => {
 
   const currentProvider = providers.find(p => p.id === selectedProvider)
 
-  // Mock models list - in real implementation would come from API
   const models = currentProvider
     ? ['gpt-4o', 'gpt-4o-mini', 'claude-3.5-sonnet', 'llama-3.1-70b']
     : []
 
   return (
     <div className={styles.container}>
-      <SettingOutlined className={styles.icon} />
+      <Settings size={14} className={styles.icon} />
       <div className={styles.selectors}>
-        <Select
-          value={selectedProvider}
-          onChange={setSelectedProvider}
-          size="small"
-          className={styles.providerSelect}
-          options={providers.map(p => ({ label: p.name, value: p.id }))}
-          suffixIcon={<Tag color="blue">API</Tag>}
-        />
-        <Select
-          value={selectedModel || models[0]}
-          onChange={setSelectedModel}
-          size="small"
-          className={styles.modelSelect}
-          options={models.map(m => ({ label: m, value: m }))}
-          placeholder="选择模型"
-          suffixIcon={<Tag color="cyan">Model</Tag>}
-        />
+        <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+          <SelectTrigger className={styles.providerSelect}>
+            <SelectValue placeholder="选择供应商" />
+          </SelectTrigger>
+          <SelectContent>
+            {providers.map(p => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedModel || models[0]} onValueChange={setSelectedModel}>
+          <SelectTrigger className={styles.modelSelect}>
+            <SelectValue placeholder="选择模型" />
+          </SelectTrigger>
+          <SelectContent>
+            {models.map(m => (
+              <SelectItem key={m} value={m}>{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

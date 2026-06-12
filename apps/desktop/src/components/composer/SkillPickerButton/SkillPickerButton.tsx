@@ -1,9 +1,9 @@
 // GeoWork - SkillPickerButton Component
-// Inline button to pick agent skills for the current task
 
 import React from 'react'
-import { Button } from 'antd'
-import { ThunderboltOutlined } from '@ant-design/icons'
+import { Zap } from 'lucide-react'
+import { Button } from '../../ui/button'
+import { cn } from '../../../lib/cn'
 import styles from './SkillPickerButton.module.scss'
 
 interface Skill {
@@ -35,32 +35,30 @@ export const SkillPickerButton: React.FC<SkillPickerButtonProps> = ({
   return (
     <div className={styles.container}>
       <Button
-        size="small"
-        icon={<ThunderboltOutlined />}
-        className={`${styles.trigger} ${isCustom ? styles.custom : ''}`}
-        type={isCustom ? 'primary' : 'default'}
+        variant={isCustom ? 'primary' : 'secondary'}
+        size="sm"
+        className={cn(styles.trigger, isCustom && styles.custom)}
         onClick={() => {
-          // Toggle visibility of skill list
           const popup = document.getElementById('skill-picker-popup')
           if (popup) {
             popup.style.display = popup.style.display === 'none' ? 'block' : 'none'
           }
         }}
       >
+        <Zap size={14} />
         技能
       </Button>
       {enabledSkills.length > 0 && (
         <span className={styles.badge}>{enabledSkills.length}</span>
       )}
 
-      {/* Skill popup list */}
       <div id="skill-picker-popup" className={styles.popup}>
         {AVAILABLE_SKILLS.map(skill => {
           const isActive = selectedSkillIds.includes(skill.id) || skill.enabled
           return (
             <button
               key={skill.id}
-              className={`${styles.skillItem} ${isActive ? styles.active : ''}`}
+              className={cn(styles.skillItem, isActive && styles.active)}
               onClick={() => onToggle?.(skill.id)}
             >
               <span className={styles.skillIcon}>{skill.icon}</span>

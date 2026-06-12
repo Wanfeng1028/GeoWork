@@ -1,8 +1,8 @@
 // GeoWork BottomDock - Complete with all tabs
 
-import { Tabs } from 'antd'
 import { useState } from 'react'
-import { CloseOutlined } from '@ant-design/icons'
+import { X } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { Terminal } from '../../common/Terminal'
 import { RuntimeEvents } from '../../panel/RuntimeEvents/RuntimeEvents'
 import { BrowserPanel } from '../../panel/BrowserPanel/BrowserPanel'
@@ -11,8 +11,6 @@ import { ProblemsPanel } from '../../panel/ProblemsPanel/ProblemsPanel'
 import { OutputPanel } from '../../panel/OutputPanel/OutputPanel'
 import useShellStore from '../../../stores/shellStore'
 import styles from './BottomDock.module.scss'
-
-const { TabPane } = Tabs
 
 export function BottomDock() {
   const { activeBottomPanel, setActiveBottomPanel, activeMode, closeBottomDock } = useShellStore()
@@ -39,33 +37,39 @@ export function BottomDock() {
     <footer className={styles.dock} style={{ height }}>
       <div className={styles.resizeHandle} onMouseDown={startResize} />
       <button className={styles.closeBtn} onClick={closeBottomDock} aria-label="关闭底部面板">
-        <CloseOutlined />
+        <X size={14} />
       </button>
       <Tabs
-        activeKey={activeBottomPanel}
-        onChange={(key) => setActiveBottomPanel(key as any)}
-        size="small"
+        defaultValue={activeBottomPanel}
+        onValueChange={(key) => setActiveBottomPanel(key as any)}
         className={styles.tabs}
-        tabBarStyle={{ paddingLeft: '4px' }}
       >
-        <TabPane tab="终端" key="terminal">
+        <TabsList className={styles.tabsList}>
+          <TabsTrigger value="terminal">终端</TabsTrigger>
+          <TabsTrigger value="browser">浏览器</TabsTrigger>
+          <TabsTrigger value="events">事件</TabsTrigger>
+          <TabsTrigger value="logs">日志</TabsTrigger>
+          <TabsTrigger value="problems">问题</TabsTrigger>
+          <TabsTrigger value="output">输出</TabsTrigger>
+        </TabsList>
+        <TabsContent value="terminal">
           <Terminal title={`任务终端 — ${activeMode}`} />
-        </TabPane>
-        <TabPane tab="浏览器" key="browser">
+        </TabsContent>
+        <TabsContent value="browser">
           <BrowserPanel />
-        </TabPane>
-        <TabPane tab="事件" key="events">
+        </TabsContent>
+        <TabsContent value="events">
           <RuntimeEvents />
-        </TabPane>
-        <TabPane tab="日志" key="logs">
+        </TabsContent>
+        <TabsContent value="logs">
           <LogsPanel />
-        </TabPane>
-        <TabPane tab="问题" key="problems">
+        </TabsContent>
+        <TabsContent value="problems">
           <ProblemsPanel />
-        </TabPane>
-        <TabPane tab="输出" key="output">
+        </TabsContent>
+        <TabsContent value="output">
           <OutputPanel />
-        </TabPane>
+        </TabsContent>
       </Tabs>
     </footer>
   )

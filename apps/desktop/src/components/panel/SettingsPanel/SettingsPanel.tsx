@@ -1,19 +1,27 @@
 // GeoWork - SettingsPanel Component
-// Settings panel for managing model/API, appearance, workspace, and agent behavior
 
 import { useState } from 'react'
-import { Input, Switch, Select, Slider, InputNumber, Divider } from 'antd'
 import {
-  SettingOutlined,
-  PaletteOutlined,
-  FolderOutlined,
-  RobotOutlined,
-} from '@ant-design/icons'
+  Settings,
+  Palette,
+  FolderOpen,
+  Bot,
+} from 'lucide-react'
 import useSettingsStore from '../../../stores/settingsStore'
+import { Input } from '../../ui/input'
+import { Textarea } from '../../ui/textarea'
+import { Switch } from '../../ui/switch'
+import { Separator } from '../../ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
+import { cn } from '../../../lib/cn'
 import styles from './SettingsPanel.module.scss'
 import type { PermissionLevel } from '../../../types/permission'
-
-const { TextArea } = Input
 
 interface ProviderOption {
   value: string
@@ -27,9 +35,10 @@ const PROVIDERS: ProviderOption[] = [
 ]
 
 const THEMES = [
-  { value: 'dark-geo', label: '暗黑 Geo' },
-  { value: 'light-geo', label: '亮色 Geo' },
+  { value: 'dark', label: '暗黑' },
+  { value: 'light', label: '亮色' },
   { value: 'dark-glass', label: '暗黑玻璃' },
+  { value: 'light-glass', label: '亮色玻璃' },
 ]
 
 const PERMISSION_LEVELS: { value: PermissionLevel; label: string }[] = [
@@ -47,26 +56,10 @@ const MODES = [
 ]
 
 const TABS = [
-  {
-    key: 'model-api',
-    label: '模型与 API',
-    icon: <SettingOutlined />,
-  },
-  {
-    key: 'appearance',
-    label: '外观',
-    icon: <PaletteOutlined />,
-  },
-  {
-    key: 'workspace',
-    label: '工作空间',
-    icon: <FolderOutlined />,
-  },
-  {
-    key: 'agent',
-    label: 'Agent 行为',
-    icon: <RobotOutlined />,
-  },
+  { key: 'model-api', label: '模型与 API', icon: <Settings size={14} /> },
+  { key: 'appearance', label: '外观', icon: <Palette size={14} /> },
+  { key: 'workspace', label: '工作空间', icon: <FolderOpen size={14} /> },
+  { key: 'agent', label: 'Agent 行为', icon: <Bot size={14} /> },
 ]
 
 export function SettingsPanel() {
@@ -80,12 +73,11 @@ export function SettingsPanel() {
 
   return (
     <div className={styles.panel}>
-      {/* Tab Navigation */}
       <div className={styles.tabs}>
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            className={styles.tab}
+            className={cn(styles.tab, activeTab === tab.key && styles.activeTab)}
             onClick={() => setActiveTab(tab.key)}
           >
             <span className={styles.tabIcon}>{tab.icon}</span>
@@ -94,179 +86,154 @@ export function SettingsPanel() {
         ))}
       </div>
 
-      {/* Tab Content */}
       <div className={styles.content}>
-        {/* === Tab 1: 模型与 API === */}
         {activeTab === 'model-api' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>模型与 API</h3>
 
-            {/* Provider Selection */}
             <div className={styles.settingRow}>
               <span className={styles.label}>Provider</span>
               <div className={styles.control}>
                 <Select
                   value={modelApi.defaultProvider}
-                  onChange={(val) => updateSetting('modelApi.defaultProvider', val)}
-                  options={PROVIDERS}
-                  className={styles.select}
-                />
+                  onValueChange={(val) => updateSetting('modelApi.defaultProvider', val)}
+                >
+                  <SelectTrigger className={styles.select}>
+                    <SelectValue placeholder="选择 Provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVIDERS.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Provider Detail Section */}
-            {(() => {
-              const currentProvider = PROVIDERS.find(
-                (p) => p.value === modelApi.defaultProvider
-              )
-              if (!currentProvider) return null
+            <Separator className="my-3" />
 
-              const mockProvider = PROVIDERS.find(
-                (p) => p.value === modelApi.defaultProvider
-              )
+            <div className={styles.settingRow}>
+              <span className={styles.label}>Base URL</span>
+              <div className={styles.control}>
+                <Input placeholder="https://api.example.com/v1" className={styles.input} />
+              </div>
+            </div>
 
-              return (
-                <>
-                  <Divider className={styles.divider} />
+            <div className={styles.settingRow}>
+              <span className={styles.label}>API Key</span>
+              <div className={styles.control}>
+                <Input type="password" placeholder="sk-..." className={styles.input} />
+              </div>
+            </div>
 
-                  {/* Base URL */}
-                  <div className={styles.settingRow}>
-                    <span className={styles.label}>Base URL</span>
-                    <div className={styles.control}>
-                      <Input
-                        placeholder="https://api.example.com/v1"
-                        className={styles.input}
-                      />
-                    </div>
-                  </div>
+            <div className={styles.settingRow}>
+              <span className={styles.label}>默认模型</span>
+              <div className={styles.control}>
+                <Select>
+                  <SelectTrigger className={styles.select}>
+                    <SelectValue placeholder="选择模型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gpt-4">GPT-4</SelectItem>
+                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                    <SelectItem value="llama3">Llama 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-                  {/* API Key */}
-                  <div className={styles.settingRow}>
-                    <span className={styles.label}>API Key</span>
-                    <div className={styles.control}>
-                      <Input.Password
-                        placeholder="sk-..."
-                        className={styles.input}
-                      />
-                    </div>
-                  </div>
+            <Separator className="my-3" />
 
-                  {/* Default Model */}
-                  <div className={styles.settingRow}>
-                    <span className={styles.label}>默认模型</span>
-                    <div className={styles.control}>
-                      <Select
-                        options={[
-                          { value: 'gpt-4', label: 'GPT-4' },
-                          { value: 'gpt-4o', label: 'GPT-4o' },
-                          { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-                          { value: 'llama3', label: 'Llama 3' },
-                        ]}
-                        className={styles.select}
-                      />
-                    </div>
-                  </div>
-                </>
-              )
-            })()}
-
-            {/* Cache Toggle */}
-            <Divider className={styles.divider} />
             <div className={styles.settingRow}>
               <span className={styles.label}>启用缓存</span>
               <div className={styles.control}>
                 <Switch
                   checked={modelApi.cacheEnabled || false}
-                  onChange={(checked) =>
-                    updateSetting('modelApi.cacheEnabled', checked)
-                  }
+                  onCheckedChange={(checked) => updateSetting('modelApi.cacheEnabled', checked)}
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* === Tab 2: 外观 === */}
         {activeTab === 'appearance' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>外观设置</h3>
 
-            {/* Theme Selector */}
             <div className={styles.settingRow}>
               <span className={styles.label}>主题</span>
               <div className={styles.control}>
                 <Select
                   value={appearance.theme}
-                  onChange={(val) => updateSetting('appearance.theme', val)}
-                  options={THEMES}
-                  className={styles.select}
-                />
+                  onValueChange={(val) => updateSetting('appearance.theme', val)}
+                >
+                  <SelectTrigger className={styles.select}>
+                    <SelectValue placeholder="选择主题" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THEMES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Font Size Slider */}
             <div className={styles.settingRow}>
               <div className={styles.fullLabelRow}>
                 <span className={styles.label}>字体大小</span>
                 <span className={styles.valueLabel}>{appearance.fontSize}px</span>
               </div>
-              <div className={styles.control} style={{ flex: 1 }}>
-                <Slider
+              <div className={styles.control}>
+                <input
+                  type="range"
                   min={12}
                   max={20}
                   value={appearance.fontSize}
-                  onChange={(val) => updateSetting('appearance.fontSize', val)}
+                  onChange={(e) => updateSetting('appearance.fontSize', Number(e.target.value))}
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </div>
             </div>
 
-            {/* Sidebar Collapsed Toggle */}
             <div className={styles.settingRow}>
               <span className={styles.label}>侧边栏收起</span>
               <div className={styles.control}>
                 <Switch
                   checked={appearance.sidebarCollapsed}
-                  onChange={(val) =>
-                    updateSetting('appearance.sidebarCollapsed', val)
-                  }
+                  onCheckedChange={(val) => updateSetting('appearance.sidebarCollapsed', val)}
                 />
               </div>
             </div>
 
-            {/* Conversation Minimap Toggle */}
             <div className={styles.settingRow}>
               <span className={styles.label}>对话缩略图</span>
               <div className={styles.control}>
                 <Switch
                   checked={appearance.conversationMinimapEnabled}
-                  onChange={(val) =>
-                    updateSetting('appearance.conversationMinimapEnabled', val)
-                  }
+                  onCheckedChange={(val) => updateSetting('appearance.conversationMinimapEnabled', val)}
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* === Tab 3: 工作空间 === */}
         {activeTab === 'workspace' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>工作空间</h3>
 
-            {/* Workspace Root Path */}
             <div className={styles.settingRow}>
               <span className={styles.label}>工作空间根路径</span>
               <div className={styles.control}>
                 <Input
                   value={workspace.rootPath}
                   placeholder="选择工作空间目录..."
-                  addonAfter="浏览"
                   className={styles.input}
                 />
               </div>
             </div>
 
-            {/* Recent Paths */}
             <div className={styles.settingRow}>
               <span className={styles.label}>最近路径</span>
               <div className={styles.control}>
@@ -282,104 +249,108 @@ export function SettingsPanel() {
               </div>
             </div>
 
-            {/* Auto-save Toggle */}
             <div className={styles.settingRow}>
               <span className={styles.label}>自动保存</span>
               <div className={styles.control}>
                 <Switch
                   checked={workspace.autoSave}
-                  onChange={(val) => updateSetting('workspace.autoSave', val)}
+                  onCheckedChange={(val) => updateSetting('workspace.autoSave', val)}
                 />
               </div>
             </div>
 
-            {/* Auto-save Interval */}
             <div className={styles.settingRow}>
               <div className={styles.fullLabelRow}>
                 <span className={styles.label}>自动保存间隔</span>
                 <span className={styles.valueLabel}>{workspace.autoSaveInterval}s</span>
               </div>
-              <div className={styles.control} style={{ flex: 1 }}>
-                <Slider
+              <div className={styles.control}>
+                <input
+                  type="range"
                   min={5}
                   max={300}
                   step={5}
                   value={workspace.autoSaveInterval}
-                  onChange={(val) =>
-                    updateSetting('workspace.autoSaveInterval', val)
-                  }
+                  onChange={(e) => updateSetting('workspace.autoSaveInterval', Number(e.target.value))}
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* === Tab 4: Agent 行为 === */}
         {activeTab === 'agent' && (
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Agent 行为</h3>
 
-            {/* Default Permission Level */}
             <div className={styles.settingRow}>
               <span className={styles.label}>默认权限等级</span>
               <div className={styles.control}>
                 <Select
                   value={agent.defaultPermission}
-                  onChange={(val) =>
-                    updateSetting('agent.defaultPermission', val)
-                  }
-                  options={PERMISSION_LEVELS}
-                  className={styles.select}
-                />
+                  onValueChange={(val) => updateSetting('agent.defaultPermission', val)}
+                >
+                  <SelectTrigger className={styles.select}>
+                    <SelectValue placeholder="选择权限" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERMISSION_LEVELS.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Default Mode */}
             <div className={styles.settingRow}>
               <span className={styles.label}>默认模式</span>
               <div className={styles.control}>
                 <Select
                   value={agent.defaultMode}
-                  onChange={(val) => updateSetting('agent.defaultMode', val)}
-                  options={MODES}
-                  className={styles.select}
-                />
+                  onValueChange={(val) => updateSetting('agent.defaultMode', val)}
+                >
+                  <SelectTrigger className={styles.select}>
+                    <SelectValue placeholder="选择模式" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODES.map(m => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Max Steps */}
             <div className={styles.settingRow}>
               <div className={styles.fullLabelRow}>
                 <span className={styles.label}>最大步数</span>
                 <span className={styles.valueLabel}>{agent.maxSteps}</span>
               </div>
-              <div className={styles.control} style={{ flex: 1 }}>
-                <Slider
+              <div className={styles.control}>
+                <input
+                  type="range"
                   min={1}
                   max={200}
                   value={agent.maxSteps}
-                  onChange={(val) => updateSetting('agent.maxSteps', val)}
+                  onChange={(e) => updateSetting('agent.maxSteps', Number(e.target.value))}
+                  className="w-full accent-[var(--gw-accent)]"
                 />
               </div>
             </div>
 
-            {/* Timeout */}
             <div className={styles.settingRow}>
               <div className={styles.fullLabelRow}>
                 <span className={styles.label}>超时时间</span>
                 <span className={styles.valueLabel}>{agent.timeout}s</span>
               </div>
-              <div className={styles.control} style={{ flex: 1 }}>
-                <InputNumber
+              <div className={styles.control}>
+                <Input
+                  type="number"
                   min={10}
                   max={3600}
                   value={agent.timeout}
-                  onChange={(val) =>
-                    updateSetting('agent.timeout', val ?? 300)
-                  }
-                  className={styles.inputNumber}
-                  addonAfter="秒"
-                  style={{ width: '100%' }}
+                  onChange={(e) => updateSetting('agent.timeout', Number(e.target.value) || 300)}
+                  className={styles.input}
                 />
               </div>
             </div>

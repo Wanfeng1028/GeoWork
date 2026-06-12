@@ -1,9 +1,14 @@
 // GeoWork - TemplateSelector Component
-// Select a task template (default, report, dashboard, etc.)
 
 import React from 'react'
-import { Select } from 'antd'
-import { FileTextOutlined } from '@ant-design/icons'
+import { FileText } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
 import styles from './TemplateSelector.module.scss'
 
 const TEMPLATES = [
@@ -24,14 +29,19 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 }) => {
   return (
     <div className={styles.container}>
-      <FileTextOutlined className={styles.icon} />
-      <Select
-        value={value}
-        onChange={onChange}
-        size="small"
-        className={styles.templateSelect}
-        options={TEMPLATES.map(t => ({ label: `${t.icon} ${t.label}`, value: t.value }))}
-      />
+      <FileText size={14} className={styles.icon} />
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className={styles.templateSelect}>
+          <SelectValue placeholder="选择模板" />
+        </SelectTrigger>
+        <SelectContent>
+          {TEMPLATES.map(t => (
+            <SelectItem key={t.value} value={t.value}>
+              {t.icon} {t.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

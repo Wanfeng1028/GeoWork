@@ -1,8 +1,13 @@
 // GeoWork - TaskModeSelector Component
-// Select the task mode: Research, Data, GeoCode, Analysis, Write
 
 import React from 'react'
-import { Select } from 'antd'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
 import styles from './TaskModeSelector.module.scss'
 
 export type TaskMode = 'Research' | 'Data' | 'GeoCode' | 'Analysis' | 'Write'
@@ -26,13 +31,18 @@ export const TaskModeSelector: React.FC<TaskModeSelectorProps> = ({
 }) => {
   return (
     <div className={styles.container}>
-      <Select
-        value={value}
-        onChange={onChange}
-        size="small"
-        className={styles.modeSelect}
-        options={MODES.map(m => ({ label: `${m.icon} ${m.label}`, value: m.value }))}
-      />
+      <Select value={value} onValueChange={onChange as (v: string) => void}>
+        <SelectTrigger className={styles.modeSelect}>
+          <SelectValue placeholder="选择模式" />
+        </SelectTrigger>
+        <SelectContent>
+          {MODES.map(m => (
+            <SelectItem key={m.value} value={m.value}>
+              {m.icon} {m.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

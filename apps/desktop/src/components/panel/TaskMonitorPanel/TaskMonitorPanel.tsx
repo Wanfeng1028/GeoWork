@@ -1,34 +1,36 @@
-// GeoWork TaskMonitorPanel - Real data from taskStore
+// GeoWork TaskMonitorPanel
 
-import { List, Tag, Progress, Alert, Spin, Collapse } from 'antd'
 import {
-  CheckCircleOutlined,
-  StopOutlined,
-  LoadingOutlined,
-  CloseCircleOutlined,
-  RollbackOutlined,
-  ReloadOutlined,
-  MinusCircleOutlined,
-} from '@ant-design/icons'
+  CheckCircle,
+  Square,
+  Loader2,
+  XCircle,
+  RotateCw,
+  MinusCircle,
+} from 'lucide-react'
 import useTaskStore from '../../../stores/taskStore'
-import type { TaskStep } from '../../../types/task'
+import { Badge } from '../../ui/badge'
+import { Button } from '../../ui/button'
+import { Spinner } from '../../ui/spinner'
+import { Empty } from '../../ui/empty'
+import { Separator } from '../../ui/separator'
 import styles from './TaskMonitorPanel.module.scss'
 
-const STATUS_CONFIG: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
-  pending: { color: 'default', label: '待处理', icon: <span className={styles.dot} /> },
-  running: { color: 'processing', label: '运行中', icon: <LoadingOutlined /> },
-  completed: { color: 'success', label: '已完成', icon: <CheckCircleOutlined /> },
-  failed: { color: 'error', label: '失败', icon: <CloseCircleOutlined /> },
-  cancelled: { color: 'default', label: '已取消', icon: <MinusCircleOutlined /> },
-  waiting_approval: { color: 'warning', label: '等待审批', icon: <StopOutlined /> },
-  recovered: { color: 'cyan', label: '已恢复', icon: <ReloadOutlined /> },
+const STATUS_CONFIG: Record<string, { variant: 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'info'; label: string; icon: React.ReactNode }> = {
+  pending: { variant: 'default', label: '待处理', icon: <span className={styles.dot} /> },
+  running: { variant: 'info', label: '运行中', icon: <Loader2 size={12} className="animate-spin" /> },
+  completed: { variant: 'success', label: '已完成', icon: <CheckCircle size={12} /> },
+  failed: { variant: 'danger', label: '失败', icon: <XCircle size={12} /> },
+  cancelled: { variant: 'default', label: '已取消', icon: <MinusCircle size={12} /> },
+  waiting_approval: { variant: 'warning', label: '等待审批', icon: <Square size={12} /> },
+  recovered: { variant: 'info', label: '已恢复', icon: <RotateCw size={12} /> },
 }
 
-const STEP_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  pending: { color: 'default', label: '待处理' },
-  running: { color: 'blue', label: '运行中' },
-  completed: { color: 'green', label: '已完成' },
-  failed: { color: 'red', label: '失败' },
+const STEP_STATUS_VARIANT: Record<string, 'default' | 'info' | 'success' | 'danger'> = {
+  pending: 'default',
+  running: 'info',
+  completed: 'success',
+  failed: 'danger',
 }
 
 export function TaskMonitorPanel() {
@@ -48,7 +50,8 @@ export function TaskMonitorPanel() {
     return (
       <div className={styles.panel}>
         <div className={styles.empty}>
-          <Spin tip="加载中..." />
+          <Spinner size="md" />
+          <span className="text-[12px] text-[var(--gw-text-tertiary)] ml-2">加载中...</span>
         </div>
       </div>
     )
@@ -57,10 +60,7 @@ export function TaskMonitorPanel() {
   if (!currentTask) {
     return (
       <div className={styles.panel}>
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>暂无运行中的任务</p>
-          <p className={styles.emptyHint}>在任务面板创建新任务</p>
-        </div>
+        <Empty title="暂无运行中的任务" description="在任务面板创建新任务" />
       </div>
     )
   }
@@ -82,28 +82,21 @@ export function TaskMonitorPanel() {
 
   return (
     <div className={styles.panel}>
-      {/* Error alert */}
       {currentTask.error && (
-        <Alert
-          className={styles.errorAlert}
-          message={currentTask.error}
-          type="error"
-          showIcon
-          closable
-        />
+        <div className={styles.errorAlert}>
+          <XCircle size={14} className="text-[var(--gw-danger)]" />
+          <span>{currentTask.error}</span>
+        </div>
       )}
 
-      {/* Task info header */}
       <div className={styles.taskInfo}>
         <div className={styles.taskHeader}>
           <h3 className={styles.taskTitle}>
             {currentTask.mode || 'Task'} - {currentTask.id}
           </h3>
-          <Tag color={statusConfig.color} className={styles.taskStatus}>
-            {statusConfig.icon}
-            {' '}
-            {statusConfig.label}
-          </Tag>
+          <Badge variant={statusConfig.variant}>
+            {statusConfig.icon} {statusConfig.label}
+          </Badge>
         </div>
 
         <div className={styles.taskMeta}>
@@ -113,30 +106,32 @@ export function TaskMonitorPanel() {
           </span>
         </div>
 
-        {/* Progress bar */}
-        <Progress
-          percent={progressPercent}
-          size="small"
-          status={currentTask.status === 'failed' || currentTask.status === 'cancelled' ? 'exception' : 'normal'}
-          className={styles.progress}
-        />
+        <div className={styles.progress}>
+          <div className="h-1.5 w-full rounded-full bg-[var(--gw-bg-active)] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                currentTask.status === 'failed' || currentTask.status === 'cancelled'
+                  ? 'bg-[var(--gw-danger)]'
+                  : 'bg-[var(--gw-accent)]'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Steps list */}
       <div className={styles.stepsSection}>
         <h4 className={styles.sectionTitle}>
           任务步骤 ({completedCount}/{totalCount} 完成)
         </h4>
 
-        <List
-          dataSource={allSteps}
-          renderItem={(step) => (
-            <List.Item className={styles.stepItem}>
-              <div className={styles.stepStatus}>
-                <Tag color={STEP_STATUS_CONFIG[step.status]?.color || 'default'}>
-                  {STEP_STATUS_CONFIG[step.status]?.label || step.status}
-                </Tag>
-              </div>
+        <div className="flex flex-col gap-1">
+          {allSteps.map((step) => (
+            <div key={step.id} className={styles.stepItem}>
+              <Badge variant={STEP_STATUS_VARIANT[step.status] || 'default'}>
+                {step.status === 'running' && <Loader2 size={10} className="animate-spin" />}
+                {step.status}
+              </Badge>
               <span className={styles.stepTitle}>{step.title}</span>
               {step.toolName && (
                 <span className={styles.stepTool}>{step.toolName}</span>
@@ -146,66 +141,54 @@ export function TaskMonitorPanel() {
                   {new Date(step.startedAt).toLocaleTimeString()}
                 </span>
               )}
-            </List.Item>
-          )}
-        />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Active steps summary */}
       <div className={styles.summary}>
         {pendingSteps.length > 0 && (
-          <Tag className={styles.summaryTag}>待处理: {pendingSteps.length}</Tag>
+          <Badge variant="default">待处理: {pendingSteps.length}</Badge>
         )}
         {runningStep && (
-          <Tag color="blue" className={styles.summaryTag}>
-            运行中: {runningStep.title}
-          </Tag>
+          <Badge variant="info">运行中: {runningStep.title}</Badge>
         )}
         {failedSteps.length > 0 && (
-          <Tag color="red" className={styles.summaryTag}>
-            失败: {failedSteps.length}
-          </Tag>
+          <Badge variant="danger">失败: {failedSteps.length}</Badge>
         )}
       </div>
 
-      {/* Recent events */}
       {events.length > 0 && (
         <div className={styles.eventsSection}>
           <h4 className={styles.sectionTitle}>最近事件</h4>
-          <Collapse
-            className={styles.eventsCollapse}
-            size="small"
-            items={events.slice(-10).reverse().map(event => ({
-              key: event.id,
-              label: (
-                <Tag color={event.type.includes('error') ? 'red' : 'blue'}>
+          <div className="flex flex-col gap-1">
+            {events.slice(-10).reverse().map(event => (
+              <div key={event.id} className="flex items-start gap-2 py-1">
+                <Badge variant={event.type.includes('error') ? 'danger' : 'info'}>
                   {event.type}
-                </Tag>
-              ),
-              children: (
-                <p className={styles.eventMessage}>{event.message}</p>
-              ),
-            }))}
-          />
+                </Badge>
+                <span className="text-[12px] text-[var(--gw-text-secondary)]">{event.message}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Actions */}
       {currentTask.status === 'running' && (
         <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={handleCancel}>
-            <StopOutlined />
+          <Button variant="danger" size="sm" onClick={handleCancel}>
+            <Square size={14} />
             取消任务
-          </button>
+          </Button>
         </div>
       )}
 
       {currentTask.status === 'failed' && (
         <div className={styles.actions}>
-          <button className={styles.recoverBtn}>
-            <ReloadOutlined />
+          <Button variant="secondary" size="sm">
+            <RotateCw size={14} />
             恢复任务
-          </button>
+          </Button>
         </div>
       )}
     </div>

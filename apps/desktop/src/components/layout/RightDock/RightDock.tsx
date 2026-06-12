@@ -1,7 +1,7 @@
 // GeoWork RightDock - Complete with all tabs
 
-import { Tabs } from 'antd'
-import { CloseOutlined } from '@ant-design/icons'
+import { X } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { TaskMonitorPanel } from '../../panel/TaskMonitorPanel/TaskMonitorPanel'
 import { ArtifactPanel } from '../../panel/ArtifactPanel/ArtifactPanel'
 import { DiffPanel } from '../../panel/DiffPanel/DiffPanel'
@@ -9,35 +9,37 @@ import { ContextPanel } from '../../panel/ContextPanel/ContextPanel'
 import useShellStore from '../../../stores/shellStore'
 import styles from './RightDock.module.scss'
 
-const { TabPane } = Tabs
-
 export function RightDock() {
   const { activeRightPanel, setActiveRightPanel, closeRightDock } = useShellStore()
 
   return (
     <aside className={styles.dock}>
       <button className={styles.closeBtn} onClick={closeRightDock} aria-label="关闭右侧面板">
-        <CloseOutlined />
+        <X size={14} />
       </button>
       <Tabs
-        activeKey={activeRightPanel}
-        onChange={(key) => setActiveRightPanel(key as any)}
-        size="small"
+        defaultValue={activeRightPanel}
+        onValueChange={(key) => setActiveRightPanel(key as any)}
         className={styles.tabs}
-        tabBarStyle={{ paddingLeft: '4px' }}
       >
-        <TabPane tab="任务" key="task">
+        <TabsList className={styles.tabsList}>
+          <TabsTrigger value="task">任务</TabsTrigger>
+          <TabsTrigger value="artifacts">产物</TabsTrigger>
+          <TabsTrigger value="diff">差异</TabsTrigger>
+          <TabsTrigger value="context">上下文</TabsTrigger>
+        </TabsList>
+        <TabsContent value="task">
           <TaskMonitorPanel />
-        </TabPane>
-        <TabPane tab="产物" key="artifacts">
+        </TabsContent>
+        <TabsContent value="artifacts">
           <ArtifactPanel />
-        </TabPane>
-        <TabPane tab="差异" key="diff">
+        </TabsContent>
+        <TabsContent value="diff">
           <DiffPanel />
-        </TabPane>
-        <TabPane tab="上下文" key="context">
+        </TabsContent>
+        <TabsContent value="context">
           <ContextPanel />
-        </TabPane>
+        </TabsContent>
       </Tabs>
     </aside>
   )

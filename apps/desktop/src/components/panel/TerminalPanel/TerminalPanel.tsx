@@ -1,21 +1,17 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Button } from 'antd';
-import {
-  ClearOutlined,
-  PlusOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
-import styles from './TerminalPanel.module.scss';
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Trash2, Plus, X } from 'lucide-react'
+import { Button } from '../../ui/button'
+import styles from './TerminalPanel.module.scss'
 
 interface HistoryLine {
-  type: 'prompt' | 'output' | 'warning' | 'error' | 'info';
-  text: string;
-  id: number;
+  type: 'prompt' | 'output' | 'warning' | 'error' | 'info'
+  text: string
+  id: number
 }
 
 interface RawLine {
-  type: 'prompt' | 'output' | 'warning' | 'error' | 'info';
-  text: string;
+  type: 'prompt' | 'output' | 'warning' | 'error' | 'info'
+  text: string
 }
 
 const MOCK_OUTPUT_RAW: RawLine[] = [
@@ -53,120 +49,120 @@ const MOCK_OUTPUT_RAW: RawLine[] = [
   { type: 'output', text: 'Changes not staged for commit:' },
   { type: 'warning', text: '        modified:   apps/desktop/src/components/panel/TerminalPanel/TerminalPanel.tsx' },
   { type: 'output', text: '' },
-];
+]
 
 function toHistory(raw: readonly RawLine[]): HistoryLine[] {
-  return raw.map((line, index) => ({ ...line, id: index }));
+  return raw.map((line, index) => ({ ...line, id: index }))
 }
 
-const PROMPT_TEXT = 'user@geowork:~$ ';
+const PROMPT_TEXT = 'user@geowork:~$ '
 
 const TerminalPanel: React.FC = () => {
-  const [history, setHistory] = useState<HistoryLine[]>(() => toHistory(MOCK_OUTPUT_RAW));
-  const [inputValue, setInputValue] = useState('');
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const outputRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const nextIdRef = useRef(MOCK_OUTPUT_RAW.length);
+  const [history, setHistory] = useState<HistoryLine[]>(() => toHistory(MOCK_OUTPUT_RAW))
+  const [inputValue, setInputValue] = useState('')
+  const [commandHistory, setCommandHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  const outputRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const nextIdRef = useRef(MOCK_OUTPUT_RAW.length)
 
   useEffect(() => {
-    outputRef.current?.scrollTo({ top: outputRef.current.scrollHeight });
-  }, [history]);
+    outputRef.current?.scrollTo({ top: outputRef.current.scrollHeight })
+  }, [history])
 
-  const generateId = useCallback(() => nextIdRef.current++, []);
+  const generateId = useCallback(() => nextIdRef.current++, [])
 
   const addLine = useCallback(
     (text: string, type: HistoryLine['type'] = 'output') => {
-      setHistory((prev) => [...prev, { id: generateId(), type, text }]);
+      setHistory((prev) => [...prev, { id: generateId(), type, text }])
     },
     [generateId],
-  );
+  )
 
   const executeCommand = useCallback(
     (cmd: string) => {
-      const trimmed = cmd.trim();
-      if (!trimmed) return;
+      const trimmed = cmd.trim()
+      if (!trimmed) return
 
-      setCommandHistory((prev) => [...prev, trimmed]);
-      setHistoryIndex(-1);
+      setCommandHistory((prev) => [...prev, trimmed])
+      setHistoryIndex(-1)
 
-      addLine(trimmed, 'output');
+      addLine(trimmed, 'output')
 
-      const lower = trimmed.toLowerCase();
+      const lower = trimmed.toLowerCase()
       if (lower === 'help') {
-        addLine('Available commands: help, clear, echo <text>, date, whoami, pwd', 'info');
+        addLine('Available commands: help, clear, echo <text>, date, whoami, pwd', 'info')
       } else if (lower === 'clear') {
-        setHistory(toHistory(MOCK_OUTPUT_RAW));
+        setHistory(toHistory(MOCK_OUTPUT_RAW))
       } else if (lower.startsWith('echo ')) {
-        addLine(trimmed.substring(5), 'output');
+        addLine(trimmed.substring(5), 'output')
       } else if (lower === 'date') {
-        addLine(new Date().toString(), 'output');
+        addLine(new Date().toString(), 'output')
       } else if (lower === 'whoami') {
-        addLine('user', 'output');
+        addLine('user', 'output')
       } else if (lower === 'pwd') {
-        addLine('/home/user/geowork', 'output');
+        addLine('/home/user/geowork', 'output')
       } else if (lower === 'ls') {
-        addLine('apps/  core/  docs/  assets/  packages.json  go.mod  README.md', 'output');
+        addLine('apps/  core/  docs/  assets/  packages.json  go.mod  README.md', 'output')
       } else if (lower.includes('warning')) {
-        addLine('Warning: this command may have side effects.', 'warning');
+        addLine('Warning: this command may have side effects.', 'warning')
       } else if (lower.includes('error')) {
-        addLine('Error: command failed with exit code 1.', 'error');
+        addLine('Error: command failed with exit code 1.', 'error')
       } else {
-        addLine(`bash: ${trimmed}: command not found`, 'error');
+        addLine(`bash: ${trimmed}: command not found`, 'error')
       }
     },
     [addLine],
-  );
+  )
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
-        e.preventDefault();
-        executeCommand(inputValue);
-        setInputValue('');
+        e.preventDefault()
+        executeCommand(inputValue)
+        setInputValue('')
       } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (commandHistory.length === 0) return;
+        e.preventDefault()
+        if (commandHistory.length === 0) return
         const newIndex =
           historyIndex === -1
             ? commandHistory.length - 1
-            : Math.max(0, historyIndex - 1);
-        setHistoryIndex(newIndex);
-        setInputValue(commandHistory[newIndex]);
+            : Math.max(0, historyIndex - 1)
+        setHistoryIndex(newIndex)
+        setInputValue(commandHistory[newIndex])
       } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (historyIndex === -1) return;
-        const newIndex = historyIndex + 1;
+        e.preventDefault()
+        if (historyIndex === -1) return
+        const newIndex = historyIndex + 1
         if (newIndex >= commandHistory.length) {
-          setHistoryIndex(-1);
-          setInputValue('');
+          setHistoryIndex(-1)
+          setInputValue('')
         } else {
-          setHistoryIndex(newIndex);
-          setInputValue(commandHistory[newIndex]);
+          setHistoryIndex(newIndex)
+          setInputValue(commandHistory[newIndex])
         }
       } else if (e.key === 'Tab') {
-        e.preventDefault();
-        const words = ['help', 'clear', 'echo', 'date', 'whoami', 'pwd', 'ls'];
-        const match = words.find((w) => w.startsWith(inputValue.toLowerCase()));
+        e.preventDefault()
+        const words = ['help', 'clear', 'echo', 'date', 'whoami', 'pwd', 'ls']
+        const match = words.find((w) => w.startsWith(inputValue.toLowerCase()))
         if (match) {
-          setInputValue(match);
+          setInputValue(match)
         }
       }
     },
     [inputValue, commandHistory, historyIndex, executeCommand],
-  );
+  )
 
   const handleClear = useCallback(() => {
-    setHistory(toHistory(MOCK_OUTPUT_RAW));
-  }, []);
+    setHistory(toHistory(MOCK_OUTPUT_RAW))
+  }, [])
 
   const handleNewTab = useCallback(() => {
-    setHistory(toHistory(MOCK_OUTPUT_RAW));
-    setInputValue('');
-    setCommandHistory([]);
-    setHistoryIndex(-1);
-  }, []);
+    setHistory(toHistory(MOCK_OUTPUT_RAW))
+    setInputValue('')
+    setCommandHistory([])
+    setHistoryIndex(-1)
+  }, [])
 
   const renderLine = (entry: HistoryLine) => {
     const lineClass =
@@ -176,7 +172,7 @@ const TerminalPanel: React.FC = () => {
           ? styles.error
           : entry.type === 'info'
             ? styles.info
-            : styles.outputText;
+            : styles.outputText
 
     if (entry.type === 'prompt') {
       return (
@@ -184,7 +180,7 @@ const TerminalPanel: React.FC = () => {
           <span className={styles.prompt}>{PROMPT_TEXT}</span>
           <span className={lineClass}>{entry.text}</span>
         </div>
-      );
+      )
     }
 
     if (entry.type === 'info') {
@@ -193,37 +189,26 @@ const TerminalPanel: React.FC = () => {
           <span className={styles.prompt}>{PROMPT_TEXT}</span>
           <span className={styles.info}>{entry.text}</span>
         </div>
-      );
+      )
     }
 
-    return <div className={styles.outputLine} key={entry.id}><span className={lineClass}>{entry.text}</span></div>;
-  };
+    return <div className={styles.outputLine} key={entry.id}><span className={lineClass}>{entry.text}</span></div>
+  }
 
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>Terminal</span>
         <div className={styles.actions}>
-          <Button
-            type="text"
-            size="small"
-            icon={<ClearOutlined />}
-            onClick={handleClear}
-            title="Clear"
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={handleNewTab}
-            title="New Tab"
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<CloseOutlined />}
-            title="Close"
-          />
+          <Button variant="ghost" size="icon-sm" onClick={handleClear} title="Clear">
+            <Trash2 size={14} />
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={handleNewTab} title="New Tab">
+            <Plus size={14} />
+          </Button>
+          <Button variant="ghost" size="icon-sm" title="Close">
+            <X size={14} />
+          </Button>
         </div>
       </div>
 
@@ -245,7 +230,7 @@ const TerminalPanel: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TerminalPanel;
+export default TerminalPanel

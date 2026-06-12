@@ -1,40 +1,40 @@
 // GeoWork UsageSummaryPopover
-// Displays credits, tokens, model usage, and plan info in the top bar
 
 import { useState } from 'react'
-import { Popover, Tag, Progress, Space, Typography, Avatar, Button, Divider } from 'antd'
-import { UserOutlined, CreditCardOutlined, BulbOutlined, CloudServerOutlined } from '@ant-design/icons'
+import {
+  User,
+  CreditCard,
+  Lightbulb,
+  Server,
+} from 'lucide-react'
 import { useAccountStore } from '../../../stores/accountStore'
+import { Badge } from '../../ui/badge'
+import { Button } from '../../ui/button'
+import { Separator } from '../../ui/separator'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '../../ui/popover'
 import styles from './UsageSummaryPopover.module.scss'
-
-const { Text, Paragraph } = Typography
 
 export function UsageSummaryPopover() {
   const { user, plan, credits, usage, loginState } = useAccountStore()
-  const [visible, setVisible] = useState(false)
+  const [open, setOpen] = useState(false)
 
   if (loginState !== 'authenticated' || !user) {
     return (
-      <Popover
-        content={
-          <div className={styles.loginPrompt}>
-            <Text>登录以查看账号信息</Text>
-          </div>
-        }
-        trigger="hover"
-        placement="bottomRight"
-      >
-        <Button type="text" className={styles.avatarBtn}>
-          <UserOutlined />
-        </Button>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon-sm" className={styles.avatarBtn}>
+            <User size={16} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-[200px]">
+          <div className="p-2 text-[12px] text-[var(--gw-text-secondary)]">登录以查看账号信息</div>
+        </PopoverContent>
       </Popover>
     )
-  }
-
-  const planColors: Record<string, string> = {
-    free: 'default',
-    pro: 'gold',
-    team: 'blue',
   }
 
   const planLabels: Record<string, string> = {
@@ -43,75 +43,80 @@ export function UsageSummaryPopover() {
     team: '团队版',
   }
 
+  const planVariant: Record<string, 'default' | 'accent' | 'info'> = {
+    free: 'default',
+    pro: 'accent',
+    team: 'info',
+  }
+
   const tokensUsed = usage?.model_tokens ?? 0
   const planLimit = plan?.limit_tokens ?? 100000
   const tokenPercent = Math.min(100, Math.round((tokensUsed / planLimit) * 100))
 
   return (
-    <Popover
-      visible={visible}
-      onVisibleChange={setVisible}
-      content={
-        <div className={styles.popoverContent}>
-          {/* User info */}
-          <div className={styles.userInfo}>
-            <Avatar size="small" icon={<UserOutlined />} />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon-sm" className={styles.avatarBtn}>
+          <User size={16} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[280px] p-0">
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--gw-bg-active)]">
+              <User size={16} className="text-[var(--gw-text-tertiary)]" />
+            </div>
             <div>
-              <Text strong>{user.name}</Text>
-              <Paragraph className={styles.email} copyable={{ text: user.email }}>
-                {user.email}
-              </Paragraph>
+              <div className="text-[13px] font-medium text-[var(--gw-text)]">{user.name}</div>
+              <div className="text-[11px] text-[var(--gw-text-tertiary)]">{user.email}</div>
             </div>
           </div>
+        </div>
 
-          <Divider style={{ margin: '8px 0' }} />
+        <Separator />
 
-          {/* Plan */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <CloudServerOutlined />
-              <Text>当前套餐</Text>
-              <Tag color={planColors[user.plan]}>{planLabels[user.plan]}</Tag>
-            </div>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Server size={14} className="text-[var(--gw-text-tertiary)]" />
+            <span className="text-[12px] text-[var(--gw-text-secondary)]">当前套餐</span>
+            <Badge variant={planVariant[user.plan] ?? 'default'} className="ml-auto">
+              {planLabels[user.plan]}
+            </Badge>
           </div>
+        </div>
 
-          <Divider style={{ margin: '8px 0' }} />
+        <Separator />
 
-          {/* Credits */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <CreditCardOutlined />
-              <Text>Credits</Text>
-            </div>
-            <Text strong className={styles.creditsValue}>{credits.toFixed(1)}</Text>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <CreditCard size={14} className="text-[var(--gw-text-tertiary)]" />
+            <span className="text-[12px] text-[var(--gw-text-secondary)]">Credits</span>
+            <span className="ml-auto text-[13px] font-semibold text-[var(--gw-text)]">
+              {credits.toFixed(1)}
+            </span>
           </div>
+        </div>
 
-          <Divider style={{ margin: '8px 0' }} />
+        <Separator />
 
-          {/* Token Usage */}
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <BulbOutlined />
-              <Text>Token 用量</Text>
-              <Text type="secondary">
-                {(tokensUsed / 1000).toFixed(0)}K / {(planLimit / 1000).toFixed(0)}K
-              </Text>
-            </div>
-            <Progress
-              percent={tokenPercent}
-              size="small"
-              status={tokenPercent > 90 ? 'exception' : 'normal'}
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Lightbulb size={14} className="text-[var(--gw-text-tertiary)]" />
+            <span className="text-[12px] text-[var(--gw-text-secondary)]">Token 用量</span>
+            <span className="ml-auto text-[11px] text-[var(--gw-text-tertiary)]">
+              {(tokensUsed / 1000).toFixed(0)}K / {(planLimit / 1000).toFixed(0)}K
+            </span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-[var(--gw-bg-active)] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                tokenPercent > 90 ? 'bg-[var(--gw-danger)]' : 'bg-[var(--gw-accent)]'
+              }`}
+              style={{ width: `${tokenPercent}%` }}
             />
           </div>
         </div>
-      }
-      trigger="click"
-      placement="bottomRight"
-      overlayClassName={styles.overlay}
-    >
-      <Button type="text" className={styles.avatarBtn}>
-        <Avatar size="small" icon={<UserOutlined />} />
-      </Button>
+      </PopoverContent>
     </Popover>
   )
 }

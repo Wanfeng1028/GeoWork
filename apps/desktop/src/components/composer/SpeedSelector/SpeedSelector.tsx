@@ -1,17 +1,16 @@
 // GeoWork - SpeedSelector Component
-// Select execution speed (fast, balanced, thorough)
 
 import React from 'react'
-import { Radio } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
+import { Loader2 } from 'lucide-react'
+import { cn } from '../../../lib/cn'
 import styles from './SpeedSelector.module.scss'
 
 type SpeedLevel = 'fast' | 'balanced' | 'thorough'
 
-const SPEED_OPTIONS: { value: SpeedLevel; label: string; icon: React.ReactNode; desc: string }[] = [
-  { value: 'fast', label: '快速', icon: <LoadingOutlined style={{ color: '#52c41a' }} />, desc: '最少步骤' },
-  { value: 'balanced', label: '均衡', icon: <LoadingOutlined style={{ color: '#1890ff' }} />, desc: '平衡质量' },
-  { value: 'thorough', label: '详尽', icon: <LoadingOutlined style={{ color: '#722ed1' }} />, desc: '最大覆盖' },
+const SPEED_OPTIONS: { value: SpeedLevel; label: string; color: string; desc: string }[] = [
+  { value: 'fast', label: '快速', color: 'var(--gw-success)', desc: '最少步骤' },
+  { value: 'balanced', label: '均衡', color: 'var(--gw-info)', desc: '平衡质量' },
+  { value: 'thorough', label: '详尽', color: '#722ed1', desc: '最大覆盖' },
 ]
 
 export type { SpeedLevel }
@@ -28,20 +27,18 @@ export const SpeedSelector: React.FC<SpeedSelectorProps> = ({
   return (
     <div className={styles.container}>
       <span className={styles.label}>速率</span>
-      <Radio.Group
-        value={value}
-        onChange={(e) => onChange?.(e.target.value as SpeedLevel)}
-        optionType="button"
-        buttonStyle="solid"
-        className={styles.group}
-      >
+      <div className={styles.group}>
         {SPEED_OPTIONS.map(opt => (
-          <Radio.Button key={opt.value} value={opt.value} className={styles.option}>
-            {opt.icon}
+          <button
+            key={opt.value}
+            className={cn(styles.option, value === opt.value && styles.active)}
+            onClick={() => onChange?.(opt.value)}
+          >
+            <Loader2 size={12} style={{ color: opt.color }} />
             <span>{opt.label}</span>
-          </Radio.Button>
+          </button>
         ))}
-      </Radio.Group>
+      </div>
     </div>
   )
 }

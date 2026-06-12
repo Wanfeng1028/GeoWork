@@ -1,8 +1,8 @@
 // GeoWork - SkillSelector Component
-// Select pre-configured skills for the agent (no mock)
 
 import React from 'react'
-import { Tag } from 'antd'
+import { Badge } from '../../ui/badge'
+import { cn } from '../../../lib/cn'
 import styles from './SkillSelector.module.scss'
 
 export interface SkillOption {
@@ -47,19 +47,17 @@ export const SkillSelector: React.FC<SkillSelectorProps> = ({
         {enabledSkills.length > 0 ? (
           <>
             {enabledSkills.map(skill => (
-              <Tag
+              <Badge
                 key={skill.id}
-                color={selectedSkillIds.includes(skill.id) ? 'blue' : 'default'}
+                variant={selectedSkillIds.includes(skill.id) ? 'accent' : 'default'}
                 className={styles.tag}
               >
-                {skill.icon}
-                {' '}
-                {skill.name}
-              </Tag>
+                {skill.icon} {skill.name}
+              </Badge>
             ))}
           </>
         ) : (
-          <Tag className={styles.tag}>选择技能以增强能力</Tag>
+          <Badge variant="default" className={styles.tag}>选择技能以增强能力</Badge>
         )}
       </div>
     )
@@ -79,7 +77,7 @@ export const SkillSelector: React.FC<SkillSelectorProps> = ({
           return (
             <button
               key={skill.id}
-              className={`${styles.skill} ${isActive ? styles.enabled : ''}`}
+              className={cn(styles.skill, isActive && styles.enabled)}
               onClick={() => onToggle?.(skill.id)}
               title={skill.category}
             >

@@ -1,34 +1,33 @@
 // GeoWork RuntimeEvents
 
-import { List, Tag } from 'antd'
 import type { RuntimeEvent } from '../../../types/task'
 import { mockEvents } from '../../../mocks/tasks.mock'
+import { Badge } from '../../ui/badge'
 import styles from './RuntimeEvents.module.scss'
 
-export function RuntimeEvents() {
-  const typeColors: Record<string, string> = {
-    'task.started': 'blue',
-    'task.progress': 'green',
-    'tool.call.started': 'orange',
-    'tool.call.completed': 'cyan'
-  }
+const typeVariant: Record<string, 'info' | 'success' | 'warning' | 'accent' | 'default'> = {
+  'task.started': 'info',
+  'task.progress': 'success',
+  'tool.call.started': 'warning',
+  'tool.call.completed': 'accent',
+}
 
+export function RuntimeEvents() {
   return (
     <div className={styles.panel}>
-      <List
-        dataSource={mockEvents}
-        renderItem={(event) => (
-          <List.Item className={styles.eventItem}>
-            <Tag color={typeColors[event.type] || 'default'}>
+      <div className="flex flex-col gap-1 p-2">
+        {mockEvents.map((event) => (
+          <div key={event.id} className={styles.eventItem}>
+            <Badge variant={typeVariant[event.type] || 'default'}>
               {event.type}
-            </Tag>
+            </Badge>
             <span className={styles.eventMessage}>{event.message}</span>
             <span className={styles.eventTime}>
               {new Date(event.timestamp).toLocaleTimeString()}
             </span>
-          </List.Item>
-        )}
-      />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

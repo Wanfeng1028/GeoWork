@@ -1,30 +1,33 @@
-// GeoWork ArtifactPanel — 连接 useArtifactStore 真实数据 + 交付物清单
+// GeoWork ArtifactPanel
 
 import { useState, useMemo } from 'react'
-import { List, Tag, Card, Empty, Tooltip } from 'antd'
 import {
-  FileImageOutlined,
-  FileTextOutlined,
-  CodeOutlined,
-  FileExcelOutlined,
-  FilePdfOutlined,
-  DatabaseOutlined,
-  EyeOutlined,
-} from '@ant-design/icons'
+  FileImage,
+  FileText,
+  Code,
+  FileSpreadsheet,
+  File,
+  Database,
+  Eye,
+  X,
+} from 'lucide-react'
 import useArtifactStore from '../../../stores/artifactStore'
 import useShellStore from '../../../stores/shellStore'
 import type { Artifact, ArtifactType } from '../../../types/artifact'
+import { Badge } from '../../ui/badge'
+import { Empty } from '../../ui/empty'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
 import styles from './ArtifactPanel.module.scss'
 
-const typeColors: Record<ArtifactType, string> = {
-  map: 'green',
-  code: 'blue',
-  document: 'orange',
-  data: 'purple',
-  image: 'geekblue',
-  ppt: 'magenta',
-  pdf: 'red',
-  diff: 'cyan',
+const typeVariant: Record<ArtifactType, 'success' | 'info' | 'accent' | 'warning' | 'danger' | 'default'> = {
+  map: 'success',
+  code: 'info',
+  document: 'warning',
+  data: 'accent',
+  image: 'info',
+  ppt: 'accent',
+  pdf: 'danger',
+  diff: 'info',
   log: 'default',
 }
 
@@ -41,15 +44,15 @@ const typeLabels: Record<ArtifactType, string> = {
 }
 
 const typeIcons: Record<ArtifactType, React.ReactNode> = {
-  map: <FileImageOutlined />,
-  code: <CodeOutlined />,
-  document: <FileTextOutlined />,
-  data: <FileExcelOutlined />,
-  image: <FileImageOutlined />,
-  ppt: <FileTextOutlined />,
-  pdf: <FilePdfOutlined />,
-  diff: <CodeOutlined />,
-  log: <FileTextOutlined />,
+  map: <FileImage size={14} />,
+  code: <Code size={14} />,
+  document: <FileText size={14} />,
+  data: <FileSpreadsheet size={14} />,
+  image: <FileImage size={14} />,
+  ppt: <FileText size={14} />,
+  pdf: <File size={14} />,
+  diff: <Code size={14} />,
+  log: <FileText size={14} />,
 }
 
 function getFileExtension(path: string): string {
@@ -61,7 +64,6 @@ export function ArtifactPanel() {
   const { setActiveRightPanel } = useShellStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Group artifacts by type
   const groupedByType = useMemo(() => {
     const groups: Record<string, Artifact[]> = {}
     artifacts.forEach(artifact => {
@@ -77,7 +79,6 @@ export function ArtifactPanel() {
     return Object.keys(groupedByType).filter(t => order.includes(t as ArtifactType))
   }, [groupedByType])
 
-  // Delivery checklist for completed tasks
   const deliveryChecklist = useMemo(() => {
     if (artifacts.length === 0) return null
     const maps = artifacts.filter(a => a.type === 'map' || a.type === 'image')
@@ -96,17 +97,13 @@ export function ArtifactPanel() {
   if (artifacts.length === 0) {
     return (
       <div className={styles.panel}>
-        <Empty
-          description="暂无产物"
-          className={styles.empty}
-        />
+        <Empty title="暂无产物" />
       </div>
     )
   }
 
   return (
     <div className={styles.panel}>
-      {/* Delivery checklist */}
       {deliveryChecklist && (
         <div className={styles.deliverySection}>
           <h3 className={styles.deliveryTitle}>交付物清单</h3>
@@ -143,95 +140,72 @@ export function ArtifactPanel() {
         </div>
       )}
 
-      {/* Artifact list grouped by type */}
-      <List
-        dataSource={sortedTypes}
-        renderItem={(type) => {
+      <div className="flex flex-col gap-3">
+        {sortedTypes.map((type) => {
           const typeKey = type as ArtifactType
-          const config = typeColors[typeKey]
-          const icons = typeIcons[typeKey]
-          const labels = typeLabels[typeKey]
           const items = groupedByType[typeKey] || []
           return (
-            <List.Item className={styles.typeGroup}>
+            <div key={type} className={styles.typeGroup}>
               <div className={styles.typeHeader}>
-                <span className={styles.typeIcon}>{icons}</span>
-                <span className={styles.typeLabel}>{labels}</span>
-                <Tag color={config} className={styles.typeBadge}>{items.length}</Tag>
+                <span className={styles.typeIcon}>{typeIcons[typeKey]}</span>
+                <span className={styles.typeLabel}>{typeLabels[typeKey]}</span>
+                <Badge variant={typeVariant[typeKey]}>{items.length}</Badge>
               </div>
-              <List
-                dataSource={items}
-                renderItem={(artifact) => {
+              <div className="flex flex-col gap-1">
+                {items.map((artifact) => {
                   const isSelected = selectedId === artifact.id
                   const ext = getFileExtension(artifact.path)
 
                   return (
-                    <List.Item className={`${styles.artifactItem} ${isSelected ? styles.selected : ''}`}>
-                      <Card
-                        size="small"
-                        className={`${styles.artifactCard} ${isSelected ? styles.cardSelected : ''}`}
-                        onClick={() => handleSelectArtifact(artifact)}
-                        extra={
-                          isSelected ? (
-                            <Tooltip title="预览">
-                              <EyeOutlined
-                                className={styles.acceptBtn}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </Tooltip>
-                          ) : null
-                        }
-                      >
-                        <div className={styles.artifactHeader}>
-                          <Tag color={typeColors[artifact.type]}>
-                            {typeIcons[artifact.type]}
-                            {' '}
-                            {typeLabels[artifact.type]}
-                          </Tag>
-                          <span className={styles.artifactName}>{artifact.name}</span>
-                        </div>
+                    <div
+                      key={artifact.id}
+                      className={`${styles.artifactItem} ${isSelected ? styles.selected : ''}`}
+                      onClick={() => handleSelectArtifact(artifact)}
+                    >
+                      <div className={styles.artifactHeader}>
+                        <Badge variant={typeVariant[artifact.type]}>
+                          {typeIcons[artifact.type]} {typeLabels[artifact.type]}
+                        </Badge>
+                        <span className={styles.artifactName}>{artifact.name}</span>
+                      </div>
 
-                        <div className={styles.artifactMeta}>
-                          <Tooltip title={artifact.path}>
+                      <div className={styles.artifactMeta}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <span className={styles.artifactPath}>{artifact.path}</span>
-                          </Tooltip>
-                          <span className={styles.artifactDate}>
-                            {new Date(artifact.createdAt).toLocaleString()}
-                          </span>
-                        </div>
+                          </TooltipTrigger>
+                          <TooltipContent>{artifact.path}</TooltipContent>
+                        </Tooltip>
+                        <span className={styles.artifactDate}>
+                          {new Date(artifact.createdAt).toLocaleString()}
+                        </span>
+                      </div>
 
-                        {/* Preview placeholder based on file type */}
-                        {ext === '.png' || ext === '.jpg' || ext === '.jpeg' ? (
-                          <div className={styles.previewImage} />
-                        ) : ext === '.geojson' ? (
-                          <div className={styles.previewGeojson} />
-                        ) : ext === '.csv' ? (
-                          <div className={styles.previewCsv} />
-                        ) : ext === '.html' || ext === '.htm' ? (
-                          <div className={styles.previewHtml} />
-                        ) : (
-                          <div className={styles.previewCode} />
-                        )}
-                      </Card>
-                    </List.Item>
+                      {isSelected && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button className={styles.acceptBtn} onClick={(e) => e.stopPropagation()}>
+                              <Eye size={14} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>预览</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   )
-                }}
-              />
-            </List.Item>
+                })}
+              </div>
+            </div>
           )
-        }}
-      />
+        })}
+      </div>
 
-      {/* Preview panel */}
       {currentPreview && (
         <div className={styles.previewPanel}>
           <div className={styles.previewHeader}>
             <span className={styles.previewTitle}>{currentPreview.name}</span>
-            <button
-              className={styles.previewClose}
-              onClick={clearPreview}
-            >
-              ×
+            <button className={styles.previewClose} onClick={clearPreview}>
+              <X size={14} />
             </button>
           </div>
           <div className={styles.previewContent}>
@@ -243,7 +217,6 @@ export function ArtifactPanel() {
   )
 }
 
-// Artifact preview renderer
 function ArtifactPreview({ artifact }: { artifact: Artifact }) {
   const ext = getFileExtension(artifact.path)
   const type = artifact.type
@@ -252,7 +225,7 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
     return (
       <div className={styles.previewMap}>
         <div className={styles.mapPlaceholder}>
-          <FileImageOutlined className={styles.mapIcon} />
+          <FileImage size={32} className={styles.mapIcon} />
           <p>地图预览: {artifact.path}</p>
           <p className={styles.previewHint}>实际地图渲染将在服务端完成</p>
         </div>
@@ -264,7 +237,7 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
     return (
       <div className={styles.previewImageContainer}>
         <div className={styles.imagePlaceholder}>
-          <FileImageOutlined className={styles.imageIcon} />
+          <FileImage size={32} className={styles.imageIcon} />
           <p>图片: {artifact.name}</p>
           <p className={styles.previewHint}>支持 .png, .jpg, .jpeg, .gif, .webp</p>
         </div>
@@ -296,7 +269,7 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
     return (
       <div className={styles.previewHtmlContainer}>
         <div className={styles.htmlPlaceholder}>
-          <CodeOutlined className={styles.htmlIcon} />
+          <Code size={32} className={styles.htmlIcon} />
           <p>HTML 预览: {artifact.name}</p>
           <p className={styles.previewHint}>HTML 内容将在 iframe 中渲染</p>
         </div>

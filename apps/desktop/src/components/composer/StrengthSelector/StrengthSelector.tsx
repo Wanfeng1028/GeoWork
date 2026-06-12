@@ -1,17 +1,16 @@
 // GeoWork - StrengthSelector Component
-// Select computation strength (low, normal, high)
 
 import React from 'react'
-import { Radio } from 'antd'
-import { ThunderboltOutlined, FireOutlined } from '@ant-design/icons'
+import { Zap, Flame } from 'lucide-react'
+import { cn } from '../../../lib/cn'
 import styles from './StrengthSelector.module.scss'
 
 type StrengthLevel = 'low' | 'normal' | 'high'
 
 const STRENGTH_OPTIONS: { value: StrengthLevel; label: string; icon: React.ReactNode; desc: string }[] = [
-  { value: 'low', label: '轻量', icon: <ThunderboltOutlined />, desc: '快速执行' },
-  { value: 'normal', label: '标准', icon: <FireOutlined />, desc: '平衡模式' },
-  { value: 'high', label: '全力', icon: <FireOutlined />, desc: '最大资源' },
+  { value: 'low', label: '轻量', icon: <Zap size={12} />, desc: '快速执行' },
+  { value: 'normal', label: '标准', icon: <Flame size={12} />, desc: '平衡模式' },
+  { value: 'high', label: '全力', icon: <Flame size={12} />, desc: '最大资源' },
 ]
 
 export type { StrengthLevel }
@@ -28,20 +27,18 @@ export const StrengthSelector: React.FC<StrengthSelectorProps> = ({
   return (
     <div className={styles.container}>
       <span className={styles.label}>强度</span>
-      <Radio.Group
-        value={value}
-        onChange={(e) => onChange?.(e.target.value as StrengthLevel)}
-        optionType="button"
-        buttonStyle="solid"
-        className={styles.group}
-      >
+      <div className={styles.group}>
         {STRENGTH_OPTIONS.map(opt => (
-          <Radio.Button key={opt.value} value={opt.value} className={styles.option}>
+          <button
+            key={opt.value}
+            className={cn(styles.option, value === opt.value && styles.active)}
+            onClick={() => onChange?.(opt.value)}
+          >
             {opt.icon}
             <span>{opt.label}</span>
-          </Radio.Button>
+          </button>
         ))}
-      </Radio.Group>
+      </div>
     </div>
   )
 }

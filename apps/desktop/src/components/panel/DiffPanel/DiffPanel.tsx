@@ -1,27 +1,38 @@
-// GeoWork DiffPanel - Real data from diffStore
+// GeoWork DiffPanel
 
 import { useState } from 'react'
-import { Table, Button, Space, Tag, Select, Collapse, Tooltip } from 'antd'
 import {
-  CheckOutlined,
-  CloseOutlined,
-  DownloadOutlined,
-  DiffOutlined,
-} from '@ant-design/icons'
+  Check,
+  X,
+  Download,
+  GitCompare,
+} from 'lucide-react'
 import useDiffStore from '../../../stores/diffStore'
 import type { DiffFile } from '../../../types/diff'
+import { Badge } from '../../ui/badge'
+import { Button } from '../../ui/button'
+import { Empty } from '../../ui/empty'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select'
 import styles from './DiffPanel.module.scss'
 
-const STATUS_LABELS: Record<string, { color: string; text: string }> = {
-  modified: { color: 'orange', text: '已修改' },
-  added: { color: 'green', text: '新增' },
-  deleted: { color: 'red', text: '已删除' },
+const STATUS_VARIANT: Record<string, 'warning' | 'success' | 'danger' | 'default'> = {
+  modified: 'warning',
+  added: 'success',
+  deleted: 'danger',
 }
 
-const FILE_ACCEPTED = (path: string, acceptedFiles: Set<string>) => acceptedFiles.has(path)
-const FILE_REJECTED = (path: string, rejectedFiles: Set<string>) => rejectedFiles.has(path)
-const FILE_PENDING = (path: string, acceptedFiles: Set<string>, rejectedFiles: Set<string>) =>
-  !acceptedFiles.has(path) && !rejectedFiles.has(path)
+const STATUS_LABELS: Record<string, string> = {
+  modified: '已修改',
+  added: '新增',
+  deleted: '已删除',
+}
 
 export function DiffPanel() {
   const {
@@ -37,22 +48,6 @@ export function DiffPanel() {
     rejectAll,
   } = useDiffStore()
 
-  const handleAccept = (path: string) => {
-    acceptFile(path)
-  }
-
-  const handleReject = (path: string) => {
-    rejectFile(path)
-  }
-
-  const handleAcceptAll = () => {
-    acceptAll(activeDiffId || undefined)
-  }
-
-  const handleRejectAll = () => {
-    rejectAll(activeDiffId || undefined)
-  }
-
   const handleDownload = () => {
     if (!currentDiff?.patch) return
     const blob = new Blob([currentDiff.patch], { type: 'text/plain' })
@@ -64,181 +59,138 @@ export function DiffPanel() {
     URL.revokeObjectURL(url)
   }
 
-  const columns = [
-    {
-      title: '文件',
-      dataIndex: 'path',
-      key: 'path',
-      width: 200,
-      render: (path: string) => {
-        const filename = path.split('/').pop() || path
-        return (
-          <Tooltip title={path}>
-            <span className={styles.filePath}>{filename}</span>
-          </Tooltip>
-        )
-      },
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status: DiffFile['status']) => (
-        <Tag color={STATUS_LABELS[status]?.color || 'default'}>
-          {STATUS_LABELS[status]?.text || status}
-        </Tag>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 140,
-      render: (_: any, record: DiffFile) => {
-        const isAccepted = FILE_ACCEPTED(record.path, acceptedFiles)
-        const isRejected = FILE_REJECTED(record.path, rejectedFiles)
-        const isPending = FILE_PENDING(record.path, acceptedFiles, rejectedFiles)
-
-        return (
-          <Space size="small">
-            {isPending && (
-              <>
-                <Tooltip title="接受变更">
-                  <Button
-                    size="small"
-                    type="primary"
-                    icon={<CheckOutlined />}
-                    onClick={() => handleAccept(record.path)}
-                    className={styles.acceptBtn}
-                  />
-                </Tooltip>
-                <Tooltip title="拒绝变更">
-                  <Button
-                    size="small"
-                    danger
-                    icon={<CloseOutlined />}
-                    onClick={() => handleReject(record.path)}
-                    className={styles.rejectBtn}
-                  />
-                </Tooltip>
-              </>
-            )}
-            {isAccepted && (
-              <Tag color="green">已接受</Tag>
-            )}
-            {isRejected && (
-              <Tag color="red">已拒绝</Tag>
-            )}
-          </Space>
-        )
-      },
-    },
-  ]
-
   if (diffs.length === 0) {
     return (
       <div className={styles.panel}>
-        <div className={styles.empty}>
-          <DiffOutlined className={styles.emptyIcon} />
-          <p className={styles.emptyText}>暂无差异文件</p>
-          <p className={styles.emptyHint}>完成任务后自动显示差异</p>
-        </div>
+        <Empty icon={<GitCompare size={40} strokeWidth={1} />} title="暂无差异文件" description="完成任务后自动显示差异" />
       </div>
     )
   }
 
   return (
     <div className={styles.panel}>
-      {/* Multi-diff selector */}
       {diffs.length > 1 && (
         <div className={styles.diffSelector}>
           <span className={styles.diffLabel}>差异批次：</span>
-          <Select
-            value={activeDiffId}
-            onChange={setActiveDiffId}
-            size="small"
-            className={styles.diffSelect}
-            options={diffs.map(d => ({
-              label: `${d.id} (${d.files.length} 文件)`,
-              value: d.id,
-            }))}
-          />
+          <Select value={activeDiffId ?? undefined} onValueChange={setActiveDiffId}>
+            <SelectTrigger className={styles.diffSelect}>
+              <SelectValue placeholder="选择批次" />
+            </SelectTrigger>
+            <SelectContent>
+              {diffs.map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.id} ({d.files.length} 文件)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {/* Actions bar */}
       <div className={styles.actionsBar}>
         <span className={styles.actionCount}>
           共 {currentDiff?.files.length || 0} 个文件
-          {' '}
-          — 已接受: {acceptedFiles.size}
-          {' '}
-          已拒绝: {rejectedFiles.size}
-          {' '}
-          待处理: {(currentDiff?.files.length || 0) - acceptedFiles.size - rejectedFiles.size}
+          {' '}— 已接受: {acceptedFiles.size}
+          {' '}已拒绝: {rejectedFiles.size}
+          {' '}待处理: {(currentDiff?.files.length || 0) - acceptedFiles.size - rejectedFiles.size}
         </span>
-        <Space size="small">
+        <div className="flex items-center gap-1">
           {currentDiff?.patch && (
-            <Tooltip title="下载 .patch 文件">
-              <Button size="small" icon={<DownloadOutlined />} onClick={handleDownload}>
-                导出
-              </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleDownload}>
+                  <Download size={14} /> 导出
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>下载 .patch 文件</TooltipContent>
             </Tooltip>
           )}
-          <Tooltip title="接受所有变更">
-            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={handleAcceptAll}>
-              全部接受
-            </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="primary" size="sm" onClick={() => acceptAll(activeDiffId || undefined)}>
+                <Check size={14} /> 全部接受
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>接受所有变更</TooltipContent>
           </Tooltip>
-          <Tooltip title="拒绝所有变更">
-            <Button size="small" danger icon={<CloseOutlined />} onClick={handleRejectAll}>
-              全部拒绝
-            </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="danger" size="sm" onClick={() => rejectAll(activeDiffId || undefined)}>
+                <X size={14} /> 全部拒绝
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>拒绝所有变更</TooltipContent>
           </Tooltip>
-        </Space>
+        </div>
       </div>
 
-      {/* File list table */}
       {currentDiff ? (
         <div className={styles.tableWrapper}>
-          <Table
-            columns={columns}
-            dataSource={currentDiff.files}
-            rowKey={(record) => record.path}
-            pagination={false}
-            size="small"
-            className={styles.diffTable}
-          />
+          <div className="flex flex-col gap-1">
+            {currentDiff.files.map((file) => {
+              const isAccepted = acceptedFiles.has(file.path)
+              const isRejected = rejectedFiles.has(file.path)
+              const isPending = !isAccepted && !isRejected
+
+              return (
+                <div key={file.path} className={styles.stepItem}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={styles.filePath}>{file.path.split('/').pop()}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>{file.path}</TooltipContent>
+                  </Tooltip>
+                  <Badge variant={STATUS_VARIANT[file.status] || 'default'}>
+                    {STATUS_LABELS[file.status] || file.status}
+                  </Badge>
+                  {isPending && (
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="primary" size="icon-sm" onClick={() => acceptFile(file.path)}>
+                            <Check size={12} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>接受变更</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="danger" size="icon-sm" onClick={() => rejectFile(file.path)}>
+                            <X size={12} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>拒绝变更</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                  {isAccepted && <Badge variant="success" className="ml-auto">已接受</Badge>}
+                  {isRejected && <Badge variant="danger" className="ml-auto">已拒绝</Badge>}
+                </div>
+              )
+            })}
+          </div>
         </div>
       ) : (
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>请选择一个差异批次</p>
-        </div>
+        <Empty title="请选择一个差异批次" />
       )}
 
-      {/* File detail collapse */}
       {currentDiff && currentDiff.files.length > 0 && (
         <div className={styles.detailSection}>
           <h4 className={styles.sectionTitle}>详细对比</h4>
-          <Collapse
-            className={styles.diffCollapse}
-            size="small"
-            items={currentDiff.files.map((file) => {
-              const fileAccepted = FILE_ACCEPTED(file.path, acceptedFiles)
-              const fileRejected = FILE_REJECTED(file.path, rejectedFiles)
-              return {
-                key: file.path,
-                label: (
-                  <div className={styles.collapseLabel}>
+          <div className="flex flex-col gap-2">
+            {currentDiff.files.map((file) => {
+              const fileAccepted = acceptedFiles.has(file.path)
+              const fileRejected = rejectedFiles.has(file.path)
+              return (
+                <details key={file.path} className={styles.collapseLabel}>
+                  <summary className="flex items-center gap-2 cursor-pointer py-1">
                     <span className={styles.collapseFileName}>{file.path.split('/').pop()}</span>
-                    <Tag color={STATUS_LABELS[file.status]?.color}>
-                      {STATUS_LABELS[file.status]?.text}
-                    </Tag>
-                    {fileAccepted && <Tag color="green">已接受</Tag>}
-                    {fileRejected && <Tag color="red">已拒绝</Tag>}
-                  </div>
-                ),
-                children: (
+                    <Badge variant={STATUS_VARIANT[file.status] || 'default'}>
+                      {STATUS_LABELS[file.status]}
+                    </Badge>
+                    {fileAccepted && <Badge variant="success">已接受</Badge>}
+                    {fileRejected && <Badge variant="danger">已拒绝</Badge>}
+                  </summary>
                   <div className={styles.diffContent}>
                     {file.oldContent && (
                       <div className={styles.oldContent}>
@@ -251,10 +203,10 @@ export function DiffPanel() {
                       <pre>{file.newContent}</pre>
                     </div>
                   </div>
-                ),
-              }
+                </details>
+              )
             })}
-          />
+          </div>
         </div>
       )}
     </div>
