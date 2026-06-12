@@ -10,6 +10,10 @@ interface DesktopAPI {
   revealInFileExplorer(filePath: string): Promise<{ success: boolean; error?: string }>
   openExternal(url: string): Promise<{ success: boolean; error?: string }>
   openLocalApp(appName: string): Promise<{ success: boolean; error?: string }>
+  minimizeWindow(): Promise<{ success: boolean }>
+  toggleMaximizeWindow(): Promise<{ success: boolean }>
+  closeWindow(): Promise<{ success: boolean }>
+  isWindowMaximized(): Promise<{ isMaximized: boolean }>
 }
 
 interface RuntimeAPI {

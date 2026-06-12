@@ -49,19 +49,15 @@ export function TopBar() {
 
   const iconBtn = "w-7 h-7 flex items-center justify-center rounded-md text-[#b4b4ac] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#eeeeeb] transition-colors cursor-pointer"
 
+  const appRegion = (v: string): React.CSSProperties => ({ WebkitAppRegion: v } as React.CSSProperties)
+
   return (
     <header
       className="shrink-0 w-full select-none overflow-hidden box-border bg-[#171716] border-b border-[rgba(255,255,255,0.06)]"
-      style={{
-        height: 40,
-        display: 'grid',
-        gridTemplateColumns: 'auto minmax(0,1fr) auto 138px',
-        alignItems: 'center',
-        WebkitAppRegion: 'drag',
-      }}
+      style={{ height: 40, display: 'grid', gridTemplateColumns: 'auto 1fr minmax(0,auto) 138px', alignItems: 'center', ...appRegion('drag') }}
     >
       {/* Column 1: Left cluster */}
-      <div className="flex items-center gap-1.5 pl-2.5 h-full" style={{ WebkitAppRegion: 'no-drag' }}>
+      <div className="flex items-center gap-1.5 pl-2.5 h-full" style={appRegion('no-drag')}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={iconBtn} title="菜单">
@@ -98,10 +94,10 @@ export function TopBar() {
       </div>
 
       {/* Column 2: Drag region */}
-      <div className="h-full" style={{ WebkitAppRegion: 'drag', minWidth: 0 }} />
+      <div className="h-full" style={{ minWidth: 0, ...appRegion('drag') }} />
 
       {/* Column 3: Right actions */}
-      <div className="flex items-center justify-end h-full min-w-0 overflow-hidden pr-2.5 gap-2" style={{ WebkitAppRegion: 'no-drag' }}>
+      <div className="flex items-center justify-end h-full min-w-0 overflow-hidden pr-2.5 gap-2" style={appRegion('no-drag')}>
         {/* GitHub Star */}
         <Popover>
           <PopoverTrigger asChild>
@@ -180,7 +176,7 @@ export function TopBar() {
           alignItems: 'stretch',
           borderLeft: '1px solid rgba(255,255,255,0.04)',
           background: 'transparent',
-          WebkitAppRegion: 'no-drag',
+          ...appRegion('no-drag'),
         }}
       >
         <button
