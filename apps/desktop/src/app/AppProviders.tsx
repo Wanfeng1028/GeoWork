@@ -4,6 +4,7 @@ import { ConfigProvider, theme as antdTheme } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode, useEffect } from 'react'
 import useSettingsStore from '../stores/settingsStore'
+import { setGeoWorkTheme, type GeoWorkTheme } from '../design/theme-init'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,10 @@ export function AppProviders({ children }: AppProvidersProps) {
     media.addEventListener('change', syncTheme)
     return () => media.removeEventListener('change', syncTheme)
   }, [selectedTheme, setResolvedTheme])
+
+  useEffect(() => {
+    setGeoWorkTheme(resolvedTheme as GeoWorkTheme)
+  }, [resolvedTheme])
 
   return (
     <QueryClientProvider client={queryClient}>

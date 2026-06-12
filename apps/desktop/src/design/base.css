@@ -1,0 +1,139 @@
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--gw-bg);
+  color: var(--gw-text);
+  font-family: var(--gw-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+a {
+  color: var(--gw-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--gw-accent-hover);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--gw-radius-full);
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--gw-border-strong);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gw-text-tertiary);
+}
+
+::selection {
+  background: rgba(var(--gw-accent-rgb), 0.3);
+  color: var(--gw-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gw-accent);
+  outline-offset: 2px;
+  border-radius: var(--gw-radius-sm);
+}
+
+[data-theme] input::placeholder,
+[data-theme] textarea::placeholder {
+  color: var(--gw-text-disabled);
+}
+
+@keyframes gw-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gw-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gw-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes gw-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gw-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gw-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gw-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(var(--gw-accent-rgb), 0.15);
+  }
+  50% {
+    box-shadow: 0 0 38px rgba(var(--gw-accent-rgb), 0.25);
+  }
+}

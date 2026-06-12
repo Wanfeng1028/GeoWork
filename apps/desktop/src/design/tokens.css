@@ -1,0 +1,62 @@
+:root {
+  --gw-radius-xs: 4px;
+  --gw-radius-sm: 6px;
+  --gw-radius-md: 8px;
+  --gw-radius-lg: 12px;
+  --gw-radius-xl: 16px;
+  --gw-radius-full: 9999px;
+
+  --gw-sidebar-width: 248px;
+  --gw-sidebar-collapsed-width: 56px;
+  --gw-right-rail-width: 44px;
+  --gw-right-panel-width: 384px;
+  --gw-statusbar-height: 26px;
+  --gw-titlebar-height: 46px;
+
+  --gw-space-1: 1px;
+  --gw-space-2: 2px;
+  --gw-space-4: 4px;
+  --gw-space-6: 6px;
+  --gw-space-8: 8px;
+  --gw-space-10: 10px;
+  --gw-space-12: 12px;
+  --gw-space-16: 16px;
+  --gw-space-20: 20px;
+  --gw-space-24: 24px;
+  --gw-space-32: 32px;
+  --gw-space-40: 40px;
+  --gw-space-48: 48px;
+  --gw-space-64: 64px;
+
+  --gw-z-titlebar: 100;
+  --gw-z-sidebar: 110;
+  --gw-z-dock: 200;
+  --gw-z-popover: 300;
+  --gw-z-modal: 400;
+  --gw-z-toast: 500;
+  --gw-z-command: 600;
+
+  --gw-font-sans:
+    "Instrument Sans",
+    "Microsoft YaHei",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+
+  --gw-font-mono:
+    "JetBrains Mono",
+    "Fira Code",
+    "Cascadia Code",
+    "Consolas",
+    monospace;
+
+  --gw-duration-fast: 100ms;
+  --gw-duration-normal: 150ms;
+  --gw-duration-slow: 250ms;
+  --gw-duration-slower: 350ms;
+
+  --gw-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --gw-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+}
