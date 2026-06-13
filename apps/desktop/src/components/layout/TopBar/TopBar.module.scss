@@ -27,7 +27,7 @@
   height: 40px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
   padding-left: 10px;
   min-width: 0;
   box-sizing: border-box;
@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   overflow: hidden;
   padding-right: 10px;
@@ -75,23 +75,29 @@
 }
 
 .iconBtn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 0;
   margin: 0;
   background: transparent;
-  color: #b4b4ac;
+  color: #d7d8d2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 1.9;
+  }
+
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #eeeeeb;
+    background: rgba(255, 255, 255, 0.075);
+    color: #ffffff;
   }
 }
 
@@ -114,40 +120,42 @@
   height: 24px;
   max-width: 168px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 13px;
   border-radius: 999px;
-  border: 1px solid rgba(92, 184, 112, 0.32);
-  background: linear-gradient(
-    180deg,
-    rgba(92, 184, 112, 0.22),
-    rgba(92, 184, 112, 0.12)
-  );
+  border: none;
+  background: linear-gradient(180deg, #2d6b3d 0%, #255832 100%);
   box-shadow:
-    0 0 0 1px rgba(92, 184, 112, 0.05),
-    0 0 18px rgba(92, 184, 112, 0.12);
-  color: #dceee0;
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 18px rgba(67, 190, 105, 0.18);
+  color: #f3fff5;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 650;
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
+  svg {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2;
+  }
+
   &:hover {
-    border-color: rgba(92, 184, 112, 0.48);
-    background: linear-gradient(
-      180deg,
-      rgba(92, 184, 112, 0.28),
-      rgba(92, 184, 112, 0.16)
-    );
+    background: linear-gradient(180deg, #347a46 0%, #2b653a 100%);
     box-shadow:
-      0 0 0 1px rgba(92, 184, 112, 0.08),
-      0 0 24px rgba(92, 184, 112, 0.18);
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 22px rgba(67, 190, 105, 0.24);
+  }
+
+  &:active {
+    background: linear-gradient(180deg, #245530 0%, #1d4528 100%);
   }
 }
 
@@ -158,27 +166,35 @@
 }
 
 .feedbackButton {
-  height: 28px;
-  max-width: 96px;
-  min-width: 28px;
-  padding: 0 8px;
+  flex: 0 1 104px;
+  height: 30px;
+  max-width: 104px;
+  min-width: 30px;
+  padding: 0 6px;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   background: transparent;
-  color: #b4b4ac;
+  color: #d7d8d2;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 520;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
   white-space: nowrap;
   overflow: hidden;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 1.85;
+  }
+
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #eeeeeb;
+    background: rgba(255, 255, 255, 0.075);
+    color: #ffffff;
   }
 }
 
@@ -189,37 +205,42 @@
 }
 
 .usageButton {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 0;
   background: transparent;
-  color: #b4b4ac;
+  color: #d7d8d2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 1.85;
+  }
+
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #eeeeeb;
+    background: rgba(255, 255, 255, 0.075);
+    color: #ffffff;
   }
 }
 
 .winBtn {
   width: 46px;
-  flex: 0 0 46px;
   height: 40px;
   border: none;
   border-radius: 0;
   padding: 0;
   margin: 0;
   background: transparent;
-  color: #b4b4ac;
+  color: #d7d8d2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,18 +249,18 @@
   transition: all 0.15s ease;
 
   svg {
-    stroke-width: 1.7;
+    stroke-width: 1.8;
     width: 12px;
     height: 12px;
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.085);
     color: #ffffff;
   }
 
   &:active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.13);
   }
 }
 
@@ -343,8 +364,9 @@
 
 @media (max-width: 1120px) {
   .rightActions {
-    flex-basis: 260px;
-    max-width: 260px;
+    flex-basis: 284px;
+    max-width: 284px;
+    gap: 12px;
   }
 
   .feedbackText {
@@ -352,8 +374,9 @@
   }
 
   .feedbackButton {
-    width: 28px;
-    max-width: 28px;
+    flex-basis: 30px;
+    width: 30px;
+    max-width: 30px;
     padding: 0;
     justify-content: center;
   }
@@ -361,8 +384,9 @@
 
 @media (max-width: 980px) {
   .rightActions {
-    flex-basis: 114px;
-    max-width: 114px;
+    flex-basis: 126px;
+    max-width: 126px;
+    gap: 10px;
   }
 
   .starText {
@@ -370,8 +394,9 @@
   }
 
   .starButton {
-    width: 28px;
-    max-width: 28px;
+    flex-basis: 30px;
+    width: 30px;
+    max-width: 30px;
     padding: 0;
     justify-content: center;
   }

@@ -27,6 +27,11 @@ async function createWindow() {
   // Hide native menu bar
   Menu.setApplicationMenu(null);
 
+  const preloadPath = join(__dirname, "../preload/preload.cjs");
+  console.log("[main] preload path:", preloadPath);
+  console.log("[main] __dirname:", __dirname);
+  console.log("[main] ELECTRON_RENDERER_URL:", process.env.ELECTRON_RENDERER_URL);
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -38,7 +43,7 @@ async function createWindow() {
     backgroundColor: "#171716",
     icon: join(__dirname, "../../assets/app-icon.png"),
     webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -48,6 +53,8 @@ async function createWindow() {
 
   if (process.env.ELECTRON_RENDERER_URL) {
     await win.loadURL(process.env.ELECTRON_RENDERER_URL);
+    // Open DevTools in dev mode
+    win.webContents.openDevTools({ mode: "detach" });
   } else {
     await win.loadFile(join(__dirname, "../renderer/index.html"));
   }

@@ -10,6 +10,7 @@ const ALLOWED_CHANNELS = new Set([
   'windows:close',
   'windows:minimize',
   'windows:maximize',
+  'windows:unmaximize',
   'windows:isMaximized',
 ]);
 
@@ -70,13 +71,15 @@ function registerWindows(mainWindow: BrowserWindow) {
     }
   );
 
-  // Close a specific window
+  // Close a specific window by ID
   ipcMain.handle(
     "windows:close",
-    async (_event: IpcMainInvokeEvent, windowId: number) => {
-      const windows = BrowserWindow.getAllWindows();
-      const target = windows.find((w) => w.id === windowId);
-      if (target) {
+    async (_event: IpcMainInvokeEvent, windowId?: number) => {
+      // If no windowId, close the main window
+      const target = windowId
+        ? BrowserWindow.getAllWindows().find((w) => w.id === windowId)
+        : mainWindow;
+      if (target && !target.isDestroyed()) {
         target.close();
         return { success: true };
       }
@@ -86,12 +89,15 @@ function registerWindows(mainWindow: BrowserWindow) {
 
   // Minimize the main window
   ipcMain.handle("windows:minimize", async () => {
-    mainWindow.minimize();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.minimize();
+    }
     return { success: true };
   });
 
   // Maximize the main window
   ipcMain.handle("windows:maximize", async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { success: false };
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     } else {
@@ -100,8 +106,17 @@ function registerWindows(mainWindow: BrowserWindow) {
     return { success: true };
   });
 
+  // Unmaximize the main window
+  ipcMain.handle("windows:unmaximize", async () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.unmaximize();
+    }
+    return { success: true };
+  });
+
   // Check if main window is maximized
   ipcMain.handle("windows:isMaximized", async () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { isMaximized: false };
     return { isMaximized: mainWindow.isMaximized() };
   });
 }
