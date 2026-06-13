@@ -1,8 +1,6 @@
 import {
-  Plug, LayoutGrid, Bell, BookOpen, Calendar, Cloud,
-  FileSearch, FolderOpen, Home, PanelLeftClose, PanelLeftOpen,
-  MessageSquare, Plus, Bot, Clock, Settings, Share2, Wrench, User,
-  LogOut, HelpCircle,
+  Plus, Boxes, Timer, MessageCircle, CheckSquare, Hash,
+  User, Settings, LogOut, HelpCircle,
 } from 'lucide-react'
 import { geoAgentCharacterAssets } from '../../brand'
 import useShellStore from '../../../stores/shellStore'
@@ -14,161 +12,121 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu'
+import styles from './LeftSidebar.module.scss'
 
-import type { LucideProps } from 'lucide-react'
-
-interface LeftSidebarProps {
-  collapsed?: boolean
-}
-
-type NavItem = [string, string, React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>]
-
-const NAV_SECTIONS: Array<{
-  label: string
-  items: NavItem[]
-}> = [
-  {
-    label: '主能力',
-    items: [
-      ['expert', '专家系统', Bot],
-      ['assistant', '助理系统', User],
-      ['automation', '自动化', Clock],
-      ['skills', '技能', Wrench],
-      ['extensions', '扩展 / 插件', LayoutGrid],
-      ['mcp', 'MCP', Plug],
-      ['scheduler', '定时任务', Calendar],
-    ],
-  },
-  {
-    label: '知识资料',
-    items: [
-      ['files', '文件系统', FolderOpen],
-      ['papers', '论文检索', FileSearch],
-      ['knowledge', '知识库', BookOpen],
-    ],
-  },
-  {
-    label: '地理空间',
-    items: [
-      ['map', '地图与图层', Share2],
-      ['gee', 'GEE 平台', Cloud],
-    ],
-  },
-  {
-    label: '任务 / 频道',
-    items: [
-      ['tasks', '任务', Home],
-      ['channels', '频道', MessageSquare],
-      ['messaging', '消息入口', Bell],
-    ],
-  },
+const TASKS = [
+  '后端 Agent 规划问题',
+  '.qoder\\specs\\周末去...',
+  '/model add',
+  '规划slot闭环修复',
+  '继续修复PlanningGo',
+  '修复 PlanningGo UI ...',
+  '继续修复PlanningGo',
+  'PlanningGo 端到端修...',
 ]
 
-export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
-  const { activeNavKey, toggleSidebar } = useShellStore()
+export function LeftSidebar() {
+  const { activeNavKey } = useShellStore()
   const openNav = (key: string) => runAction('switchMainModule', key)
 
   return (
-    <aside
-      className={`shrink-0 h-full flex flex-col border-r border-[var(--gw-border-soft)] bg-[var(--gw-bg-sidebar)] transition-[width] duration-200 overflow-hidden ${
-        collapsed ? 'w-[56px]' : 'w-[240px]'
-      }`}
-    >
-      {/* Brand row */}
-      <div className="flex items-center gap-2 h-[40px] px-3 shrink-0">
-        <button
-          className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--gw-accent)] hover:bg-[var(--gw-bg-hover)] transition-colors cursor-pointer"
-          onClick={() => openNav('workbench')}
-          aria-label="GeoWork"
-        >
-          <img src={geoAgentCharacterAssets.logo.mark} alt="GeoWork" className="w-[18px] h-[18px]" draggable={false} />
-        </button>
-        {!collapsed && (
-          <span className="text-[13px] font-bold text-[var(--gw-text)] tracking-tight">GeoWork</span>
-        )}
-        <button
-          className="ml-auto w-7 h-7 flex items-center justify-center rounded-md text-[var(--gw-text-tertiary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors cursor-pointer"
-          onClick={toggleSidebar}
-          aria-label={collapsed ? '展开' : '折叠'}
-        >
-          {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-        </button>
+    <aside className={styles.sidebar}>
+      {/* Brand */}
+      <div className={styles.brand}>
+        <img
+          className={styles.logo}
+          src={geoAgentCharacterAssets.logo.mark}
+          alt="GeoWork"
+        />
       </div>
 
-      {/* New task button */}
-      <div className="px-2 mb-2 shrink-0">
-        <button
-          className="w-full h-[34px] flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-semibold cursor-pointer transition-all border border-[rgba(92,184,112,0.3)] bg-[rgba(92,184,112,0.12)] text-[var(--gw-accent)] hover:bg-[rgba(92,184,112,0.2)] hover:border-[var(--gw-accent)]"
-          onClick={() => openNav('workbench')}
-        >
-          <Plus size={14} />
-          {!collapsed && <span>新建任务</span>}
+      {/* Main nav */}
+      <nav className={styles.nav}>
+        <button className={styles.newTaskBtn} onClick={() => openNav('workbench')}>
+          <span className={styles.newTaskLeft}>
+            <Plus size={15} />
+            <span>新任务</span>
+          </span>
+          <span className={styles.shortcut}>Ctrl + N</span>
         </button>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 min-h-0">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.label} className="mb-3">
-            {!collapsed && (
-              <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--gw-text-disabled)]">
-                {section.label}
-              </div>
-            )}
-            <div className="flex flex-col gap-0.5">
-              {section.items.map(([key, label, Icon]) => {
-                const isActive = activeNavKey === key
-                return (
-                  <button
-                    key={key}
-                    title={label}
-                    className={`w-full flex items-center gap-2.5 rounded-lg text-[12px] cursor-pointer transition-all ${
-                      collapsed ? 'h-[34px] justify-center px-0' : 'h-[32px] px-2.5'
-                    } ${
-                      isActive
-                        ? 'bg-[var(--gw-accent-soft)] text-[var(--gw-accent)] border border-[rgba(92,184,112,0.2)]'
-                        : 'text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] border border-transparent'
-                    }`}
-                    onClick={() => openNav(key)}
-                  >
-                    <Icon size={16} className="shrink-0" />
-                    {!collapsed && <span className="truncate">{label}</span>}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        ))}
+        <button className={styles.navItem} onClick={() => openNav('extensions')}>
+          <Boxes size={15} />
+          <span>扩展</span>
+        </button>
+
+        <button className={styles.navItem} onClick={() => openNav('scheduler')}>
+          <Timer size={15} />
+          <span>定时任务</span>
+        </button>
+
+        <button className={styles.navItem} onClick={() => openNav('channels')}>
+          <MessageCircle size={15} />
+          <span>IM 频道</span>
+        </button>
+
+        {/* Task / Channel tabs */}
+        <div className={styles.tabs}>
+          <button className={`${styles.tab} ${activeNavKey === 'tasks' ? styles.active : ''}`}>
+            <CheckSquare size={14} />
+            <span>任务</span>
+          </button>
+          <button className={`${styles.tab} ${activeNavKey === 'channels' ? styles.active : ''}`}>
+            <MessageCircle size={14} />
+            <span>频道</span>
+          </button>
+        </div>
+
+        <div className={styles.sectionTitle}>任务</div>
+
+        <div className={styles.taskList}>
+          {TASKS.map((task) => {
+            const isCommand = task.startsWith('/')
+            return (
+              <button key={task} className={isCommand ? `${styles.taskItem} ${styles.command}` : styles.taskItem}>
+                {isCommand ? (
+                  <>
+                    <span className={styles.commandBadge}>
+                      <Hash size={11} />
+                      {task.slice(1).split(' ')[0]}
+                    </span>
+                    <span className={styles.commandRest}>{task.slice(task.indexOf(' ') + 1)}</span>
+                  </>
+                ) : (
+                  <span>{task}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </nav>
 
-      {/* User area */}
-      <div className="border-t border-[var(--gw-border-soft)] mt-auto shrink-0">
+      {/* User area - hidden for now */}
+      <div className={styles.userArea}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="w-full flex items-center gap-2.5 px-3 py-3 hover:bg-[var(--gw-bg-hover)] transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-[var(--gw-bg-panel)] border border-[var(--gw-border-soft)] flex items-center justify-center text-[var(--gw-accent)] shrink-0">
+            <button className={styles.userBtn}>
+              <div className={styles.userAvatar}>
                 <User size={14} />
               </div>
-              {!collapsed && (
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="text-[12px] font-semibold text-[var(--gw-text)] truncate">GeoWork User</div>
-                  <div className="text-[10px] text-[var(--gw-text-disabled)]">Free</div>
-                </div>
-              )}
+              <div className={styles.userInfo}>
+                <div className={styles.userName}>GeoWork User</div>
+                <div className={styles.userPlan}>Free</div>
+              </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" sideOffset={8} collisionPadding={8} className="w-[220px]">
+          <DropdownMenuContent side="top" align="start" sideOffset={8} collisionPadding={8} className={styles.userMenu}>
             <DropdownMenuItem onClick={() => openNav('settings')}>
               <Settings size={14} /> 设置
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openNav('workspaces')}>
-              <LayoutGrid size={14} /> 工作空间
+              <Boxes size={14} /> 工作空间
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <HelpCircle size={14} /> 帮助与反馈
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-[var(--gw-danger)] focus:text-[var(--gw-danger)]">
+            <DropdownMenuItem className={styles.logoutItem}>
               <LogOut size={14} /> 退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>

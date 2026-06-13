@@ -1,13 +1,14 @@
 .topbar {
   height: 40px;
   min-height: 40px;
+  max-height: 40px;
   width: 100%;
   display: flex;
   align-items: center;
   overflow: hidden;
   box-sizing: border-box;
   background: #171716;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid #2e2e2c;
   font-family: var(
     --gw-font-sans,
     "Inter",
@@ -27,8 +28,8 @@
   height: 40px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-left: 10px;
+  gap: 8px;
+  padding-left: 14px;
   min-width: 0;
   box-sizing: border-box;
   -webkit-app-region: no-drag;
@@ -42,17 +43,17 @@
 }
 
 .rightActions {
-  flex: 0 1 342px;
+  flex: 0 1 auto;
   width: auto;
-  max-width: min(342px, 42vw);
+  max-width: none;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
   overflow: hidden;
-  padding-right: 10px;
+  padding-right: 12px;
   box-sizing: border-box;
   -webkit-app-region: no-drag;
 }
@@ -75,14 +76,14 @@
 }
 
 .iconBtn {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 40px;
   border: none;
   border-radius: 8px;
   padding: 0;
   margin: 0;
   background: transparent;
-  color: #d7d8d2;
+  color: #e8e8e5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -90,9 +91,9 @@
   -webkit-app-region: no-drag;
 
   svg {
-    width: 15px;
-    height: 15px;
-    stroke-width: 1.9;
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
   }
 
   &:hover {
@@ -116,46 +117,39 @@
 }
 
 .starButton {
-  flex: 0 1 168px;
-  height: 24px;
-  max-width: 168px;
-  min-width: 0;
-  padding: 0 13px;
+  flex: 0 0 auto;
+  height: 28px;
+  min-height: 28px;
+  min-width: auto;
+  padding: 0 10px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(180deg, #2d6b3d 0%, #255832 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 0 18px rgba(67, 190, 105, 0.18);
-  color: #f3fff5;
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1;
+  background: #1a2e21;
+  color: #c7c7bf;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
   svg {
-    width: 13px;
-    height: 13px;
+    width: 16px;
+    height: 16px;
+    color: #73cd94;
     stroke-width: 2;
   }
 
   &:hover {
-    background: linear-gradient(180deg, #347a46 0%, #2b653a 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      0 0 22px rgba(67, 190, 105, 0.24);
+    background: #203a29;
   }
 
   &:active {
-    background: linear-gradient(180deg, #245530 0%, #1d4528 100%);
+    background: #16281d;
   }
 }
 
@@ -166,17 +160,16 @@
 }
 
 .feedbackButton {
-  flex: 0 1 104px;
-  height: 30px;
-  max-width: 104px;
-  min-width: 30px;
-  padding: 0 6px;
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 8px;
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #d7d8d2;
-  font-size: 12px;
-  font-weight: 520;
+  color: #eeeeeb;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -187,9 +180,10 @@
   -webkit-app-region: no-drag;
 
   svg {
-    width: 15px;
-    height: 15px;
-    stroke-width: 1.85;
+    width: 16px;
+    height: 16px;
+    color: #eeeeeb;
+    stroke-width: 2;
   }
 
   &:hover {
@@ -205,15 +199,15 @@
 }
 
 .usageButton {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 40px;
+  min-width: 36px;
   border: none;
   border-radius: 8px;
   padding: 0;
   background: transparent;
-  color: #d7d8d2;
+  color: #eeeeeb;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -221,8 +215,8 @@
   -webkit-app-region: no-drag;
 
   svg {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     stroke-width: 1.85;
   }
 
@@ -240,7 +234,7 @@
   padding: 0;
   margin: 0;
   background: transparent;
-  color: #d7d8d2;
+  color: #eeeeeb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,8 +358,6 @@
 
 @media (max-width: 1120px) {
   .rightActions {
-    flex-basis: 284px;
-    max-width: 284px;
     gap: 12px;
   }
 
@@ -374,9 +366,9 @@
   }
 
   .feedbackButton {
-    flex-basis: 30px;
-    width: 30px;
-    max-width: 30px;
+    flex-basis: 28px;
+    width: 28px;
+    max-width: 28px;
     padding: 0;
     justify-content: center;
   }
@@ -384,8 +376,6 @@
 
 @media (max-width: 980px) {
   .rightActions {
-    flex-basis: 126px;
-    max-width: 126px;
     gap: 10px;
   }
 
@@ -394,9 +384,10 @@
   }
 
   .starButton {
-    flex-basis: 30px;
-    width: 30px;
-    max-width: 30px;
+    flex-basis: 28px;
+    width: 28px;
+    min-width: 28px;
+    max-width: 28px;
     padding: 0;
     justify-content: center;
   }
