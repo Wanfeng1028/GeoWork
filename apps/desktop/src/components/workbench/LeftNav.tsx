@@ -2,12 +2,12 @@ import { cn } from '../../lib/cn'
 import {
   ChevronLeft,
   ChevronRight,
-  Compass,
   Plus,
   Settings,
   User,
   type LucideIcon,
 } from 'lucide-react'
+import { geoAgentCharacterAssets } from '../brand'
 
 export type NavItem = {
   key: string
@@ -47,7 +47,7 @@ export function LeftNav({
           onClick={() => onNavigate('workbench')}
           aria-label="GeoWork"
         >
-          <Compass className="h-5 w-5" />
+          <img src={geoAgentCharacterAssets.logo.mark} alt="GeoWork" className="h-5 w-5" draggable={false} />
         </button>
         {!collapsed && (
           <span className="text-[14px] font-semibold text-[var(--gw-text)]">{brandName}</span>

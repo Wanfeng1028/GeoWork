@@ -38,3 +38,9 @@ logs/
 
 # Cache
 .pytest_cache/
+
+# design files
+*.sketch
+*.fig
+*.xd    
+assets/

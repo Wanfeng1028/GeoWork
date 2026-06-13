@@ -9,7 +9,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
 import { Empty } from '../../../components/ui/empty'
 import { Search, Download, CheckCircle, Settings } from 'lucide-react'
-import usePluginStore from '../../pluginStore'
+import usePluginStore from '../pluginStore'
+import type { Plugin } from '../pluginClient'
 import styles from './PluginMarketplace.module.scss'
 
 interface PluginMarketplaceProps {
@@ -48,13 +49,13 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
     let result = plugins
 
     if (categoryFilter) {
-      result = result.filter((p) => p.category === categoryFilter)
+      result = result.filter((p: Plugin) => p.category === categoryFilter)
     }
 
     if (searchText.trim()) {
       const query = searchText.trim().toLowerCase()
       result = result.filter(
-        (p) =>
+        (p: Plugin) =>
           p.name.toLowerCase().includes(query) ||
           p.description.toLowerCase().includes(query) ||
           p.author.toLowerCase().includes(query)
@@ -162,7 +163,7 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
         ) : filteredPlugins.length === 0 ? (
           <Empty description="没有找到匹配的插件" className={styles.empty} />
         ) : (
-          filteredPlugins.map((plugin) => (
+          filteredPlugins.map((plugin: Plugin) => (
             <Card
               key={plugin.id}
               className={`${styles.pluginCard} ${plugin.installed ? styles.pluginCardInstalled : ''}`}
@@ -213,7 +214,7 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
 
               {plugin.permissions.length > 0 && (
                 <div className={styles.pluginPermissions}>
-                  {plugin.permissions.slice(0, 3).map((perm) => (
+                  {plugin.permissions.slice(0, 3).map((perm: string) => (
                     <Badge
                       key={perm}
                       className={getBadgeClass(getPermissionTagColor(perm))}

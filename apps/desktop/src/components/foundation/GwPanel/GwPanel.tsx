@@ -2,13 +2,12 @@
 // Panel container for docks, sidebars, and modal panels
 
 import React from 'react'
-import classNames from 'classnames'
 import styles from './GwPanel.module.scss'
 
 export type GwPanelVariant = 'sidebar' | 'dock' | 'modal' | 'floating'
 export type GwPanelPosition = 'left' | 'right' | 'top' | 'bottom'
 
-export interface GwPanelProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface GwPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   variant?: GwPanelVariant
   position?: GwPanelPosition
   title?: React.ReactNode
@@ -50,13 +49,13 @@ export const GwPanel: React.FC<GwPanelProps> = ({
   resizeHandle,
   ...rest
 }) => {
-  const cls = classNames(
+  const cls = [
     styles.panel,
     variantClasses[variant],
     positionClasses[position],
-    resizeHandle ? styles.resizable : undefined,
-    className
-  )
+    resizeHandle && styles.resizable,
+    className,
+  ].filter(Boolean).join(' ')
 
   return (
     <div className={cls} style={style} {...rest}>

@@ -54,7 +54,7 @@ class AgentClient {
       permissionLevel?: string
     },
   ): Promise<{ taskId: string }> {
-    return runtimeClient.geowork.runtime.createTask({
+    return (runtimeClient as any).geowork.runtime.createTask({
       workspaceId,
       prompt,
       ...options,
@@ -62,7 +62,7 @@ class AgentClient {
   }
 
   async getTask(taskId: string): Promise<Record<string, unknown>> {
-    return runtimeClient.geowork.runtime.getTask(taskId)
+    return (runtimeClient as any).geowork.runtime.getTask(taskId)
   }
 
   async getPlan(taskId: string): Promise<AgentPlan> {
@@ -70,7 +70,7 @@ class AgentClient {
   }
 
   async cancelTask(taskId: string): Promise<void> {
-    return runtimeClient.geowork.runtime.cancelTask(taskId)
+    return (runtimeClient as any).geowork.runtime.cancelTask(taskId)
   }
 
   async getSteps(taskId: string): Promise<AgentStep[]> {

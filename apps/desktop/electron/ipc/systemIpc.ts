@@ -179,7 +179,7 @@ export function registerSystemIPC(mainWindow: BrowserWindow) {
   )
 
   ipcMain.handle('shortcuts:unregister', async (_event: IpcMainInvokeEvent, shortcut: string) => {
-    const result = globalShortcut.unregister(shortcut)
+    const result = globalShortcut.unregister(shortcut) as unknown as boolean
     if (result) registeredShortcuts.delete(shortcut)
     return { success: result }
   })

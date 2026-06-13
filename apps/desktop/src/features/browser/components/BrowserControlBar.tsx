@@ -5,7 +5,7 @@ import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
 import { Camera, FileText, Zap, X, CheckCircle, Square } from 'lucide-react'
-import { useBrowserStore } from '../browserStore'
+import useBrowserStore from '../browserStore'
 import styles from './BrowserControlBar.module.scss'
 
 interface BrowserControlBarProps {
@@ -110,7 +110,7 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
           <TooltipTrigger asChild>
             <Button
               size="sm"
-              variant="destructive"
+              variant="danger"
               disabled={!isRunning}
               onClick={handleCloseSession}
             >

@@ -27,6 +27,8 @@ const buttonVariants = cva(
           'border border-[var(--gw-border)] bg-transparent text-[var(--gw-text)] hover:bg-[var(--gw-bg-hover)]',
         danger:
           'bg-[var(--gw-danger-soft)] text-[var(--gw-danger)] hover:bg-[var(--gw-danger)]/20',
+        link:
+          'bg-transparent text-[var(--gw-accent)] underline-offset-4 hover:underline',
       },
       size: {
         xs: 'h-6 px-2 text-[11px]',

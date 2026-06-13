@@ -9,7 +9,7 @@ import { Spinner } from '../../../components/ui/spinner'
 import { Empty } from '../../../components/ui/empty'
 import { Search, Globe, Zap } from 'lucide-react'
 import type { PaperSearchResult } from '../browserBridgeClient'
-import { useBrowserStore } from '../browserStore'
+import useBrowserStore from '../browserStore'
 import styles from './PaperSearchPanel.module.scss'
 
 interface PaperSearchPanelProps {

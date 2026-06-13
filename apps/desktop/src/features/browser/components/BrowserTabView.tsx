@@ -7,7 +7,7 @@ import { Button } from '../../../components/ui/button'
 import { Spinner } from '../../../components/ui/spinner'
 import { Card } from '../../../components/ui/card'
 import { ArrowLeft, ArrowRight, RefreshCw, Zap, Copy } from 'lucide-react'
-import { useBrowserStore } from '../browserStore'
+import useBrowserStore from '../browserStore'
 import styles from './BrowserTabView.module.scss'
 
 interface BrowserTabViewProps {

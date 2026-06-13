@@ -2,7 +2,6 @@
 // Primary interactive button with multiple variants
 
 import React from 'react'
-import classNames from 'classnames'
 import styles from './GwButton.module.scss'
 
 export type GwButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'ghost'
@@ -41,13 +40,14 @@ export const GwButton: React.FC<GwButtonProps> = ({
   className,
   ...rest
 }) => {
-  const cls = classNames(
+  const cls = [
     styles.btn,
     variantClasses[variant],
     sizeClasses[size],
-    { [styles.loading]: loading, [styles.disabled]: disabled },
-    className
-  )
+    loading && styles.loading,
+    disabled && styles.disabled,
+    className,
+  ].filter(Boolean).join(' ')
 
   return (
     <button className={cls} disabled={disabled || loading} {...rest}>

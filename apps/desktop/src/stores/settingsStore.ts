@@ -47,7 +47,22 @@ const useSettingsStore = create<SettingsState>((set) => ({
     }))
   },
 
-  setResolvedTheme: (resolvedTheme) => set({ resolvedTheme })
+  setResolvedTheme: (resolvedTheme) => set({ resolvedTheme }),
+
+  updateSetting: (path: string, value: unknown) => {
+    set((state) => {
+      const settings = JSON.parse(JSON.stringify(state.settings))
+      const keys = path.split('.')
+      let obj: unknown = settings
+      for (let i = 0; i < keys.length - 1; i++) {
+        obj = (obj as Record<string, unknown>)[keys[i]]
+      }
+      if (obj && typeof obj === 'object') {
+        (obj as Record<string, unknown>)[keys[keys.length - 1]] = value
+      }
+      return { settings }
+    })
+  }
 }))
 
 export default useSettingsStore

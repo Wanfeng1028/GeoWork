@@ -2,13 +2,7 @@
 // Settings page for account, subscription, team, sync, and telemetry preferences
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs'
-import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card'
-import { Input } from '../../../components/ui/input'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
-import { Switch } from '../../../components/ui/switch'
-import { Separator } from '../../../components/ui/separator'
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card, CardHeader, CardTitle, CardContent, Input, Button, Badge, Switch, Separator } from '../../components/ui'
 import { User, CreditCard, Users, Cloud, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAccountStore } from '../../stores/accountStore'
@@ -102,7 +96,7 @@ export function AccountSettings() {
                   <Input
                     placeholder="https://example.com/avatar.jpg"
                     value={formValues.avatar_url}
-                    onChange={(e) => setFormValues((v) => ({ ...v, avatar_url: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormValues((v) => ({ ...v, avatar_url: e.target.value }))}
                   />
                 </div>
                 <div className={styles.avatarPreview}>
@@ -118,7 +112,7 @@ export function AccountSettings() {
                   <label className="text-[13px] text-[var(--gw-text-secondary)]">昵称</label>
                   <Input
                     value={formValues.name}
-                    onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormValues((v) => ({ ...v, name: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-1">
@@ -275,7 +269,7 @@ function LoginPanel({ onLogin }: LoginPanelProps) {
         <Input
           placeholder="your@email.com"
           value={loginValues.email}
-          onChange={(e) => setLoginValues((v) => ({ ...v, email: e.target.value }))}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginValues((v) => ({ ...v, email: e.target.value }))}
         />
       </div>
       <div className="space-y-1">
@@ -284,7 +278,7 @@ function LoginPanel({ onLogin }: LoginPanelProps) {
           type="password"
           placeholder="密码"
           value={loginValues.password}
-          onChange={(e) => setLoginValues((v) => ({ ...v, password: e.target.value }))}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginValues((v) => ({ ...v, password: e.target.value }))}
         />
       </div>
       <Button type="submit" disabled={loading}>

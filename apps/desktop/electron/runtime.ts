@@ -80,7 +80,7 @@ async function checkCloudServerHealth(): Promise<boolean> {
 /**
  * Notify renderer about startup status via IPC
  */
-function notifyStartupStatus(service: 'goCore' | 'cloudServer', status: 'running' | 'failed', error?: string) {
+function notifyStartupStatus(service: 'goCore' | 'cloudServer', status: 'running' | 'failed' | 'stopped', error?: string) {
   const windows = require('electron').BrowserWindow.getAllWindows()
   windows.forEach((win: any) => {
     win.webContents.send('runtime:status-change', {

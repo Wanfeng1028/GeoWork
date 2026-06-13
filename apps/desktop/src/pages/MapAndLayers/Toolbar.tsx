@@ -36,7 +36,7 @@ export function Toolbar() {
             <TooltipTrigger asChild>
               <Button
                 size="sm"
-                variant={activeTool?.id === tool.id ? 'default' : 'outline'}
+                variant={activeTool?.id === tool.id ? 'secondary' : 'outline'}
                 onClick={() => handleToolClick(tool)}
               >
                 <span style={{ fontSize: 16 }}>{tool.icon}</span>

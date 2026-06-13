@@ -285,8 +285,8 @@ export function PaperSearch() {
                   找到 <span className="font-semibold text-foreground">{total}</span> 篇论文
                 </span>
                 <div className="flex gap-1">
-                  <Button size="sm" variant={viewMode === 'table' ? 'default' : 'outline'} onClick={() => setViewMode('table')}>表格</Button>
-                  <Button size="sm" variant={viewMode === 'card' ? 'default' : 'outline'} onClick={() => setViewMode('card')}>卡片</Button>
+                  <Button size="sm" variant={viewMode === 'table' ? 'secondary' : 'outline'} onClick={() => setViewMode('table')}>表格</Button>
+                  <Button size="sm" variant={viewMode === 'card' ? 'secondary' : 'outline'} onClick={() => setViewMode('card')}>卡片</Button>
                 </div>
                 {results.length > 0 && (
                   <Button size="sm" variant="outline" onClick={() => exportCsv(results)}>
@@ -365,7 +365,7 @@ export function PaperSearch() {
                     <Button
                       key={p}
                       size="sm"
-                      variant={p === page ? 'default' : 'outline'}
+                      variant={p === page ? 'secondary' : 'outline'}
                       onClick={() => handlePageChange(p)}
                     >
                       {p}

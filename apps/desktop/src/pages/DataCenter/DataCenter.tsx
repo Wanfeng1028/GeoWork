@@ -35,7 +35,7 @@ export default function DataCenter() {
     try {
       await registerDataset({
         name: formState.name,
-        type: formState.type,
+        type: formState.type as Dataset['type'],
         path: formState.path,
         crs: formState.crs || 'EPSG:4326',
         extent: { minX: 0, minY: 0, maxX: 1, maxY: 1 },

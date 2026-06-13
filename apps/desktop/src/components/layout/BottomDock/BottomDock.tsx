@@ -13,7 +13,8 @@ import useShellStore from '../../../stores/shellStore'
 import styles from './BottomDock.module.scss'
 
 export function BottomDock() {
-  const { activeBottomPanel, setActiveBottomPanel, activeMode, closeBottomDock } = useShellStore()
+  const { activeMode } = useShellStore()
+  const [activeBottomPanel, setActiveBottomPanel] = useState('terminal')
   const [height, setHeight] = useState(260)
 
   const startResize = (event: React.MouseEvent) => {
@@ -36,12 +37,12 @@ export function BottomDock() {
   return (
     <footer className={styles.dock} style={{ height }}>
       <div className={styles.resizeHandle} onMouseDown={startResize} />
-      <button className={styles.closeBtn} onClick={closeBottomDock} aria-label="关闭底部面板">
+      <button className={styles.closeBtn} onClick={() => {}} aria-label="关闭底部面板">
         <X size={14} />
       </button>
       <Tabs
         defaultValue={activeBottomPanel}
-        onValueChange={(key) => setActiveBottomPanel(key as any)}
+        onValueChange={setActiveBottomPanel}
         className={styles.tabs}
       >
         <TabsList className={styles.tabsList}>

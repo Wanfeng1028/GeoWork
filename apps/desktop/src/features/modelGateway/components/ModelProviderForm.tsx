@@ -40,7 +40,7 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
 
   useEffect(() => {
     if (provider) {
-      setFormValues(provider)
+      setFormValues(provider as Partial<ModelProvider>)
     } else {
       setFormValues({ kind: 'openai_compatible', enabled: true })
     }
@@ -102,7 +102,7 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
         <label className="text-[13px] text-[var(--gw-text-secondary)]">类型</label>
         <Select
           value={formValues.kind || 'openai_compatible'}
-          onValueChange={(val) => setFormValues((v) => ({ ...v, kind: val }))}
+          onValueChange={(val) => setFormValues((v) => ({ ...v, kind: val as ModelProvider['kind'] }))}
         >
           <SelectTrigger>
             <SelectValue />

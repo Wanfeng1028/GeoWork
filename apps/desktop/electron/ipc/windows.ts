@@ -1,6 +1,7 @@
 // GeoWork Electron - Windows IPC
 
 import { ipcMain, BrowserWindow, IpcMainInvokeEvent } from 'electron';
+import { join } from 'node:path';
 
 const ALLOWED_CHANNELS = new Set([
   'windows:getAll',
@@ -49,6 +50,7 @@ function registerWindows(mainWindow: BrowserWindow) {
           width: (options.width as number) || 1024,
           height: (options.height as number) || 768,
           title: (options.title as string) || "GeoWork",
+          icon: join(__dirname, "../../assets/app-icon.png"),
           webPreferences: {
             preload: options.preload as string | undefined,
             contextIsolation: true,

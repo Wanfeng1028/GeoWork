@@ -322,8 +322,8 @@ export default function NdvAnalysis() {
                 {isAnalyzing && <Spinner className="w-4 h-4" />}
               </CardTitle>
               <div className="flex gap-1">
-                <Button size="sm" variant={activeTab === 'config' ? 'default' : 'outline'} onClick={() => setActiveTab('config')}>参数配置</Button>
-                <Button size="sm" variant={activeTab === 'results' ? 'default' : 'outline'} onClick={() => setActiveTab('results')}>分析结果 ({results.length})</Button>
+                <Button size="sm" variant={activeTab === 'config' ? 'secondary' : 'outline'} onClick={() => setActiveTab('config')}>参数配置</Button>
+                <Button size="sm" variant={activeTab === 'results' ? 'secondary' : 'outline'} onClick={() => setActiveTab('results')}>分析结果 ({results.length})</Button>
               </div>
             </div>
           </CardHeader>

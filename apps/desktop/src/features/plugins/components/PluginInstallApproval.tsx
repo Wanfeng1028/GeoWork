@@ -8,7 +8,7 @@ import { Badge } from '../../../components/ui/badge'
 import { Input } from '../../../components/ui/input'
 import { Spinner } from '../../../components/ui/spinner'
 import { Check, X, AlertTriangle, Save } from 'lucide-react'
-import type { Plugin } from '../../pluginClient'
+import type { Plugin } from '../pluginClient'
 import styles from './PluginInstallApproval.module.scss'
 
 interface PluginInstallApprovalProps {
@@ -110,16 +110,16 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState<'approve' | 'deny' | null>(null)
 
-  const permissionsWithRisk = plugin.permissions.map((perm) => ({
+  const permissionsWithRisk = plugin.permissions.map((perm: string) => ({
     name: perm,
     ...PERMISSION_RISK[perm],
   }))
 
   const hasHighRisk = permissionsWithRisk.some(
-    (p) => p.level === '高风险'
+    (p: { level: string }) => p.level === '高风险'
   )
-  const riskCount = permissionsWithRisk.filter((p) => p.level === '高风险').length
-  const medRiskCount = permissionsWithRisk.filter((p) => p.level === '中等风险').length
+  const riskCount = permissionsWithRisk.filter((p: { level: string }) => p.level === '高风险').length
+  const medRiskCount = permissionsWithRisk.filter((p: { level: string }) => p.level === '中等风险').length
 
   const maxRisk = riskCount > 0 ? 'high' : medRiskCount > 0 ? 'medium' : 'low'
   const maxRiskColor = getRiskColor(maxRisk)
@@ -176,7 +176,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           <span className="text-[13px] text-[var(--gw-text-secondary)]">
             请求的权限及风险评估：
           </span>
-          {permissionsWithRisk.map((perm) => (
+          {permissionsWithRisk.map((perm: { name: string; level: string; color: string }) => (
             <div key={perm.name} className={styles.permissionRow}>
               <code className={styles.permissionName}>{perm.name}</code>
               <Badge className={getBadgeClass(perm.color)}>
@@ -217,7 +217,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           批准
         </Button>
         <Button
-          variant="destructive"
+          variant="danger"
           onClick={handleDeny}
           disabled={loading === 'deny'}
         >

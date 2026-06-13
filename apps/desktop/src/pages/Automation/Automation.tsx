@@ -48,10 +48,10 @@ export function Automation() {
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <Button size="sm" variant={activeTab === 'rules' ? 'default' : 'outline'} onClick={() => setActiveTab('rules')}>
+              <Button size="sm" variant={activeTab === 'rules' ? 'secondary' : 'outline'} onClick={() => setActiveTab('rules')}>
                 自动化规则 ({filteredRules.length} 条)
               </Button>
-              <Button size="sm" variant={activeTab === 'jobs' ? 'default' : 'outline'} onClick={() => setActiveTab('jobs')}>
+              <Button size="sm" variant={activeTab === 'jobs' ? 'secondary' : 'outline'} onClick={() => setActiveTab('jobs')}>
                 定时任务 ({filteredJobs.length} 个)
               </Button>
             </div>

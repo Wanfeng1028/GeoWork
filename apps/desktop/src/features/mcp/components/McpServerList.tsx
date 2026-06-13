@@ -8,7 +8,7 @@ import { Card } from '../../../components/ui/card'
 import { Input } from '../../../components/ui/input'
 import { Badge } from '../../../components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog'
-import { Plus, Trash, Tool } from 'lucide-react'
+import { Plus, Trash, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import useMcpStore from '../mcpStore'
 import type { McpServer } from '../mcpClient'
@@ -91,7 +91,7 @@ export function McpServerList() {
       <div className="flex flex-col">
         {servers.length === 0 && !isLoading && (
           <div className={styles.empty}>
-            <Tool className={styles.emptyIcon} />
+            <Settings className={styles.emptyIcon} />
             <span className="text-[13px] text-[var(--gw-text-secondary)]">No MCP servers configured. Add one to get started.</span>
           </div>
         )}
@@ -132,7 +132,7 @@ export function McpServerList() {
             </summary>
             <div className={styles.toolsSection}>
               <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
-                <Tool className="h-4 w-4 inline mr-1" /> Available Tools
+                <Settings className="h-4 w-4 inline mr-1" /> Available Tools
               </h4>
               {server.tools.length === 0 ? (
                 <span className="text-[13px] text-[var(--gw-text-secondary)]">No tools available</span>

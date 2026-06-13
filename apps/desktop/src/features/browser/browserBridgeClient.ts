@@ -33,11 +33,12 @@ export interface PaperSearchResult {
 
 class BrowserBridgeClient {
   private request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    return runtimeClient.request<T>({
+    const fn = (runtimeClient as any).request
+    return fn.call(runtimeClient, {
       method,
       path: `/api/browser-bridge${path}`,
       body,
-    })
+    }) as Promise<T>
   }
 
   async openSession(): Promise<{ sessionId: string }> {

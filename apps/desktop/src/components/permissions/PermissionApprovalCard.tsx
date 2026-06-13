@@ -3,10 +3,10 @@
 
 import React, { useState } from 'react'
 import { Check, X, AlertTriangle, Save, Eye } from 'lucide-react'
-import { Card, CardContent } from '../../ui/card'
-import { Button } from '../../ui/button'
-import { Badge } from '../../ui/badge'
-import { Textarea } from '../../ui/textarea'
+import { Card, CardContent } from '../ui/card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Textarea } from '../ui/textarea'
 import usePermissionStore from '../../stores/permissionStore'
 import type { PermissionRequest, RiskLevel } from '../../types/permission'
 import styles from './PermissionApprovalCard.module.scss'
@@ -134,7 +134,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             className={styles.reasonInput}
             placeholder="审批理由（可选）"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
           <div className={`${styles.actionButtons} flex flex-wrap gap-2`}>

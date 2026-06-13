@@ -21,7 +21,7 @@ export function registerShortcut(shortcut: string, callback: ShortcutCallback): 
 }
 
 export function unregisterShortcut(shortcut: string): boolean {
-  const result = globalShortcut.unregister(shortcut);
+  const result = globalShortcut.unregister(shortcut) as unknown as boolean
   if (result) {
     registeredShortcuts.delete(shortcut);
   }

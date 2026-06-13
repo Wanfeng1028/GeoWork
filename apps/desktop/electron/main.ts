@@ -1,108 +1,119 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron'
-import { join } from 'node:path'
-import { startRuntime, stopRuntime, checkHealth, getRuntimeStatus } from './runtime'
-import { registerDesktopIPC } from './ipc/desktopIpc'
-import { registerRuntimeIPC } from './ipc/runtimeIpc'
-import { registerSystemIPC } from './ipc/systemIpc'
-import { registerClipboardIPC } from './ipc/clipboardIpc'
-import { registerNotificationIPC } from './ipc/notificationIpc'
-import registerWindows from './ipc/windows'
-import { registerPermissionForwarder } from './security/permission-forwarder'
-import { initTray } from './local/tray'
-import { buildMenu, getDefaultMenu } from './local/menu'
-import { registerLoggingIPC, writeLog } from './local/logging'
-import { cleanupShortcuts } from './local/shortcuts'
-import { cleanupSystemIPC } from './ipc/systemIpc'
+import { app, BrowserWindow, ipcMain, Menu } from "electron";
+import { join } from "node:path";
+import {
+  startRuntime,
+  stopRuntime,
+  checkHealth,
+  getRuntimeStatus,
+} from "./runtime";
+import { registerDesktopIPC } from "./ipc/desktopIpc";
+import { registerRuntimeIPC } from "./ipc/runtimeIpc";
+import { registerSystemIPC } from "./ipc/systemIpc";
+import { registerClipboardIPC } from "./ipc/clipboardIpc";
+import { registerNotificationIPC } from "./ipc/notificationIpc";
+import registerWindows from "./ipc/windows";
+import { registerPermissionForwarder } from "./security/permission-forwarder";
+import { initTray } from "./local/tray";
+import { registerLoggingIPC, writeLog } from "./local/logging";
+import { cleanupShortcuts } from "./local/shortcuts";
+import { cleanupSystemIPC } from "./ipc/systemIpc";
 
-let mainWindow: BrowserWindow | null = null
-let isAppReady = false
+let mainWindow: BrowserWindow | null = null;
+let isAppReady = false;
 
 async function createWindow() {
-  await startRuntime()
+  await startRuntime();
 
   // Hide native menu bar
-  Menu.setApplicationMenu(null)
+  Menu.setApplicationMenu(null);
 
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 940,
-    minWidth: 1180,
-    minHeight: 760,
-    title: 'GeoWork',
+    width: 1280,
+    height: 800,
+    minWidth: 960,
+    minHeight: 640,
     frame: false,
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#11110f',
-      symbolColor: '#b4b4ac',
-      height: 44,
-    },
-    backgroundColor: '#080807',
+    titleBarStyle: "hidden",
+    titleBarOverlay: false,
+    backgroundColor: "#171716",
+    icon: join(__dirname, "../../assets/app-icon.png"),
     webPreferences: {
-      preload: join(__dirname, '../preload/preload.mjs'),
+      preload: join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
-  })
+  });
+
+  const win = mainWindow;
 
   if (process.env.ELECTRON_RENDERER_URL) {
-    await mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
+    await win.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    await mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    await win.loadFile(join(__dirname, "../renderer/index.html"));
   }
 
   // Initialize local modules after window is ready
-  registerDesktopIPC(mainWindow)
-  registerRuntimeIPC()
-  registerSystemIPC(mainWindow)
-  registerClipboardIPC()
-  registerNotificationIPC()
-  registerWindows(mainWindow)
-  registerPermissionForwarder(mainWindow)
-  registerLoggingIPC()
+  registerDesktopIPC(win);
+  registerRuntimeIPC();
+  registerSystemIPC(win);
+  registerClipboardIPC();
+  registerNotificationIPC();
+  registerWindows(win);
+  registerPermissionForwarder(win);
+  registerLoggingIPC();
 
   // Initialize tray
-  initTray(mainWindow)
+  initTray(win);
 
   // Register runtime status IPC
-  ipcMain.handle('runtime:status', async () => {
-    return getRuntimeStatus()
-  })
+  ipcMain.handle("runtime:status", async () => {
+    return getRuntimeStatus();
+  });
 
-  ipcMain.handle('runtime:health', async () => {
-    return await checkHealth()
-  })
+  ipcMain.handle("runtime:health", async () => {
+    return await checkHealth();
+  });
 
-  isAppReady = true
-  writeLog('main', 'GeoWork main window created and initialized')
+  win.on("closed", () => {
+    mainWindow = null;
+  });
+
+  isAppReady = true;
+  writeLog("main", "GeoWork main window created and initialized");
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
-  stopRuntime()
-  cleanupSystemIPC()
-  cleanupShortcuts()
-  if (process.platform !== 'darwin') app.quit()
-})
+app.on("window-all-closed", () => {
+  stopRuntime();
+  cleanupSystemIPC();
+  cleanupShortcuts();
 
-app.on('will-quit', () => {
-  stopRuntime()
-  cleanupSystemIPC()
-  cleanupShortcuts()
-})
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});
+
+app.on("will-quit", () => {
+  stopRuntime();
+  cleanupSystemIPC();
+  cleanupShortcuts();
+});
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
 
 // Handle renderer crash — graceful recovery
-app.on('web-contents-created', (_event, webContents) => {
-  webContents.on('render-process-gone', (_e, details) => {
-    writeLog('error', `Renderer process gone: ${details.reason}`)
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.reload()
+app.on("web-contents-created", (_event, webContents) => {
+  webContents.on("render-process-gone", (_e, details) => {
+    writeLog("error", `Renderer process gone: ${details.reason}`);
+
+    const win = mainWindow;
+    if (win && !win.isDestroyed()) {
+      win.webContents.reload();
     }
-  })
-})
+  });
+});

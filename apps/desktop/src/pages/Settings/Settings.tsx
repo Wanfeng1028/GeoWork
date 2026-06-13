@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { Settings, Palette, FolderOpen, Bot } from 'lucide-react'
+import { Settings as SettingsIcon, Palette, FolderOpen, Bot } from 'lucide-react'
 import { Input } from '../../components/ui/input'
 import { Switch } from '../../components/ui/switch'
 import { Separator } from '../../components/ui/separator'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
 import { toast } from 'sonner'
 import useSettingsStore from '../../stores/settingsStore'
+import type { Settings } from '../../types/settings'
 
 const TABS = [
-  { key: 'model', label: '模型与 API', icon: Settings },
+  { key: 'model', label: '模型与 API', icon: SettingsIcon },
   { key: 'appearance', label: '外观', icon: Palette },
   { key: 'workspace', label: '工作区', icon: FolderOpen },
   { key: 'agent', label: 'Agent 行为', icon: Bot },
@@ -100,7 +101,7 @@ export function SettingsPage() {
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-[180px_1fr] items-center gap-4">
                     <label className="text-[12px] text-[var(--gw-text-secondary)]">主题</label>
-                    <Select onValueChange={(v) => { setTheme(v); toast.success('主题已更新') }}>
+                    <Select onValueChange={(v) => { setTheme(v as Settings['appearance']['theme']); toast.success('主题已更新') }}>
                       <SelectTrigger><SelectValue placeholder="选择主题" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="dark">深色</SelectItem>

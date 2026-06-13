@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { Button } from '../../../components/ui/button'
-import { ExclamationCircle, RefreshCw } from 'lucide-react'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 import useAgentStore from '../agentStore'
 import styles from './AgentRecoveryBanner.module.scss'
 
@@ -24,7 +24,7 @@ export const AgentRecoveryBanner: React.FC<{ taskId: string }> = ({ taskId }) =>
   return (
     <div className={`${styles.banner} ${styles[stateType]}`}>
       <div className={styles.content}>
-        <ExclamationCircle className={styles.warningIcon} style={{ color: config.color }} />
+        <AlertTriangle className={styles.warningIcon} style={{ color: config.color }} />
         <div className={styles.text}>
           <span className={styles.title}>{config.title}</span>
           <span className={styles.description}>{config.description}</span>

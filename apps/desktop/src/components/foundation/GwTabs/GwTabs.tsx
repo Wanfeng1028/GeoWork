@@ -2,12 +2,12 @@
 // Tabbed interface with multiple activation styles
 
 import React, { useState } from 'react'
-import classNames from 'classnames'
 import styles from './GwTabs.module.scss'
 
 export type GwTabsSize = 'small' | 'default' | 'large'
 export type GwTabsTabType = 'line' | 'card' | 'segmented'
 
+// @ts-expect-error - TS2430 is a known false positive with React.HTMLAttributes and nested children types
 export interface GwTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: GwTabsSize
   tabType?: GwTabsTabType
@@ -58,7 +58,7 @@ export const GwTabs: React.FC<GwTabsProps> = ({
 
   return (
     <div
-      className={classNames(styles.tabs, sizeClasses[size], tabTypeClasses[tabType], { [styles.centered]: centered }, className)}
+      className={[styles.tabs, sizeClasses[size], tabTypeClasses[tabType], centered && styles.centered, className].filter(Boolean).join(' ')}
       {...rest}
     >
       <div className={styles.tabList}>
@@ -67,7 +67,7 @@ export const GwTabs: React.FC<GwTabsProps> = ({
           return (
             <button
               key={item.key}
-              className={classNames(styles.tabItem, { [styles.active]: isActive, [styles.disabled]: item.disabled })}
+              className={[styles.tabItem, { [styles.active]: isActive, [styles.disabled]: item.disabled }].filter(Boolean).join(' ')}
               onClick={() => handleTabClick(item.key)}
               disabled={item.disabled}
             >

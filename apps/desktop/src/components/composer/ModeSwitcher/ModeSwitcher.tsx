@@ -3,15 +3,14 @@
 
 import React from 'react'
 import useShellStore from '../../../stores/shellStore'
+import type { AppMode } from '../../../types/shell'
 import styles from './ModeSwitcher.module.scss'
 
-type AppMode = 'work' | 'code' | 'paper' | 'ppt'
-
 const modes: { key: AppMode; label: string; icon: string; desc: string }[] = [
-  { key: 'work', label: '工作', icon: '📋', desc: '通用工作流' },
-  { key: 'code', label: '编码', icon: '💻', desc: '代码开发' },
-  { key: 'paper', label: '论文', icon: '📄', desc: '研究论文' },
-  { key: 'ppt', label: '演示', icon: '🎯', desc: 'PPT 演示' },
+  { key: 'general', label: '工作', icon: '📋', desc: '通用工作流' },
+  { key: 'analysis', label: '分析', icon: '📊', desc: '数据分析' },
+  { key: 'research', label: '研究', icon: '📄', desc: '研究论文' },
+  { key: 'automation', label: '自动化', icon: '⚙️', desc: '自动化任务' },
 ]
 
 export const ModeSwitcher: React.FC = () => {

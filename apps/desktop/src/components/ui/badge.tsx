@@ -13,6 +13,8 @@ const badgeVariants = cva(
       variant: {
         default:
           'bg-[var(--gw-bg-active)] text-[var(--gw-text-secondary)]',
+        secondary:
+          'bg-[var(--gw-bg-hover)] text-[var(--gw-text-secondary)]',
         accent:
           'bg-[var(--gw-accent-soft)] text-[var(--gw-accent)]',
         success:
@@ -25,6 +27,10 @@ const badgeVariants = cva(
           'bg-[var(--gw-info-soft)] text-[var(--gw-info)]',
         outline:
           'border border-[var(--gw-border)] bg-transparent text-[var(--gw-text-secondary)]',
+        link:
+          'bg-transparent text-[var(--gw-accent)] underline-offset-4 hover:underline',
+        destructive:
+          'bg-[var(--gw-danger)] text-white',
       },
     },
     defaultVariants: {

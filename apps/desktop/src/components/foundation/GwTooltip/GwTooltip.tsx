@@ -2,12 +2,12 @@
 // Custom tooltip with positioning support
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import classNames from 'classnames'
 import styles from './GwTooltip.module.scss'
 
 export type GwTooltipPlacement = 'top' | 'bottom' | 'left' | 'right'
 
-export interface GwTooltipProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'title'> {
+// @ts-expect-error - TS2430 is a known false positive with React.HTMLAttributes and nested children types
+export interface GwTooltipProps extends React.HTMLAttributes<HTMLSpanElement> {
   content: React.ReactNode
   placement?: GwTooltipPlacement
   trigger?: 'hover' | 'click' | 'focus'
@@ -15,6 +15,7 @@ export interface GwTooltipProps extends Omit<React.HTMLAttributes<HTMLSpanElemen
   onVisibleChange?: (visible: boolean) => void
   delay?: number
   disabled?: boolean
+  children?: React.ReactNode
 }
 
 const defaultOffset: Record<GwTooltipPlacement, number> = {
@@ -158,11 +159,11 @@ export const GwTooltip: React.FC<GwTooltipProps> = ({
       {isVisible && content && !disabled && (
         <div
           ref={tooltipRef}
-          className={classNames(styles.tooltip, styles[placement])}
+          className={`${styles.tooltip} ${styles[placement]}`}
           style={{ top: position.top, left: position.left }}
         >
           <div className={styles.tooltipContent}>{content}</div>
-          <div className={classNames(styles.arrow, styles[`arrow-${arrowDirection}`])} />
+          <div className={`${styles.arrow} ${styles[`arrow-${arrowDirection}`]}`} />
         </div>
       )}
     </span>

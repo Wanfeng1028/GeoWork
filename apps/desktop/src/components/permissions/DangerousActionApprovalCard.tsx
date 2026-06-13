@@ -3,10 +3,10 @@
 
 import React, { useState } from 'react'
 import { AlertCircle, X, Lock, AlertTriangle } from 'lucide-react'
-import { Card, CardContent } from '../../ui/card'
-import { Button } from '../../ui/button'
-import { Badge } from '../../ui/badge'
-import { Textarea } from '../../ui/textarea'
+import { Card, CardContent } from '../ui/card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Textarea } from '../ui/textarea'
 import usePermissionStore from '../../stores/permissionStore'
 import type { RiskLevel, DangerousAction } from '../../types/permission'
 import styles from './DangerousActionApprovalCard.module.scss'
@@ -153,7 +153,7 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
             className={styles.reasonInput}
             placeholder="备注（可选）"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
           <div className={`${styles.actionButtons} flex flex-wrap gap-2`}>

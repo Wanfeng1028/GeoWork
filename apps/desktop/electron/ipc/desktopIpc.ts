@@ -46,7 +46,7 @@ export function registerDesktopIPC(mainWindow: BrowserWindow) {
         }
       }
       const result = await dialog.showOpenDialog(mainWindow, {
-        properties,
+        properties: properties as ('openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles' | 'createDirectory' | 'promptToCreate' | 'noResolveAliases' | 'treatPackageAsDirectory' | 'dontAddToRecent')[],
         filters: options.filters || [],
       })
       return result.filePaths

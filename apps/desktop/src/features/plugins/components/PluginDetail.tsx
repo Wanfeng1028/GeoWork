@@ -10,8 +10,8 @@ import { Switch } from '../../../components/ui/switch'
 import { Empty } from '../../../components/ui/empty'
 import { Spinner } from '../../../components/ui/spinner'
 import { CheckCircle, Download, User, Globe, Shield, Star, AlertTriangle } from 'lucide-react'
-import type { Plugin } from '../../pluginClient'
-import usePluginStore from '../../pluginStore'
+import type { Plugin } from '../pluginClient'
+import usePluginStore from '../pluginStore'
 import styles from './PluginDetail.module.scss'
 
 interface PluginDetailProps {
@@ -93,13 +93,13 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
   const { install, uninstall, toggle, isLoading } = usePluginStore()
   const [showConfirm, setShowConfirm] = useState<'install' | 'uninstall' | null>(null)
 
-  const riskInfo = plugin.permissions.map((perm) => ({
+  const riskInfo = plugin.permissions.map((perm: string) => ({
     name: perm,
     ...PERMISSION_RISK[perm],
   }))
 
-  const hasHighRisk = riskInfo.some((r) => r.level === '高风险')
-  const hasMediumRisk = riskInfo.some((r) => r.level === '中等风险')
+  const hasHighRisk = riskInfo.some((r: { level: string }) => r.level === '高风险')
+  const hasMediumRisk = riskInfo.some((r: { level: string }) => r.level === '中等风险')
 
   const handleInstall = async () => {
     setShowConfirm('install')
@@ -234,7 +234,7 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
           )}
 
           <div className={styles.permissionsList}>
-            {plugin.permissions.map((perm) => {
+            {plugin.permissions.map((perm: string) => {
               const info = PERMISSION_RISK[perm] || PERMISSION_RISK.default
               return (
                 <div key={perm} className={styles.permissionItem}>
@@ -269,7 +269,7 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                   />
                 </div>
                 <Button
-                  variant="destructive"
+                  variant="danger"
                   className="w-full"
                   onClick={handleUninstall}
                   disabled={isLoading || (showConfirm !== 'uninstall' && showConfirm !== null)}

@@ -1,9 +1,10 @@
 import {
-  Plug, LayoutGrid, Bell, BookOpen, Calendar, Cloud, Compass,
+  Plug, LayoutGrid, Bell, BookOpen, Calendar, Cloud,
   FileSearch, FolderOpen, Home, PanelLeftClose, PanelLeftOpen,
   MessageSquare, Plus, Bot, Clock, Settings, Share2, Wrench, User,
   LogOut, HelpCircle,
 } from 'lucide-react'
+import { geoAgentCharacterAssets } from '../../brand'
 import useShellStore from '../../../stores/shellStore'
 import { runAction } from '../../../services/actionRegistry'
 import {
@@ -14,11 +15,18 @@ import {
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu'
 
+import type { LucideProps } from 'lucide-react'
+
 interface LeftSidebarProps {
   collapsed?: boolean
 }
 
-const NAV_SECTIONS = [
+type NavItem = [string, string, React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>]
+
+const NAV_SECTIONS: Array<{
+  label: string
+  items: NavItem[]
+}> = [
   {
     label: '主能力',
     items: [
@@ -73,7 +81,7 @@ export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
           onClick={() => openNav('workbench')}
           aria-label="GeoWork"
         >
-          <Compass size={18} />
+          <img src={geoAgentCharacterAssets.logo.mark} alt="GeoWork" className="w-[18px] h-[18px]" draggable={false} />
         </button>
         {!collapsed && (
           <span className="text-[13px] font-bold text-[var(--gw-text)] tracking-tight">GeoWork</span>

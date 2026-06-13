@@ -27,11 +27,12 @@ export interface UsageSummary {
 
 class ModelGatewayClient {
   private request<T>(method: string, path: string, data?: unknown): Promise<T> {
-    return runtimeClient.request<T>({
+    const fn = (runtimeClient as any).request
+    return fn.call(runtimeClient, {
       method,
       path: `/api/model-gateway${path}`,
       body: data,
-    })
+    }) as Promise<T>
   }
 
   async listProviders(): Promise<ModelProvider[]> {

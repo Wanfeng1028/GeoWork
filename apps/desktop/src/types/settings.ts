@@ -51,4 +51,5 @@ export interface SettingsState {
   resolvedTheme: 'dark' | 'light';
   setTheme: (theme: Settings['appearance']['theme']) => void;
   setResolvedTheme: (theme: 'dark' | 'light') => void;
+  updateSetting: (path: string, value: unknown) => void;
 }

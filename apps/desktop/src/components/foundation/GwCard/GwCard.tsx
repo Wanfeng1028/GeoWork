@@ -2,12 +2,11 @@
 // Base card container with multiple variants
 
 import React from 'react'
-import classNames from 'classnames'
 import styles from './GwCard.module.scss'
 
 export type GwCardVariant = 'elevated' | 'outlined' | 'filled' | 'ghost'
 
-export interface GwCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface GwCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   variant?: GwCardVariant
   hoverable?: boolean
   bordered?: boolean
@@ -35,12 +34,13 @@ export const GwCard: React.FC<GwCardProps> = ({
   style,
   ...rest
 }) => {
-  const cls = classNames(
+  const cls = [
     styles.card,
     variantClasses[variant],
-    { [styles.hoverable]: hoverable, [styles.bordered]: bordered },
-    className
-  )
+    hoverable && styles.hoverable,
+    bordered && styles.bordered,
+    className,
+  ].filter(Boolean).join(' ')
 
   return (
     <div className={cls} style={style} {...rest}>

@@ -2,7 +2,6 @@
 // Status indicator badge for counts, alerts, and notifications
 
 import React from 'react'
-import classNames from 'classnames'
 import styles from './GwBadge.module.scss'
 
 export type GwBadgeColor =
@@ -54,7 +53,7 @@ export const GwBadge: React.FC<GwBadgeProps> = ({
     )
   }
 
-  const shouldShow = show !== undefined ? show : (count !== undefined && count > 0)
+  const shouldShow = show !== undefined ? show : (count !== undefined && typeof count === 'number' && count > 0)
 
   if (!shouldShow && !dot) {
     return (
@@ -80,12 +79,12 @@ export const GwBadge: React.FC<GwBadgeProps> = ({
       {children}
       {dot ? (
         <span
-          className={classNames(styles.badge, styles.dot, styles[color])}
+          className={`${styles.badge} ${styles.dot} ${styles[color]}`}
           style={badgeStyle}
         />
       ) : (
         <span
-          className={classNames(styles.badge, styles.count, styles[color])}
+          className={`${styles.badge} ${styles.count} ${styles[color]}`}
           style={badgeStyle}
         >
           {displayCount}

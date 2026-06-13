@@ -2,7 +2,6 @@
 // Icon-only button with tooltip support
 
 import React from 'react'
-import classNames from 'classnames'
 import styles from './GwIconButton.module.scss'
 
 export type GwIconButtonVariant = 'ghost' | 'subtle' | 'solid'
@@ -41,13 +40,14 @@ export const GwIconButton: React.FC<GwIconButtonProps> = ({
   className,
   ...rest
 }) => {
-  const cls = classNames(
+  const cls = [
     styles.btn,
     variantClasses[variant],
     sizeClasses[size],
-    { [styles.active]: active, [styles.danger]: danger },
-    className
-  )
+    active && styles.active,
+    danger && styles.danger,
+    className,
+  ].filter(Boolean).join(' ')
 
   const wrapperProps: React.HTMLAttributes<HTMLDivElement> = {}
   if (tooltip) {

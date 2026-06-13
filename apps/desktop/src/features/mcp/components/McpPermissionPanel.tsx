@@ -179,7 +179,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
 
         <div className={styles.actionButtons}>
           <Button
-            variant="destructive"
+            variant="danger"
             disabled={!denyReason.trim() || denying}
             onClick={handleDeny}
           >

@@ -1,33 +1,90 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360" role="img" aria-label="GeoWork README logo">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="360" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#071225"/><stop offset="0.42" stop-color="#0A3042"/><stop offset="1" stop-color="#05070F"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="120" y1="62" x2="300" y2="286" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8BFFE2"/><stop offset="0.52" stop-color="#3AD9FF"/><stop offset="1" stop-color="#F4D77E"/></linearGradient>
-    <linearGradient id="word" x1="385" y1="86" x2="1036" y2="208" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8BFFE2"/><stop offset="0.5" stop-color="#E7FFFA"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
-    <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000" flood-opacity="0.36"/></filter>
-  </defs>
-  <rect x="28" y="28" width="1344" height="304" rx="72" fill="url(#bg)" filter="url(#shadow)"/>
-  <g opacity="0.12" stroke="#A7FFF0" stroke-width="1.6"><path d="M70 95H1320M70 150H1320M70 205H1320M70 260H1320"/><path d="M135 54V306M225 54V306M315 54V306M405 54V306M495 54V306M585 54V306M675 54V306M765 54V306M855 54V306M945 54V306M1035 54V306M1125 54V306M1215 54V306M1305 54V306"/></g>
-  <g transform="translate(92 63)">
-    <circle cx="116" cy="116" r="105" fill="#0B2233" stroke="url(#accent)" stroke-width="8"/>
-    <ellipse cx="116" cy="116" rx="105" ry="34" fill="none" stroke="#A4FFEB" stroke-width="3.5" opacity="0.65"/>
-    <ellipse cx="116" cy="116" rx="34" ry="105" fill="none" stroke="#A4FFEB" stroke-width="3.5" opacity="0.45"/>
-    <path d="M34 158C86 77 177 48 229 74" fill="none" stroke="url(#accent)" stroke-width="7" stroke-linecap="round"/>
-    <circle cx="34" cy="158" r="9" fill="#8BFFE2"/><circle cx="229" cy="74" r="10" fill="#F4D77E"/>
-    <path d="M68 151H164M84 129v48M116 129v48M148 129v48" stroke="#EFFFFB" stroke-width="3.4" stroke-linecap="round"/>
-    <rect x="54" y="126" width="29" height="29" rx="8" fill="#0C2433" stroke="#8BFFE2" stroke-width="3"/>
-    <rect x="102" y="116" width="29" height="29" rx="8" fill="#102D3A" stroke="#E9F7FF" stroke-width="3"/>
-    <rect x="150" y="126" width="29" height="29" rx="8" fill="#0C2433" stroke="#F2D680" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620" role="img" aria-label="GeoWork Agent hero illustration">
+<defs>
+  <radialGradient id="hero-core" cx="38%" cy="32%" r="72%">
+    <stop offset="0%" stop-color="#8BFFE2"/>
+    <stop offset="18%" stop-color="#3AD9FF"/>
+    <stop offset="52%" stop-color="#1E6BFF"/>
+    <stop offset="100%" stop-color="#081020"/>
+  </radialGradient>
+  <linearGradient id="hero-petalA" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#8EE6FF" stop-opacity=".94"/>
+    <stop offset="58%" stop-color="#1E6BFF" stop-opacity=".94"/>
+    <stop offset="100%" stop-color="#5965F2" stop-opacity=".96"/>
+  </linearGradient>
+  <linearGradient id="hero-petalB" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#00D1B2" stop-opacity=".86"/>
+    <stop offset="65%" stop-color="#8EE6FF" stop-opacity=".72"/>
+    <stop offset="100%" stop-color="#1E6BFF" stop-opacity=".64"/>
+  </linearGradient>
+  <radialGradient id="hero-glow" cx="50%" cy="48%" r="68%">
+    <stop offset="0%" stop-color="#8BFFE2" stop-opacity=".9"/>
+    <stop offset="48%" stop-color="#3AD9FF" stop-opacity=".28"/>
+    <stop offset="100%" stop-color="#3AD9FF" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="hero-beam" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#8BFFE2" stop-opacity=".72"/>
+    <stop offset="72%" stop-color="#3AD9FF" stop-opacity=".16"/>
+    <stop offset="100%" stop-color="#3AD9FF" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="hero-shadow" x="-35%" y="-35%" width="170%" height="170%">
+    <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#05142E" flood-opacity=".34"/>
+    <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#3AD9FF" flood-opacity=".20"/>
+  </filter>
+  <filter id="hero-blur"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="920" height="620" rx="52" fill="#F3F7FC"/>
+<circle cx="558" cy="304" r="268" fill="#8EE6FF" opacity=".09"/>
+<g transform="translate(184 50) scale(3.05)"><g filter="url(#hero-shadow)">
+  
+  <g opacity=".9">
+    <path d="M59 89 L44 124 L88 124 L73 89 Z" fill="url(#hero-beam)"/>
+    <ellipse cx="66" cy="124" rx="34" ry="9" fill="#3AD9FF" opacity=".18"/>
+    <ellipse cx="66" cy="124" rx="22" ry="5" fill="none" stroke="#8BFFE2" stroke-width="1.5" opacity=".44"/>
   </g>
-  <text x="375" y="166" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="118" font-weight="850" letter-spacing="-4" fill="url(#word)">GeoWork</text>
-  <text x="383" y="220" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="30" font-weight="680" fill="#9FFFE9" opacity="0.9" letter-spacing="0.3">Local-first AI Agent Workbench for GIS + Remote Sensing</text>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="750" fill="#DFFCF8">
-    <rect x="382" y="248" width="91" height="38" rx="19" fill="#12394A" stroke="#56EAD0" stroke-opacity="0.45"/><text x="408" y="274">GEE</text>
-    <rect x="492" y="248" width="98" height="38" rx="19" fill="#12394A" stroke="#56EAD0" stroke-opacity="0.45"/><text x="516" y="274">QGIS</text>
-    <rect x="610" y="248" width="98" height="38" rx="19" fill="#12394A" stroke="#56EAD0" stroke-opacity="0.45"/><text x="634" y="274">GDAL</text>
-    <rect x="728" y="248" width="102" height="38" rx="19" fill="#12394A" stroke="#56EAD0" stroke-opacity="0.45"/><text x="750" y="274">Skills</text>
-    <rect x="850" y="248" width="89" height="38" rx="19" fill="#12394A" stroke="#F4D77E" stroke-opacity="0.5"/><text x="875" y="274">MCP</text>
+  
+  <ellipse cx="66" cy="69" rx="49" ry="20" fill="none" stroke="#8EE6FF" stroke-width="1.2" opacity=".28" transform="rotate(-13 66 69)"/>
+  <ellipse cx="66" cy="69" rx="42" ry="16" fill="none" stroke="#3AD9FF" stroke-width="1" opacity=".20" transform="rotate(28 66 69)"/>
+  <path d="M31 81 C46 104 88 106 106 81" fill="none" stroke="#8EE6FF" stroke-width="1" opacity=".22"/>
+
+  <g transform="rotate(0 66 66)">
+    <path d="M32 55 C39 25 77 8 101 25 C91 34 74 42 62 56 C52 67 41 66 32 55Z" fill="url(#hero-petalB)" opacity=".86"/>
+    <path d="M91 34 C116 46 116 81 91 96 C88 80 82 66 68 57 C79 49 84 42 91 34Z" fill="url(#hero-petalA)" opacity=".95"/>
+    <path d="M29 68 C30 91 53 109 78 102 C68 92 60 78 60 63 C48 70 39 72 29 68Z" fill="url(#hero-petalA)" opacity=".88"/>
+    <path d="M45 25 C58 15 76 14 89 23 C82 24 70 30 62 38 C55 34 49 30 45 25Z" fill="#8EE6FF" opacity=".56"/>
   </g>
-  <rect x="29.5" y="29.5" width="1341" height="301" rx="70" fill="none" stroke="#D6FFF6" stroke-opacity="0.17" stroke-width="2"/>
+  <circle cx="66" cy="66" r="32" fill="url(#hero-glow)" filter="url(#hero-blur)" opacity=".7"/>
+  <circle cx="66" cy="66" r="31" fill="url(#hero-core)"/>
+  <circle cx="66" cy="66" r="30" fill="none" stroke="#C9F7FF" stroke-opacity=".38"/>
+  <path d="M43 62 C55 54 75 54 90 64" fill="none" stroke="#8EE6FF" stroke-width="1.1" opacity=".35"/>
+  <path d="M44 74 C58 82 78 82 90 73" fill="none" stroke="#8EE6FF" stroke-width="1" opacity=".22"/>
+  <path d="M66 36 C56 48 56 82 66 96 C76 82 76 48 66 36Z" fill="none" stroke="#8EE6FF" stroke-width=".9" opacity=".24"/>
+  <circle cx="54" cy="45" r="1.1" fill="#8BFFE2" opacity=".82"/>
+<circle cx="61" cy="41" r="0.8" fill="#8BFFE2" opacity=".82"/>
+<circle cx="71" cy="44" r="0.9" fill="#8BFFE2" opacity=".82"/>
+<circle cx="80" cy="51" r="0.8" fill="#8BFFE2" opacity=".82"/>
+<circle cx="50" cy="56" r="0.8" fill="#8BFFE2" opacity=".82"/>
+<circle cx="61" cy="59" r="1.0" fill="#8BFFE2" opacity=".82"/>
+<circle cx="72" cy="57" r="0.8" fill="#8BFFE2" opacity=".82"/>
+<circle cx="83" cy="62" r="0.7" fill="#8BFFE2" opacity=".82"/>
+<circle cx="45" cy="68" r="0.7" fill="#8BFFE2" opacity=".82"/>
+<circle cx="56" cy="73" r="0.8" fill="#8BFFE2" opacity=".82"/>
+<circle cx="69" cy="72" r="0.9" fill="#8BFFE2" opacity=".82"/>
+<circle cx="78" cy="78" r="0.7" fill="#8BFFE2" opacity=".82"/>
+<circle cx="88" cy="70" r="0.6" fill="#8BFFE2" opacity=".82"/>
+<circle cx="64" cy="85" r="0.8" fill="#8BFFE2" opacity=".82"/>
+  <circle cx="66" cy="66" r="7.6" fill="#8BFFE2"/>
+  <circle cx="66" cy="66" r="13" fill="#8BFFE2" opacity=".12"/>
+  <g fill="none" stroke="#00D1B2" stroke-width="2" opacity=".7"><circle cx="96" cy="38" r="7"/><circle cx="96" cy="38" r="13" opacity=".42"/><path d="M96 38 L112 28"/></g>
+  
+  
+</g></g>
+<g opacity=".78" fill="none" stroke="#8EE6FF" stroke-width="1.4">
+  <ellipse cx="456" cy="535" rx="180" ry="42"/>
+  <ellipse cx="456" cy="535" rx="119" ry="25"/>
+  <ellipse cx="456" cy="535" rx="66" ry="13"/>
+</g>
+<g font-family="Inter, Segoe UI, Arial, sans-serif">
+  <text x="56" y="82" font-size="56" font-weight="850" fill="#081020">Geo Agent</text>
+  <text x="60" y="124" font-size="24" font-weight="700" fill="#00D1B2">Spatial Intelligence Core</text>
+</g>
 </svg>
