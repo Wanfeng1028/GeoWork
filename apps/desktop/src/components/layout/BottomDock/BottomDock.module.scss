@@ -1,15 +1,14 @@
-// GeoWork BottomDock Styles
-
 .dock {
   position: relative;
   max-height: 45vh;
   min-height: 180px;
-  border-top: 1px solid var(--gw-border-soft);
-  background: var(--gw-bg-elevated);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.22);
+  border-top: 1px solid var(--gw-border);
+  background: var(--gw-bg-panel);
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.18);
+  color: var(--gw-text);
 }
 
 .resizeHandle {
@@ -17,22 +16,28 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 5px;
   cursor: ns-resize;
   z-index: 2;
 }
 
+.resizeHandle:hover {
+  background: color-mix(in srgb, var(--gw-accent) 18%, transparent);
+}
+
 .closeBtn {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 6px;
+  right: 8px;
   z-index: 3;
   width: 26px;
   height: 26px;
-  border: 1px solid var(--gw-border-soft);
-  border-radius: var(--gw-radius-sm);
-  background: var(--gw-bg-subtle);
-  color: var(--gw-text-muted);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gw-text-tertiary);
   cursor: pointer;
 
   &:hover {
@@ -43,17 +48,44 @@
 
 .tabs {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  
-  :global(.ant-tabs-nav) {
-    padding: var(--gw-space-8) 46px 0 var(--gw-space-8);
-    margin-bottom: 0;
-  }
-  
-  :global(.ant-tabs-content) {
-    padding: var(--gw-space-8);
-    flex: 1;
-    overflow: auto;
-  }
+}
+
+.tabsList {
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 42px 4px 8px;
+  border-bottom: 1px solid var(--gw-border);
+  border-radius: 0;
+  background: var(--gw-bg-sidebar);
+  overflow-x: auto;
+}
+
+.tabsList :global(button) {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 6px;
+  color: var(--gw-text-secondary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.tabsList :global(button:hover),
+.tabsList :global(button[data-state='active']) {
+  background: var(--gw-bg-hover);
+  color: var(--gw-text);
+  box-shadow: none;
+}
+
+.tabs :global([data-radix-tabs-content]) {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
 }

@@ -1,88 +1,89 @@
+// ExpertCard — ported from QoderWorkCopy .skill-card visual language.
+// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.skill-card, .market-icon, .card-plus).
+
 .card {
-  border-radius: 10px;
-  border: 1px solid #d9dee8;
-  transition: all 0.2s ease;
+  position: relative;
+  display: block;
+  min-height: 116px;
+  padding: 16px 14px 12px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-panel);
   cursor: pointer;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  transition: border-color var(--gw-duration-normal) ease,
+    background-color var(--gw-duration-normal) ease;
 
   &:hover {
-    border-color: #1677ff;
-    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.12);
-    transform: translateY(-2px);
-  }
-
-  :global(.ant-card-body) {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
+    border-color: var(--gw-border-strong);
+    background: color-mix(in srgb, var(--gw-bg-panel) 88%, var(--gw-bg-hover));
   }
 }
 
-.cardContent {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
+.icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background: var(--gw-bg-soft);
+  color: var(--gw-text);
 }
 
-.expertHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.expertInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.expertName {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2a32;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.expertCategory {
-  font-size: 11px;
-  color: #8c97a1;
-}
-
-.expertDesc {
-  margin: 0;
-  font-size: 12px;
-  color: #60717f;
-  line-height: 1.5;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.skills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.skillTag {
-  font-size: 11px;
-  padding: 0 6px;
-  margin: 0;
-  border-radius: 4px;
-}
-
-.callButton {
-  margin-top: auto;
+.plus {
+  position: absolute;
+  right: 12px;
+  top: 14px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
   border-radius: 6px;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
+  }
+}
+
+.name {
+  display: block;
+  width: calc(100% - 28px);
   font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--gw-text);
+}
+
+.category {
+  display: block;
+  margin-top: 1px;
+  color: var(--gw-text-tertiary);
+  font-style: normal;
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.desc {
+  display: block;
+  height: 38px;
+  margin-top: 8px;
+  color: var(--gw-text-secondary);
+  font-size: 11px;
+  line-height: 18px;
+  overflow: hidden;
+}
+
+.skillCount {
+  display: block;
+  margin-top: 10px;
+  color: var(--gw-text-tertiary);
+  font-size: 11px;
 }

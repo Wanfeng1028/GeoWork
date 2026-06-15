@@ -72,7 +72,7 @@ export function Terminal({
             cyan: '#4dc9b0',
             white: '#d4d4d4',
             brightBlack: '#808080',
-            brightRed: '#ff6b6b',
+            brightRed: '#ef8d73',
             brightGreen: '#8bc24a',
             brightYellow: '#ffd700',
             brightBlue: '#61afef',

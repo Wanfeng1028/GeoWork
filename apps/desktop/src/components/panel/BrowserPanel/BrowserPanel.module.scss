@@ -1,26 +1,40 @@
-// GeoWork BrowserPanel Styles
-
 .panel {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
   overflow: hidden;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
 
   .navBar {
+    min-height: 40px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-bottom: 1px solid #f0f0f0;
-    background: #fafafa;
+    gap: 7px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
 
-    .urlBar {
-      flex: 1;
+    .urlBar { flex: 1; }
 
-      :global(.ant-input) {
-        height: 28px;
-      }
+    :global(button) {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border-color: var(--gw-border);
+      background: var(--gw-bg-panel);
+      color: var(--gw-text-secondary);
+    }
+
+    :global(button:hover) { background: var(--gw-bg-hover); color: var(--gw-text); }
+
+    :global(input) {
+      height: 30px;
+      border-color: var(--gw-border);
+      border-radius: 999px;
+      background: var(--gw-bg-panel);
+      color: var(--gw-text);
+      font-size: 12px;
     }
   }
 
@@ -28,13 +42,13 @@
     flex: 1;
     overflow: auto;
     position: relative;
+    background: radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px, var(--gw-bg);
 
     .loadingOverlay {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       height: 100%;
+      color: var(--gw-text-tertiary);
     }
 
     .iframeArea {
@@ -42,115 +56,77 @@
       position: relative;
 
       .screenshotPlaceholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        gap: 12px;
-        background: #fafafa;
-        color: #999;
+        min-height: 100%;
+        display: grid;
+        place-items: center;
+        gap: 10px;
+        padding: 22px;
+        color: var(--gw-text-tertiary);
+        text-align: center;
 
-        p {
-          margin: 0;
-          font-size: 16px;
-          color: #666;
-        }
-
-        .viewportSize {
-          font-size: 11px;
-          color: #bfbfbf;
-          font-family: monospace;
-        }
+        p { margin: 0; color: var(--gw-text-secondary); font-size: 13px; }
+        .viewportSize { color: var(--gw-text-tertiary); font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
       }
     }
 
-    .emptyBrowser {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-    }
+    .emptyBrowser { display: grid; place-items: center; height: 100%; }
   }
 
   .consolePanel {
-    border-top: 1px solid #f0f0f0;
     height: 160px;
     display: flex;
     flex-direction: column;
-    background: #1e1e1e;
+    border-top: 1px solid var(--gw-border);
+    background: #151512;
 
     .consoleHeader {
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 8px;
-      border-bottom: 1px solid #333;
-      background: #252526;
+      padding: 0 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: #1d1b16;
 
-      .consoleTitle {
-        font-size: 11px;
-        color: #999;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
+      .consoleTitle { color: #8f8b82; font-size: 10px; font-weight: 700; letter-spacing: 0; text-transform: none; }
     }
 
     .consoleBody {
       flex: 1;
       overflow-y: auto;
-      padding: 4px 8px;
-      font-family: 'Courier New', monospace;
+      padding: 6px 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-      .emptyLog {
-        font-size: 12px;
-        color: #666;
-      }
-
-      .logList {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
+      .emptyLog { color: #66635c; font-size: 12px; }
+      .logList { display: flex; flex-direction: column; gap: 2px; }
 
       .logEntry {
-        display: flex;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
-        gap: 4px;
-        font-size: 11px;
+        gap: 7px;
         padding: 2px 0;
+        font-size: 11px;
 
-        .logTime {
-          color: #666;
-          flex-shrink: 0;
-          font-size: 10px;
-        }
-
-        .logMessage {
-          flex: 1;
-          color: #d4d4d4;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+        .logTime { color: #66635c; font-size: 10px; }
+        .logMessage { min-width: 0; overflow: hidden; color: #d8d3c6; text-overflow: ellipsis; white-space: nowrap; }
       }
     }
   }
 
   .consoleToggle {
+    height: 30px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-top: 1px solid #f0f0f0;
-    border: none;
-    background: #fafafa;
-    color: #999;
+    gap: 5px;
+    padding: 0 10px;
+    border: 0;
+    border-top: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
+    color: var(--gw-text-secondary);
     cursor: pointer;
     font-size: 11px;
 
-    &:hover {
-      background: #f5f5f5;
-    }
+    &:hover { background: var(--gw-bg-hover); color: var(--gw-text); }
   }
 }

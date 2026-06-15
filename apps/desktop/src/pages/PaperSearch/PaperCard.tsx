@@ -1,17 +1,7 @@
-import React, { useState } from 'react'
-import { Card, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Input } from '../../components/ui/input'
+import { useState } from 'react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip'
 import { toast } from 'sonner'
-import {
-  Star,
-  Download,
-  Database,
-  Link,
-  FileText
-} from 'lucide-react'
+import { Star, Download, Database, Link, FileText } from 'lucide-react'
 import { PaperResult } from './store'
 import styles from './PaperCard.module.scss'
 
@@ -42,96 +32,54 @@ export function PaperCard({ paper, isSelected, onSelect, onExportBibtex, onIndex
     }
   }
 
-  const citationColor = paper.citations > 100 ? 'bg-amber-100 text-amber-800' : paper.citations > 10 ? 'bg-blue-100 text-blue-800' : ''
-
   return (
-    <Card
-      className={`${styles.paperCard} ${isSelected ? styles.selected : ''}`}
-      onClick={() => onSelect(paper)}
-    >
-      <CardContent>
-        <div className="flex justify-between items-start mb-2">
-          <h4 className={styles.paperTitle}>{paper.title}</h4>
-          <div className="flex gap-1 ml-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => { e.stopPropagation(); setFavorited(!favorited) }}
-                >
-                  <Star className={`w-4 h-4 ${favorited ? 'fill-amber-400 text-amber-400' : ''}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{favorited ? '取消收藏' : '收藏'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => { e.stopPropagation(); onExportBibtex(paper) }}
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>导出 BibTeX</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={indexed || indexing}
-                  onClick={(e) => { e.stopPropagation(); handleIndex() }}
-                >
-                  <Database className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{indexed ? '已索引' : '索引到知识库'}</TooltipContent>
-            </Tooltip>
-          </div>
+    <article className={`${styles.paperCard} ${isSelected ? styles.selected : ''}`} onClick={() => onSelect(paper)}>
+      <header className={styles.paperHeader}>
+        <h4>{paper.title}</h4>
+        <div className={styles.iconActions}>
+          <IconTip label={favorited ? '取消收藏' : '收藏'}>
+            <button onClick={(e) => { e.stopPropagation(); setFavorited(!favorited) }}>
+              <Star size={14} className={favorited ? styles.filledStar : ''} />
+            </button>
+          </IconTip>
+          <IconTip label="导出 BibTeX">
+            <button onClick={(e) => { e.stopPropagation(); onExportBibtex(paper) }}><Download size={14} /></button>
+          </IconTip>
+          <IconTip label={indexed ? '已索引' : '索引到知识库'}>
+            <button disabled={indexed || indexing} onClick={(e) => { e.stopPropagation(); handleIndex() }}><Database size={14} /></button>
+          </IconTip>
         </div>
+      </header>
 
-        <div className={styles.paperMeta}>
-          <span className={styles.paperAuthors}>{paper.authors.join(', ')}</span>
-          <span className={styles.paperJournal}>{paper.journal}</span>
-          <span className={styles.paperYear}>{paper.year}</span>
-          <Badge variant="secondary" className={citationColor}>
-            引用 {paper.citations}
-          </Badge>
-        </div>
+      <div className={styles.paperMeta}>
+        <span>{paper.authors.join(', ')}</span>
+        <em>{paper.journal}</em>
+        <b>{paper.year}</b>
+        <strong>引用 {paper.citations}</strong>
+      </div>
 
+      <details className={styles.paperCollapse}>
+        <summary>摘要</summary>
+        <p>{paper.abstract}</p>
+      </details>
+
+      {paper.keywords.length > 0 && (
         <details className={styles.paperCollapse}>
-          <summary className="cursor-pointer text-sm text-muted-foreground mt-2">摘要</summary>
-          <p className={styles.abstractText}>{paper.abstract}</p>
+          <summary>关键词</summary>
+          <div className={styles.keywordList}>{paper.keywords.map((kw) => <span key={kw}>{kw}</span>)}</div>
         </details>
+      )}
 
-        {paper.keywords.length > 0 && (
-          <details className="mt-1">
-            <summary className="cursor-pointer text-sm text-muted-foreground">关键词</summary>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {paper.keywords.map((kw) => (
-                <Badge key={kw} variant="secondary">{kw}</Badge>
-              ))}
-            </div>
-          </details>
-        )}
-
-        {paper.doi && (
-          <details className="mt-1">
-            <summary className="cursor-pointer text-sm text-muted-foreground">链接</summary>
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" variant="link" onClick={(e) => { e.stopPropagation(); window.open(`https://doi.org/${paper.doi}`, '_blank') }}>
-                <Link className="w-3 h-3 mr-1" /> DOI: {paper.doi}
-              </Button>
-              <Button size="sm" variant="link" onClick={(e) => { e.stopPropagation(); onExportBibtex(paper) }}>
-                <FileText className="w-3 h-3 mr-1" /> 导出 BibTeX
-              </Button>
-            </div>
-          </details>
-        )}
-      </CardContent>
-    </Card>
+      {paper.doi && (
+        <div className={styles.linkRow}>
+          <button onClick={(e) => { e.stopPropagation(); window.open(`https://doi.org/${paper.doi}`, '_blank') }}><Link size={13} /> DOI: {paper.doi}</button>
+          <button onClick={(e) => { e.stopPropagation(); onExportBibtex(paper) }}><FileText size={13} /> 导出 BibTeX</button>
+        </div>
+      )}
+    </article>
   )
+}
+
+function IconTip({ label, children }: { label: string; children: React.ReactNode }) {
+  return <Tooltip><TooltipTrigger asChild>{children}</TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>
 }

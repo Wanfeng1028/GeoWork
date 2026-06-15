@@ -69,16 +69,16 @@ const TOOLTIP_MAP: Record<NavItemType, string> = {
 };
 
 const COLOR_MAP: Record<NavItemType, string> = {
-  "user-question": "#1890ff",
+  "user-question": "var(--gw-info)",
   "agent-plan": "#722ed1",
   "tool-call": "#fa8c16",
-  artifact: "#52c41a",
+  artifact: "var(--gw-accent)",
   diff: "#13c2c2",
-  error: "#f5222d",
-  checkpoint: "#52c41a",
-  permission: "#faad14",
-  "task-started": "#1890ff",
-  "task-completed": "#52c41a",
+  error: "var(--gw-danger)",
+  checkpoint: "var(--gw-accent)",
+  permission: "var(--gw-warning)",
+  "task-started": "var(--gw-info)",
+  "task-completed": "var(--gw-accent)",
   "step-start": "#722ed1",
 };
 
@@ -243,7 +243,7 @@ export function ConversationMinimap() {
         <div className={styles.minimapBody}>
           {builtItems.length === 0 ? (
             <div className={styles.emptyState}>
-              <span style={{ fontSize: 12, color: "#bfbfbf" }}>暂无导航项</span>
+              <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无导航项</span>
             </div>
           ) : (
             <ul className={styles.navList}>
@@ -276,7 +276,7 @@ export function ConversationMinimap() {
                       <div>
                         <div>{TOOLTIP_MAP[item.type]}</div>
                         {item.summary && (
-                          <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: "var(--gw-text-tertiary)", marginTop: 2 }}>
                             {item.summary.slice(0, 40)}
                             {item.summary.length > 40 ? "..." : ""}
                           </div>

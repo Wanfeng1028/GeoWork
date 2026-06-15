@@ -4,7 +4,7 @@
 // Displays streaming runtime events from the task engine with real-time update
 
 import { useEffect, useState, useCallback } from "react";
-import { Play, CheckCircle, XCircle, Loader2, RefreshCw, Filter } from "lucide-react";
+import { Play, CheckCircle, XCircle, Loader2, Filter, ChevronRight } from "lucide-react";
 import { Button } from "../../../ui/button";
 import { Badge } from "../../../ui/badge";
 import { Empty } from "../../../ui/empty";
@@ -20,57 +20,57 @@ const EVENT_TYPE_CONFIG: Record<
 > = {
   "task.started": {
     icon: <Play className="h-3.5 w-3.5" />,
-    color: "#1890ff",
+    color: "var(--gw-info)",
     label: "任务启动",
   },
   "task.progress": {
     icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    color: "#722ed1",
+    color: "var(--gw-accent)",
     label: "任务进度",
   },
   "task.completed": {
     icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "#52c41a",
+    color: "var(--gw-accent)",
     label: "任务完成",
   },
   "task.failed": {
     icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "#f5222d",
+    color: "var(--gw-danger)",
     label: "任务失败",
   },
   "task.cancelled": {
     icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "#fa8c16",
+    color: "var(--gw-warning)",
     label: "任务取消",
   },
   "tool.call.started": {
     icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    color: "#13c2c2",
+    color: "var(--gw-info)",
     label: "工具调用",
   },
   "tool.call.completed": {
     icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "#52c41a",
+    color: "var(--gw-accent)",
     label: "工具完成",
   },
   "tool.call.failed": {
     icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "#f5222d",
+    color: "var(--gw-danger)",
     label: "工具失败",
   },
   "permission.request": {
     icon: <Filter className="h-3.5 w-3.5" />,
-    color: "#faad14",
+    color: "var(--gw-warning)",
     label: "权限请求",
   },
   "permission.approved": {
     icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "#52c41a",
+    color: "var(--gw-accent)",
     label: "权限通过",
   },
   "permission.denied": {
     icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "#f5222d",
+    color: "var(--gw-danger)",
     label: "权限拒绝",
   },
 };
@@ -127,7 +127,7 @@ export function RuntimeEvents() {
         <span className="relative inline-flex">
           <span className={styles.collapsedIcon}>&#9889;</span>
           <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full text-[9px] font-medium px-1 py-0 min-w-[14px]"
-            style={{ backgroundColor: connected ? "#52c41a" : "#d9d9d9", color: "#fff" }}
+            style={{ backgroundColor: connected ? "var(--gw-accent)" : "var(--gw-text-disabled)", color: "var(--gw-bg)" }}
           >
             {events.length}
           </span>
@@ -144,7 +144,7 @@ export function RuntimeEvents() {
           <span className="inline-flex items-center gap-1.5 text-[11px]">
             <span
               className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: connected ? "#52c41a" : "#d9d9d9" }}
+              style={{ backgroundColor: connected ? "var(--gw-accent)" : "var(--gw-text-disabled)" }}
             />
             {connected ? "已连接" : "未连接"}
           </span>
@@ -169,7 +169,7 @@ export function RuntimeEvents() {
       {/* Filter section */}
       <div className={styles.filterSection}>
         <div className="relative">
-          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#bfbfbf]" />
+          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
           <Input
             placeholder="搜索事件消息..."
             value={filter}
@@ -192,8 +192,8 @@ export function RuntimeEvents() {
                 key={type}
                 className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-opacity"
                 style={{
-                  backgroundColor: config?.color || "#999",
-                  color: "#fff",
+                  backgroundColor: config?.color || "var(--gw-text-tertiary)",
+                  color: "var(--gw-bg)",
                   opacity: eventTypeFilter === type ? 1 : 0.6,
                 }}
                 onClick={() =>
@@ -222,7 +222,7 @@ export function RuntimeEvents() {
             {filteredEvents.map((evt) => {
               const config = EVENT_TYPE_CONFIG[evt.type] || {
                 icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-                color: "#999",
+                color: "var(--gw-text-tertiary)",
                 label: evt.type,
               };
 
@@ -246,7 +246,7 @@ export function RuntimeEvents() {
                     <div className={styles.eventMeta}>
                       <span
                         className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium"
-                        style={{ backgroundColor: config.color, color: "#fff" }}
+                        style={{ backgroundColor: config.color, color: "var(--gw-bg)" }}
                       >
                         {config.label}
                       </span>

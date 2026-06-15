@@ -12,9 +12,9 @@ import useDiffStore from "../../../../stores/diffStore";
 import styles from "./DiffPanel.module.scss";
 
 const STATUS_COLORS: Record<string, string> = {
-  modified: "#faad14",
-  added: "#52c41a",
-  deleted: "#f5222d",
+  modified: "var(--gw-warning)",
+  added: "var(--gw-accent)",
+  deleted: "var(--gw-danger)",
 };
 
 export function DiffPanel() {
@@ -90,8 +90,8 @@ export function DiffPanel() {
           </span>
         </div>
         <div className={styles.emptyState}>
-          <Diff className="h-8 w-8 text-[#d9d9d9]" />
-          <span style={{ fontSize: 12, color: "#bfbfbf" }}>暂无差异对比</span>
+          <Diff className="h-8 w-8 text-[var(--gw-text-disabled)]" />
+          <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无差异对比</span>
         </div>
       </div>
     );

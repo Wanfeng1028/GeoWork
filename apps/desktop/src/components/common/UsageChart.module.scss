@@ -1,21 +1,31 @@
 .container {
+  color: var(--gw-text);
+
   h3 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2a32;
+    color: var(--gw-text);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
   }
 }
 
 .toolbar {
+  min-height: 30px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .chartCard {
+  border: 1px solid var(--gw-border) !important;
+  border-radius: 8px !important;
+  background: var(--gw-bg-panel) !important;
+  box-shadow: none !important;
+
   :global(.ant-card-body) {
-    padding: 8px;
+    padding: 10px !important;
   }
 }

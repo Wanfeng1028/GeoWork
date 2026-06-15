@@ -1,18 +1,53 @@
+/*
+ * GeoWork Design Tokens — ported from QoderWorkCopy dimensions.
+ * Canonical source: QoderWorkCopy/src/styles/qoder-work.css (inline dimensions).
+ */
+
+/* ---- Font: Instrument Sans (variable font, full weight range 100-900) ---- */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('../../assets/InstrumentSans.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  /* ---- Radii (QoderWorkCopy qoder-work.css) ---- */
   --gw-radius-xs: 4px;
   --gw-radius-sm: 6px;
   --gw-radius-md: 8px;
   --gw-radius-lg: 12px;
   --gw-radius-xl: 14px;
+  --gw-radius-2xl: 16px;
   --gw-radius-full: 9999px;
+  --gw-radius-composer: 12px;
+  --gw-radius-pill: 18px;
 
-  --gw-sidebar-width: 248px;
-  --gw-sidebar-collapsed-width: 56px;
-  --gw-right-rail-width: 44px;
-  --gw-right-panel-width: 384px;
+  /* ---- Layout dimensions (QoderWorkCopy sizes) ---- */
+  --gw-titlebar-height: 35px;
   --gw-statusbar-height: 22px;
-  --gw-titlebar-height: 40px;
+  --gw-sidebar-width: 190px;
+  --gw-sidebar-collapsed-width: 56px;
+  --gw-sidebar-narrow-width: 154px;
+  --gw-right-dock-width: 44px;
+  --gw-right-panel-width: 323px;
+  --gw-settings-nav-width: 207px;
+  --gw-monitor-width: 323px;
 
+  /* ---- Composer dimensions ---- */
+  --gw-composer-width: 668px;
+  --gw-composer-height: 154px;
+  --gw-composer-height-compact: 126px;
+
+  /* ---- Content column widths ---- */
+  --gw-home-width: 668px;
+  --gw-content-width: 655px;
+  --gw-content-width-narrow: 615px;
+  --gw-utility-width: 620px;
+  --gw-prompt-width: 670px;
+
+  /* ---- Spacing scale ---- */
   --gw-space-1: 1px;
   --gw-space-2: 2px;
   --gw-space-4: 4px;
@@ -28,6 +63,7 @@
   --gw-space-48: 48px;
   --gw-space-64: 64px;
 
+  /* ---- Z-index stack ---- */
   --gw-z-titlebar: 100;
   --gw-z-sidebar: 110;
   --gw-z-dock: 200;
@@ -36,28 +72,73 @@
   --gw-z-toast: 500;
   --gw-z-command: 600;
 
+  /* ---- Font stacks ---- */
   --gw-font-sans:
-    "Inter",
-    "SF Pro Text",
-    "Segoe UI",
-    "PingFang SC",
-    "Microsoft YaHei UI",
-    system-ui,
+    'Instrument Sans',
     -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Microsoft YaHei',
+    'PingFang SC',
+    Arial,
     sans-serif;
 
   --gw-font-mono:
-    "JetBrains Mono",
-    "Fira Code",
-    "Cascadia Code",
-    "Consolas",
+    ui-monospace,
+    'JetBrains Mono',
+    'Fira Code',
+    'Cascadia Code',
+    SFMono-Regular,
+    Consolas,
     monospace;
 
+  /* ---- Motion durations ---- */
   --gw-duration-fast: 100ms;
-  --gw-duration-normal: 150ms;
+  --gw-duration-normal: 130ms;
   --gw-duration-slow: 250ms;
   --gw-duration-slower: 350ms;
-
   --gw-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --gw-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+
+  /* ---- Legacy backward-compat aliases (map old names → new tokens).
+     Keeps unmigrated components working without mass find/replace. ---- */
+  --gw-bg-window: var(--gw-bg);
+  --gw-bg-shell: var(--gw-bg-titlebar);
+  --gw-bg-primary: var(--gw-bg);
+  --gw-bg-secondary: var(--gw-bg-elevated);
+  --gw-bg-tertiary: var(--gw-bg-panel);
+  --gw-text-primary: var(--gw-text);
+  --gw-text-muted: var(--gw-text-secondary);
+  --gw-text-subtle: var(--gw-text-tertiary);
+  --gw-border-subtle: var(--gw-border-soft);
+  --gw-border-active: var(--gw-accent);
+  --gw-accent-primary: var(--gw-accent);
+  --gw-accent-color: var(--gw-accent);
+  --gw-shadow-popover: var(--gw-popup-shadow);
+  --gw-topbar-height: var(--gw-titlebar-height);
+  --gw-rightdock-width: var(--gw-right-panel-width);
+  --gw-bottomdock-height: 260px;
+
+  /* ---- QoderWorkCopy alias passthrough (so ported SCSS reads naturally) ---- */
+  --app-bg: var(--gw-bg);
+  --top-bg: var(--gw-bg-titlebar);
+  --side-bg: var(--gw-bg-sidebar);
+  --canvas-bg: var(--gw-bg-canvas);
+  --panel-bg: var(--gw-bg-panel);
+  --soft-bg: var(--gw-bg-soft);
+  --soft-bg-2: var(--gw-bg-soft-2);
+  --hover: var(--gw-bg-hover);
+  --active: var(--gw-bg-active);
+  --text-2: var(--gw-text-secondary);
+  --text-3: var(--gw-text-tertiary);
+  --line: var(--gw-border);
+  --line-2: var(--gw-border-strong);
+  --green: var(--gw-accent);
+  --green-bg: var(--gw-accent-soft);
+  --orange: var(--gw-warning);
+  --code-bg: var(--gw-bg-code);
+  --shadow-card: var(--gw-shadow-card);
+  --dot-color: var(--gw-dot-color);
+  --composer-bg: var(--gw-bg-composer);
+  --promo-bg: var(--gw-bg-promo);
 }

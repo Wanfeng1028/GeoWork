@@ -13,20 +13,20 @@ import useChatStore from "../../../../stores/chatStore";
 import styles from "./TaskMonitorPanel.module.scss";
 
 const STATUS_CONFIG = {
-  pending: { color: "#faad14", icon: <Pause className="h-3.5 w-3.5" />, label: "等待中" },
-  running: { color: "#1890ff", icon: <Play className="h-3.5 w-3.5" />, label: "运行中" },
+  pending: { color: "var(--gw-warning)", icon: <Pause className="h-3.5 w-3.5" />, label: "等待中" },
+  running: { color: "var(--gw-info)", icon: <Play className="h-3.5 w-3.5" />, label: "运行中" },
   waiting_approval: {
-    color: "#fa8c16",
+    color: "var(--gw-warning)",
     icon: <Zap className="h-3.5 w-3.5" />,
     label: "等待审批",
   },
   completed: {
-    color: "#52c41a",
+    color: "var(--gw-accent)",
     icon: <CheckCircle className="h-3.5 w-3.5" />,
     label: "已完成",
   },
-  failed: { color: "#f5222d", icon: <XCircle className="h-3.5 w-3.5" />, label: "失败" },
-  recovered: { color: "#13c2c2", icon: <RefreshCw className="h-3.5 w-3.5" />, label: "已恢复" },
+  failed: { color: "var(--gw-danger)", icon: <XCircle className="h-3.5 w-3.5" />, label: "失败" },
+  recovered: { color: "var(--gw-info)", icon: <RefreshCw className="h-3.5 w-3.5" />, label: "已恢复" },
 };
 
 export function TaskMonitorPanel() {
@@ -192,7 +192,7 @@ export function TaskMonitorPanel() {
           </>
         ) : (
           <div className={styles.noTask}>
-            <span style={{ fontSize: 12, color: "#bfbfbf" }}>
+            <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>
               暂无运行中的任务
             </span>
           </div>
@@ -208,9 +208,9 @@ export function TaskMonitorPanel() {
               <div key={evt.id || index} className="flex gap-3 pb-3">
                 <div className="flex flex-col items-center">
                   {evt.type?.includes("error") ? (
-                    <XCircle className="h-4 w-4 text-[#f5222d]" />
+                    <XCircle className="h-4 w-4 text-[var(--gw-danger)]" />
                   ) : (
-                    <Loader2 className="h-4 w-4 text-[#1890ff] animate-spin" />
+                    <Loader2 className="h-4 w-4 text-[var(--gw-info)] animate-spin" />
                   )}
                   {index < recentEvents.length - 1 && (
                     <div className="w-px flex-1 bg-[var(--gw-border-soft)] mt-1" />

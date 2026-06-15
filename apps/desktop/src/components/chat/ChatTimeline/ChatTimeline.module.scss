@@ -66,7 +66,7 @@
 }
 
 .toolError {
-  color: var(--gw-color-error);
+  color: var(--gw-danger);
 }
 
 .runningIndicator {
@@ -94,7 +94,7 @@
   display: flex;
   align-items: center;
   gap: var(--gw-space-8);
-  color: var(--gw-color-error);
+  color: var(--gw-danger);
 }
 
 // Approval Card
@@ -128,13 +128,13 @@
 
 // Message type variants
 .userMsg {
-  border-left: 3px solid #1890ff;
+  border-left: 3px solid var(--gw-info);
 }
 
 .assistantMsg {
-  border-left: 3px solid #52c41a;
+  border-left: 3px solid var(--gw-accent);
 }
 
 .systemMsg {
-  border-left: 3px solid #faad14;
+  border-left: 3px solid var(--gw-warning);
 }

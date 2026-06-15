@@ -60,11 +60,11 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
   }
 
   return (
-    <Card className="mb-2" style={{ border: '1px solid #faad14' }}>
+    <Card className="mb-2" style={{ border: '1px solid var(--gw-warning)' }}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-[13px]">
-            <AlertTriangle className="h-4 w-4 text-[#faad14]" />
+            <AlertTriangle className="h-4 w-4 text-[var(--gw-warning)]" />
             <span>权限审批请求</span>
             <Badge
               variant={request.riskLevel === 'critical' ? 'danger' : request.riskLevel === 'high' ? 'danger' : request.riskLevel === 'medium' ? 'warning' : 'success'}

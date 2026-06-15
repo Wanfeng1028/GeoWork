@@ -1,7 +1,7 @@
 // GeoWork Global Styles
 
 :root {
-  font-family: "Instrument Sans", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  font-family: var(--gw-font-sans);
 }
 
 * {

@@ -1,28 +1,35 @@
-// GeoWork RuntimeEvents - Styles
-
 .panel {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
   overflow: hidden;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
 
   .header {
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid #f0f0f0;
+    gap: 8px;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
 
     .headerLeft {
+      min-width: 0;
       display: flex;
       align-items: center;
       gap: 8px;
 
       .title {
+        overflow: hidden;
+        color: var(--gw-text);
         font-size: 13px;
-        font-weight: 600;
-        color: #333;
+        line-height: 18px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
@@ -32,22 +39,30 @@
       gap: 4px;
 
       :global(.ant-btn) {
-        font-size: 11px;
+        height: 26px !important;
+        border-radius: 999px !important;
+        background: var(--gw-bg-panel) !important;
+        border-color: var(--gw-border) !important;
+        color: var(--gw-text-secondary) !important;
+        font-size: 11px !important;
       }
 
       .collapseBtn {
-        width: 20px;
-        height: 20px;
-        border: none;
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 6px;
         background: transparent;
-        color: #999;
+        color: var(--gw-text-tertiary);
         cursor: pointer;
-        font-size: 16px;
+        font-size: 13px;
         line-height: 1;
-        border-radius: 4px;
 
         &:hover {
-          background: #f5f5f5;
+          background: var(--gw-bg-hover);
+          color: var(--gw-text);
         }
       }
     }
@@ -55,15 +70,27 @@
 
   .filterSection {
     padding: 8px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--gw-border);
+    background: var(--gw-bg-panel);
 
     .searchInput {
       margin-bottom: 6px;
+
+      :global(.ant-input),
+      :global(.ant-input-affix-wrapper) {
+        height: 28px !important;
+        border-radius: 999px !important;
+        border-color: var(--gw-border) !important;
+        background: var(--gw-bg-soft) !important;
+        color: var(--gw-text) !important;
+        font-size: 12px !important;
+      }
     }
 
     .typeFilters {
       display: flex;
       flex-wrap: wrap;
+      gap: 5px;
     }
   }
 
@@ -72,10 +99,12 @@
     overflow: hidden;
 
     .emptyState {
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100%;
+      color: var(--gw-text-tertiary);
+      font-size: 12px;
     }
 
     .eventScrollArea {
@@ -83,29 +112,35 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 4px 8px;
+      gap: 3px;
+      padding: 6px 8px;
 
       .eventItem {
+        min-height: 34px;
         display: flex;
         align-items: flex-start;
         gap: 8px;
-        padding: 6px 8px;
-        border-radius: 4px;
-        transition: background 0.15s;
+        padding: 7px 8px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        transition: background-color var(--gw-duration-normal) ease,
+          border-color var(--gw-duration-normal) ease;
 
         &:hover {
-          background: #f5f5f5;
+          border-color: var(--gw-border);
+          background: var(--gw-bg-hover);
         }
 
         &.eventError {
-          background: #fff2f0;
+          border-color: color-mix(in srgb, var(--gw-danger) 24%, var(--gw-border));
+          background: var(--gw-danger-soft);
         }
 
         .eventIcon {
-          font-size: 14px;
           margin-top: 1px;
           flex-shrink: 0;
+          color: var(--gw-text-tertiary);
+          font-size: 13px;
         }
 
         .eventBody {
@@ -113,10 +148,10 @@
           min-width: 0;
 
           .eventMessage {
-            font-size: 12px;
-            color: #333;
-            line-height: 1.4;
             overflow: hidden;
+            color: var(--gw-text-secondary);
+            font-size: 12px;
+            line-height: 17px;
             text-overflow: ellipsis;
             white-space: nowrap;
           }
@@ -128,58 +163,63 @@
             margin-top: 2px;
 
             .eventTime {
+              color: var(--gw-text-tertiary);
+              font-family: var(--gw-font-mono);
               font-size: 10px;
-              color: #bfbfbf;
+              line-height: 14px;
             }
           }
         }
 
         .eventDataBadge {
-          font-size: 14px;
-          color: #d9d9d9;
           flex-shrink: 0;
+          color: var(--gw-text-disabled);
+          font-size: 12px;
         }
       }
     }
   }
 
   .footer {
+    min-height: 31px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
-    border-top: 1px solid #f0f0f0;
-    background: #fafafa;
+    gap: 8px;
+    padding: 6px 10px;
+    border-top: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
 
-    .footerStat {
+    .footerStat,
+    .footerTask {
+      color: var(--gw-text-tertiary);
       font-size: 11px;
-      color: #999;
+      line-height: 16px;
     }
 
     .footerTask {
-      font-size: 11px;
-      color: #999;
-      font-family: monospace;
+      font-family: var(--gw-font-mono);
     }
   }
 }
 
 .collapsedBtn {
+  position: relative;
   width: 32px;
   height: 32px;
-  border: none;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-left: none;
+  border: 1px solid var(--gw-border);
+  border-left: 0;
   border-radius: 8px 0 0 8px;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text-secondary);
   cursor: pointer;
-  position: relative;
 
   .collapsedIcon {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   &:hover {
-    background: #f6f8fa;
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
   }
 }

@@ -89,7 +89,7 @@ export function ArtifactPanel() {
         </div>
         <div className={styles.emptyState}>
           <Empty description="暂无产物" />
-          <span style={{ fontSize: 12, color: "#bfbfbf" }}>
+          <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>
             任务完成后产物将在此显示
           </span>
         </div>

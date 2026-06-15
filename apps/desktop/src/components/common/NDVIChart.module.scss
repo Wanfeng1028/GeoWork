@@ -1,57 +1,67 @@
 .container {
+  color: var(--gw-text);
+
   h3 {
-    margin: 0 0 4px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2a32;
+    margin: 0 0 3px;
+    color: var(--gw-text);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
   }
 
   .subtitle {
-    font-size: 12px;
-    color: #60717f;
+    color: var(--gw-text-secondary);
+    font-size: 11px;
+    line-height: 16px;
   }
 }
 
 .header {
+  min-height: 31px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-top: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .statItem {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f8fafb;
-  border: 1px solid #e8eef1;
+  padding: 10px 8px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-panel);
 }
 
 .label {
-  font-size: 12px;
-  color: #60717f;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  color: var(--gw-text-tertiary);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .value {
-  font-size: 20px;
+  color: var(--gw-accent);
+  font-size: 15px;
+  line-height: 20px;
   font-weight: 700;
-  color: #0f6b57;
 }
 
 .month {
-  font-size: 11px;
-  color: #8a9ba6;
-  margin-top: 2px;
+  margin-top: 1px;
+  color: var(--gw-text-tertiary);
+  font-size: 10px;
+  line-height: 14px;
 }
 
 @media (max-width: 768px) {

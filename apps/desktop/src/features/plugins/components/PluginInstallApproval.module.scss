@@ -1,86 +1,118 @@
-/* GeoWork Desktop - Plugin Install Approval Styles */
-
+/* QoderWork-style plugin install approval card. */
 .card {
+  border: 1px solid var(--gw-border) !important;
+  border-radius: 8px !important;
+  background: var(--gw-bg-panel) !important;
+  color: var(--gw-text);
+  box-shadow: none !important;
+  overflow: hidden;
+
   :global(.ant-card-head) {
-    padding: 0 16px;
-    min-height: 44px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--gw-border) !important;
+    background: var(--gw-bg-sidebar) !important;
+    color: var(--gw-text) !important;
   }
 
   :global(.ant-card-body) {
-    padding: 12px 16px;
+    padding: 12px 14px;
   }
 }
 
 .alert {
-  margin-bottom: var(--gw-space-12);
+  margin-bottom: 10px;
 }
 
 .permissionsList {
-  margin-bottom: var(--gw-space-12);
-  padding: var(--gw-space-8);
-  background: var(--gw-bg-card);
-  border-radius: var(--gw-radius-md);
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 8px;
+  background: var(--gw-bg-soft);
 }
 
 .permissionsTitle {
   display: block;
+  margin-bottom: 8px;
+  color: var(--gw-text-secondary);
   font-size: 12px;
-  margin-bottom: var(--gw-space-8);
+  line-height: 17px;
+  font-weight: 700;
 }
 
 .permissionRow {
+  min-height: 26px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0;
+  gap: 8px;
+  padding: 3px 0;
 }
 
 .permissionName {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 11px;
-  background: transparent;
-  color: var(--gw-text-primary);
   padding: 0;
+  background: transparent;
+  color: var(--gw-text);
+  font-family: var(--gw-font-mono);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .riskTag {
+  height: 18px;
   margin: 0;
-  font-size: 11px;
   padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 18px;
 }
 
 .reasonSection {
-  margin-bottom: var(--gw-space-12);
+  margin-bottom: 10px;
 }
 
 .reasonInput {
-  margin-bottom: var(--gw-space-8);
+  margin-bottom: 8px;
+
+  :global(.ant-input) {
+    border-color: var(--gw-border) !important;
+    border-radius: 8px !important;
+    background: var(--gw-bg-panel) !important;
+    color: var(--gw-text) !important;
+    box-shadow: none !important;
+    font-size: 12px;
+  }
 }
 
 .rememberRow {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
   color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 17px;
 }
 
 .actions {
   width: 100%;
-  margin-top: var(--gw-space-8);
+  margin-top: 9px;
 }
 
 .warning {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: var(--gw-space-12);
-  padding: var(--gw-space-8);
-  background: rgba(250, 173, 20, 0.08);
-  border-radius: var(--gw-radius-sm);
+  margin-top: 10px;
+  padding: 8px 9px;
+  border: 1px solid color-mix(in srgb, var(--gw-warning) 25%, var(--gw-border));
+  border-radius: 7px;
+  background: var(--gw-warning-soft);
+  color: var(--gw-text-secondary);
   font-size: 12px;
+  line-height: 17px;
 
   :global(.anticon) {
-    color: #faad14;
+    color: var(--gw-warning);
   }
 }

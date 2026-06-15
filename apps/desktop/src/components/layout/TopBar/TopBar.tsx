@@ -12,25 +12,15 @@ import {
   RefreshCw,
   MessageSquare,
   Info,
-  ExternalLink,
 } from "lucide-react";
 import useShellStore from "../../../stores/shellStore";
 import {
   runAction,
   commandPaletteActions,
 } from "../../../services/actionRegistry";
-import { GeoMascot } from "../../brand/GeoMascot";
 import { Input } from "../../ui/input";
 import { Textarea } from "../../ui/textarea";
-import { Button } from "../../ui/button";
-import {
-  Dialog,
-  DialogPortal,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../ui/dialog";
+import { Dialog, DialogPortal, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog";
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
   DropdownMenu,
@@ -47,28 +37,24 @@ function getGeoWorkApi() {
   return (window as any).geowork;
 }
 
-function UsageRow({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function QoderMiniMascot() {
   return (
-    <div className={styles.usageRow}>
-      <span>{label}</span>
-      <strong className={accent ? styles.green : ""}>{value}</strong>
+    <div className={styles.feedbackMascot} aria-hidden="true">
+      <span className={styles.feedbackCurl} />
+      <span className={`${styles.feedbackEyeWhite} ${styles.feedbackLeftWhite}`} />
+      <span className={`${styles.feedbackEyeWhite} ${styles.feedbackRightWhite}`} />
+      <span className={`${styles.feedbackEye} ${styles.feedbackLeftEye}`} />
+      <span className={`${styles.feedbackEye} ${styles.feedbackRightEye}`} />
+      <span className={styles.feedbackBeak} />
     </div>
-  );
+  )
 }
-
 export function TopBar() {
   const { sidebarCollapsed, commandPaletteOpen, setCommandPaletteOpen } =
     useShellStore();
   const [isMaximized, setIsMaximized] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [usageOpen, setUsageOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
 
@@ -148,7 +134,7 @@ export function TopBar() {
         </DropdownMenu>
 
         <button
-          className={styles.iconBtn}
+          className={`${styles.iconBtn} ${sidebarCollapsed ? "" : styles.isSelected}`}
           onClick={() => useShellStore.getState().toggleSidebar()}
           title={sidebarCollapsed ? "展开侧栏" : "折叠侧栏"}
         >
@@ -182,58 +168,47 @@ export function TopBar() {
       <div className={styles.dragRegion} />
 
       {/* Column 3: Right actions */}
-      <div className={styles.rightActions}>
-        {/* GitHub Star */}
+      <div className={styles.rightActions}>{/* GitHub */}
         <Popover>
           <PopoverTrigger asChild>
             <button
-              className={styles.starButton}
+              className={styles.earnPill}
               type="button"
-              title="给 GitHub 点 Star"
+              title="Github"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="15" height="15">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.73-4.03-1.42-4.03-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.4s2.05.13 3.01.4c2.29-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.19.69.8.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
               </svg>
-              <span className={styles.starText}>Github</span>
+              <span className={styles.earnPillText}>Github</span>
             </button>
           </PopoverTrigger>
           <PopoverContent
             side="bottom"
             align="end"
-            sideOffset={6}
-            className={styles.starPopover}
+            sideOffset={8}
+            className={styles.githubPopover}
           >
-            <div className={styles.starPopoverInner}>
-              <GeoMascot size="md" state="idle" />
-              <div>
-                <h3>喜欢 GeoWork？给项目点个 Star</h3>
-                <p>
-                  你的 Star
-                  会帮助项目被更多人看到，也会鼓励后续继续完善桌面端、Agent
-                  工作流和地理分析能力。
-                </p>
+            <div className={styles.githubCard}>
+              <div className={styles.githubHero}>
+                <div className={styles.githubMark}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.73-4.03-1.42-4.03-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.4s2.05.13 3.01.4c2.29-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.19.69.8.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+                  </svg>
+                </div>
+                <div>
+                  <strong>Github</strong>
+                  <span>Wanfeng1028 / GeoWork</span>
+                </div>
               </div>
-              <div className={styles.popoverActions}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className={styles.popoverMainButton}
-                  onClick={() =>
-                    window.open(
-                      "https://github.com/Wanfeng1028/GeoWork",
-                      "_blank",
-                    )
-                  }
-                >
-                  <ExternalLink size={13} /> 打开 GitHub
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toast.info("贡献指南开发中")}
-                >
-                  查看项目
-                </Button>
+              <p className={styles.githubDesc}>查看项目源码、更新记录和问题反馈入口。保持本地工作区不变，只在浏览器中打开仓库页面。</p>
+              <div className={styles.githubStats}>
+                <span><b>main</b><em>当前分支</em></span>
+                <span><b>CN</b><em>桌面端</em></span>
+                <span><b>MIT</b><em>License</em></span>
+              </div>
+              <div className={styles.githubActions}>
+                <button onClick={() => window.open('https://github.com/Wanfeng1028/GeoWork', '_blank')}>打开 Github</button>
+                <button onClick={() => toast.info('稍后接入 issue 列表')}>问题列表</button>
               </div>
             </div>
           </PopoverContent>
@@ -241,7 +216,7 @@ export function TopBar() {
 
         {/* Feedback */}
         <button
-          className={styles.feedbackButton}
+          className={styles.plainAction}
           type="button"
           onClick={() => setFeedbackOpen(true)}
           title="问题反馈"
@@ -259,13 +234,13 @@ export function TopBar() {
               strokeLinecap="round"
             />
           </svg>
-          <span className={styles.feedbackText}>问题反馈</span>
+          <span className={styles.plainActionText}>问题反馈</span>
         </button>
 
         {/* Usage */}
-        <Popover>
+        <Popover open={usageOpen} onOpenChange={setUsageOpen}>
           <PopoverTrigger asChild>
-            <button className={styles.usageButton} type="button" title="用量">
+            <button className={styles.iconBtn} type="button" title="用量">
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
                 <path
                   d="M8 2.8a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 0 0 0-10.4z"
@@ -286,26 +261,42 @@ export function TopBar() {
             sideOffset={6}
             className={styles.usagePopover}
           >
-            <div className={styles.usageContent}>
-              <h4>用量概览</h4>
-              <UsageRow label="本地任务额度" value="无限" />
-              <UsageRow label="Agent 调用额度" value="1,280 / 2,000" />
-              <UsageRow label="地理分析额度" value="45 / 100" />
-              <UsageRow label="今日剩余" value="87 次" accent />
-              <Button
-                variant="ghost"
-                size="sm"
-                className={styles.usageDetailButton}
-                onClick={() => toast.info("详情页开发中")}
-              >
-                查看详情
-              </Button>
+            <div className={styles.usagePanel}>
+              <div className={styles.usageHead}>
+                <strong>用量概览</strong>
+                <button aria-label="关闭" onClick={() => setUsageOpen(false)}>×</button>
+              </div>
+              {[
+                { label: "套餐内 Credits", date: "2026年7月3日 续期", used: "0", total: "2,000", remain: "2,000" },
+                { label: "附加 Credits", date: "", used: "0", total: "4,000", remain: "4,000" },
+                { label: "Qwen3.7-Max 免费额度", tag: "限时特惠", used: "0", total: "200", remain: "今日剩余 200 次", metric: true },
+              ].map((item) => (
+                <div className={styles.usageItem} key={item.label}>
+                  <div className={styles.usageTitle}>
+                    <span>{item.label}</span>
+                    {"tag" in item && item.tag && <em>{item.tag}</em>}
+                    {item.date && <b>{item.date}</b>}
+                  </div>
+                  {!("metric" in item) && <div className={styles.usageBars} aria-hidden="true">{Array.from({ length: 46 }).map((_, i) => <i key={i} />)}</div>}
+                  <div className={styles.usageNumbers}>
+                    <span><strong>{item.used}</strong> / {item.total}（已使用 0%）</span>
+                    <span>{"metric" in item ? item.remain : <>剩余 <strong>{item.remain}</strong></>}</span>
+                  </div>
+                </div>
+              ))}
+              <div className={styles.usageActions}>
+                <button className={styles.usageRefresh} aria-label="刷新用量" onClick={() => toast.info("用量已刷新")}>
+                  <RefreshCw size={13} />
+                </button>
+                <button className={styles.usageDetailButton} onClick={() => toast.info("详情页开发中")}>查看详情 ↗</button>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
       </div>
 
       {/* Column 4: Window controls */}
+      <span className={styles.winGap} />
       <div className={styles.windowControls}>
         <button
           className={styles.winBtn}
@@ -375,101 +366,41 @@ export function TopBar() {
       {/* Feedback dialog */}
       <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
         <DialogPortal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-[var(--gw-z-modal)] bg-[var(--gw-overlay-bg,rgba(8,8,7,0.62))] backdrop-blur-[10px] backdrop-saturate-110 data-[state=open]:animate-[gw-fade-in_160ms_ease-out] data-[state=closed]:animate-[gw-fade-out_120ms_ease-in]" />
-          <DialogPrimitive.Content
-            ref={undefined}
-            className="fixed left-1/2 top-1/2 z-[var(--gw-z-modal)] -translate-x-1/2 -translate-y-1/2 w-full max-w-[520px] rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a18] p-0 shadow-[0_24px_80px_rgba(0,0,0,0.55)] data-[state=open]:animate-[gw-scale-in_160ms_var(--gw-ease-out)] data-[state=closed]:animate-[gw-fade-out_120ms_ease-in] focus-visible:outline-none"
-          >
-          {/* Header */}
-          <div className="px-6 pt-6 pb-4">
-            <h2 className="text-[16px] font-semibold text-[#e8e8e3] leading-tight">问题反馈</h2>
-            <p className="text-[12px] text-[#8a8a86] leading-[1.7] mt-2">
-              如果您在使用过程中遇到任何问题，请随时反馈给我们。您的反馈将帮助我们不断改进和优化产品。
-            </p>
-          </div>
-
-          {/* Body */}
-          <div className="px-6 pb-2 flex flex-col gap-4">
-            {/* Textarea */}
-            <div className="rounded-[10px] bg-[#151512] border border-[rgba(255,255,255,0.08)] overflow-hidden">
-              <Textarea
-                placeholder="请输入您的问题或建议"
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                rows={5}
-                className="bg-transparent border-0 resize-none text-[13px] text-[#e8e8e3] placeholder-[#5a5a56] leading-[1.7] focus-visible:ring-0"
-              />
+          <DialogPrimitive.Overlay className={styles.feedbackOverlay} />
+          <DialogPrimitive.Content className={styles.feedbackCard}>
+            <QoderMiniMascot />
+            <h3>问题反馈</h3>
+            <p>如果您在使用过程中遇到任何问题，请随时反馈给我们。您的反馈将帮助我们不断改进和优化产品。</p>
+            <Textarea
+              placeholder="请输入您的问题或建议"
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              className={styles.feedbackTextarea}
+            />
+            <label>屏幕截图:</label>
+            <div className={styles.uploadRow}>
+              <div className={styles.thumbShot} />
+              <button className={styles.dropZone} onClick={() => toast.info("截图功能开发中")}>
+                <Plus size={18} />
+                <span>点击添加，或拖拽/粘贴图片到此区域</span>
+              </button>
             </div>
-
-            {/* Screenshot area */}
-            <div>
-              <div className="text-[12px] text-[#8a8a86] mb-2">屏幕截图：</div>
-              <div className="flex gap-3">
-                {/* Screenshot thumbnail placeholder */}
-                <div className="w-[140px] h-[96px] rounded-[8px] bg-[#2a2a27] border border-[rgba(255,255,255,0.06)] overflow-hidden flex-shrink-0">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-[120px] h-[72px] bg-[#1a1a18] rounded-[4px] border border-[rgba(255,255,255,0.04)]" />
-                  </div>
-                </div>
-                {/* Add screenshot button */}
-                <button
-                  data-feedback-ignore="true"
-                  type="button"
-                  className="flex-1 h-[96px] rounded-[8px] border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
-                  onClick={() => toast.info("截图功能开发中")}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 4v12M4 10h12" stroke="#5a5a56" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <span className="text-[11px] text-[#5a5a56] text-center leading-[1.5]">点击添加，或拖拽/
-粘贴图片到此区域</span>
-                </button>
-              </div>
+            <label>联系邮箱</label>
+            <Input
+              placeholder="请输入您的邮箱地址"
+              value={feedbackEmail}
+              onChange={(e) => setFeedbackEmail(e.target.value)}
+              className={styles.feedbackInput}
+            />
+            <div className={styles.feedbackActions}>
+              <button onClick={() => setFeedbackOpen(false)}>取消</button>
+              <button onClick={() => { toast.info("反馈功能开发中"); setFeedbackOpen(false); }}>提交</button>
             </div>
-
-            {/* Email */}
-            <div>
-              <div className="text-[12px] text-[#8a8a86] mb-2">联系邮箱</div>
-              <div className="relative">
-                <Input
-                  placeholder="请输入您的邮箱地址"
-                  value={feedbackEmail}
-                  onChange={(e) => setFeedbackEmail(e.target.value)}
-                  className="h-[36px] bg-[#151512] border border-[rgba(255,255,255,0.08)] rounded-[8px] text-[13px] text-[#e8e8e3] placeholder-[#5a5a56] focus-visible:ring-0 pl-3.5 pr-3.5"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="px-6 pb-5 pt-3 flex justify-end gap-2.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3.5 text-[13px] text-[#8a8a86] hover:text-[#e8e8e3] hover:bg-[rgba(255,255,255,0.06)] rounded-full"
-              onClick={() => setFeedbackOpen(false)}
-            >
-              取消
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              className="h-8 px-4 text-[13px] bg-[#3a3a36] hover:bg-[#4a4a46] text-[#e8e8e3] rounded-full border border-[rgba(255,255,255,0.08)]"
-              onClick={() => {
-                toast.info("反馈功能开发中");
-                setFeedbackOpen(false);
-              }}
-            >
-              提交
-            </Button>
-          </div>
-          {/* Close button */}
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-2 text-[var(--gw-text-tertiary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--gw-text-secondary)] transition-colors">
-            <X className="h-3.5 w-3.5" />
-          </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
+            <DialogPrimitive.Close className={styles.feedbackClose}><X size={14} /></DialogPrimitive.Close>
+          </DialogPrimitive.Content>
         </DialogPortal>
       </Dialog>
     </header>
   );
 }
+

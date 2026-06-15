@@ -14,6 +14,7 @@ import { LogsPanel } from '../../panel/LogsPanel/LogsPanel'
 import { ProblemsPanel } from '../../panel/ProblemsPanel/ProblemsPanel'
 import { OutputPanel } from '../../panel/OutputPanel/OutputPanel'
 import useShellStore from '../../../stores/shellStore'
+import styles from './RightDock.module.scss'
 
 const PANELS = [
   { key: 'task', label: '任务', icon: ListTodo },
@@ -32,13 +33,13 @@ export function RightDock() {
   const { activeRightPanel, setActiveRightPanel } = useShellStore()
 
   return (
-    <aside className="shrink-0 h-full w-[360px] flex flex-col border-l border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)] overflow-hidden">
+    <aside className={styles.dock}>
       <Tabs
         defaultValue={activeRightPanel}
         onValueChange={(key) => setActiveRightPanel(key as any)}
-        className="flex flex-col h-full"
+        className={styles.tabs}
       >
-        <TabsList className="flex shrink-0 border-b border-[var(--gw-border-soft)] bg-[var(--gw-bg-shell)] px-1 py-0.5 overflow-x-auto">
+        <TabsList className={styles.tabsList}>
           {PANELS.map((panel) => {
             const Icon = panel.icon
             return (
@@ -46,26 +47,27 @@ export function RightDock() {
                 key={panel.key}
                 value={panel.key}
                 title={panel.label}
-                className="px-2 py-1"
+                className={styles.tabTrigger}
               >
                 <Icon size={14} />
               </TabsTrigger>
             )
           })}
         </TabsList>
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <TabsContent value="task" className="h-full overflow-auto"><TaskMonitorPanel /></TabsContent>
-          <TabsContent value="artifacts" className="h-full overflow-auto"><ArtifactPanel /></TabsContent>
-          <TabsContent value="diff" className="h-full overflow-auto"><DiffPanel /></TabsContent>
-          <TabsContent value="context" className="h-full overflow-auto"><ContextPanel /></TabsContent>
-          <TabsContent value="terminal" className="h-full overflow-hidden"><TerminalComponent title="任务终端" /></TabsContent>
-          <TabsContent value="browser" className="h-full overflow-auto"><BrowserPanel /></TabsContent>
-          <TabsContent value="events" className="h-full overflow-auto"><RuntimeEvents /></TabsContent>
-          <TabsContent value="logs" className="h-full overflow-auto"><LogsPanel /></TabsContent>
-          <TabsContent value="problems" className="h-full overflow-auto"><ProblemsPanel /></TabsContent>
-          <TabsContent value="output" className="h-full overflow-auto"><OutputPanel /></TabsContent>
+        <div className={styles.content}>
+          <TabsContent value="task" className={styles.panelContent}><TaskMonitorPanel /></TabsContent>
+          <TabsContent value="artifacts" className={styles.panelContent}><ArtifactPanel /></TabsContent>
+          <TabsContent value="diff" className={styles.panelContent}><DiffPanel /></TabsContent>
+          <TabsContent value="context" className={styles.panelContent}><ContextPanel /></TabsContent>
+          <TabsContent value="terminal" className={styles.panelContent}><TerminalComponent title="任务终端" /></TabsContent>
+          <TabsContent value="browser" className={styles.panelContent}><BrowserPanel /></TabsContent>
+          <TabsContent value="events" className={styles.panelContent}><RuntimeEvents /></TabsContent>
+          <TabsContent value="logs" className={styles.panelContent}><LogsPanel /></TabsContent>
+          <TabsContent value="problems" className={styles.panelContent}><ProblemsPanel /></TabsContent>
+          <TabsContent value="output" className={styles.panelContent}><OutputPanel /></TabsContent>
         </div>
       </Tabs>
     </aside>
   )
 }
+

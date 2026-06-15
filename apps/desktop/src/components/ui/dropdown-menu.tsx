@@ -17,10 +17,8 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-[var(--gw-z-popover)] min-w-[148px] overflow-hidden',
-        'rounded-xl border border-[var(--gw-popup-border,rgba(255,255,255,0.08))]',
-        'bg-[var(--gw-popup-bg,#1d1d1a)] p-1.5',
-        'shadow-[0_18px_48px_rgba(0,0,0,0.48)]',
+        'gw-popup',
+        'z-[var(--gw-z-popover)] min-w-[148px] overflow-hidden p-1.5',
         'data-[state=open]:animate-[gw-scale-in_130ms_var(--gw-ease-out)]',
         'data-[state=closed]:animate-[gw-fade-out_100ms_ease-in]',
         className,
@@ -38,10 +36,11 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center gap-2 rounded-[7px] px-2.5 h-[32px]',
-      'text-[12px] font-medium text-[var(--gw-text-secondary)] outline-none',
+      'relative flex cursor-pointer select-none items-center gap-2 rounded-[5px] px-2 h-[33px]',
+      'text-[13px] text-[var(--gw-text-secondary)] outline-none',
       'transition-colors',
-      'focus:bg-[rgba(255,255,255,0.06)] focus:text-[var(--gw-text)]',
+      'focus:bg-[var(--gw-bg-hover)] focus:text-[var(--gw-text)]',
+      'data-[state=highlighted]:bg-[var(--gw-bg-hover)] data-[state=highlighted]:text-[var(--gw-text)]',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-45',
       inset && 'pl-8',
       className,
@@ -58,7 +57,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-[var(--gw-radius-xs)] py-1.5 pl-8 pr-2',
+      'relative flex cursor-pointer select-none items-center rounded-[5px] h-[33px] pl-7 pr-2 gap-2',
       'text-[13px] text-[var(--gw-text-secondary)] outline-none',
       'transition-colors',
       'focus:bg-[var(--gw-bg-hover)] focus:text-[var(--gw-text)]',
@@ -85,7 +84,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      'relative flex cursor-pointer select-none items-center rounded-[var(--gw-radius-xs)] py-1.5 pl-8 pr-2',
+      'relative flex cursor-pointer select-none items-center rounded-[5px] h-[33px] pl-7 pr-2 gap-2',
       'text-[13px] text-[var(--gw-text-secondary)] outline-none',
       'transition-colors',
       'focus:bg-[var(--gw-bg-hover)] focus:text-[var(--gw-text)]',
@@ -126,7 +125,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn('my-1 h-px bg-[rgba(255,255,255,0.06)]', className)}
+    className={cn('my-1 h-px bg-[var(--gw-border)]', className)}
     {...props}
   />
 ))

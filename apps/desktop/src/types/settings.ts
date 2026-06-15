@@ -1,6 +1,7 @@
 // GeoWork Types - Settings
 
 import type { PermissionLevel } from './permission'
+import type { GeoWorkTheme } from '../design/types'
 
 export interface ModelProvider {
   id: string;
@@ -26,7 +27,8 @@ export interface Settings {
     cacheEnabled: boolean;
   };
   appearance: {
-    theme: 'dark' | 'light' | 'system';
+    /** Theme variant — one of the 9 GeoWork themes (default/auto + families × light/dark). */
+    theme: GeoWorkTheme;
     fontSize: number;
     sidebarCollapsed: boolean;
     conversationMinimapEnabled: boolean;

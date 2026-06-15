@@ -174,7 +174,7 @@ function DeliveryChecklist({ delivery }: { delivery: any }) {
   return (
     <div className={styles.deliveryChecklist}>
       <div className={styles.deliveryHeader}>
-        <CheckCircle style={{ color: "#52c41a", fontSize: 16 }} className="h-4 w-4" />
+        <CheckCircle style={{ color: "var(--gw-accent)", fontSize: 14 }} className="h-4 w-4" />
         <span className={styles.deliveryTitle}>交付物清单</span>
         <Badge variant="success">任务完成</Badge>
       </div>

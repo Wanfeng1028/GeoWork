@@ -1,5 +1,4 @@
-import React from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
+import { SlidersHorizontal, Layers3, FileJson } from 'lucide-react'
 import { LayerPanel } from './LayerPanel'
 import { MapView } from './MapView'
 import { Toolbar } from './Toolbar'
@@ -8,53 +7,61 @@ import styles from './MapAndLayers.module.scss'
 
 export function MapAndLayers() {
   const selectedLayer = useMapViewStore((s) => s.selectedLayer)
-  const setSelectedLayer = useMapViewStore((s) => s.setSelectedLayer)
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="w-[280px] flex-shrink-0 bg-muted/50 border-r">
-        <div className="p-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>图层控制</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LayerPanel />
-            </CardContent>
-          </Card>
+    <div className={styles.mapShell}>
+      <aside className={styles.layerRail}>
+        <div className={styles.panelTitle}>
+          <Layers3 size={15} />
+          <span>图层控制</span>
         </div>
-      </div>
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 relative overflow-hidden">
+        <LayerPanel />
+      </aside>
+
+      <main className={styles.mapStage}>
+        <div className={styles.stageTopbar}>
+          <div>
+            <h2>地图与图层</h2>
+            <p>管理、检查和处理当前工作区的空间数据。</p>
+          </div>
+          <div className={styles.stageActions}>
+            <button>底图</button>
+            <button>坐标</button>
+            <button>导出</button>
+          </div>
+        </div>
+        <div className={styles.mapCanvasWrap}>
           <MapView />
         </div>
         <Toolbar />
-      </div>
-      {selectedLayer && (
-        <div className="w-[260px] flex-shrink-0 border-l bg-background">
-          <div className="p-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>图层属性</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div><span className="font-semibold">名称：</span>{selectedLayer.name}</div>
-                  <div><span className="font-semibold">类型：</span>{selectedLayer.type}</div>
-                  <div><span className="font-semibold">数据源：</span><span className="break-all">{selectedLayer.source}</span></div>
-                  <div><span className="font-semibold">透明度：</span>{selectedLayer.opacity}%</div>
-                  <div>
-                    <span className="font-semibold">元数据：</span>
-                    <pre className="text-xs max-h-[200px] overflow-auto mt-1 bg-muted p-2 rounded">
-                      {JSON.stringify(selectedLayer.metadata, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+      </main>
+
+      <aside className={`${styles.detailRail} ${selectedLayer ? styles.visible : ''}`}>
+        <div className={styles.panelTitle}>
+          <SlidersHorizontal size={15} />
+          <span>图层属性</span>
         </div>
-      )}
+        {selectedLayer ? (
+          <div className={styles.propertyCard}>
+            <div className={styles.layerBadge}>{selectedLayer.type}</div>
+            <h3>{selectedLayer.name}</h3>
+            <dl>
+              <div><dt>类型</dt><dd>{selectedLayer.type}</dd></div>
+              <div><dt>透明度</dt><dd>{selectedLayer.opacity}%</dd></div>
+              <div><dt>数据源</dt><dd>{selectedLayer.source}</dd></div>
+            </dl>
+            <div className={styles.metadataBlock}>
+              <div className={styles.metadataTitle}>
+                <FileJson size={14} />
+                <span>元数据</span>
+              </div>
+              <pre>{JSON.stringify(selectedLayer.metadata, null, 2)}</pre>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.emptyDetail}>选择一个图层后查看属性</div>
+        )}
+      </aside>
     </div>
   )
 }

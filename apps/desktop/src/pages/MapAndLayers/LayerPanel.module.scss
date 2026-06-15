@@ -1,114 +1,139 @@
 .panel {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: var(--geowork-bg-secondary);
-  border-right: 1px solid var(--geowork-border-color);
   overflow: hidden;
+  background: transparent;
 }
 
 .panelHeader {
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--geowork-border-color);
-  background: var(--geowork-bg-elevated);
+  padding: 0 14px;
+  border-bottom: 1px solid var(--gw-border);
 
   h3 {
     margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--geowork-text-primary);
+    color: var(--gw-text);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 650;
   }
 }
 
 .reorderHint {
-  font-size: 12px;
-  color: var(--geowork-text-secondary);
-  cursor: help;
+  color: var(--gw-text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .layerList {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 8px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--gw-scrollbar-thumb);
+  }
 }
 
 .empty {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--geowork-text-secondary);
-  font-size: 13px;
+  min-height: 130px;
+  display: grid;
+  place-items: center;
+  margin: 4px;
+  border: 1px dashed var(--gw-border-strong);
+  border-radius: 8px;
+  color: var(--gw-text-tertiary);
+  background: var(--gw-bg-subtle);
+  font-size: 12px;
 }
 
 .layerItem {
   user-select: none;
-  transition: background 0.15s;
+  border-radius: 7px;
+  transition: background-color var(--gw-duration-normal) ease;
 
   &:hover {
-    background: var(--geowork-bg-hover);
+    background: var(--gw-bg-hover);
   }
 }
 
 .layerHeader {
-  display: flex;
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: 14px 22px minmax(0, 1fr) auto 64px auto;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 4px 6px;
   cursor: grab;
 
   &:active {
     cursor: grabbing;
   }
+
+  :global(button) {
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--gw-text-secondary);
+  }
+
+  :global(button:hover) {
+    background: var(--gw-bg-active);
+    color: var(--gw-text);
+  }
+
+  :global(input[type='range']) {
+    height: 3px;
+  }
 }
 
 .dragHandle {
-  color: var(--geowork-text-quaternary);
+  width: 14px;
+  height: 14px;
+  color: var(--gw-text-tertiary);
   cursor: grab;
-  font-size: 14px;
 }
 
 .typeIcon {
-  font-size: 14px;
-  color: var(--geowork-primary-color);
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--gw-bg-soft);
+  color: var(--gw-accent);
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 .layerName {
-  flex: 1;
-  font-size: 13px;
-  color: var(--geowork-text-primary);
+  min-width: 0;
+  color: var(--gw-text);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 
   &:hover {
-    color: var(--geowork-primary-color);
-  }
-}
-
-.opacitySlider {
-  width: 80px;
-
-  :global(.ant-slider-track) {
-    background: var(--geowork-primary-color);
-  }
-}
-
-.moreBtn {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--geowork-text-tertiary);
-
-  &:hover {
-    background: var(--geowork-bg-hover);
-    color: var(--geowork-text-primary);
+    color: var(--gw-accent);
   }
 }

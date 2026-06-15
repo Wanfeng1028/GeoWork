@@ -266,7 +266,7 @@ export function BrowserPanel() {
         {state.isNavigating ? (
           <div className={styles.loadingOverlay}>
             <Spinner size="lg" />
-            <span style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)", marginTop: 8 }}>
               正在加载...
             </span>
           </div>
@@ -274,7 +274,7 @@ export function BrowserPanel() {
           <div className={styles.iframeArea}>
             {/* Placeholder: In production this would show the actual browser content */}
             <div className={styles.screenshotPlaceholder}>
-              <Monitor className="h-12 w-12 text-[#d9d9d9]" />
+              <Monitor className="h-12 w-12 text-[var(--gw-text-disabled)]" />
               <p>页面内容预览</p>
               <span>{state.url}</span>
               <Badge variant="accent">{state.title}</Badge>

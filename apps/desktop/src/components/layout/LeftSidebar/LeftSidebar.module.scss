@@ -1,210 +1,157 @@
+// GeoWork LeftSidebar — ported from QoderWorkCopy visual language.
+// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.side, .side-action,
+// .mode-switch, .history-item, .profile, .profile-menu, .menu-row, .theme-row).
+
 .sidebar {
-  width: 198px;
-  min-width: 198px;
-  max-width: 198px;
-  height: 100vh;
+  position: relative;
+  width: var(--gw-sidebar-width);
+  min-width: var(--gw-sidebar-width);
+  max-width: var(--gw-sidebar-width);
+  height: 100%;
 
   display: flex;
   flex-direction: column;
 
-  background: #171716;
-  border-right: 1px solid #2a2a28;
+  background: var(--gw-bg-sidebar);
+  border-right: 1px solid var(--gw-border);
 
-  color: #e8e8e5;
+  color: var(--gw-text);
   box-sizing: border-box;
   overflow: hidden;
 }
 
-.brand {
-  height: 42px;
-  min-height: 42px;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 14px;
-  box-sizing: border-box;
-}
-
-.logo {
-  width: 18px;
-  height: 18px;
-  display: block;
-  border-radius: 4px;
-  object-fit: contain;
-}
-
-.nav {
+// ---- Main scrollable nav area ----
+.main {
   flex: 1;
   display: flex;
   flex-direction: column;
-
-  padding: 0 13px 12px;
-  box-sizing: border-box;
-
+  padding: 14px 14px 0;
+  min-height: 0;
   overflow: hidden;
 }
 
-.newTaskBtn {
-  width: 100%;
-  height: 32px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 0 10px;
-  margin-bottom: 12px;
-
-  border: none;
-  border-radius: 6px;
-
-  background: #252522;
-  color: #f1f1ee;
-
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 32px;
-
-  cursor: pointer;
-
-  &:hover {
-    background: #2b2b28;
-  }
-}
-
-.newTaskLeft {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.newTaskBtn svg {
-  color: #bdbdb6;
-  stroke-width: 2;
-}
-
-.shortcut {
-  color: #696963;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.navItem {
+// ---- New task / nav action buttons (34px, 7px radius) ----
+.action {
   width: 100%;
   height: 34px;
-
   display: flex;
   align-items: center;
   gap: 10px;
-
   padding: 0 8px;
-
-  border: none;
-  border-radius: 6px;
-
+  border: 0;
+  border-radius: 7px;
   background: transparent;
-  color: #dfdfdc;
-
+  color: var(--gw-text);
   font-size: 14px;
-  font-weight: 600;
-  line-height: 34px;
   text-align: left;
-
   cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease;
+  margin-bottom: 2px;
 
-  &:hover {
-    background: #22221f;
-    color: #ffffff;
+  &:hover,
+  &.active {
+    background: var(--gw-bg-hover);
   }
 
   svg {
-    width: 15px;
-    height: 15px;
-    color: #aaaaa4;
-    stroke-width: 1.9;
     flex-shrink: 0;
   }
-}
 
-.tabs {
-  height: 28px;
-
-  display: flex;
-  align-items: center;
-
-  margin-top: 10px;
-  margin-bottom: 8px;
-
-  padding: 2px;
-
-  background: #242421;
-  border: 1px solid #2f2f2c;
-  border-radius: 6px;
-
-  box-sizing: border-box;
-}
-
-.tab {
-  flex: 1;
-  height: 22px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-
-  border: none;
-  border-radius: 4px;
-
-  background: transparent;
-  color: #a7a7a0;
-
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 22px;
-
-  cursor: pointer;
-
-  svg {
-    width: 13px;
-    height: 13px;
-    stroke-width: 1.9;
-  }
-
-  &.active {
-    background: #181817;
-    color: #eeeeeb;
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-.sectionTitle {
-  height: 24px;
-
-  display: flex;
-  align-items: center;
-
-  padding: 0 8px;
-
-  color: #666660;
-
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 24px;
-}
-
-.taskList {
-  flex: 1;
+// ---- Extension group (collapsible sub-nav) ----
+.extensionGroup {
   display: flex;
   flex-direction: column;
   gap: 2px;
 
+  &.open .action {
+    gap: 7px;
+  }
+
+  .chevron {
+    color: var(--gw-text-secondary);
+    flex-shrink: 0;
+  }
+}
+
+.kitNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 5px 28px;
+
+  button {
+    min-height: 27px;
+    width: 100%;
+    padding: 0 7px;
+    border: 0;
+    border-radius: var(--gw-radius-sm);
+    background: transparent;
+    color: var(--gw-text);
+    font-size: 14px;
+    font-weight: 520;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &.active {
+      background: transparent;
+      color: var(--gw-text);
+    }
+  }
+}
+
+// ---- Mode switch (segmented control, 30px) ----
+.modeSwitch {
+  height: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin: 10px 0 9px;
+  padding: 3px;
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-soft);
+}
+
+.modeTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--gw-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--gw-bg-panel) 58%, transparent);
+  }
+
+  &.active {
+    background: var(--gw-bg-panel);
+    box-shadow: 0 1px 2px rgba(45, 38, 24, 0.09);
+  }
+}
+
+// ---- History / task list ----
+.historyList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   overflow-y: auto;
   overflow-x: hidden;
-
-  padding-right: 2px;
+  min-height: 0;
 
   &::-webkit-scrollbar {
     width: 0;
@@ -212,147 +159,363 @@
   }
 }
 
-.taskItem {
+.historyItem,
+.wechatRow {
   width: 100%;
-  min-height: 31px;
-
+  min-height: 30px;
   display: flex;
   align-items: center;
-
-  padding: 0 8px;
-
-  border: none;
-  border-radius: 6px;
-
+  gap: 7px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: var(--gw-radius-sm);
   background: transparent;
-  color: #a6a69f;
-
+  color: var(--gw-text-secondary);
   font-size: 13px;
-  font-weight: 500;
-  line-height: 31px;
   text-align: left;
-
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
-
-  box-sizing: border-box;
-
-  span {
-    display: block;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  transition: background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease;
 
   &:hover {
-    background: #22221f;
-    color: #e7e7e3;
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
   }
 
-  &.command {
-    gap: 4px;
-    color: #9f9f98;
+  &.active {
+    background: var(--gw-bg-active);
+    color: var(--gw-text);
+    font-weight: 520;
+  }
+
+  &.warning {
+    color: #c05a3e;
+    background: color-mix(in srgb, #e9ded0 60%, transparent);
   }
 }
 
+.wechatRow {
+  color: var(--gw-text);
+}
+
+.wechatDot {
+  color: #19c56d;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.conversationChip {
+  margin-left: 16px;
+  width: calc(100% - 16px);
+}
+
+// ---- Command-style task item (slash commands) ----
 .commandBadge {
   height: 20px;
-
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 3px;
-
   padding: 0 6px;
-
   border-radius: 5px;
-
-  background: #103a20;
-  color: #75f098;
-
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent);
   font-size: 13px;
   font-weight: 700;
-  line-height: 20px;
-
   flex-shrink: 0;
 
   svg {
     width: 11px;
     height: 11px;
-    stroke-width: 2;
   }
 }
 
 .commandRest {
-  color: #8b8b84;
+  color: var(--gw-text-tertiary);
   font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.userArea {
-  border-top: 1px solid #2a2a28;
-  padding: 8px;
-}
-
-.userBtn {
-  width: 100%;
+// ---- Section label ----
+.sectionTitle {
+  height: 24px;
   display: flex;
   align-items: center;
+  padding: 0 8px;
+  color: var(--gw-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// ---- Profile footer (58px, 3-col grid) ----
+.profile {
+  height: 58px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 22px;
+  align-items: center;
   gap: 8px;
-  padding: 4px;
-
-  border: none;
+  padding: 0 16px;
+  text-align: left;
+  border-radius: 0;
   background: transparent;
+  color: var(--gw-text);
   cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease;
 
-  &:hover {
-    background: #22221f;
+  &:hover,
+  &.active {
+    background: var(--gw-bg-hover);
   }
 }
 
-.userAvatar {
-  width: 28px;
-  height: 28px;
+.avatar {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  background: #1d1d1a;
-  color: #73cd94;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #2a2a28;
-  flex-shrink: 0;
+  background: #d8ebff;
+  color: #2179ff;
+  font-weight: 700;
 }
 
-.userInfo {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-}
-
-.userName {
-  font-size: 12px;
-  font-weight: 600;
-  color: #e8e8e5;
+.profileName {
+  display: block;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.userPlan {
-  font-size: 10px;
-  color: #666660;
+.profilePlan {
+  display: block;
+  color: var(--gw-text-tertiary);
+  font-size: 12px;
+  margin-top: 1px;
 }
 
+// ---- Profile dropdown menu (Radix) — styled to match QoderWorkCopy profile-menu ----
 .userMenu {
-  width: 200px;
-  padding: 6px;
-  border-radius: 8px;
-  border: 1px solid #2f2f2c;
-  background: #1d1d1a;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  width: 220px;
+  padding: 8px;
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-popup-border-strong);
+  background: var(--gw-popup-bg);
+  box-shadow: var(--gw-popup-shadow);
+}
+
+.planSummary {
+  padding: 5px 7px 9px;
+  border-bottom: 1px solid var(--gw-border);
+  margin-bottom: 7px;
+
+  span {
+    display: block;
+    color: var(--gw-text-secondary);
+    font-size: 11px;
+    line-height: 17px;
+  }
+
+  strong {
+    display: block;
+    color: var(--gw-text);
+    font-size: 13px;
+    line-height: 18px;
+  }
 }
 
 .logoutItem {
-  color: #c42b1c !important;
+  color: #ff6b5f !important;
+
   &:hover {
-    background: #2a1510 !important;
+    background: color-mix(in srgb, #ff5b50 12%, transparent) !important;
   }
+}
+
+// ---- Menu section labels (theme/family groups) ----
+.menuLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 7px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gw-text-tertiary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+// QoderWork profile cascading menus.
+.open {}
+.active {}
+.danger {}
+.checked {}
+
+.channelGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.profileMenu,
+.preferenceMenu,
+.themeMenu {
+  position: absolute;
+  z-index: 80;
+  width: 199px;
+  padding: 7px;
+  border-radius: 7px;
+  border: 1px solid var(--gw-border-strong);
+  background: var(--gw-bg-panel);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+  color: var(--gw-text);
+}
+
+.profileMenu {
+  left: 7px;
+  bottom: 63px;
+}
+
+.preferenceMenu {
+  left: 203px;
+  bottom: 128px;
+  width: 124px;
+}
+
+.themeMenu {
+  left: 327px;
+  bottom: 63px;
+  width: 124px;
+}
+
+.profileMenuSection {
+  padding: 4px 6px 8px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--gw-border);
+
+  span,
+  strong {
+    display: block;
+    line-height: 19px;
+  }
+
+  span {
+    color: var(--gw-text-secondary);
+    font-size: 12px;
+    font-weight: 520;
+  }
+
+  strong {
+    color: var(--gw-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.menuRow,
+.themeRow {
+  width: 100%;
+  height: 33px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--gw-text);
+  font-size: 13px;
+  font-weight: 560;
+  text-align: left;
+  cursor: pointer;
+
+  svg {
+    color: currentColor;
+  }
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover,
+  &.active {
+    background: var(--gw-bg-hover);
+  }
+
+  &.danger {
+    color: #ec5f58;
+  }
+}
+
+.themeRow {
+  font-weight: 540;
+
+  &.checked {
+    background: var(--gw-bg-hover);
+  }
+}
+
+.themeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.88;
+  justify-self: center;
+}
+
+.submenuDivider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--gw-border);
+}
+
+html[data-theme^='dark'] {
+  .profileMenu,
+  .preferenceMenu,
+  .themeMenu {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #181712;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  }
+
+  .profileMenuSection,
+  .submenuDivider {
+    border-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .menuRow:hover,
+  .menuRow.active,
+  .themeRow:hover,
+  .themeRow.active,
+  .themeRow.checked {
+    background: #343126;
+  }
+}
+
+:global([data-resolved-theme='dark']) .profileMenu,
+:global([data-resolved-theme='dark']) .preferenceMenu,
+:global([data-resolved-theme='dark']) .themeMenu {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #181712;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+}
+
+:global([data-resolved-theme='dark']) .menuRow:hover,
+:global([data-resolved-theme='dark']) .menuRow.active,
+:global([data-resolved-theme='dark']) .themeRow:hover,
+:global([data-resolved-theme='dark']) .themeRow.active,
+:global([data-resolved-theme='dark']) .themeRow.checked {
+  background: #343126;
 }

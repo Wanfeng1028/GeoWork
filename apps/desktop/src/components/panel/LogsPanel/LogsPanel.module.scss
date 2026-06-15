@@ -1,37 +1,36 @@
-// GeoWork LogsPanel Styles
-
 .panel {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
   overflow: hidden;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
 
   .filterSection {
-    padding: 8px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
 
     .filterRow {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+      gap: 7px;
+      margin-bottom: 7px;
 
-      .searchInput {
-        flex: 1;
-      }
-
-      .levelSelect,
-      .moduleSelect {
-        width: 120px;
-      }
+      .searchInput { flex: 1; }
+      .levelSelect, .moduleSelect { width: 116px; }
     }
 
-    .levelBadges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
+    :global(input), :global(button[role='combobox']) {
+      height: 30px;
+      border-color: var(--gw-border);
+      border-radius: 999px;
+      background: var(--gw-bg-panel);
+      color: var(--gw-text);
+      font-size: 12px;
     }
+
+    .levelBadges { display: flex; flex-wrap: wrap; gap: 5px; }
   }
 
   .logArea {
@@ -40,78 +39,68 @@
     padding: 8px;
 
     .emptyLogs {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       height: 100%;
-      color: #bfbfbf;
+      color: var(--gw-text-tertiary);
       font-size: 12px;
     }
 
-    .logEntries {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .logEntries { display: flex; flex-direction: column; gap: 2px; }
 
     .logEntry {
-      display: flex;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: auto auto auto minmax(0, 1fr);
+      align-items: start;
       gap: 8px;
-      padding: 4px 8px;
-      border-left: 3px solid transparent;
+      min-height: 28px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border-left: 2px solid transparent;
+      color: var(--gw-text-secondary);
       font-size: 12px;
-      border-radius: 2px;
-      transition: background 0.15s;
+      transition: background-color var(--gw-duration-normal) ease;
 
-      &:hover {
-        background: #f5f5f5;
-      }
+      &:hover { background: var(--gw-bg-hover); }
 
       .logLevel {
-        flex-shrink: 0;
-        padding: 0 4px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--gw-bg-soft);
+        color: var(--gw-text);
         font-size: 10px;
-        font-weight: 600;
-        border-radius: 2px;
+        font-weight: 700;
         line-height: 18px;
       }
 
-      .logTimestamp {
-        flex-shrink: 0;
-        font-family: monospace;
+      .logTimestamp, .logModule {
+        color: var(--gw-text-tertiary);
         font-size: 11px;
-        color: #bfbfbf;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
 
-      .logModule {
-        flex-shrink: 0;
-        font-family: monospace;
-        font-size: 11px;
-        color: #1890ff;
-      }
+      .logModule { color: var(--gw-accent); }
 
       .logMessage {
-        flex: 1;
-        color: #333;
-        white-space: nowrap;
+        min-width: 0;
         overflow: hidden;
+        color: var(--gw-text-secondary);
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
   }
 
   .footer {
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
-    border-top: 1px solid #f0f0f0;
-    background: #fafafa;
+    padding: 0 10px;
+    border-top: 1px solid var(--gw-border);
+    background: var(--gw-bg-sidebar);
 
-    .entryCount {
-      font-size: 11px;
-      color: #999;
-    }
+    .entryCount { color: var(--gw-text-tertiary); font-size: 11px; }
   }
 }

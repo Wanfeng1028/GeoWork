@@ -9,8 +9,8 @@ body,
   background: var(--gw-bg);
   color: var(--gw-text);
   font-family: var(--gw-font-sans);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -137,3 +137,52 @@ a:hover {
     box-shadow: 0 0 38px rgba(var(--gw-accent-rgb), 0.25);
   }
 }
+
+/* Composer breathing glow — ported from QoderWorkCopy chat-input-glow-pulse */
+@keyframes gw-composer-glow {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.24; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow::before,
+  .glow::after {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+ * Global utility classes — ported from QoderWorkCopy design language.
+ * ============================================================ */
+
+/* ---- Popup shell (popovers, dropdowns, menus) ----
+ * Guarantees every Radix Portal-rendered popup picks up theme tokens,
+ * regardless of Tailwind class precedence on the trigger.
+ */
+.gw-popup {
+  border-radius: var(--gw-radius-md);
+  border: 1px solid var(--gw-popup-border-strong);
+  background: var(--gw-popup-bg);
+  box-shadow: var(--gw-popup-shadow);
+  color: var(--gw-text);
+}
+
+/* ---- Dot-grid surface (canvas/home/utility/picker) ----
+ * The signature QoderWorkCopy dotted background. Add `gw-dotgrid` to any
+ * element that should show the subtle dot pattern. Tint per-theme via
+ * --gw-dot-color.
+ */
+.gw-dotgrid {
+  background-color: var(--gw-bg-canvas);
+  background-image:
+    radial-gradient(var(--gw-dot-color, color-mix(in srgb, var(--gw-text-tertiary) 20%, transparent)) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 0 0;
+}
+
+/* Dark-mode dot spacing tightens slightly (15px), like QoderWorkCopy */
+[data-resolved-theme='dark'] .gw-dotgrid {
+  background-size: 15px 15px;
+}
+
+

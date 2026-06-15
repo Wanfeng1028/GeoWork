@@ -1,0 +1,18 @@
+refactor(desktop): migrate to design tokens and convert all styles to SCSS Modules  
+  
+Introduce a centralized design token system (tokens.css + themes.css + theme-init.ts)  
+and convert the entire codebase from inline Tailwind classes to SCSS Modules.  
+  
+### Token system  
+- tokens.css: design tokens (spacing, colors, typography, radii, shadows)  
+- themes.css: light/dark theme definitions referencing tokens  
+- theme-init.ts: runtime theme initialization  
+- base.css: global reset and base styles  
+- types.ts: TypeScript types for the token system  
+- styles/: global.scss, themes.scss, tokens.scss as the global entry point  
+  
+### SCSS Module migration  
+Rewrite all components' .module.scss files to use CSS custom properties  
+and design tokens, removing Tailwind utility class dependencies.  
+  
+Co-Authored-By: AtomCode (deepseek-v4-flash) <noreply@atomgit.com> 

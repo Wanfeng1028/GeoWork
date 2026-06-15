@@ -1,35 +1,36 @@
-/* GeoWork Desktop - Plugin Detail Styles */
-
+/* QoderWork-style plugin detail side panel. */
 .container {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: var(--gw-bg-panel);
+  color: var(--gw-text);
 }
 
 .header {
-  padding: var(--gw-space-16) var(--gw-space-20) var(--gw-space-12);
-  border-bottom: 1px solid var(--gw-border-subtle);
   flex-shrink: 0;
+  padding: 15px 16px 13px;
+  border-bottom: 1px solid var(--gw-border);
+  background: var(--gw-bg-sidebar);
 }
 
 .headerMain {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-16);
+  gap: 12px;
 }
 
 .pluginIcon {
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gw-bg-card);
-  border-radius: var(--gw-radius-md);
-  color: var(--gw-accent);
-  font-size: 24px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
+  border: 1px solid var(--gw-border);
+  border-radius: 8px;
+  background: var(--gw-bg-soft);
+  color: var(--gw-accent);
+  font-size: 19px;
 }
 
 .headerInfo {
@@ -40,110 +41,142 @@
 .headerTitle {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
-  margin-bottom: var(--gw-space-4);
+  gap: 7px;
+  margin-bottom: 3px;
+
+  :global(h1),
+  :global(h2),
+  :global(h3) {
+    margin: 0;
+    color: var(--gw-text) !important;
+    font-size: 15px !important;
+    line-height: 21px !important;
+    font-weight: 700 !important;
+  }
 }
 
 .closeBtn {
-  color: var(--gw-text-secondary);
-  transition: color 0.15s;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--gw-text-tertiary);
+  transition: background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease;
 
   &:hover {
-    color: var(--gw-text-primary);
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
   }
 }
 
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--gw-space-16) var(--gw-space-20);
+  padding: 14px 16px 18px;
+  background:
+    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 15px 15px,
+    var(--gw-bg-canvas);
 }
 
 .section {
-  margin-bottom: var(--gw-space-20);
+  margin-bottom: 14px;
 }
 
 .sectionTitle {
-  color: var(--gw-text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: var(--gw-space-8);
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
+  gap: 7px;
+  margin: 0 0 8px;
+  color: var(--gw-text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
 }
 
 .description {
-  color: var(--gw-text-secondary);
-  font-size: 13px;
-  line-height: 1.6;
   margin: 0;
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 19px;
 }
 
 .infoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--gw-space-8);
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
 }
 
 .infoItem {
+  min-height: 34px;
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-8) var(--gw-space-12);
-  background: var(--gw-bg-card);
-  border-radius: var(--gw-radius-md);
-  color: var(--gw-text-primary);
-  font-size: 13px;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text-secondary);
+  font-size: 12px;
 
-  :global(.anticon) {
+  :global(.anticon),
+  svg {
     color: var(--gw-text-tertiary);
   }
 }
 
 .permissionAlert {
-  margin-bottom: var(--gw-space-12);
+  margin-bottom: 10px;
 }
 
 .permissionsList {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-8);
+  gap: 8px;
 }
 
 .permissionItem {
-  padding: var(--gw-space-12);
-  background: var(--gw-bg-card);
-  border-radius: var(--gw-radius-md);
+  padding: 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-panel);
 }
 
 .permissionRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--gw-space-4);
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .permissionName {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--gw-text);
+  font-family: var(--gw-font-mono);
   font-size: 12px;
-  font-weight: 500;
-  color: var(--gw-text-primary);
+  line-height: 17px;
+  font-weight: 600;
 }
 
 .permissionDesc {
-  font-size: 12px;
   display: block;
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .actions {
-  margin-top: var(--gw-space-8);
+  margin-top: 10px;
 }
 
 .actionRow {
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--gw-space-12);
-  padding: var(--gw-space-8) 0;
+  gap: 12px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--gw-border-soft);
 }

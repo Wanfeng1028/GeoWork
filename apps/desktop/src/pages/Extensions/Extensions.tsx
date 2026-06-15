@@ -1,256 +1,170 @@
-import { useState, useEffect } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Input } from '../../components/ui/input'
-import { Switch } from '../../components/ui/switch'
-import { Empty } from '../../components/ui/empty'
-import { toast } from 'sonner'
-import {
-  Settings,
-  Download,
-  Star,
-  CheckCircle,
-  Cloud,
-  Zap,
-  Globe,
-  Code,
-  Search,
-  LayoutGrid
-} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Check, Plus, RefreshCw, Search, SlidersHorizontal } from 'lucide-react'
 import styles from './Extensions.module.scss'
 
-interface Plugin {
+type Variant = 'extensions' | 'skills' | 'connectors'
+
+interface MarketItem {
   id: string
   name: string
+  subtitle: string
   description: string
-  category: string
-  version: string
-  author: string
-  rating: number
-  downloads: number
-  enabled: boolean
-  tags: string[]
+  installed?: boolean
+  icon?: string
+  downloads?: string
 }
 
-const MOCK_PLUGINS: Plugin[] = [
-  {
-    id: 'gee-integration',
-    name: 'GEE 集成',
-    description: 'Google Earth Engine 数据访问和脚本生成插件，支持 Sentinel-2、Landsat 等数据集',
-    category: 'remote-sensing',
-    version: '1.2.0',
-    author: 'GeoWork Team',
-    rating: 4.8,
-    downloads: 3200,
-    enabled: true,
-    tags: ['GEE', 'Sentinel', 'Landsat', 'NDVI']
-  },
-  {
-    id: 'gdal-tools',
-    name: 'GDAL 工具集',
-    description: '提供 GDAL 栅格数据处理能力，包括裁剪、重投影、COG 生成等',
-    category: 'gis',
-    version: '1.0.3',
-    author: 'GeoWork Team',
-    rating: 4.6,
-    downloads: 2800,
-    enabled: true,
-    tags: ['GDAL', 'Raster', 'COG']
-  },
-  {
-    id: 'qgis-bridge',
-    name: 'QGIS 桥接',
-    description: '连接本地 QGIS 安装，调用 QGIS 处理算法和图层管理',
-    category: 'gis',
-    version: '0.9.1',
-    author: 'GeoWork Team',
-    rating: 4.4,
-    downloads: 1900,
-    enabled: false,
-    tags: ['QGIS', 'Processing']
-  },
-  {
-    id: 'office-generator',
-    name: 'Office 文档生成',
-    description: '生成 Word、PowerPoint、Excel 和 Jupyter Notebook 格式的分析报告',
-    category: 'office',
-    version: '1.1.0',
-    author: 'GeoWork Team',
-    rating: 4.5,
-    downloads: 2100,
-    enabled: true,
-    tags: ['Word', 'PPT', 'Excel', 'Notebook']
-  },
-  {
-    id: 'paper-reader',
-    name: '论文阅读器',
-    description: 'PDF 论文解析、OpenAlex 学术搜索和文献矩阵生成',
-    category: 'knowledge',
-    version: '0.8.0',
-    author: 'GeoWork Team',
-    rating: 4.3,
-    downloads: 1500,
-    enabled: true,
-    tags: ['PDF', 'OpenAlex', 'Literature']
-  },
-  {
-    id: 'diff-viewer',
-    name: '差异对比查看器',
-    description: '栅格影像前后对比、变化检测可视化插件',
-    category: 'analysis',
-    version: '0.5.2',
-    author: 'GeoWork Team',
-    rating: 4.2,
-    downloads: 980,
-    enabled: false,
-    tags: ['Diff', 'Change Detection']
-  }
+const CONNECTORS: MarketItem[] = [
+  { id: 'qoder', name: 'QoderWork', subtitle: '赋予 Agent 自省与自治能力：查询、配置、操控...', description: '连接 QoderWork 本地能力', installed: true, icon: 'Q' },
+  { id: 'browser', name: '浏览器', subtitle: '连接浏览器，实现网页自动化和数据提取。', description: '网页自动化', icon: 'B' },
+  { id: 'control', name: '计算机控制', subtitle: '允许 AI 控制鼠标、键盘并截取屏幕。', description: '本机控制', icon: '□' },
+  { id: 'm365', name: 'Microsoft 365', subtitle: '连接 Microsoft 365 服务，包括邮件、日历和 Tea...', description: '办公服务', icon: 'M' },
+  { id: 'dingtalk', name: '钉钉', subtitle: '发送消息、管理频道，与钉钉工作区交互', description: '生产力', icon: '钉' },
+  { id: 'feishu', name: '飞书', subtitle: '接收机器人消息，处理飞书文档和会议', description: '生产力', icon: '飞' },
+  { id: 'slack', name: 'Slack', subtitle: '发送消息、管理频道，与 Slack 工作区交互', description: '沟通', icon: 'S' },
+  { id: 'figma', name: 'Figma', subtitle: '访问 Figma 设计、组件，协作编辑文件', description: '设计', icon: 'F' },
+  { id: 'calendar', name: 'Google 日历', subtitle: '管理 Google 日历事件，创建会议，查看日程安排', description: '日程', icon: '31' },
+  { id: 'maps', name: 'Google 地图', subtitle: '搜索地点、获取路线、计算距离、查找附近位置', description: '地图', icon: 'G' },
 ]
 
-const CATEGORIES = [
-  { key: 'all', label: '全部', icon: <Cloud /> },
-  { key: 'remote-sensing', label: '遥感', icon: <Zap /> },
-  { key: 'gis', label: 'GIS', icon: <Globe /> },
-  { key: 'office', label: '办公', icon: <Code /> },
-  { key: 'knowledge', label: '知识', icon: <Star /> },
-  { key: 'analysis', label: '分析', icon: <LayoutGrid /> },
+const SKILLS: MarketItem[] = [
+  { id: 'deep-research', name: '深入研究', subtitle: 'deep-research', description: '通过来源验证、三角测量和引用支持的报告对技术主题进行系统的深入研究。', downloads: '21.8K' },
+  { id: 'ui-designer', name: 'UI 设计', subtitle: 'ui-designer', description: '从参考 UI 图像中提取设计系统并生成可实施的 UI 设计提示。', installed: true, downloads: '19.3K' },
+  { id: 'qoder-ppt', name: 'QoderWork 演示文稿', subtitle: 'qoderwork-ppt', description: '生成 QoderWork 风格演示文稿。根据主题自动匹配模板。', downloads: '16.4K' },
+  { id: 'diagram', name: '技术图表生成', subtitle: 'drafter-diagram', description: '帮助把系统怎么组成、流程怎么走、模块怎么连讲清楚。', downloads: '12.2K' },
+  { id: 'data', name: '智能小Q·数据分析', subtitle: 'quickbi-smartq-chat', description: '超级数据分析技能，用户只需自然语言提出问题。', downloads: '9.7K' },
+  { id: 'notion', name: 'Notion 信息图', subtitle: 'notion-infographic', description: '根据参考文档批量生成 Notion 风格信息图。', downloads: '8.4K' },
 ]
 
-function PluginCard({ plugin, onToggle }: { plugin: Plugin; onToggle: (id: string) => void }) {
-  return (
-    <Card className={styles.pluginCard}>
-      <CardContent>
-        <div className={styles.pluginHeader}>
-          <div className="flex items-center justify-center rounded-full w-10 h-10" style={{ background: '#1677ff' }}>
-            <LayoutGrid className="text-white w-5 h-5" />
-          </div>
-          <div className={styles.pluginInfo}>
-            <span className="font-semibold">{plugin.name}</span>
-            <span className="text-xs text-muted-foreground"> v{plugin.version}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {plugin.enabled && <div className="w-2 h-2 rounded-full bg-green-500" />}
-            <Switch
-              checked={plugin.enabled}
-              onCheckedChange={() => onToggle(plugin.id)}
-            />
-          </div>
-        </div>
+const PLUGINS: MarketItem[] = [
+  { id: 'case-law', name: '法律行业', subtitle: '合同审查、条款比对与检索路径预置', description: '合同审查、条款比对与检索路径预置，减少重复说明。' },
+  { id: 'remote-sensing', name: '遥感行业', subtitle: '影像筛选、指数计算、变化检测工作流', description: '面向 Sentinel/Landsat 的遥感分析流程。' },
+  { id: 'paper', name: '论文行业', subtitle: '文献检索、综述、引用矩阵与写作模板', description: '让研究流程更接近 Qoder 的专家案件体验。' },
+]
 
-        <p className="text-sm text-muted-foreground mt-3 mb-2 line-clamp-2">
-          {plugin.description}
-        </p>
-
-        <div className={styles.pluginTags}>
-          {plugin.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">{tag}</Badge>
-          ))}
-        </div>
-
-        <div className={styles.pluginFooter}>
-          <div className="flex gap-4">
-            <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 text-amber-500" /> {plugin.rating}</span>
-            <span className="flex items-center gap-1"><Download className="w-3.5 h-3.5" /> {plugin.downloads > 1000 ? `${(plugin.downloads / 1000).toFixed(1)}k` : plugin.downloads}</span>
-            <span className="text-muted-foreground">{plugin.author}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+const COPY: Record<Variant, { title: string; subtitle: string; heroTitle: string; heroText: string; tabs: string[]; section: string; search: string; columns: string }> = {
+  extensions: {
+    title: '专家案件',
+    subtitle: '专家案件是面向角色/行业的工具套件，在对话框中输入 @ 或 / 即可使用。',
+    heroTitle: '法律行业',
+    heroText: '合同审查、条款比对与检索路径预置：减少重复说明，专注结论输出。',
+    tabs: ['案件广场', '已安装'],
+    section: '推荐',
+    search: '搜索案件...',
+    columns: 'wide',
+  },
+  skills: {
+    title: '技能',
+    subtitle: '安装与管理技能，在对话中扩展 QoderWork 的能力。',
+    heroTitle: '为你精选的职场技能',
+    heroText: '涵盖写作、效率、设计、数据分析等多种场景，一键安装。',
+    tabs: ['市场', '内置', '已安装'],
+    section: '官方精选',
+    search: '搜索技能',
+    columns: 'cards',
+  },
+  connectors: {
+    title: '连接器',
+    subtitle: '连接外部应用、日历与服务，让你的工作流更顺畅。',
+    heroTitle: '连接你的应用，释放生产力',
+    heroText: '更高效、更愉悦的开发体验。',
+    tabs: ['市场', '已安装'],
+    section: '推荐',
+    search: '搜索...',
+    columns: 'rows',
+  },
 }
 
-export default function Extensions() {
+export default function Extensions({ variant = 'connectors' }: { variant?: Variant }) {
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('all')
-  const [plugins, setPlugins] = useState<Plugin[]>(MOCK_PLUGINS)
+  const [tab, setTab] = useState(0)
+  const config = COPY[variant]
+  const items = variant === 'skills' ? SKILLS : variant === 'extensions' ? PLUGINS : CONNECTORS
 
-  const handleToggle = (id: string) => {
-    setPlugins((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p))
-    )
-    toast.success('插件状态已更新')
-  }
-
-  const filtered = plugins.filter((p) => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
-    const matchCategory = category === 'all' || p.category === category
-    return matchSearch && matchCategory
-  })
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return items.filter((item) => {
+      const tabOk = tab === 0 || item.installed
+      const searchOk = !q || `${item.name} ${item.subtitle} ${item.description}`.toLowerCase().includes(q)
+      return tabOk && searchOk
+    })
+  }, [items, search, tab])
 
   return (
     <div className={styles.extensions}>
-      <div className={styles.content}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div>
-            <h3 className="text-xl font-semibold m-0">扩展中心</h3>
-            <p className="text-sm text-muted-foreground">管理和安装 GeoWork 扩展插件</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline"><Settings className="w-4 h-4 mr-1" /> 插件设置</Button>
-            <Button><Download className="w-4 h-4 mr-1" /> 从市场安装</Button>
-          </div>
-        </div>
-
-        {/* Search and Filter */}
-        <div className={styles.filterBar}>
-          <Input
-            placeholder="搜索插件..."
+      <div className={styles.topBar}>
+        <button className={styles.refresh} title="刷新">
+          <RefreshCw size={14} />
+        </button>
+        <div className={styles.searchField}>
+          <Search size={14} />
+          <input
+            className={styles.searchInput}
+            placeholder={config.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="max-w-[320px]"
           />
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <Badge
-                key={cat.key}
-                variant={category === cat.key ? 'default' : 'outline'}
-                className="cursor-pointer px-3 py-1 text-xs"
-                onClick={() => setCategory(cat.key)}
-              >
-                {cat.icon} {cat.label}
-              </Badge>
-            ))}
+        </div>
+        <button className={styles.createBtn}>
+          <Plus size={14} /> 添加
+        </button>
+      </div>
+
+      <div className={styles.content}>
+        <h1 className={styles.title}>{config.title}</h1>
+        <p className={styles.subtitle}>{config.subtitle}</p>
+
+        <div className={`${styles.hero} ${styles[variant]}`}>
+          <div>
+            <strong>{config.heroTitle}</strong>
+            <span>{config.heroText}</span>
+          </div>
+          <div className={styles.heroArt} aria-hidden="true">
+            <span />
+            <span />
+            <span />
           </div>
         </div>
 
-        {/* Plugin Grid */}
-        {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((plugin) => (
-              <PluginCard key={plugin.id} plugin={plugin} onToggle={handleToggle} />
+        <div className={styles.filterRow}>
+          <div className={styles.tabs}>
+            {config.tabs.map((name, index) => (
+              <button key={name} className={tab === index ? styles.active : ''} onClick={() => setTab(index)}>
+                {name}{index === config.tabs.length - 1 && <em>{items.filter((item) => item.installed).length}</em>}
+              </button>
+            ))}
+          </div>
+          <div className={styles.filters}>
+            {variant === 'skills' && <button><SlidersHorizontal size={13} /> 全部</button>}
+            <button><SlidersHorizontal size={13} /> 排序: 热门</button>
+          </div>
+        </div>
+
+        <p className={styles.sectionLabel}>{config.section}</p>
+
+        {visible.length > 0 ? (
+          <div className={`${styles.grid} ${styles[config.columns]}`}>
+            {visible.map((item) => (
+              <article key={item.id} className={styles.card}>
+                <div className={styles.cardIcon}>{item.icon ?? item.name.slice(0, 1)}</div>
+                <div className={styles.cardBody}>
+                  <strong>{item.name}</strong>
+                  <small>{item.subtitle}</small>
+                  {variant !== 'connectors' && <span>{item.description}</span>}
+                  {item.downloads && <em>↓ {item.downloads}</em>}
+                </div>
+                <button className={styles.cardAdd} title={item.installed ? '已安装' : '安装'}>
+                  {item.installed ? <Check size={15} /> : <Plus size={18} />}
+                </button>
+              </article>
             ))}
           </div>
         ) : (
-          <Empty description="没有找到匹配的插件" />
+          <div className={styles.emptyState}>没有找到匹配内容</div>
         )}
-
-        {/* Installed Plugins List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>已安装的插件</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col">
-              {plugins.filter((p) => p.enabled).map((plugin) => (
-                <div key={plugin.id} className={styles.installedItem}>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center rounded-full w-8 h-8" style={{ background: '#1677ff' }}>
-                      <LayoutGrid className="text-white w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-medium">{plugin.name}</div>
-                      <div className="text-xs text-muted-foreground">v{plugin.version} — {plugin.description}</div>
-                    </div>
-                  </div>
-                  <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> 已启用</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      <button className={styles.avatarFloat} title="账户">G</button>
     </div>
   )
 }

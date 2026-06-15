@@ -1,50 +1,55 @@
-// GeoWork - GwButton Styles
-
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--gw-space-8);
+  gap: 6px;
   border: 1px solid transparent;
-  border-radius: var(--gw-radius-md);
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 650;
+  transition: background-color var(--gw-duration-normal) ease,
+    border-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease,
+    filter var(--gw-duration-normal) ease;
   user-select: none;
   white-space: nowrap;
 
   &:hover:not(.loading):not(.disabled) {
-    transform: translateY(-1px);
+    filter: brightness(.965);
   }
 
   &:active:not(.loading):not(.disabled) {
-    transform: translateY(0);
+    filter: brightness(.94);
   }
 
   &:disabled,
   &.disabled {
-    opacity: 0.5;
+    opacity: .48;
     cursor: not-allowed;
   }
 
-  .icon {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
+  &:focus-visible {
+    outline: 1px solid var(--gw-accent);
+    outline-offset: 2px;
   }
 
+  .icon,
   .label {
     display: flex;
     align-items: center;
   }
 
+  .icon {
+    flex-shrink: 0;
+  }
+
   .spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    width: 13px;
+    height: 13px;
+    border: 2px solid color-mix(in srgb, currentColor 24%, transparent);
     border-top-color: currentColor;
     border-radius: 50%;
-    animation: gw-spin 0.6s linear infinite;
+    animation: gw-spin .6s linear infinite;
   }
 }
 
@@ -52,81 +57,62 @@
   to { transform: rotate(360deg); }
 }
 
-// === Variants ===
-
 .primary {
-  background: var(--gw-accent);
-  color: var(--gw-bg-window);
-  border-color: var(--gw-accent);
-
-  &:hover:not(.loading):not(.disabled) {
-    background: color-mix(in srgb, var(--gw-accent) 85%, white);
-    border-color: color-mix(in srgb, var(--gw-accent) 85%, white);
-  }
+  border-color: var(--gw-text);
+  background: var(--gw-text);
+  color: var(--gw-bg);
 }
 
 .secondary {
-  background: var(--gw-bg-card);
-  color: var(--gw-text-primary);
-  border-color: var(--gw-border-subtle);
-
-  &:hover:not(.loading):not(.disabled) {
-    background: var(--gw-bg-popover);
-    border-color: var(--gw-border-strong);
-  }
+  border-color: var(--gw-border);
+  background: var(--gw-bg-soft);
+  color: var(--gw-text);
 }
 
 .text {
+  border-color: transparent;
   background: transparent;
   color: var(--gw-text-secondary);
-  border: none;
-  padding-left: var(--gw-space-8);
-  padding-right: var(--gw-space-8);
 
   &:hover:not(.loading):not(.disabled) {
-    color: var(--gw-text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
+    filter: none;
   }
 }
 
 .danger {
+  border-color: var(--gw-danger);
   background: var(--gw-danger);
   color: #fff;
-  border-color: var(--gw-danger);
-
-  &:hover:not(.loading):not(.disabled) {
-    background: color-mix(in srgb, var(--gw-danger) 85%, white);
-    border-color: color-mix(in srgb, var(--gw-danger) 85%, white);
-  }
 }
 
 .ghost {
+  border-color: var(--gw-border);
   background: transparent;
   color: var(--gw-text-secondary);
-  border-color: var(--gw-border-subtle);
 
   &:hover:not(.loading):not(.disabled) {
-    color: var(--gw-text-primary);
-    border-color: var(--gw-border-strong);
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
+    filter: none;
   }
 }
 
-// === Sizes ===
-
 .small {
   height: 28px;
-  padding: 0 var(--gw-space-12);
+  padding: 0 11px;
   font-size: 12px;
 }
 
 .default {
-  height: 36px;
-  padding: 0 var(--gw-space-20);
-  font-size: 14px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
 }
 
 .large {
-  height: 44px;
-  padding: 0 var(--gw-space-24);
-  font-size: 16px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
 }

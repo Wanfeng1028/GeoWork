@@ -1,117 +1,274 @@
 .panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 4px 0;
+  position: relative;
+  min-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--gw-bg-canvas);
+  color: var(--gw-text);
 }
 
-// Header
-.header {
+// ---- Top toolbar (refresh + search + create) ----
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--gw-bg-canvas);
+}
+
+.refresh {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
+  }
+}
+
+.searchField {
+  flex: 1;
+  max-width: 240px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius-full);
+  color: var(--gw-text-tertiary);
+  padding: 0 12px;
+  font-size: 12px;
+  background: var(--gw-bg-panel);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gw-text);
+  font: inherit;
+  font-size: 12px;
+
+  &::placeholder {
+    color: var(--gw-text-tertiary);
+  }
+}
+
+// ---- Content column (centered, 655px) ----
+.content {
+  width: var(--gw-content-width);
+  max-width: calc(100% - 32px);
+  margin: 18px auto 48px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 650;
+  color: var(--gw-text);
+}
+
+.subtitle {
+  margin: 4px 0 18px;
+  color: var(--gw-text-tertiary);
+  font-size: 13px;
+}
+
+// ---- Hero banner ----
+.hero {
+  height: 118px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--gw-border);
+  background: color-mix(in srgb, var(--gw-bg-panel) 88%, var(--gw-bg-soft));
+  padding-left: 17px;
+
+  strong {
+    display: block;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--gw-text);
+  }
+
+  span {
+    display: block;
+    margin-top: 4px;
+    color: var(--gw-text-secondary);
+    font-size: 12px;
+  }
+
+  img {
+    width: 160px;
+    height: 118px;
+    object-fit: cover;
+    opacity: 0.9;
+  }
+}
+
+// ---- Filter row (tabs + sort) ----
+.filterRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #f6ffed 0%, #e6f4ff 100%);
-  border-radius: 12px;
-  border: 1px solid #d9e1e7;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-  .headerText {
-    .title {
-      margin: 0 0 4px 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #1f2a32;
-    }
+.tabs {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
 
-    .subtitle {
-      margin: 0;
-      font-size: 13px;
-      color: #60717f;
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--gw-text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--gw-duration-normal) ease;
+
+    &:hover,
+    &.active {
+      color: var(--gw-text);
     }
   }
 }
 
-// Category tabs
-.categoryTabs {
-  :global(.ant-tabs-nav) {
-    margin-bottom: 16px;
-  }
-}
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-// Expert grid
-.expertGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-// Expert detail modal
-.modalContent {
-  .expertAvatar {
-    display: flex;
+  button {
+    height: 26px;
+    display: inline-flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: #f8fafb;
-    border-radius: 10px;
-    margin-bottom: 16px;
+    gap: 5px;
+    border: 1px solid var(--gw-border);
+    border-radius: 6px;
+    padding: 0 9px;
+    background: var(--gw-bg-panel);
+    color: var(--gw-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
 
-    :global(.ant-avatar) {
-      flex-shrink: 0;
+    &:hover {
+      background: var(--gw-bg-hover);
+      color: var(--gw-text);
     }
-
-    .avatarInfo {
-      .avatarName {
-        margin: 0 0 4px 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #1f2a32;
-      }
-
-      .avatarCategory {
-        font-size: 12px;
-        color: #60717f;
-      }
-    }
-  }
-
-  .skillsSection {
-    .sectionTitle {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #1f2a32;
-    }
-
-    .skillsList {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-  }
-
-  .callButton {
-    margin-top: 16px;
-    height: 40px;
-    font-size: 14px;
   }
 }
 
-// Responsive
-@media (max-width: 1200px) {
-  .expertGrid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+.sectionLabel {
+  margin: 6px 0 10px;
+  color: var(--gw-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+// ---- Expert grid (3 columns, QoderWorkCopy skill-grid) ----
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 768px) {
-  .expertGrid {
+@media (max-width: 720px) {
+  .grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .header {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
+// ---- Floating avatar (bottom-right) ----
+.avatarFloat {
+  position: fixed;
+  right: 17px;
+  bottom: 40px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  z-index: 40;
+}
+
+// ---- Detail modal content ----
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px;
+
+  strong {
+    color: var(--gw-text);
   }
+}
+
+.modalDesc {
+  color: var(--gw-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.modalSkills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalSkill {
+  padding: 8px 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 6px;
+  background: var(--gw-bg-panel);
+
+  strong {
+    display: block;
+    font-size: 13px;
+    color: var(--gw-text);
+  }
+
+  span {
+    display: block;
+    margin-top: 2px;
+    color: var(--gw-text-secondary);
+    font-size: 12px;
+  }
+}
+
+.emptyState {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--gw-text-tertiary);
+  font-size: 13px;
 }

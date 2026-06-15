@@ -1,67 +1,153 @@
-.popoverContent {
-  width: 300px;
+// UsageSummaryPopover — ported from QoderWorkCopy usage-panel visual language.
+// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.usage-panel, .usage-bars, .usage-numbers).
 
-  .loginPrompt {
-    padding: 8px 12px;
+.popoverContent {
+  width: 320px;
+  border-radius: var(--gw-radius-lg);
+  border: 1px solid var(--gw-border);
+  background: var(--gw-bg-panel);
+  box-shadow: var(--gw-popup-shadow);
+  overflow: hidden;
+}
+
+// ---- Header (user info) ----
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 12px;
+}
+
+.avatarCircle {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gw-bg-active);
+  color: var(--gw-text-tertiary);
+  flex-shrink: 0;
+}
+
+.userName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gw-text);
+  line-height: 18px;
+}
+
+.userEmail {
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+  line-height: 16px;
+  margin-top: 1px;
+}
+
+// ---- Section row ----
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--gw-border);
+
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gw-text-secondary);
   }
+
+  .value {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gw-text);
+  }
+}
+
+// ---- Usage bars (46 cells, QoderWorkCopy .usage-bars) ----
+.usageBars {
+  display: grid;
+  grid-template-columns: repeat(23, 1fr);
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.usageBar {
+  height: 14px;
+  border-radius: 2px;
+  background: var(--gw-bg-soft);
+}
+
+.usageBarActive {
+  background: var(--gw-accent);
+}
+
+.usageBarWarn {
+  background: var(--gw-warning);
+}
+
+.usageNumbers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+
+  strong {
+    color: var(--gw-text);
+    font-weight: 600;
+  }
+}
+
+.usageSection {
+  padding: 11px 14px 14px;
+  border-top: 1px solid var(--gw-border);
+}
+
+.usageHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gw-text-secondary);
+  margin-bottom: 2px;
+
+  .right {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--gw-text-tertiary);
+  }
+}
+
+.detailBtn {
+  width: 100%;
+  margin-top: 10px;
+  height: 30px;
+  border-radius: var(--gw-radius-sm);
+  border: 1px solid var(--gw-border);
+  background: var(--gw-bg-panel);
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease, color var(--gw-duration-normal) ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
+  }
+}
+
+.loginPrompt {
+  padding: 16px 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--gw-text-secondary);
 }
 
 .avatarBtn {
   padding: 4px;
   border-radius: 8px;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.userInfo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .email {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-  }
-}
-
-.section {
-  margin-bottom: 4px;
-
-  .sectionHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.85);
-    margin-bottom: 6px;
-
-    :global(.anticon) {
-      color: #1890ff;
-    }
-  }
-
-  .creditsValue {
-    font-size: 20px;
-    color: #52c41a;
-  }
-}
-
-.overlay {
-  :global(.ant-popover-inner) {
-    background-color: #1a1a2e;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-
-  :global(.ant-popover-arrow) {
-    display: none;
-  }
-
-  :global(.ant-divider) {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
 }

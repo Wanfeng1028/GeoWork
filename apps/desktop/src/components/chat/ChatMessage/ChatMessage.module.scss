@@ -55,7 +55,7 @@
   &.systemMessage {
     max-width: 90%;
     background: var(--gw-bg-card);
-    border-left: 3px solid #faad14;
+    border-left: 3px solid var(--gw-warning);
   }
 }
 
@@ -72,7 +72,7 @@
   font-size: 14px;
 
   &.system {
-    background: #faad14;
+    background: var(--gw-warning);
   }
 }
 

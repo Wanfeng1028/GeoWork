@@ -1,19 +1,28 @@
+/* QoderWork-style MCP server list. */
 .container {
-  padding: var(--gw-space-24);
-  background: var(--gw-bg-panel);
   min-height: 100%;
+  padding: 14px;
+  background:
+    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 15px 15px,
+    var(--gw-bg-canvas);
+  color: var(--gw-text);
 }
 
 .header {
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--gw-space-24);
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .title {
-  color: var(--gw-text-primary);
   margin: 0;
+  color: var(--gw-text);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
 }
 
 .collapse {
@@ -24,63 +33,70 @@
   }
 
   :global(.ant-collapse-content-box) {
-    padding: 0;
+    padding: 12px !important;
   }
 
+  :global(.ant-collapse-content),
   :global(.ant-collapse-item) {
-    border: none !important;
+    border: 0 !important;
     background: transparent !important;
   }
 
-  :global(.ant-collapse-content) {
-    border: none !important;
-  }
-
   :global(.ant-collapse-expand-icon) {
-    padding-right: var(--gw-space-16) !important;
-    color: var(--gw-text-secondary);
+    padding-right: 10px !important;
+    color: var(--gw-text-secondary) !important;
   }
 }
 
 .empty {
+  min-height: 224px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--gw-space-12);
-  padding: var(--gw-space-48) var(--gw-space-24);
+  gap: 10px;
+  padding: 34px 24px;
   color: var(--gw-text-tertiary);
+  font-size: 12px;
 }
 
 .emptyIcon {
-  font-size: 48px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gw-border);
+  border-radius: 9px;
+  background: var(--gw-bg-soft);
+  color: var(--gw-text-secondary);
+  font-size: 18px;
 }
 
-// ── Server Header ──────────────────────────────────────────────────
 .serverHeader {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  gap: 10px;
 }
 
 .serverInfo {
-  display: flex;
-  align-items: center;
-  gap: var(--gw-space-12);
   min-width: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
+  border-radius: 50%;
 
   &.statusConnected {
     background: var(--gw-accent);
-    box-shadow: 0 0 6px rgba(77, 220, 151, 0.5);
+    box-shadow: 0 0 10px rgba(var(--gw-accent-rgb), .36);
   }
 
   &.statusDisconnected {
@@ -89,122 +105,116 @@
 }
 
 .serverName {
-  color: var(--gw-text-primary);
-  font-weight: 600;
+  overflow: hidden;
+  color: var(--gw-text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .serverCommand {
+  max-width: 280px;
+  overflow: hidden;
+  padding: 2px 7px;
+  border: 1px solid var(--gw-border);
+  border-radius: 999px;
+  background: var(--gw-bg-code);
   color: var(--gw-text-tertiary);
-  font-family: 'Cascadia Code', 'Fira Code', monospace;
-  font-size: 12px;
-  background: var(--gw-bg-card);
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-family: var(--gw-font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-// ── Server Panel ───────────────────────────────────────────────────
 .serverPanel {
-  :global(.ant-collapse-header) {
-    padding: var(--gw-space-16) var(--gw-space-12) !important;
-    background: var(--gw-bg-card);
-    border-radius: var(--gw-radius-md);
-  }
-
-  :global(.ant-collapse-content-box) {
-    padding: var(--gw-space-16) !important;
-  }
+  margin-bottom: 8px;
 
   :global(.ant-collapse-header) {
-    border: 1px solid var(--gw-border-subtle);
-    border-bottom: none;
-    border-radius: var(--gw-radius-md) var(--gw-radius-md) 0 0;
+    min-height: 50px;
+    padding: 10px 12px !important;
+    border: 1px solid var(--gw-border) !important;
+    border-radius: 8px !important;
+    background: var(--gw-bg-panel) !important;
   }
 
   :global(.ant-collapse-content) {
-    border: 1px solid var(--gw-border-subtle);
-    border-top: none;
-    border-radius: 0 0 var(--gw-radius-md) var(--gw-radius-md);
+    border: 1px solid var(--gw-border) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 8px 8px !important;
+    background: var(--gw-bg-panel) !important;
   }
 }
 
-// ── Tools Section ──────────────────────────────────────────────────
-.toolsSection {
-  margin-bottom: var(--gw-space-16);
+.toolsSection,
+.envSection {
+  margin-bottom: 14px;
 }
 
-.toolsTitle {
-  color: var(--gw-text-secondary);
-  font-size: 13px;
-  margin: 0 0 var(--gw-space-12) 0;
+.toolsTitle,
+.envTitle {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
+  gap: 7px;
+  margin: 0 0 9px;
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 650;
 }
 
 .toolsGrid {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-8);
+  gap: 7px;
 }
 
 .toolItem {
-  padding: var(--gw-space-8) 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-soft);
 }
 
 .toolName {
   display: block;
-  color: var(--gw-text-primary);
-  font-weight: 500;
-}
-
-.toolDesc {
-  display: block;
+  color: var(--gw-text);
   font-size: 12px;
-  margin-top: 2px;
+  line-height: 17px;
+  font-weight: 650;
 }
 
-.noTools {
+.toolDesc,
+.noTools,
+.lastConnected {
   display: block;
-  padding: var(--gw-space-8) 0;
-}
-
-// ── Environment Section ────────────────────────────────────────────
-.envSection {
-  margin-bottom: var(--gw-space-16);
-}
-
-.envTitle {
-  color: var(--gw-text-secondary);
-  font-size: 13px;
-  margin: 0 0 var(--gw-space-12) 0;
+  margin-top: 2px;
+  color: var(--gw-text-tertiary);
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .envGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--gw-space-8);
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 8px;
 }
 
 .envItem {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--gw-space-8);
-  background: var(--gw-bg-card);
-  border-radius: var(--gw-radius-sm);
-  border: 1px solid var(--gw-border-subtle);
+  padding: 8px 10px;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-soft);
 }
 
 .envKey {
   color: var(--gw-accent);
-  font-size: 12px;
-}
-
-// ── Last Connected ─────────────────────────────────────────────────
-.lastConnected {
-  display: block;
-  margin-top: var(--gw-space-12);
-  font-size: 12px;
+  font-family: var(--gw-font-mono);
+  font-size: 11px;
+  line-height: 16px;
 }

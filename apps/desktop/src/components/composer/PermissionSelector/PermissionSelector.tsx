@@ -18,7 +18,7 @@ const riskColors: Record<string, string> = {
   low: 'var(--gw-accent)',
   medium: 'var(--gw-warning)',
   high: 'var(--gw-danger)',
-  critical: '#ff4d4f',
+  critical: 'var(--gw-danger)',
 }
 
 export const PermissionSelector: React.FC = () => {

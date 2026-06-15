@@ -160,26 +160,26 @@ export function OutputPanel() {
   const getColor = (type: OutputLine["type"]) => {
     switch (type) {
       case "error":
-        return "#f5222d";
+        return "var(--gw-danger)";
       case "warn":
-        return "#faad14";
+        return "var(--gw-warning)";
       case "success":
-        return "#52c41a";
+        return "var(--gw-accent)";
       default:
-        return "#8c8c8c";
+        return "var(--gw-text-tertiary)";
     }
   };
 
   const getPrefix = (type: OutputLine["type"]) => {
     switch (type) {
       case "error":
-        return "❌";
+        return "ERR";
       case "warn":
-        return "⚠️";
+        return "WRN";
       case "success":
-        return "✅";
+        return "OK";
       default:
-        return "ℹ️";
+        return "LOG";
     }
   };
 
@@ -240,7 +240,7 @@ export function OutputPanel() {
       >
         {output.length === 0 ? (
           <div className={styles.emptyOutput}>
-            <span style={{ fontSize: 12, color: "#bfbfbf" }}>暂无输出</span>
+            <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无输出</span>
           </div>
         ) : (
           <div className={styles.outputLines}>

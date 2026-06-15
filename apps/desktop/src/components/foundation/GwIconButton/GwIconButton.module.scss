@@ -1,98 +1,98 @@
-// GeoWork - GwIconButton Styles
-
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: var(--gw-radius-sm);
-  cursor: pointer;
-  color: var(--gw-text-secondary);
-  background: transparent;
-  transition: all 0.15s ease;
   flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease,
+    border-color var(--gw-duration-normal) ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--gw-text-primary);
+    background: var(--gw-bg-hover);
+    color: var(--gw-text);
   }
 
   &:active {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--gw-bg-active);
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: .42;
     cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--gw-accent);
+    outline-offset: 2px;
   }
 }
 
-// === Variants ===
-
-.ghost {
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
+.ghost:hover {
+  background: var(--gw-bg-hover);
 }
 
 .subtle {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--gw-bg-soft);
+
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--gw-bg-hover);
   }
 }
 
 .solid {
-  background: var(--gw-bg-card);
-  border: 1px solid var(--gw-border-subtle);
+  border-color: var(--gw-border);
+  background: var(--gw-bg-panel);
+
   &:hover {
     border-color: var(--gw-border-strong);
-    background: var(--gw-bg-popover);
+    background: var(--gw-bg-hover);
   }
 }
-
-// === Active state ===
 
 .active {
+  border-color: color-mix(in srgb, var(--gw-accent) 42%, var(--gw-border));
+  background: var(--gw-accent-soft);
   color: var(--gw-accent);
-  background: rgba(77, 220, 151, 0.12);
 
   &:hover {
-    background: rgba(77, 220, 151, 0.18);
+    background: var(--gw-accent-soft);
   }
 }
-
-// === Danger state ===
 
 .danger {
   color: var(--gw-danger);
+
   &:hover {
-    background: rgba(255, 107, 107, 0.12);
+    background: var(--gw-danger-soft);
+    color: var(--gw-danger);
   }
 }
-
-// === Sizes ===
 
 .xs {
   width: 22px;
   height: 22px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .sm {
   width: 28px;
   height: 28px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .default {
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
 }
 
 .lg {
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
 }

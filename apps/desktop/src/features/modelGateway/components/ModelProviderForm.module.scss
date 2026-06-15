@@ -1,31 +1,62 @@
-// GeoWork Model Gateway - Model Provider Form Styles
-
+// QoderWork-style model provider form.
 .form {
+  color: var(--gw-text);
+
+  :global(.ant-form-item) {
+    margin-bottom: 12px;
+  }
+
   :global(.ant-form-item-label) {
+    padding-bottom: 5px;
+
     label {
-      color: var(--gw-text-secondary);
+      color: var(--gw-text-secondary) !important;
       font-size: 12px;
+      line-height: 17px;
+      font-weight: 650;
     }
   }
 
   :global(.ant-input),
-  :global(.ant-input-password) {
-    background: var(--gw-bg-input);
-    border-color: var(--gw-border-subtle);
+  :global(.ant-input-password),
+  :global(.ant-input-number),
+  :global(.ant-input-affix-wrapper) {
+    height: 32px;
+    border-color: var(--gw-border) !important;
+    border-radius: 8px !important;
+    background: var(--gw-bg-panel) !important;
+    color: var(--gw-text) !important;
+    box-shadow: none !important;
+    font-size: 12px;
 
     &:hover,
-    &:focus {
-      border-color: var(--gw-border-strong);
+    &:focus,
+    &:focus-within {
+      border-color: var(--gw-border-strong) !important;
+      background: var(--gw-bg-hover) !important;
     }
+  }
+
+  :global(textarea.ant-input) {
+    height: auto;
+    min-height: 74px;
+    padding: 8px 10px;
+    line-height: 18px;
   }
 
   :global(.ant-select) {
     .ant-select-selector {
-      background: var(--gw-bg-input);
-      border-color: var(--gw-border-subtle);
+      height: 32px !important;
+      border-color: var(--gw-border) !important;
+      border-radius: 8px !important;
+      background: var(--gw-bg-panel) !important;
+      color: var(--gw-text) !important;
+      box-shadow: none !important;
+      font-size: 12px;
 
       &:hover {
-        border-color: var(--gw-border-strong);
+        border-color: var(--gw-border-strong) !important;
+        background: var(--gw-bg-hover) !important;
       }
     }
   }
@@ -39,7 +70,13 @@
   }
 
   .testTag {
-    line-height: 28px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 24px;
+
     :global(.anticon) {
       margin-right: 4px;
     }
@@ -47,5 +84,8 @@
 }
 
 .actions {
-  margin-top: 8px;
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }

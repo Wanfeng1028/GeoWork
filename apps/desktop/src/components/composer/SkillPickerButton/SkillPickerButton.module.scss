@@ -1,4 +1,5 @@
-// GeoWork - SkillPickerButton Styles
+// SkillPickerButton — ported from QoderWorkCopy picker-popover visual language.
+// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.picker-popover, .picker-row).
 
 .container {
   position: relative;
@@ -6,24 +7,46 @@
   align-items: center;
 }
 
+// ---- Round trigger button (32px, like QoderWorkCopy .round) ----
 .trigger {
-  border-radius: var(--gw-radius-md);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
+  box-shadow: 0 2px 8px rgba(45, 38, 24, 0.12), inset 0 0 0 1px var(--gw-border);
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease, transform var(--gw-duration-normal) ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   &.custom {
-    border-color: var(--gw-accent);
-    background: rgba(77, 220, 151, 0.1);
+    background: var(--gw-accent-soft);
     color: var(--gw-accent);
+    box-shadow: inset 0 0 0 1px var(--gw-accent);
   }
 }
 
 .badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  margin-left: 4px;
   border-radius: 8px;
   background: var(--gw-accent);
   color: #fff;
@@ -31,54 +54,113 @@
   font-weight: 600;
 }
 
-.popup {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 1000;
-  min-width: 200px;
-  padding: 8px;
-  border: 1px solid var(--gw-border-subtle);
+// ---- Picker popover (358px, QoderWorkCopy .picker-popover) ----
+.popover {
+  width: 320px;
+  padding: 10px;
   border-radius: var(--gw-radius-md);
-  background: var(--gw-bg-popover);
-  box-shadow: var(--gw-shadow-md);
+  border: 1px solid var(--gw-popup-border-strong);
+  background: var(--gw-popup-bg);
+  box-shadow: var(--gw-popup-shadow);
+}
 
-  .skillItem {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: var(--gw-radius-sm);
+.popoverHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px;
+  font-size: 11px;
+  color: var(--gw-text-tertiary);
+
+  span {
+    font-weight: 600;
+  }
+
+  button {
+    border: 0;
     background: transparent;
-    color: var(--gw-text-primary);
-    font-size: 13px;
-    text-align: left;
+    color: var(--gw-text-secondary);
+    font-size: 11px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    padding: 0;
 
     &:hover {
-      background: var(--gw-bg-hover);
-    }
-
-    &.active {
-      background: rgba(77, 220, 151, 0.1);
-      color: var(--gw-accent);
+      color: var(--gw-text);
     }
   }
+}
 
-  .skillIcon {
-    font-size: 14px;
+// ---- Picker row (28px icon + label + status) ----
+.row {
+  width: 100%;
+  min-height: 50px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: var(--gw-radius-sm);
+  padding: 7px 8px;
+  background: transparent;
+  color: var(--gw-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease;
+
+  &:hover {
+    background: var(--gw-bg-hover);
   }
 
-  .skillName {
-    flex: 1;
+  &.active {
+    background: var(--gw-bg-active);
+  }
+}
+
+.rowIcon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--gw-radius-sm);
+  background: var(--gw-bg-soft);
+  font-size: 15px;
+}
+
+.rowBody {
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--gw-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .check {
-    font-size: 12px;
-    color: var(--gw-accent);
+  span {
+    display: block;
+    color: var(--gw-text-tertiary);
+    font-size: 11px;
+    line-height: 15px;
+    margin-top: 1px;
+  }
+}
+
+.rowStatus {
+  height: 19px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--gw-accent) 14%, transparent);
+  color: var(--gw-accent);
+  font-size: 10px;
+  font-weight: 600;
+
+  &.off {
+    background: var(--gw-bg-soft);
+    color: var(--gw-text-tertiary);
   }
 }

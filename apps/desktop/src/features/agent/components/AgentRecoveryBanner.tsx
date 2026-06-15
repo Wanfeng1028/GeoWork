@@ -57,17 +57,17 @@ interface ConfigItem {
 
 const STATE_CONFIG: Record<StateType, ConfigItem> = {
   recoverable: {
-    color: '#f2c94c',
+    color: 'var(--gw-warning)',
     title: '任务可恢复',
     description: '任务已暂停，可以从最近检查点恢复继续执行。',
   },
   'read-only': {
-    color: '#ff6b6b',
+    color: 'var(--gw-danger)',
     title: '只读模式',
     description: '任务无法恢复，只能查看只读快照。',
   },
   failed: {
-    color: '#ff6b6b',
+    color: 'var(--gw-danger)',
     title: '任务失败',
     description: '任务执行失败，无法恢复。',
   },

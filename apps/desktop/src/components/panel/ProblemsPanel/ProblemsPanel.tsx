@@ -77,17 +77,17 @@ export function ProblemsPanel() {
       render: (severity: ProblemSeverity) => {
         const config = {
           error: {
-            color: "#f5222d",
+            color: "var(--gw-danger)",
             icon: <XCircle className="h-3.5 w-3.5" />,
             label: "错误",
           },
           warning: {
-            color: "#faad14",
+            color: "var(--gw-warning)",
             icon: <AlertCircle className="h-3.5 w-3.5" />,
             label: "警告",
           },
           info: {
-            color: "#1890ff",
+            color: "var(--gw-info)",
             icon: <Info className="h-3.5 w-3.5" />,
             label: "信息",
           },
@@ -128,13 +128,13 @@ export function ProblemsPanel() {
       <div className={styles.header}>
         <div className={styles.badges}>
           <span className="inline-flex items-center gap-1.5 mr-3">
-            <span className="inline-flex items-center justify-center rounded-full bg-[#f5222d] text-white text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+            <span className="inline-flex items-center justify-center rounded-full bg-[var(--gw-danger)] text-[var(--gw-bg)] text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
               {errorCount}
             </span>
             <span className={styles.badgeLabel}>错误</span>
           </span>
           <span className="inline-flex items-center gap-1.5 mr-3">
-            <span className="inline-flex items-center justify-center rounded-full bg-[#faad14] text-white text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+            <span className="inline-flex items-center justify-center rounded-full bg-[var(--gw-warning)] text-[var(--gw-bg)] text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
               {warningCount}
             </span>
             <span className={styles.badgeLabel}>警告</span>
@@ -154,7 +154,7 @@ export function ProblemsPanel() {
 
       <div className={styles.filterSection}>
         <div className="relative">
-          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#bfbfbf]" />
+          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
           <Input
             placeholder="搜索问题..."
             value={filter}
@@ -174,7 +174,7 @@ export function ProblemsPanel() {
             size="sm"
             variant={severityFilter === "error" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("error")}
-            className="text-[#f5222d] border-[#f5222d]"
+            className="text-[var(--gw-danger)] border-[var(--gw-danger)]"
           >
             错误
           </Button>
@@ -182,7 +182,7 @@ export function ProblemsPanel() {
             size="sm"
             variant={severityFilter === "warning" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("warning")}
-            className="text-[#faad14] border-[#faad14]"
+            className="text-[var(--gw-warning)] border-[var(--gw-warning)]"
           >
             警告
           </Button>

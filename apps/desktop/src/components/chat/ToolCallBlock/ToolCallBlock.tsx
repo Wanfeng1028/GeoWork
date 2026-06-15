@@ -31,15 +31,15 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
   const [expanded, setExpanded] = useState(false)
 
   const statusConfig = {
-    started: { icon: <Play className="h-3.5 w-3.5" />, color: '#1890ff', label: '运行中', variant: 'info' as const },
-    completed: { icon: <CheckCircle className="h-3.5 w-3.5" />, color: '#52c41a', label: '已完成', variant: 'success' as const },
-    failed: { icon: <XCircle className="h-3.5 w-3.5" />, color: '#ff4d4f', label: '失败', variant: 'danger' as const },
-    pending: { icon: <Spinner size="xs" />, color: '#faad14', label: '等待中', variant: 'warning' as const },
+    started: { icon: <Play className="h-3.5 w-3.5" />, color: 'var(--gw-info)', label: '运行中', variant: 'info' as const },
+    completed: { icon: <CheckCircle className="h-3.5 w-3.5" />, color: 'var(--gw-accent)', label: '已完成', variant: 'success' as const },
+    failed: { icon: <XCircle className="h-3.5 w-3.5" />, color: 'var(--gw-danger)', label: '失败', variant: 'danger' as const },
+    pending: { icon: <Spinner size="xs" />, color: 'var(--gw-warning)', label: '等待中', variant: 'warning' as const },
   }
 
   const config = statusConfig[event.status as keyof typeof statusConfig] || {
     icon: <Code className="h-3.5 w-3.5" />,
-    color: '#d9d9d9',
+    color: 'var(--gw-text-tertiary)',
     label: event.status || '未知',
     variant: 'default' as const,
   }
@@ -64,7 +64,7 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
         {event.input && (
           <div style={{ marginBottom: 8 }}>
             <span className="text-[12px] text-[var(--gw-text-tertiary)]">输入:</span>
-            <pre style={{ background: 'var(--gw-bg-muted, #f5f5f5)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
+            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
               {typeof event.input === 'string' ? event.input : JSON.stringify(event.input, null, 2)}
             </pre>
           </div>
@@ -73,7 +73,7 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
         {event.output && (
           <div style={{ marginBottom: 8 }}>
             <span className="text-[12px] text-[var(--gw-text-tertiary)]">输出:</span>
-            <pre style={{ background: 'var(--gw-bg-muted, #f5f5f5)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
+            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
               {typeof event.output === 'string' ? event.output : JSON.stringify(event.output, null, 2)}
             </pre>
           </div>
@@ -81,8 +81,8 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
 
         {event.error && (
           <div style={{ marginBottom: 8 }}>
-            <span className="text-[12px] text-[var(--gw-danger, #ff4d4f)]">错误:</span>
-            <div style={{ background: 'var(--gw-danger-soft, #fff2f0)', padding: 8, borderRadius: 4 }}>
+            <span className="text-[12px] text-[var(--gw-danger)]">错误:</span>
+            <div style={{ background: 'var(--gw-danger-soft)', padding: 8, borderRadius: 4 }}>
               {event.error}
             </div>
           </div>
@@ -91,7 +91,7 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
         {event.log && (
           <div>
             <span className="text-[12px] text-[var(--gw-text-tertiary)]">日志:</span>
-            <pre style={{ background: 'var(--gw-bg-muted, #fafafa)', padding: 8, borderRadius: 4, overflowX: 'auto', fontSize: 12 }}>
+            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto', fontSize: 12 }}>
               {event.log}
             </pre>
           </div>

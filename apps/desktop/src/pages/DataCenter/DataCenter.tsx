@@ -1,25 +1,16 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { Input } from '../../components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
-import { Empty } from '../../components/ui/empty'
 import { toast } from 'sonner'
-import {
-  Plus,
-  Database,
-  Trash2,
-  Download,
-  Search,
-  RefreshCw,
-  Eye
-} from 'lucide-react'
+import { Plus, Database, Trash2, Download, Search, RefreshCw, Eye, HardDrive, Layers3 } from 'lucide-react'
 import { useDataCenterStore } from './store'
 import { DataPreview } from './DataPreview'
 import type { Dataset } from '../../services/dataService'
 import styles from './DataCenter.module.scss'
+
+const DATASET_TYPES: Dataset['type'][] = ['GeoTIFF', 'Shapefile', 'GeoPackage', 'CSV', 'GeoJSON', 'NetCDF']
 
 export default function DataCenter() {
   const [search, setSearch] = useState('')
@@ -45,9 +36,7 @@ export default function DataCenter() {
       setRegisterModalOpen(false)
       setFormState({ name: '', type: '', path: '', crs: 'EPSG:4326', size: '' })
       toast.success('数据集已登记')
-    } catch {
-      // error already handled in store
-    }
+    } catch {}
   }, [registerDataset, formState])
 
   const handleRemove = useCallback(async (id: string) => {
@@ -68,170 +57,110 @@ export default function DataCenter() {
     !search || d.name.toLowerCase().includes(search.toLowerCase()) || d.path.toLowerCase().includes(search.toLowerCase())
   )
 
-  const typeColors: Record<string, string> = {
-    GeoTIFF: 'bg-blue-100 text-blue-800',
-    Shapefile: 'bg-green-100 text-green-800',
-    GeoPackage: 'bg-purple-100 text-purple-800',
-    CSV: 'bg-orange-100 text-orange-800',
-    GeoJSON: 'bg-cyan-100 text-cyan-800',
-    NetCDF: 'bg-pink-100 text-pink-800'
-  }
-
-  const statusColors: Record<string, string> = {
-    registered: 'bg-green-100 text-green-800',
-    processing: 'bg-orange-100 text-orange-800',
-    error: 'bg-red-100 text-red-800'
-  }
-
-  function formatSize(size: number): string {
-    if (size === 0) return 'N/A'
-    const units = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(size) / Math.log(1024))
-    return `${(size / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
-  }
+  const rasterCount = datasets.filter((d) => d.type === 'GeoTIFF' || d.type === 'NetCDF').length
+  const vectorCount = datasets.filter((d) => ['Shapefile', 'GeoPackage', 'GeoJSON', 'CSV'].includes(d.type)).length
 
   return (
     <div className={styles.dataCenter}>
-      <div className={styles.content}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div>
-            <h3 className="text-xl font-semibold m-0">数据中心</h3>
-            <p className="text-sm text-muted-foreground">管理和预览项目数据集</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={refreshDatasets} disabled={isLoading}>
-              <RefreshCw className="w-4 h-4 mr-1" /> 刷新
-            </Button>
-            <Button onClick={() => setRegisterModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-1" /> 登记数据集
-            </Button>
-          </div>
+      <div className={styles.pageHeader}>
+        <div>
+          <h2>数据中心</h2>
+          <p>管理和预览项目数据集</p>
         </div>
-
-        {/* Search */}
-        <Input
-          placeholder="搜索数据集名称或路径..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className={styles.searchInput}
-        />
-
-        {/* Dataset Table */}
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-3">名称</th>
-                  <th className="text-left p-3 w-[120px]">类型</th>
-                  <th className="text-left p-3 w-[120px]">CRS</th>
-                  <th className="text-left p-3 w-[100px]">大小</th>
-                  <th className="text-left p-3 w-[100px]">状态</th>
-                  <th className="text-left p-3 w-[200px]">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((record) => (
-                  <tr key={record.id} className="border-b">
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <Database className="w-4 h-4 text-blue-500" />
-                        <span className="font-medium">{record.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <Badge variant="secondary" className={typeColors[record.type] || ''}>{record.type}</Badge>
-                    </td>
-                    <td className="p-3">{record.crs}</td>
-                    <td className="p-3">{formatSize(record.size)}</td>
-                    <td className="p-3">
-                      <Badge variant="secondary" className={statusColors[record.status] || ''}>
-                        {record.status === 'registered' ? '已登记' : record.status === 'processing' ? '处理中' : '错误'}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => setSelectedDataset(record)}>
-                          <Eye className="w-3 h-3 mr-1" /> 预览
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleExport(record.id)}>
-                          <Download className="w-3 h-3 mr-1" /> 导出
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleRemove(record.id)}>
-                          <Trash2 className="w-3 h-3 mr-1" /> 移除
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{datasets.length}</div>
-              <div className="text-sm text-muted-foreground">数据集总数</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{datasets.filter((d) => d.type === 'GeoTIFF').length}</div>
-              <div className="text-sm text-muted-foreground">栅格数据</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{datasets.filter((d) => ['Shapefile', 'GeoPackage', 'GeoJSON'].includes(d.type)).length}</div>
-              <div className="text-sm text-muted-foreground">矢量数据</div>
-            </CardContent>
-          </Card>
+        <div className={styles.headerActions}>
+          <button className={styles.ghostButton} onClick={refreshDatasets} disabled={isLoading}>
+            <RefreshCw size={14} />
+            <span>刷新</span>
+          </button>
+          <button className={styles.primaryButton} onClick={() => setRegisterModalOpen(true)}>
+            <Plus size={14} />
+            <span>登记数据集</span>
+          </button>
         </div>
       </div>
 
-      {/* Register Dataset Modal */}
+      <div className={styles.summaryRow}>
+        <MetricCard icon={Database} value={datasets.length} label="数据集总数" />
+        <MetricCard icon={HardDrive} value={rasterCount} label="栅格数据" />
+        <MetricCard icon={Layers3} value={vectorCount} label="矢量数据" />
+      </div>
+
+      <section className={styles.tablePanel}>
+        <div className={styles.tableToolbar}>
+          <div className={styles.searchBox}>
+            <Search size={14} />
+            <Input
+              placeholder="搜索数据集名称或路径..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <span className={styles.resultCount}>{filtered.length} 个结果</span>
+        </div>
+
+        <div className={styles.datasetTable}>
+          <div className={styles.tableHead}>
+            <span>名称</span>
+            <span>类型</span>
+            <span>CRS</span>
+            <span>大小</span>
+            <span>状态</span>
+            <span>操作</span>
+          </div>
+          <div className={styles.tableBody}>
+            {filtered.map((record) => (
+              <div className={styles.tableRow} key={record.id}>
+                <div className={styles.nameCell}>
+                  <span className={styles.datasetIcon}><Database size={15} /></span>
+                  <div>
+                    <strong>{record.name}</strong>
+                    <small>{record.path}</small>
+                  </div>
+                </div>
+                <span className={`${styles.badge} ${styles.typeBadge}`}>{record.type}</span>
+                <span className={styles.mutedCell}>{record.crs}</span>
+                <span className={styles.mutedCell}>{formatSize(record.size)}</span>
+                <span className={`${styles.badge} ${record.status === 'registered' ? styles.success : record.status === 'processing' ? styles.pending : styles.error}`}>
+                  {record.status === 'registered' ? '已登记' : record.status === 'processing' ? '处理中' : '错误'}
+                </span>
+                <div className={styles.rowActions}>
+                  <button onClick={() => setSelectedDataset(record)} title="预览"><Eye size={14} /></button>
+                  <button onClick={() => handleExport(record.id)} title="导出"><Download size={14} /></button>
+                  <button className={styles.dangerButton} onClick={() => handleRemove(record.id)} title="移除"><Trash2 size={14} /></button>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && <div className={styles.emptyState}>暂无匹配的数据集</div>}
+          </div>
+        </div>
+      </section>
+
       <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
-        <DialogContent>
+        <DialogContent className={styles.registerDialog}>
           <DialogHeader>
             <DialogTitle>登记新数据集</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">名称</label>
+          <div className={styles.formGrid}>
+            <Field label="名称">
               <Input placeholder="例如: Sentinel-2 NDVI 2024" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">类型</label>
+            </Field>
+            <Field label="类型">
               <Select value={formState.type} onValueChange={(v) => setFormState({ ...formState, type: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择数据类型" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="选择数据类型" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="GeoTIFF">GeoTIFF</SelectItem>
-                  <SelectItem value="Shapefile">Shapefile</SelectItem>
-                  <SelectItem value="GeoPackage">GeoPackage</SelectItem>
-                  <SelectItem value="CSV">CSV</SelectItem>
-                  <SelectItem value="GeoJSON">GeoJSON</SelectItem>
-                  <SelectItem value="NetCDF">NetCDF</SelectItem>
+                  {DATASET_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">路径</label>
-              <Input placeholder="C:\data\sensor\image.tif" value={formState.path} onChange={(e) => setFormState({ ...formState, path: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">CRS</label>
+            </Field>
+            <Field label="路径">
+              <Input placeholder="C:\\data\\sensor\\image.tif" value={formState.path} onChange={(e) => setFormState({ ...formState, path: e.target.value })} />
+            </Field>
+            <Field label="CRS">
               <Input placeholder="EPSG:4326" value={formState.crs} onChange={(e) => setFormState({ ...formState, crs: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">文件大小 (bytes)</label>
+            </Field>
+            <Field label="文件大小 (bytes)">
               <Input type="number" placeholder="1048576" value={formState.size} onChange={(e) => setFormState({ ...formState, size: e.target.value })} />
-            </div>
+            </Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRegisterModalOpen(false)}>取消</Button>
@@ -240,8 +169,33 @@ export default function DataCenter() {
         </DialogContent>
       </Dialog>
 
-      {/* Data Preview */}
       <DataPreview dataset={selectedDataset} open={!!selectedDataset} onClose={() => setSelectedDataset(null)} />
     </div>
   )
+}
+
+function MetricCard({ icon: Icon, value, label }: { icon: typeof Database; value: number; label: string }) {
+  return (
+    <div className={styles.metricCard}>
+      <Icon size={16} />
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className={styles.field}>
+      <span>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function formatSize(size: number): string {
+  if (size === 0) return 'N/A'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(size) / Math.log(1024))
+  return `${(size / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
 }

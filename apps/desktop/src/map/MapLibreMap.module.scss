@@ -1,41 +1,25 @@
-/* ==========================================================================
-   MapLibreMap module styles — uses CSS Variables from the project theme
-   ========================================================================== */
-
-/* ---------- CSS Variables (project-level) ---------- */
-/*
-  --gw-color-primary       #1677ff (Ant Design default)
-  --gw-color-geo           #0f6b57  (GeoWork green)
-  --gw-sidebar-width       220px    (from App.module.scss)
-  --gw-map-toolbar-height  36px
-  --gw-map-layer-panel-w   260px
-*/
-
 .mapContainer {
   position: relative;
   width: 100%;
   height: 100%;
   min-height: 480px;
-  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #d9e1e7;
-  background: #eef6f3;
+  border: 1px solid var(--gw-border);
+  border-radius: 8px;
+  background: var(--gw-map-base, var(--gw-bg-canvas));
 }
 
-/* ---------- Layer panel (left sidebar) ---------- */
 .layerPanel {
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--gw-map-layer-panel-w, 260px);
-  background: #ffffff;
-  border-right: 1px solid #d9e1e7;
+  inset: 0 auto 0 0;
   z-index: 10;
+  width: var(--gw-map-layer-panel-w, 260px);
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease;
+  border-right: 1px solid var(--gw-border);
+  background: color-mix(in srgb, var(--gw-bg-panel) 94%, transparent);
+  box-shadow: 8px 0 28px rgba(0, 0, 0, .18);
+  transition: transform var(--gw-duration-slow) var(--gw-ease-out);
 }
 
 .layerPanelCollapsed {
@@ -43,20 +27,22 @@
 }
 
 .layerPanelHeader {
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-bottom: 1px solid #d9e1e7;
-  background: #f8fafb;
   flex-shrink: 0;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--gw-border);
+  background: var(--gw-bg-sidebar);
 }
 
 .layerPanelHeader h5 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2a32;
+  color: var(--gw-text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
 }
 
 .layerPanelBody {
@@ -65,45 +51,51 @@
   padding: 8px;
 }
 
-/* ---------- Individual layer item ---------- */
 .layerItem {
+  min-height: 34px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px;
+  padding: 7px 8px;
   margin-bottom: 4px;
-  border-radius: 6px;
   border: 1px solid transparent;
-  background: #fbfdfe;
-  transition: background 0.15s, border-color 0.15s;
+  border-radius: 7px;
+  background: transparent;
+  transition: background-color var(--gw-duration-normal) ease,
+    border-color var(--gw-duration-normal) ease;
 }
 
 .layerItem:hover {
-  background: #f0f7f5;
-  border-color: #c9d8d3;
+  border-color: var(--gw-border);
+  background: var(--gw-bg-hover);
 }
 
 .layerItemVisible {
-  border-color: var(--gw-color-geo, #0f6b57);
-  background: #eef6f3;
+  border-color: color-mix(in srgb, var(--gw-accent) 50%, var(--gw-border));
+  background: var(--gw-accent-soft);
 }
 
 .layerName {
   flex: 1;
-  font-size: 13px;
-  color: #1f2a32;
   overflow: hidden;
+  color: var(--gw-text);
+  font-size: 12px;
+  line-height: 17px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .layerKind {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: #e7f1ee;
-  color: var(--gw-color-geo, #0f6b57);
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gw-bg-soft);
+  color: var(--gw-accent);
+  font-size: 10px;
+  line-height: 18px;
 }
 
 .layerOpacity {
@@ -111,27 +103,34 @@
   flex-shrink: 0;
 }
 
-/* ---------- Toggle button ---------- */
-.layerToggle {
-  width: 28px;
-  height: 28px;
+.layerToggle,
+.toolbarButton,
+.collapseToggle {
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
-  border: 1px solid #d9e1e7;
-  border-radius: 4px;
-  background: #ffffff;
-  cursor: pointer;
-  color: #60717f;
-  transition: color 0.15s, border-color 0.15s;
   flex-shrink: 0;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text-secondary);
+  font-size: 13px;
+  box-shadow: var(--gw-popup-shadow-soft);
+  cursor: pointer;
+  transition: background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease,
+    border-color var(--gw-duration-normal) ease;
 }
 
-.layerToggle:hover {
-  border-color: var(--gw-color-primary, #1677ff);
-  color: var(--gw-color-primary, #1677ff);
+.layerToggle:hover,
+.toolbarButton:hover,
+.collapseToggle:hover {
+  border-color: var(--gw-border-strong);
+  background: var(--gw-bg-hover);
+  color: var(--gw-text);
 }
 
-/* ---------- Toolbar (top-right) ---------- */
 .toolbar {
   position: absolute;
   top: 10px;
@@ -139,97 +138,61 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.toolbarButton {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #d9e1e7;
-  border-radius: 6px;
-  background: #ffffff;
-  cursor: pointer;
-  color: #344652;
-  font-size: 16px;
-  transition: background 0.15s, color 0.15s;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.toolbarButton:hover {
-  background: #f0f7f5;
-  color: var(--gw-color-geo, #0f6b57);
+  gap: 5px;
 }
 
 .toolbarButtonActive {
-  background: var(--gw-color-geo, #0f6b57);
-  color: #ffffff;
-  border-color: var(--gw-color-geo, #0f6b57);
+  border-color: color-mix(in srgb, var(--gw-accent) 58%, var(--gw-border));
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent);
 }
 
-/* ---------- Map canvas ---------- */
 .mapCanvas {
   width: 100%;
   height: 100%;
 }
 
-/* ---------- Deck.gl overlay container ---------- */
 .deckOverlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  inset: 0;
   z-index: 5;
+  pointer-events: none;
 }
 
 .deckOverlayInteractive {
   pointer-events: auto;
 }
 
-/* ---------- Collapse toggle ---------- */
 .collapseToggle {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 11;
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #d9e1e7;
-  border-radius: 6px;
-  background: #ffffff;
-  cursor: pointer;
-  color: #344652;
-  font-size: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transition: left 0.2s ease;
+  transition: left var(--gw-duration-slow) var(--gw-ease-out),
+    background-color var(--gw-duration-normal) ease,
+    color var(--gw-duration-normal) ease;
 }
 
 .collapseToggleShifted {
   left: calc(var(--gw-map-layer-panel-w, 260px) + 10px);
 }
 
-/* ---------- Measure tooltip ---------- */
 .measureTooltip {
   position: absolute;
   z-index: 20;
-  background: #ffffff;
-  border: 1px solid var(--gw-color-geo, #0f6b57);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: var(--gw-color-geo, #0f6b57);
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 4px 9px;
+  border: 1px solid color-mix(in srgb, var(--gw-accent) 62%, var(--gw-border));
+  border-radius: 999px;
+  background: var(--gw-popup-bg);
+  color: var(--gw-accent);
+  box-shadow: var(--gw-popup-shadow-soft);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 650;
   pointer-events: none;
   white-space: nowrap;
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .layerPanel {
     width: 220px;

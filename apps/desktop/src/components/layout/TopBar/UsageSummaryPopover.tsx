@@ -1,16 +1,9 @@
-// GeoWork UsageSummaryPopover
+// GeoWork UsageSummaryPopover — ported from QoderWorkCopy usage-panel visual language.
 
 import { useState } from 'react'
-import {
-  User,
-  CreditCard,
-  Lightbulb,
-  Server,
-} from 'lucide-react'
+import { User, CreditCard, Server } from 'lucide-react'
 import { useAccountStore } from '../../../stores/accountStore'
 import { Badge } from '../../ui/badge'
-import { Button } from '../../ui/button'
-import { Separator } from '../../ui/separator'
 import {
   Popover,
   PopoverContent,
@@ -21,21 +14,6 @@ import styles from './UsageSummaryPopover.module.scss'
 export function UsageSummaryPopover() {
   const { user, plan, credits, usage, loginState } = useAccountStore()
   const [open, setOpen] = useState(false)
-
-  if (loginState !== 'authenticated' || !user) {
-    return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon-sm" className={styles.avatarBtn}>
-            <User size={16} />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-[200px]">
-          <div className="p-2 text-[12px] text-[var(--gw-text-secondary)]">登录以查看账号信息</div>
-        </PopoverContent>
-      </Popover>
-    )
-  }
 
   const planLabels: Record<string, string> = {
     free: '免费',
@@ -49,72 +27,97 @@ export function UsageSummaryPopover() {
     team: 'info',
   }
 
+  if (loginState !== 'authenticated' || !user) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button className={styles.avatarBtn} title="账号">
+            <User size={16} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" sideOffset={6} className={styles.popoverContent}>
+          <div className={styles.loginPrompt}>登录以查看账号信息</div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
   const tokensUsed = usage?.model_tokens ?? 0
   const planLimit = plan?.limit_tokens ?? 100000
   const tokenPercent = Math.min(100, Math.round((tokensUsed / planLimit) * 100))
 
+  // Build 46 usage bars — filled proportionally to tokenPercent.
+  const totalBars = 46
+  const filledBars = Math.round((tokenPercent / 100) * totalBars)
+  const bars = Array.from({ length: totalBars }, (_, i) => {
+    if (i < filledBars) return tokenPercent > 90 ? 'warn' : 'active'
+    return 'idle'
+  })
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon-sm" className={styles.avatarBtn}>
+        <button className={styles.avatarBtn} title="用量">
           <User size={16} />
-        </Button>
+        </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[280px] p-0">
-        <div className="p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--gw-bg-active)]">
-              <User size={16} className="text-[var(--gw-text-tertiary)]" />
-            </div>
-            <div>
-              <div className="text-[13px] font-medium text-[var(--gw-text)]">{user.name}</div>
-              <div className="text-[11px] text-[var(--gw-text-tertiary)]">{user.email}</div>
-            </div>
+      <PopoverContent align="end" sideOffset={6} className={styles.popoverContent}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.avatarCircle}>
+            <User size={16} />
+          </div>
+          <div>
+            <div className={styles.userName}>{user.name}</div>
+            <div className={styles.userEmail}>{user.email}</div>
           </div>
         </div>
 
-        <Separator />
-
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <Server size={14} className="text-[var(--gw-text-tertiary)]" />
-            <span className="text-[12px] text-[var(--gw-text-secondary)]">当前套餐</span>
-            <Badge variant={planVariant[user.plan] ?? 'default'} className="ml-auto">
-              {planLabels[user.plan]}
-            </Badge>
-          </div>
+        {/* Plan */}
+        <div className={styles.row}>
+          <span className={styles.label}>
+            <Server size={14} /> 当前套餐
+          </span>
+          <Badge variant={planVariant[user.plan] ?? 'default'}>
+            {planLabels[user.plan]}
+          </Badge>
         </div>
 
-        <Separator />
-
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <CreditCard size={14} className="text-[var(--gw-text-tertiary)]" />
-            <span className="text-[12px] text-[var(--gw-text-secondary)]">Credits</span>
-            <span className="ml-auto text-[13px] font-semibold text-[var(--gw-text)]">
-              {credits.toFixed(1)}
-            </span>
-          </div>
+        {/* Credits */}
+        <div className={styles.row}>
+          <span className={styles.label}>
+            <CreditCard size={14} /> Credits
+          </span>
+          <span className={styles.value}>{credits.toFixed(1)}</span>
         </div>
 
-        <Separator />
-
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Lightbulb size={14} className="text-[var(--gw-text-tertiary)]" />
-            <span className="text-[12px] text-[var(--gw-text-secondary)]">Token 用量</span>
-            <span className="ml-auto text-[11px] text-[var(--gw-text-tertiary)]">
+        {/* Usage bars (46 cells) */}
+        <div className={styles.usageSection}>
+          <div className={styles.usageHead}>
+            <span>本月用量</span>
+            <span className={styles.right}>
               {(tokensUsed / 1000).toFixed(0)}K / {(planLimit / 1000).toFixed(0)}K
             </span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-[var(--gw-bg-active)] overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                tokenPercent > 90 ? 'bg-[var(--gw-danger)]' : 'bg-[var(--gw-accent)]'
-              }`}
-              style={{ width: `${tokenPercent}%` }}
-            />
+          <div className={styles.usageBars}>
+            {bars.map((state, i) => (
+              <span
+                key={i}
+                className={`${styles.usageBar} ${
+                  state === 'active'
+                    ? styles.usageBarActive
+                    : state === 'warn'
+                      ? styles.usageBarWarn
+                      : ''
+                }`}
+              />
+            ))}
           </div>
+          <div className={styles.usageNumbers}>
+            <span>已用 <strong>{tokenPercent}%</strong></span>
+            <span>重置于 7 月 1 日</span>
+          </div>
+          <button className={styles.detailBtn}>查看详细用量</button>
         </div>
       </PopoverContent>
     </Popover>

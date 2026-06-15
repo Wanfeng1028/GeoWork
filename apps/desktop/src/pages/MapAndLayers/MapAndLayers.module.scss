@@ -1,15 +1,218 @@
-.map-and-layers-layout {
+.mapShell {
   height: 100%;
-  background: #0f172a;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 282px minmax(0, 1fr) 268px;
+  overflow: hidden;
+  background: var(--gw-bg);
+  color: var(--gw-text);
 }
 
-.map-sider {
-  background: #1e293b !important;
-  overflow-y: auto;
+.layerRail,
+.detailRail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--gw-bg-sidebar);
+  border-color: var(--gw-border);
 }
 
-.map-detail-sider {
-  background: #f8fafc !important;
-  border-left: 1px solid #e2e8f0;
-  overflow-y: auto;
+.layerRail {
+  border-right: 1px solid var(--gw-border);
+}
+
+.detailRail {
+  border-left: 1px solid var(--gw-border);
+}
+
+.panelTitle {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--gw-border);
+  color: var(--gw-text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mapStage {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
+    var(--gw-bg);
+}
+
+.stageTopbar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 18px 10px;
+  border-bottom: 1px solid var(--gw-border);
+  background: color-mix(in srgb, var(--gw-bg-panel) 74%, transparent);
+}
+
+.stageTopbar h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 720;
+  color: var(--gw-text);
+}
+
+.stageTopbar p {
+  margin: 2px 0 0;
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.stageActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stageActions button {
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--gw-border);
+  border-radius: 999px;
+  background: var(--gw-bg-panel);
+  color: var(--gw-text);
+  font-size: 12px;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.stageActions button:hover {
+  background: var(--gw-bg-hover);
+}
+
+.mapCanvasWrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 12px;
+  overflow: hidden;
+  border: 1px solid var(--gw-border);
+  border-radius: 8px;
+  background: var(--gw-bg-panel);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gw-bg-panel) 80%, transparent);
+}
+
+.propertyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  overflow: hidden auto;
+}
+
+.layerBadge {
+  width: fit-content;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.propertyCard h3 {
+  margin: 0;
+  color: var(--gw-text);
+  font-size: 15px;
+  line-height: 21px;
+  font-weight: 700;
+}
+
+.propertyCard dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.propertyCard dl div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 26px;
+  align-items: start;
+}
+
+.propertyCard dt {
+  color: var(--gw-text-tertiary);
+  font-size: 12px;
+}
+
+.propertyCard dd {
+  margin: 0;
+  color: var(--gw-text-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  word-break: break-all;
+}
+
+.metadataBlock {
+  min-height: 0;
+  border: 1px solid var(--gw-border);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--gw-bg-soft);
+}
+
+.metadataTitle {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--gw-border);
+  color: var(--gw-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.metadataBlock pre {
+  max-height: 260px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  color: var(--gw-text-secondary);
+  font-size: 11px;
+  line-height: 17px;
+  white-space: pre-wrap;
+}
+
+.emptyDetail {
+  margin: 14px;
+  min-height: 132px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--gw-border-strong);
+  border-radius: 8px;
+  color: var(--gw-text-tertiary);
+  font-size: 12px;
+  background: var(--gw-bg-subtle);
+}
+
+@media (max-width: 1180px) {
+  .mapShell {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .detailRail {
+    display: none;
+  }
 }
