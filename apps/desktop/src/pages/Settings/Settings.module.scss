@@ -31,9 +31,6 @@
   text-align: left;
 }
 
-.settingsBack:hover {
-}
-
 .settingsGroup {
   display: flex;
   flex-direction: column;
@@ -58,10 +55,6 @@
   text-align: left;
   background: transparent;
   font-size: 13px;
-}
-
-.settingsGroup button:hover,
-.settingsGroup button.active {
 }
 
 .settingsNavLabel {
@@ -215,5 +208,6 @@
   }
 
   .settingsPanel {
+    margin: 16px 12px 32px;
   }
 }

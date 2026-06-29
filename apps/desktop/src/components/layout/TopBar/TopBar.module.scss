@@ -49,7 +49,7 @@
   -webkit-app-region: no-drag;
 }
 
-// ---- Top icon button (34×34, transparent, hover = --gw-bg-hover) ----
+// ---- Top icon button (34×34, transparent) ----
 .iconBtn {
   width: 34px;
   height: 34px;
@@ -61,15 +61,7 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background-color 0.15s ease,;
-    color 0.15s ease;
   -webkit-app-region: no-drag;
-
-  &:hover {
-  }
-}
-
-.isSelected {
 }
 
 // ---- Window control buttons (square, no radius) ----
@@ -96,19 +88,10 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background-color 0.15s ease,;
-    color 0.15s ease;
   -webkit-app-region: no-drag;
-
-  &:hover {
-  }
 }
 
 .winClose {
-  &:hover {
-    background: #e8695f;
-    color: #fff;
-  }
 }
 
 // ---- Earn / sign-in pill (green capsule, 30px) ----
@@ -144,11 +127,7 @@
   gap: 5px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.15s ease;
   -webkit-app-region: no-drag;
-
-  &:hover {
-  }
 }
 
 // ---- Thin divider before window controls ----
@@ -230,9 +209,6 @@
   strong {
     font-weight: 600;
   }
-}
-
-.green {
 }
 
 .usageDetailButton {
@@ -398,18 +374,8 @@
   cursor: pointer;
 }
 
-.githubActions button:first-child {
-}
-
 .githubActions button:hover {
   filter: brightness(.96);
-}
-
-.usagePopover {
-  width: 320px;
-  padding: 0;
-  border-radius: 12px;
-  overflow: hidden;
 }
 
 .usagePanel {
@@ -437,9 +403,6 @@
   background: transparent;
   font-size: 16px;
   line-height: 20px;
-}
-
-.usageHead button:hover {
 }
 
 .usageItem {
@@ -521,9 +484,6 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  transition: filter 0.15s ease,;
-    background-color 0.15s ease,
-    color 0.15s ease;
 }
 
 .usageRefresh:focus-visible {
@@ -595,10 +555,6 @@
   outline: 0;
 }
 
-.feedbackTextarea::placeholder,
-.feedbackInput::placeholder {
-}
-
 .uploadRow {
   display: grid;
   grid-template-columns: 103px minmax(0, 1fr);
@@ -609,7 +565,6 @@
   width: 103px;
   height: 102px;
   border-radius: 7px;
-  background:
 }
 
 .dropZone {
@@ -623,9 +578,6 @@
   font-size: 11px;
   line-height: 16px;
   text-align: center;
-}
-
-.dropZone:hover {
 }
 
 .feedbackInput {
@@ -653,12 +605,6 @@
   font-weight: 600;
 }
 
-.feedbackActions button:hover {
-}
-
-.feedbackActions button:last-child {
-}
-
 .feedbackClose {
   position: absolute;
   right: 9px;
@@ -668,9 +614,6 @@
   display: grid;
   place-items: center;
   border-radius: 5px;
-}
-
-.feedbackClose:hover {
 }
 
 .feedbackMascot {

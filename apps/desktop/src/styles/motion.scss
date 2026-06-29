@@ -18,7 +18,7 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 .gw-panel-enter-active {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity $gw-transition-normal $gw-ease-out, 
+  transition: opacity $gw-transition-normal $gw-ease-out,
               transform $gw-transition-normal $gw-ease-out;
 }
 
@@ -30,7 +30,7 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 .gw-panel-exit-active {
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity $gw-transition-fast $gw-ease-in, 
+  transition: opacity $gw-transition-fast $gw-ease-in,
               transform $gw-transition-fast $gw-ease-in;
 }
 
@@ -43,7 +43,7 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 .gw-hover-lift {
   transition: transform $gw-transition-fast $gw-ease-out,
               box-shadow $gw-transition-fast $gw-ease-out;
-  
+
   &:hover {
     transform: translateY(-2px);
   }
@@ -74,9 +74,6 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .gw-shimmer {
-  background: linear-gradient(
-    90deg,
-  );
   background-size: 200% 100%;
   animation: gw-shimmer 1.5s ease-in-out infinite;
 }
