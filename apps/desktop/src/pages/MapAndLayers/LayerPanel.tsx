@@ -50,12 +50,10 @@ function LayerItem({ layer, depth, expandedIds, toggleExpand }: LayerItemProps) 
         <GripVertical className={styles.dragHandle} />
         <span className={styles.typeIcon}>{typeIcon}</span>
         <span className={styles.layerName} onClick={() => setSelectedLayer(layer)}>{layer.name}</span>
-        <Switch
-          checked={layer.visible}
-          onCheckedChange={() => toggleLayer(layer.id)}
+        <button onClick={() => toggleLayer(layer.id)}
         />
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <div>
+          <span asChild>
             <div >
               <input
                 type="range"
@@ -67,19 +65,19 @@ function LayerItem({ layer, depth, expandedIds, toggleExpand }: LayerItemProps) 
                 step={1}
               />
             </div>
-          </TooltipTrigger>
-          <TooltipContent>透明度: {layer.opacity}%</TooltipContent>
-        </Tooltip>
+          </span>
+          <div>透明度: {layer.opacity}%</div>
+        </div>
         <div >
-          <Button size="sm" variant="ghost" onClick={openRename}>
+          <button onClick={openRename}>
             <Edit  />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => { duplicateLayer(layer.id); toast.success('图层已复制') }}>
+          </button>
+          <button onClick={() => { duplicateLayer(layer.id); toast.success('图层已复制') }}>
             <Copy  />
-          </Button>
-          <Button size="sm" variant="ghost"  onClick={() => removeLayer(layer.id).then(() => toast.success('图层已删除'))}>
+          </button>
+          <button  onClick={() => removeLayer(layer.id).then(() => toast.success('图层已删除'))}>
             <Trash2  />
-          </Button>
+          </button>
         </div>
       </div>
     </div>

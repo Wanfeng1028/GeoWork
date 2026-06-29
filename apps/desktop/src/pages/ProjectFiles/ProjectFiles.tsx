@@ -196,7 +196,7 @@ export function ProjectFiles() {
     return (
       <div key={node.id}>
         <div
-          className={`${styles.treeNode} rounded`}
+          className={`${styles.treeNode}`}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onClick={() => handleTreeSelect(node)}
           onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, node }) }}
@@ -223,12 +223,12 @@ export function ProjectFiles() {
       {/* Top toolbar */}
       <div className={styles.toolbar}>
         <div >
-          <Button onClick={() => setCreateFolderModal({ open: true, parentId: '' })} disabled={isLoading}>
+          <button onClick={() => setCreateFolderModal({ open: true, parentId: '' })} disabled={isLoading}>
             <FolderPlus  /> 新建文件夹
-          </Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
+          </button>
+          <button onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
             <Upload  /> 上传文件
-          </Button>
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -241,13 +241,12 @@ export function ProjectFiles() {
               }
             }}
           />
-          <Button variant="outline" onClick={() => refreshTree()} disabled={isLoading}>
+          <button onClick={() => refreshTree()} disabled={isLoading}>
             <RefreshCw  /> 刷新
-          </Button>
+          </button>
         </div>
-        <Input
+        <input
           placeholder="搜索文件..."
-          value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           
         />
@@ -283,25 +282,25 @@ export function ProjectFiles() {
         )}
 
         <div className={styles.leftPanel}>
-          <Card>
-            <CardHeader>
-              <CardTitle>项目文件树</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div>
+            <div>
+              <div>项目文件树</div>
+            </div>
+            <div>
               {filteredTreeData.map(node => renderTreeNode(node))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         <div className={styles.rightPanel}>
-          <Card>
-            <CardHeader>
-              <CardTitle>文件预览</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div>
+            <div>
+              <div>文件预览</div>
+            </div>
+            <div>
               <FilePreview file={selectedFile} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -334,44 +333,48 @@ export function ProjectFiles() {
       )}
 
       {/* Rename modal */}
-      <Dialog open={renameModal.open} onOpenChange={(open) => setRenameModal({ ...renameModal, open })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>重命名</DialogTitle>
-          </DialogHeader>
-          <Input
-            value={renameModal.newName}
+      <div className={styles.modalOverlay} style={{ display: renameModal.open ? 'flex' : 'none' }}>
+        <div className={styles.modal}>
+          <div>
+            <div>
+              重命名
+            </div>
+          </div>
+          <input
+            defaultValue={renameModal.node?.name || ''}
             onChange={(e) => setRenameModal({ ...renameModal, newName: e.target.value })}
             onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSubmit() }}
             autoFocus
           />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameModal({ open: false, node: null, newName: '' })}>取消</Button>
-            <Button onClick={handleRenameSubmit}>确定</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setRenameModal({ open: false, node: null, newName: '' })}>取消</button>
+            <button onClick={handleRenameSubmit}>确定</button>
+          </div>
+        </div>
+      </div>
 
       {/* Create folder modal */}
-      <Dialog open={createFolderModal.open} onOpenChange={(open) => setCreateFolderModal({ ...createFolderModal, open })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>新建文件夹</DialogTitle>
-          </DialogHeader>
+      <div className={styles.modalOverlay} style={{ display: createFolderModal.open ? 'flex' : 'none' }}>
+        <div className={styles.modal}>
+          <div>
+            <div>
+              新建文件夹
+            </div>
+          </div>
           <p >文件夹将创建在: {createFolderModal.parentId ? '指定位置' : '项目根目录'}</p>
           <p >请在右键菜单中输入文件夹名称</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateFolderModal({ open: false, parentId: '' })}>取消</Button>
-            <Button onClick={handleCreateFolderSubmit}>确定</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setCreateFolderModal({ open: false, parentId: '' })}>取消</button>
+            <button onClick={handleCreateFolderSubmit}>确定</button>
+          </div>
+        </div>
+      </div>
 
       {/* Error display */}
       {error && (
         <div className={styles.errorBanner}>
           <span>{error}</span>
-          <Button size="sm" variant="outline" onClick={() => refreshTree()}>重试</Button>
+          <button onClick={() => refreshTree()}>重试</button>
         </div>
       )}
     </div>
