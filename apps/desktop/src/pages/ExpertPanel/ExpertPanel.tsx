@@ -1,6 +1,4 @@
 import React, { useState, useCallback } from 'react'
-import { Dialog, DialogContent } from '../../components/ui/dialog'
-import { Button } from '../../components/ui/button'
 import { toast } from 'sonner'
 import { Sparkles, Search, Plus, SlidersHorizontal, Bot } from 'lucide-react'
 import ExpertCard, { type ExpertItem, type ExpertSkill } from './ExpertCard'
@@ -219,7 +217,7 @@ export default function ExpertPanel({
 
       {/* Detail modal */}
       <Dialog open={modalVisible} onOpenChange={setModalVisible}>
-        <DialogContent className="max-w-[520px]">
+        <DialogContent >
           {selectedExpert && (
             <div className={styles.modalBody}>
               <div>

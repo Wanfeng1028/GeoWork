@@ -1,4 +1,3 @@
-import { cn } from '../../lib/cn'
 
 type WorkbenchShellProps = {
   topBar: React.ReactNode
@@ -20,33 +19,29 @@ export function WorkbenchShell({
   rightOpen = false,
 }: WorkbenchShellProps) {
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[var(--gw-bg)] text-[var(--gw-text)]">
-      <div className="flex h-full w-full flex-col">
+    <div >
+      <div className="flex-col">
         <header
-          className="shrink-0 border-b border-[var(--gw-border-soft)] bg-[var(--gw-bg-shell)]"
-          style={{ height: 'var(--gw-titlebar-height)' }}
+          className="shrink-0"
+          
         >
           {topBar}
         </header>
 
-        <div className="flex min-h-0 flex-1">
+        <div className="flex-1">
           <aside
             className={cn(
-              'shrink-0 border-r border-[var(--gw-border-soft)] bg-[var(--gw-bg-sidebar)]',
-              'transition-[width] duration-200 ease-[var(--gw-ease-out)]',
+              'shrink-0 border-r border-[""] bg-[""]',
+              'transition-[width] duration-200 ease-[""]',
             )}
-            style={{
-              width: sidebarCollapsed
-                ? 'var(--gw-sidebar-collapsed-width)'
-                : 'var(--gw-sidebar-width)',
-            }}
+            
           >
             {leftSidebar}
           </aside>
 
-          <main className="min-w-0 flex-1 bg-[var(--gw-bg-shell)]">
-            <div className="h-full p-2">
-              <div className="h-full overflow-hidden rounded-[var(--gw-radius-lg)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)]">
+          <main className="flex-1">
+            <div >
+              <div className="border">
                 {mainWorkspace}
               </div>
             </div>
@@ -55,12 +50,10 @@ export function WorkbenchShell({
           {rightInspector && (
             <aside
               className={cn(
-                'shrink-0 border-l border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)]',
-                'transition-[width] duration-200 ease-[var(--gw-ease-out)]',
+                'shrink-0 border-l border-[""] bg-[""]',
+                'transition-[width] duration-200 ease-[""]',
               )}
-              style={{
-                width: rightOpen ? 'var(--gw-right-panel-width)' : 'var(--gw-right-rail-width)',
-              }}
+              
             >
               {rightInspector}
             </aside>
@@ -69,8 +62,8 @@ export function WorkbenchShell({
 
         {statusBar && (
           <footer
-            className="shrink-0 border-t border-[var(--gw-border-soft)] bg-[var(--gw-bg-shell)]"
-            style={{ height: 'var(--gw-statusbar-height)' }}
+            className="shrink-0"
+            
           >
             {statusBar}
           </footer>

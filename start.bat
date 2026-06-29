@@ -19,6 +19,9 @@ set "CLOUD_PORT=8767"
 :: Set Electron path
 set "ELECTRON_PATH=%ROOT_DIR%node_modules\electron\dist\electron.exe"
 
+:: Set Python path to project virtual environment
+set "PYTHON_EXE=%ROOT_DIR%.venv\Scripts\python.exe"
+
 :: Check dependencies
 echo [Step 1/8] Checking dependencies...
 where node >nul 2>&1
@@ -35,9 +38,8 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
-where python >nul 2>&1
-if !errorlevel! neq 0 (
-    echo [ERROR] Python not found, please install Python first
+if not exist "!PYTHON_EXE!" (
+    echo [ERROR] Python virtual environment not found at .venv\Scripts\python.exe
     pause
     exit /b 1
 )
@@ -72,11 +74,11 @@ echo [Step 3/8] Checking Python dependencies...
 if not exist "%ROOT_DIR%workers\geo-python\requirements.txt" (
     echo [WARN] requirements.txt not found, skipping Python dependency check
 ) else (
-    pip show uvicorn >nul 2>&1
+    "!PYTHON_EXE!" -m pip show uvicorn >nul 2>&1
     if !errorlevel! neq 0 (
         echo [INFO] Installing Python dependencies...
         cd /d "%ROOT_DIR%workers\geo-python"
-        pip install -r requirements.txt
+        "!PYTHON_EXE!" -m pip install -r requirements.txt
         if !errorlevel! neq 0 (
             echo [WARN] Python dependency installation failed, may need manual installation
         )
@@ -88,9 +90,9 @@ echo.
 
 :: Check Electron dependencies
 echo [Step 4/8] Checking Electron dependencies...
-if not exist "%ROOT_DIR%apps\desktop\node_modules\.package-lock.json" (
+if not exist "%ROOT_DIR%apps\desktop\node_modules" (
     echo [INFO] First run, installing frontend dependencies...
-    cd /d "%ROOT_DIR%apps\desktop"
+    cd /d "%ROOT_DIR%"
     call npm install
     if !errorlevel! neq 0 (
         echo [ERROR] Frontend dependency installation failed
@@ -170,7 +172,7 @@ echo.
 
 :: Start Python Geo Worker
 echo [Step 7/8] Starting Python Geo Worker (port !PY_PORT!)...
-start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "python -m uvicorn app.main:app --host 127.0.0.1 --port !PY_PORT! > "%ROOT_DIR%logs\python-worker.log" 2>&1"
+start "GeoWork-Python-Worker" /D "%ROOT_DIR%workers\geo-python" cmd /c "!PYTHON_EXE! -m uvicorn app.main:app --host 127.0.0.1 --port !PY_PORT! > "%ROOT_DIR%logs\python-worker.log" 2>&1"
 
 :: Wait for startup
 timeout /t 3 >nul

@@ -3,8 +3,6 @@
 
 import React from 'react'
 import { Save, RotateCw, Settings, Share2 } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
-import { cn } from '../../../lib/cn'
 import styles from './DockToolbar.module.scss'
 
 export interface DockToolbarItem {

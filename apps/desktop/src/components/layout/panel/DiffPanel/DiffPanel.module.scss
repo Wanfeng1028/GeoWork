@@ -3,8 +3,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .header {
     min-height: 38px;
@@ -13,21 +11,17 @@
     justify-content: space-between;
     gap: 8px;
     padding: 7px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .title {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--gw-text);
       font-size: 13px;
       line-height: 18px;
       font-weight: 700;
     }
 
     .diffCount {
-      color: var(--gw-text-tertiary);
       font-size: 11px;
     }
   }
@@ -36,7 +30,6 @@
     max-height: 120px;
     overflow-y: auto;
     padding: 6px 8px;
-    border-bottom: 1px solid var(--gw-border);
 
     .diffListItem {
       min-height: 30px;
@@ -47,25 +40,22 @@
       border-radius: 7px;
       cursor: pointer;
       font-size: 12px;
-      transition: background-color var(--gw-duration-normal) ease;
+      transition: background-color 0.15s ease;
 
       &:hover,
       &.diffListSelected {
-        background: var(--gw-bg-hover);
       }
 
       .diffListId {
         flex: 1;
         overflow: hidden;
-        color: var(--gw-text-secondary);
-        font-family: var(--gw-font-mono);
+        font-family: monospace;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .diffListTime {
-        color: var(--gw-text-tertiary);
-        font-family: var(--gw-font-mono);
+        font-family: monospace;
         font-size: 10px;
       }
     }
@@ -79,7 +69,6 @@
 
     .diffActions {
       padding: 8px;
-      border-bottom: 1px solid var(--gw-border);
     }
 
     .fileDiffs {
@@ -95,8 +84,7 @@
 
         .fileName {
           overflow: hidden;
-          color: var(--gw-text);
-          font-family: var(--gw-font-mono);
+          font-family: monospace;
           font-size: 12px;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -108,8 +96,7 @@
         flex-direction: column;
         gap: 5px;
         margin: 8px 0;
-        color: var(--gw-text-secondary);
-        font-family: var(--gw-font-mono);
+        font-family: monospace;
         font-size: 11px;
 
         .oldContent,
@@ -118,24 +105,19 @@
           overflow: auto;
           margin: 0;
           padding: 8px;
-          border: 1px solid var(--gw-border);
           border-radius: 7px;
-          background: var(--gw-bg-code);
           white-space: pre-wrap;
         }
 
         .oldContent {
-          color: var(--gw-danger);
         }
 
         .diffArrow {
-          color: var(--gw-text-tertiary);
           font-size: 10px;
           text-align: center;
         }
 
         .newContent {
-          color: var(--gw-accent);
         }
       }
 
@@ -155,6 +137,5 @@
     justify-content: center;
     gap: 10px;
     padding: 20px;
-    color: var(--gw-text-tertiary);
   }
 }

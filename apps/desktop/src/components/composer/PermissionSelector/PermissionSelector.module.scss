@@ -1,6 +1,5 @@
 .container {
   padding: 7px 0;
-  color: var(--gw-text);
 }
 
 .label {
@@ -9,14 +8,12 @@
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 7px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 17px;
   font-weight: 650;
 }
 
 .labelText {
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 16px;
   font-weight: 650;
@@ -28,7 +25,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--gw-text);
   font-size: 11px;
   line-height: 16px;
 }
@@ -47,27 +43,17 @@
   justify-content: center;
   gap: 4px;
   padding: 8px 6px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text-secondary);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    border-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease,
-    box-shadow var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
-    border-color: var(--gw-border-strong);
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 
   &.active {
-    border-color: color-mix(in srgb, var(--gw-accent) 52%, var(--gw-border));
-    background: var(--gw-accent-soft);
-    color: var(--gw-text);
-    box-shadow: 0 0 18px rgba(var(--gw-accent-rgb), .14);
   }
 }
 
@@ -83,8 +69,6 @@
   align-items: center;
   padding: 0 6px;
   border-radius: 999px;
-  color: var(--gw-bg);
-  background: var(--gw-text);
   font-size: 9px;
   line-height: 17px;
   font-weight: 700;

@@ -3,29 +3,21 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-12);
-  background: var(--gw-bg-panel);
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-border-subtle);
+  gap: 12px;
   overflow: hidden;
 }
 
 /* ── Search bar ──────────────────────────────────────── */
 
 .searchBar {
-  padding: var(--gw-space-12);
-  border-bottom: 1px solid var(--gw-border-subtle);
+  padding: 12px;
 }
 
 .searchInput {
   :global(.ant-input) {
-    background: var(--gw-bg-card);
-    border-color: var(--gw-border-subtle);
-    color: var(--gw-text-primary);
   }
 
   :global(.ant-input-prefix) {
-    color: var(--gw-accent);
   }
 }
 
@@ -41,22 +33,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--gw-space-12);
-  padding: var(--gw-space-32);
+  gap: 12px;
+  padding: 32px;
 }
 
 .emptyState {
-  padding: var(--gw-space-32) 0;
+  padding: 32px 0;
 }
 
 /* ── Result item ─────────────────────────────────────── */
 
 .resultItem {
-  padding: var(--gw-space-12) var(--gw-space-12);
+  padding: 12px 12px;
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-card);
   }
 
   :global(.ant-list-item-action) {
@@ -67,18 +58,16 @@
 .resultContent {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-4);
+  gap: 4px;
 }
 
 .resultTitle {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
+  gap: 8px;
   margin: 0;
-  color: var(--gw-text-primary);
 
   .resultUrlIcon {
-    color: var(--gw-accent);
     font-size: 14px;
   }
 }
@@ -94,11 +83,11 @@
 
 .resultSnippet {
   display: block;
-  margin-top: var(--gw-space-4);
+  margin-top: 4px;
 }
 
 .resultActions {
   display: flex;
-  gap: var(--gw-space-8);
-  margin-top: var(--gw-space-8);
+  gap: 8px;
+  margin-top: 8px;
 }

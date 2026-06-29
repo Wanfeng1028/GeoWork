@@ -3,10 +3,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-8);
-  background: var(--gw-bg-panel);
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-border-subtle);
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -15,10 +12,8 @@
 .navBar {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-8) var(--gw-space-12);
-  background: var(--gw-bg-card);
-  border-bottom: 1px solid var(--gw-border-subtle);
+  gap: 8px;
+  padding: 8px 12px;
 }
 
 .navButtons {
@@ -29,13 +24,9 @@
   flex: 1;
 
   :global(.ant-input-prefix) {
-    color: var(--gw-accent);
   }
 
   :global(.ant-input) {
-    background: var(--gw-bg-panel);
-    border-color: var(--gw-border-subtle);
-    color: var(--gw-text-primary);
   }
 
   :global(.ant-input:disabled) {
@@ -51,7 +42,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gw-bg-panel);
 }
 
 .loadingOverlay {
@@ -60,7 +50,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gw-bg-panel);
   z-index: 1;
 }
 
@@ -70,27 +59,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--gw-space-8);
+  padding: 8px;
 }
 
 .screenshotImage {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: var(--gw-radius-md);
 }
 
 .placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--gw-space-12);
-  color: var(--gw-text-secondary);
+  gap: 12px;
 }
 
 /* ── Action bar ──────────────────────────────────────── */
 
 .actionBar {
-  padding: var(--gw-space-8) var(--gw-space-12);
-  border-top: 1px solid var(--gw-border-subtle);
+  padding: 8px 12px;
 }

@@ -1,4 +1,3 @@
-import { cn } from '../../lib/cn'
 import {
   ChevronLeft,
   ChevronRight,
@@ -40,49 +39,49 @@ export function LeftNav({
   brandName = 'GeoWork',
 }: LeftNavProps) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-[var(--gw-titlebar-height)] items-center gap-2 px-3">
+    <div className="flex-col">
+      <div >
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--gw-radius-sm)] text-[var(--gw-accent)] hover:bg-[var(--gw-bg-hover)] transition-colors"
+          
           onClick={() => onNavigate('workbench')}
           aria-label="GeoWork"
         >
-          <img src={geoAgentCharacterAssets.logo.mark} alt="GeoWork" className="h-5 w-5" draggable={false} />
+          <img src={geoAgentCharacterAssets.logo.mark} alt="GeoWork"  draggable={false} />
         </button>
         {!collapsed && (
-          <span className="text-[14px] font-semibold text-[var(--gw-text)]">{brandName}</span>
+          <span >{brandName}</span>
         )}
         <button
-          className="ml-auto flex h-7 w-7 items-center justify-center rounded-[var(--gw-radius-xs)] text-[var(--gw-text-tertiary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors"
+          
           onClick={onToggleCollapse}
           aria-label={collapsed ? '展开侧栏' : '折叠侧栏'}
         >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {collapsed ? <ChevronRight  /> : <ChevronLeft  />}
         </button>
       </div>
 
       <button
         className={cn(
-          'mx-2 mb-2 flex items-center justify-center gap-1.5 rounded-[var(--gw-radius-sm)]',
-          'bg-[var(--gw-accent)] text-[var(--gw-bg)] text-[12px] font-medium',
-          'hover:bg-[var(--gw-accent-hover)] active:bg-[var(--gw-accent-active)]',
+          'mx-2 mb-2 flex items-center justify-center gap-1.5 rounded-[""]',
+          'bg-[""] text-[""] text-[12px] font-medium',
+          'hover:bg-[""] active:bg-[""]',
           'transition-colors h-8',
         )}
         onClick={() => onNavigate('workbench')}
       >
-        <Plus className="h-3.5 w-3.5" />
+        <Plus  />
         {!collapsed && <span>新建任务</span>}
       </button>
 
-      <nav className="flex-1 overflow-y-auto px-1.5">
+      <nav className="flex-1">
         {sections.map((section) => (
-          <div key={section.label} className="mb-3">
+          <div key={section.label} >
             {!collapsed && (
-              <div className="px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-[var(--gw-text-disabled)]">
+              <div >
                 {section.label}
               </div>
             )}
-            <div className="flex flex-col gap-0.5">
+            <div className="flex-col">
               {section.items.map((item) => {
                 const Icon = item.icon
                 const isActive = activeKey === item.key
@@ -91,16 +90,16 @@ export function LeftNav({
                     key={item.key}
                     title={item.label}
                     className={cn(
-                      'flex items-center gap-2 rounded-[var(--gw-radius-sm)] px-2 py-1.5',
+                      'flex items-center gap-2 rounded-[""] px-2 py-1.5',
                       'text-[12px] transition-colors',
                       isActive
-                        ? 'bg-[var(--gw-bg-active)] text-[var(--gw-text)]'
-                        : 'text-[var(--gw-text-secondary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)]',
+                        ? 'bg-[""] text-[""]'
+                        : 'text-[""] hover:bg-[""] hover:text-[""]',
                     )}
                     onClick={() => onNavigate(item.key)}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    <Icon className="shrink-0" />
+                    {!collapsed && <span >{item.label}</span>}
                   </button>
                 )
               })}
@@ -109,23 +108,23 @@ export function LeftNav({
         ))}
       </nav>
 
-      <div className="border-t border-[var(--gw-border-soft)] p-2">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--gw-bg-active)] text-[var(--gw-text-tertiary)]">
-            <User className="h-4 w-4" />
+      <div >
+        <div >
+          <div >
+            <User  />
           </div>
           {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-medium text-[var(--gw-text)] truncate">GeoWork User</div>
-              <div className="text-[10px] text-[var(--gw-text-tertiary)]">Free</div>
+            <div className="flex-1">
+              <div >GeoWork User</div>
+              <div >Free</div>
             </div>
           )}
           <button
-            className="flex h-7 w-7 items-center justify-center rounded-[var(--gw-radius-xs)] text-[var(--gw-text-tertiary)] hover:bg-[var(--gw-bg-hover)] hover:text-[var(--gw-text)] transition-colors"
+            
             onClick={onOpenSettings}
             title="设置"
           >
-            <Settings className="h-4 w-4" />
+            <Settings  />
           </button>
         </div>
       </div>

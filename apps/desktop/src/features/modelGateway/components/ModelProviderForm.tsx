@@ -2,10 +2,6 @@
 // Form for adding and editing model providers
 
 import { useState, useEffect } from 'react'
-import { Input } from '../../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../../components/ui/select'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
 import { Link, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import modelGatewayClient, { type ModelProvider } from '../modelGatewayClient'
@@ -89,8 +85,8 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">名称</label>
+      <div >
+        <label >名称</label>
         <Input
           placeholder="例如: OpenAI API, Local Ollama"
           value={formValues.name || ''}
@@ -98,8 +94,8 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">类型</label>
+      <div >
+        <label >类型</label>
         <Select
           value={formValues.kind || 'openai_compatible'}
           onValueChange={(val) => setFormValues((v) => ({ ...v, kind: val as ModelProvider['kind'] }))}
@@ -117,8 +113,8 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">Base URL</label>
+      <div >
+        <label >Base URL</label>
         <Input
           placeholder="https://api.openai.com"
           value={formValues.baseUrl || ''}
@@ -126,8 +122,8 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">API Key</label>
+      <div >
+        <label >API Key</label>
         <Input
           type="password"
           placeholder="sk-... (可选)"
@@ -136,8 +132,8 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">默认模型</label>
+      <div >
+        <label >默认模型</label>
         <Input
           placeholder="gpt-4, llama3 等 (可选)"
           value={formValues.defaultModel || ''}
@@ -154,12 +150,12 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
             onClick={handleTestConnection}
             className={styles.testBtn}
           >
-            <Link className="h-4 w-4 mr-1" />
+            <Link  />
             测试连接
           </Button>
           {testResult && (
             <Badge className={testResult.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
-              {testResult.ok ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
+              {testResult.ok ? <CheckCircle  /> : <XCircle  />}
               {testResult.ok ? '连接成功' : '连接失败'}
             </Badge>
           )}
@@ -167,7 +163,7 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
       )}
 
       <div className={styles.actions}>
-        <div className="flex gap-2">
+        <div >
           <Button type="button" variant="ghost" onClick={onCancel}>取消</Button>
           <Button type="submit">
             {provider?.id ? '保存' : '添加'}

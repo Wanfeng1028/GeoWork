@@ -2,7 +2,6 @@
 // Banner shown when task needs recovery
 
 import React from 'react'
-import { Button } from '../../../components/ui/button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import useAgentStore from '../agentStore'
 import styles from './AgentRecoveryBanner.module.scss'
@@ -37,7 +36,7 @@ export const AgentRecoveryBanner: React.FC<{ taskId: string }> = ({ taskId }) =>
             className={styles.recoverBtn}
             disabled={isRecovering}
           >
-            <RefreshCw className={`h-4 w-4 mr-1 ${isRecovering ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`${isRecovering ? 'animate-spin' : ''}`} />
             恢复任务
           </Button>
         )}
@@ -57,17 +56,17 @@ interface ConfigItem {
 
 const STATE_CONFIG: Record<StateType, ConfigItem> = {
   recoverable: {
-    color: 'var(--gw-warning)',
+    color: '',
     title: '任务可恢复',
     description: '任务已暂停，可以从最近检查点恢复继续执行。',
   },
   'read-only': {
-    color: 'var(--gw-danger)',
+    color: '',
     title: '只读模式',
     description: '任务无法恢复，只能查看只读快照。',
   },
   failed: {
-    color: 'var(--gw-danger)',
+    color: '',
     title: '任务失败',
     description: '任务执行失败，无法恢复。',
   },

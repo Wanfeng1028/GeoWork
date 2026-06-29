@@ -44,8 +44,7 @@ export const useTaskStore = create<TaskState>()(
   persist(
     (set) => ({
       tasks: [],
-      currentTask: null,
-
+      currentTask: '',
       setTasks: (tasks) => set({ tasks }),
 
       setCurrentTask: (task) => set({ currentTask: task }),

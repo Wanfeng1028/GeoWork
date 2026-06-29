@@ -46,18 +46,18 @@ export interface AccountState {
 }
 
 const defaultState = {
-  user: null,
+  user: '',
   teams: [],
   teamMembers: [],
-  plan: null,
+  plan: '',
   credits: 0,
-  usage: null,
+  usage: '',
   modelUsage: [],
   marketplacePlugins: [],
   marketplaceSkills: [],
   loginState: 'logged_out' as LoginState,
   syncStatus: 'unknown' as const,
-  error: null,
+  error: '',
 }
 
 export const useAccountStore = create<AccountState>((set, get) => ({

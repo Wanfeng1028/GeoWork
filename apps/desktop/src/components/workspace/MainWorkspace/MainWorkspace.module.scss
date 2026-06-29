@@ -5,7 +5,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg);
 }
 
 .home {
@@ -25,7 +24,6 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle, rgba(var(--gw-accent-rgb), 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent);
   opacity: 0.5;
@@ -54,7 +52,6 @@
   position: absolute;
   inset: -16px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--gw-accent-rgb), 0.2), transparent 65%);
   filter: blur(8px);
   animation: gw-glow 3s ease-in-out infinite;
 }
@@ -67,13 +64,11 @@
     font-size: 32px;
     line-height: 1.1;
     font-weight: 760;
-    color: var(--gw-text);
     letter-spacing: -0.03em;
   }
 
   p {
     margin: 0;
-    color: var(--gw-text-tertiary);
     font-size: 14px;
     line-height: 1.5;
   }
@@ -88,19 +83,12 @@
   button {
     height: 32px;
     padding: 0 16px;
-    border-radius: var(--gw-radius-full);
-    border: 1px solid var(--gw-border-soft);
-    background: var(--gw-bg-panel);
-    color: var(--gw-text-secondary);
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
     transition: all 0.15s ease;
 
     &:hover {
-      color: var(--gw-text);
-      border-color: var(--gw-border);
-      background: var(--gw-bg-hover);
     }
   }
 }
@@ -116,29 +104,22 @@
 .placeholderPanel {
   width: min(420px, 100%);
   padding: 32px;
-  border: 1px solid var(--gw-border-soft);
-  border-radius: var(--gw-radius-lg);
-  background: var(--gw-bg-panel);
-  box-shadow: var(--gw-shadow-panel);
   text-align: center;
 
   h2 {
     margin: 16px 0 8px;
     font-size: 18px;
     font-weight: 600;
-    color: var(--gw-text);
   }
 
   p {
     margin: 0;
-    color: var(--gw-text-tertiary);
     font-size: 13px;
     line-height: 1.6;
   }
 }
 
 // ============================================================
-// WorkbenchHome — ported from QoderWorkCopy HomePage visual language.
 // ============================================================
 
 .home {
@@ -151,16 +132,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 51px 24px 60px;
-  background-color: var(--gw-bg-canvas);
 }
 
-// Dot-grid background (QoderWorkCopy .canvas radial-gradient)
 .dotGrid {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(var(--gw-dot-color, color-mix(in srgb, var(--gw-text-tertiary) 20%, transparent)) 1px, transparent 1px);
   background-size: 16px 16px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent);
 }
@@ -168,7 +146,6 @@
 .homeInner {
   position: relative;
   z-index: 1;
-  width: min(var(--gw-home-width), 100%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -184,7 +161,6 @@
   position: absolute;
   inset: -16px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--gw-accent-rgb), 0.2), transparent 65%);
   filter: blur(8px);
   animation: gw-glow 3s ease-in-out infinite;
 }
@@ -204,12 +180,10 @@
   line-height: 36px;
   font-weight: 520;
   letter-spacing: 0;
-  color: var(--gw-text);
 }
 
 .subtitle {
   margin: 8px 0 0;
-  color: var(--gw-text-secondary);
   font-size: 16px;
   line-height: 24px;
 }
@@ -228,33 +202,23 @@
 .quickPill {
   height: 32px;
   padding: 0 16px;
-  border: 1px solid var(--gw-border-soft);
-  border-radius: var(--gw-radius-full);
-  background: var(--gw-bg-panel);
-  color: var(--gw-text-secondary);
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: color var(--gw-duration-normal) ease,
-    border-color var(--gw-duration-normal) ease,
-    background-color var(--gw-duration-normal) ease;
+  transition: color 0.15s ease,;
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 
   &:hover {
-    color: var(--gw-text);
-    border-color: var(--gw-border);
-    background: var(--gw-bg-hover);
   }
 }
 
-// Edge handle (right-side affordance, QoderWorkCopy .edge-handle)
 .edgeHandle {
   position: fixed;
   right: 0;
   top: 56%;
   width: 8px;
   height: 28px;
-  background: var(--gw-text);
-  color: var(--gw-bg);
   border-radius: 4px 0 0 4px;
   border: 0;
   padding: 0;
@@ -265,18 +229,6 @@
   text-align: center;
 }
 
-// Dark-mode: home heading is a touch smaller and left-aligned (QoderWorkCopy)
-:global([data-resolved-theme='dark']) .title {
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 620;
-}
-
-:global([data-resolved-theme='dark']) .subtitle {
-  font-size: 13px;
-}
-
-/* QoderWorkCopy fidelity pass: home, composer surroundings, promo. */
 .home {
   position: relative;
   flex: 1;
@@ -284,8 +236,6 @@
   display: block;
   overflow: hidden;
   padding: 0;
-  background-color: var(--gw-bg-canvas);
-  background-image: radial-gradient(var(--gw-dot-color, color-mix(in srgb, var(--gw-text-tertiary) 20%, transparent)) 1px, transparent 1px);
   background-size: 16px 16px;
 }
 
@@ -296,7 +246,6 @@
 .homeInner {
   position: relative;
   z-index: 1;
-  width: var(--gw-home-width);
   margin-left: 100px;
   padding-top: 51px;
   display: flex;
@@ -327,18 +276,16 @@
   line-height: 36px;
   font-weight: 520;
   letter-spacing: 0;
-  color: var(--gw-text);
 }
 
 .subtitle {
   margin: 8px 0 18px;
-  color: var(--gw-text-secondary);
   font-size: 16px;
   line-height: 24px;
 }
 
 .composerWrap {
-  width: var(--gw-composer-width);
+  width: 680px;
 }
 
 .folderSelect {
@@ -350,13 +297,11 @@
   border: 0;
   padding: 0;
   background: transparent;
-  color: var(--gw-text);
   font-size: 13px;
   cursor: pointer;
 }
 
 .folderSelect:hover {
-  color: var(--gw-accent);
 }
 
 .promo {
@@ -369,7 +314,6 @@
   gap: 14px;
   padding: 0 18px 0 22px;
   border-radius: 12px;
-  background: var(--gw-bg-promo);
 }
 
 .giftArt {
@@ -467,7 +411,6 @@
 
 .promoCopy strong {
   display: block;
-  color: var(--gw-text);
   font-size: 14px;
   line-height: 20px;
   font-weight: 650;
@@ -475,13 +418,11 @@
 
 .promoCopy span {
   display: block;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 20px;
 }
 
 .promoCopy em {
-  color: var(--gw-warning);
   font-style: normal;
 }
 
@@ -511,75 +452,6 @@
   border: 0;
   padding: 0;
   z-index: 50;
-}
-
-:global([data-resolved-theme='dark']) .home {
-  border: 1px solid var(--gw-border);
-  border-radius: 5px;
-  background-image: radial-gradient(rgba(132, 119, 86, .2) 1px, transparent 1px);
-  background-size: 15px 15px;
-}
-
-:global([data-resolved-theme='dark']) .homeInner {
-  width: 610px;
-  margin-left: calc(50% - 305px);
-  padding-top: 38vh;
-  transform: translateY(-120px);
-}
-
-:global([data-resolved-theme='dark']) .mascotWrap {
-  width: 38px;
-  height: 38px;
-  margin-bottom: 14px;
-}
-
-:global([data-resolved-theme='dark']) .title {
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 620;
-}
-
-:global([data-resolved-theme='dark']) .subtitle {
-  margin: 5px 0 15px;
-  font-size: 13px;
-  line-height: 20px;
-}
-
-:global([data-resolved-theme='dark']) .composerWrap {
-  width: 610px;
-}
-
-:global([data-resolved-theme='dark']) .promo {
-  width: 514px;
-  height: 56px;
-  margin-top: 22px;
-  margin-left: 53px;
-  grid-template-columns: 42px minmax(0, 1fr) 64px;
-  gap: 12px;
-  padding: 0 13px 0 14px;
-  border-radius: 8px;
-}
-
-:global([data-resolved-theme='dark']) .giftArt {
-  width: 38px;
-  height: 38px;
-}
-
-:global([data-resolved-theme='dark']) .promoCopy strong {
-  font-size: 12px;
-  line-height: 17px;
-}
-
-:global([data-resolved-theme='dark']) .promoCopy span {
-  font-size: 10px;
-  line-height: 15px;
-}
-
-:global([data-resolved-theme='dark']) .promo button {
-  height: 28px;
-  font-size: 11px;
-  background: var(--gw-bg-soft-2);
-  color: var(--gw-text-tertiary);
 }
 
 .qoderMascot {
@@ -672,59 +544,4 @@
   height: 7px;
   border-bottom: 2px solid #171511;
   transform: rotate(18deg);
-}
-
-:global([data-resolved-theme='dark']) .qoderMascot {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px 17px 14px 10px;
-  background: #68d980;
-  box-shadow: inset 0 -6px 0 rgba(22, 87, 39, .12);
-}
-
-:global([data-resolved-theme='dark']) .qoderMascot::after {
-  right: -4px;
-  bottom: 3px;
-  border-left-color: #68d980;
-  border-left-width: 10px;
-  border-top-width: 7px;
-}
-
-:global([data-resolved-theme='dark']) .curl {
-  left: 15px;
-  top: 5px;
-  transform: scale(.86) rotate(28deg);
-}
-
-:global([data-resolved-theme='dark']) .eyeWhite {
-  top: 12px;
-  width: 13px;
-  height: 18px;
-}
-
-:global([data-resolved-theme='dark']) .leftWhite {
-  left: 12px;
-}
-
-:global([data-resolved-theme='dark']) .rightWhite {
-  left: 23px;
-}
-
-:global([data-resolved-theme='dark']) .eye {
-  top: 17px;
-  width: 6px;
-  height: 9px;
-}
-
-:global([data-resolved-theme='dark']) .leftEye {
-  left: 16px;
-}
-
-:global([data-resolved-theme='dark']) .rightEye {
-  left: 27px;
-}
-
-:global([data-resolved-theme='dark']) .beak {
-  left: 22px;
-  top: 15px;
 }

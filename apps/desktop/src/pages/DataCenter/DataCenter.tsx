@@ -1,8 +1,4 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
 import { toast } from 'sonner'
 import { Plus, Database, Trash2, Download, Search, RefreshCw, Eye, HardDrive, Layers3 } from 'lucide-react'
 import { useDataCenterStore } from './store'

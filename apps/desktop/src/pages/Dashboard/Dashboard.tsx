@@ -1,9 +1,4 @@
 import React, { useState, useCallback } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Spinner } from '../../components/ui/spinner'
-import { Empty } from '../../components/ui/empty'
 import {
   Bot,
   Folder,
@@ -177,21 +172,21 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Spinner className="w-8 h-8" />
+      <div >
+        <Spinner  />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="rounded-md border border-destructive p-4 bg-destructive/10">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-          <span className="font-semibold">加载失败</span>
-          <Button size="sm" variant="outline" className="ml-auto">重试</Button>
+      <div className="border">
+        <div >
+          <AlertTriangle  />
+          <span >加载失败</span>
+          <Button size="sm" variant="outline" >重试</Button>
         </div>
-        <p className="text-sm mt-2">{error}</p>
+        <p >{error}</p>
       </div>
     )
   }
@@ -203,8 +198,8 @@ export default function Dashboard({
     <div className={styles.dashboard}>
       {/* Welcome Section */}
       <div className={styles.welcome}>
-        <div className="flex items-center justify-center rounded-full w-14 h-14" style={{ background: '#1677ff' }}>
-          <Bot className="text-white w-7 h-7" />
+        <div  style={{ background: '#1677ff' }}>
+          <Bot  />
         </div>
         <div className={styles.welcomeText}>
           <h2 className={styles.greeting}>欢迎回来，GeoWork 用户</h2>
@@ -212,15 +207,15 @@ export default function Dashboard({
             你目前有 {stats.activeTasks} 个任务正在运行，{stats.totalProjects} 个项目已创建。
           </p>
         </div>
-        <div className="flex gap-2">
+        <div >
           <Button variant="outline" onClick={onContinueAnalysis}>
-            <Zap className="w-4 h-4 mr-1" /> 继续分析
+            <Zap  /> 继续分析
           </Button>
           <Button variant="outline" onClick={onViewReport}>
-            <FileText className="w-4 h-4 mr-1" /> 查看报告
+            <FileText  /> 查看报告
           </Button>
           <Button onClick={onNewProject}>
-            <Plus className="w-4 h-4 mr-1" /> 新建项目
+            <Plus  /> 新建项目
           </Button>
         </div>
       </div>
@@ -229,60 +224,60 @@ export default function Dashboard({
       <QuickActions onAction={handleQuickAction} />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid-cols-1">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Folder className="w-5 h-5 text-blue-500" />
+          <CardContent >
+            <div >
+              <Folder  />
               <div>
-                <div className="text-sm text-muted-foreground">项目总数</div>
-                <div className="text-2xl font-bold">{stats.totalProjects}</div>
+                <div >项目总数</div>
+                <div >{stats.totalProjects}</div>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <RefreshCw className="w-5 h-5 text-green-500" />
+          <CardContent >
+            <div >
+              <RefreshCw  />
               <div>
-                <div className="text-sm text-muted-foreground">进行中任务</div>
-                <div className="text-2xl font-bold">{stats.activeTasks}</div>
+                <div >进行中任务</div>
+                <div >{stats.activeTasks}</div>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-orange-500" />
+          <CardContent >
+            <div >
+              <Zap  />
               <div>
-                <div className="text-sm text-muted-foreground">本月 API 调用</div>
-                <div className="text-2xl font-bold">{stats.monthlyApiCalls}</div>
+                <div >本月 API 调用</div>
+                <div >{stats.monthlyApiCalls}</div>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-purple-500" />
+          <CardContent >
+            <div >
+              <AlertTriangle  />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground">存储空间</div>
-                <div className="text-2xl font-bold">
+                <div >存储空间</div>
+                <div >
                   {storageValue}
-                  <span className="text-sm font-normal cursor-pointer text-blue-500 ml-1" onClick={handleStorageToggle}>
+                  <span  onClick={handleStorageToggle}>
                     {storageUnit}
                   </span>
                 </div>
-                <div className="mt-1">
-                  <div className="h-1 bg-muted rounded overflow-hidden">
+                <div >
+                  <div className="rounded">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded"
+                      className="rounded"
                       style={{ width: `${(stats.storageUsed / stats.storageTotal) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span >
                     {stats.storageUsed} / {stats.storageTotal} {storageUnit}
                   </span>
                 </div>
@@ -298,12 +293,12 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle>
               最近项目
-              <span className="text-sm font-normal text-muted-foreground ml-2 cursor-pointer">查看全部</span>
+              <span >查看全部</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {projects.length > 0 ? (
-              <div className="flex flex-col gap-3">
+              <div className="flex-col">
                 {projects.map((project) => (
                   <ProjectCard key={project.id} project={project} onClick={handleProjectClick} />
                 ))}
@@ -318,28 +313,28 @@ export default function Dashboard({
           <CardHeader>
             <CardTitle>
               最近任务
-              <span className="text-sm font-normal text-muted-foreground ml-2 cursor-pointer">查看全部</span>
+              <span >查看全部</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {tasks.length > 0 ? (
-              <div className="space-y-4">
+              <div >
                 {tasks.map((task) => (
-                  <div key={task.id} className="flex gap-3">
-                    <div className="flex flex-col items-center">
+                  <div key={task.id} >
+                    <div className="flex-col">
                       {task.status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle  />
                       ) : task.status === 'running' ? (
-                        <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+                        <RefreshCw  />
                       ) : task.status === 'failed' ? (
-                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                        <AlertTriangle  />
                       ) : (
-                        <Clock className="w-5 h-5 text-gray-400" />
+                        <Clock  />
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{task.name}</span>
+                      <div >
+                        <span >{task.name}</span>
                         <Badge variant={
                           task.status === 'completed' ? 'default' :
                           task.status === 'running' ? 'secondary' :
@@ -351,9 +346,9 @@ export default function Dashboard({
                         </Badge>
                       </div>
                       {task.description && (
-                        <div className="text-xs text-muted-foreground mt-1">{task.description}</div>
+                        <div >{task.description}</div>
                       )}
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div >
                         {new Date(task.updatedAt).toLocaleString('zh-CN')}
                       </div>
                     </div>

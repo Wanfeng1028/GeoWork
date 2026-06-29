@@ -1,8 +1,6 @@
 // GeoWork - SkillSelector Component
 
 import React from 'react'
-import { Badge } from '../../ui/badge'
-import { cn } from '../../../lib/cn'
 import styles from './SkillSelector.module.scss'
 
 export interface SkillOption {

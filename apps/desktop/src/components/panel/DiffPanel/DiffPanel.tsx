@@ -9,17 +9,6 @@ import {
 } from 'lucide-react'
 import useDiffStore from '../../../stores/diffStore'
 import type { DiffFile } from '../../../types/diff'
-import { Badge } from '../../ui/badge'
-import { Button } from '../../ui/button'
-import { Empty } from '../../ui/empty'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
 import styles from './DiffPanel.module.scss'
 
 const STATUS_VARIANT: Record<string, 'warning' | 'success' | 'danger' | 'default'> = {
@@ -94,7 +83,7 @@ export function DiffPanel() {
           {' '}已拒绝: {rejectedFiles.size}
           {' '}待处理: {(currentDiff?.files.length || 0) - acceptedFiles.size - rejectedFiles.size}
         </span>
-        <div className="flex items-center gap-1">
+        <div >
           {currentDiff?.patch && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -126,7 +115,7 @@ export function DiffPanel() {
 
       {currentDiff ? (
         <div className={styles.tableWrapper}>
-          <div className="flex flex-col gap-1">
+          <div className="flex-col">
             {currentDiff.files.map((file) => {
               const isAccepted = acceptedFiles.has(file.path)
               const isRejected = rejectedFiles.has(file.path)
@@ -144,7 +133,7 @@ export function DiffPanel() {
                     {STATUS_LABELS[file.status] || file.status}
                   </Badge>
                   {isPending && (
-                    <div className="flex items-center gap-1 ml-auto">
+                    <div >
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="primary" size="icon-sm" onClick={() => acceptFile(file.path)}>
@@ -163,8 +152,8 @@ export function DiffPanel() {
                       </Tooltip>
                     </div>
                   )}
-                  {isAccepted && <Badge variant="success" className="ml-auto">已接受</Badge>}
-                  {isRejected && <Badge variant="danger" className="ml-auto">已拒绝</Badge>}
+                  {isAccepted && <Badge variant="success" >已接受</Badge>}
+                  {isRejected && <Badge variant="danger" >已拒绝</Badge>}
                 </div>
               )
             })}
@@ -177,13 +166,13 @@ export function DiffPanel() {
       {currentDiff && currentDiff.files.length > 0 && (
         <div className={styles.detailSection}>
           <h4 className={styles.sectionTitle}>详细对比</h4>
-          <div className="flex flex-col gap-2">
+          <div className="flex-col">
             {currentDiff.files.map((file) => {
               const fileAccepted = acceptedFiles.has(file.path)
               const fileRejected = rejectedFiles.has(file.path)
               return (
                 <details key={file.path} className={styles.collapseLabel}>
-                  <summary className="flex items-center gap-2 cursor-pointer py-1">
+                  <summary >
                     <span className={styles.collapseFileName}>{file.path.split('/').pop()}</span>
                     <Badge variant={STATUS_VARIANT[file.status] || 'default'}>
                       {STATUS_LABELS[file.status]}

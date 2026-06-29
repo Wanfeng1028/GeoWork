@@ -1,8 +1,3 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
-import { Badge } from '../../components/ui/badge'
-import { Spinner } from '../../components/ui/spinner'
-import { Empty } from '../../components/ui/empty'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs'
 import {
   FileImage,
   FileText,
@@ -59,9 +54,9 @@ function isVectorDataset(dataset: Dataset): boolean {
 
 function DescItem({ label, children, span = 1 }: { label: string; children: React.ReactNode; span?: number }) {
   return (
-    <div className={`flex gap-2 py-1 ${span === 2 ? 'col-span-2' : ''}`}>
-      <span className="text-sm text-muted-foreground min-w-[80px]">{label}</span>
-      <span className="text-sm">{children}</span>
+    <div className={`${span === 2 ? 'col-span-2' : ''}`}>
+      <span >{label}</span>
+      <span >{children}</span>
     </div>
   )
 }
@@ -71,7 +66,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[560px] max-h-[80vh] overflow-y-auto">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>数据预览 — {dataset.name}</DialogTitle>
         </DialogHeader>
@@ -85,7 +80,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
           </TabsList>
 
           <TabsContent value="basic">
-            <div className="grid grid-cols-2 gap-1 border rounded p-3">
+            <div className="grid-cols-2 border rounded">
               <DescItem label="名称" span={2}>{dataset.name}</DescItem>
               <DescItem label="类型">
                 <Badge variant="secondary" className={typeColors[dataset.type] || ''}>
@@ -94,7 +89,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
               </DescItem>
               <DescItem label="CRS">{dataset.crs}</DescItem>
               <DescItem label="范围" span={2}>
-                <code className="text-xs">{formatExtent(dataset.extent)}</code>
+                <code >{formatExtent(dataset.extent)}</code>
               </DescItem>
               <DescItem label="文件大小">{formatSize(dataset.size)}</DescItem>
               <DescItem label="路径" span={2}>
@@ -111,7 +106,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
           <TabsContent value="raster">
             {isRasterDataset(dataset) ? (
               <div className={styles.metadataSection}>
-                <div className="grid grid-cols-2 gap-1 border rounded p-3">
+                <div className="grid-cols-2 border rounded">
                   <DescItem label="波段数">{dataset.metadata.bands ?? 'N/A'}</DescItem>
                   <DescItem label="像元大小">
                     {dataset.metadata.pixelSize ? `${dataset.metadata.pixelSize[0]} x ${dataset.metadata.pixelSize[1]}` : 'N/A'}
@@ -123,8 +118,8 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 </div>
                 {dataset.metadata.statistics && (
                   <>
-                    <h5 className="font-semibold text-sm mt-4 mb-2">统计信息</h5>
-                    <div className="grid grid-cols-2 gap-1 border rounded p-3">
+                    <h5 >统计信息</h5>
+                    <div className="grid-cols-2 border rounded">
                       <DescItem label="均值">{dataset.metadata.statistics.mean ?? 'N/A'}</DescItem>
                       <DescItem label="标准差">{dataset.metadata.statistics.std ?? 'N/A'}</DescItem>
                       <DescItem label="最小值">{dataset.metadata.statistics.min ?? 'N/A'}</DescItem>
@@ -132,10 +127,10 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                     </div>
                   </>
                 )}
-                <h5 className="font-semibold text-sm mt-4 mb-2">缩略图</h5>
-                <div className="flex flex-col items-center justify-center p-8 border rounded bg-muted/50">
-                  <FileImage className="w-12 h-12 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground mt-2">缩略图预览区域</span>
+                <h5 >缩略图</h5>
+                <div className="flex-col border rounded">
+                  <FileImage  />
+                  <span >缩略图预览区域</span>
                 </div>
               </div>
             ) : (
@@ -146,7 +141,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
           <TabsContent value="vector">
             {isVectorDataset(dataset) ? (
               <div className={styles.metadataSection}>
-                <div className="grid grid-cols-2 gap-1 border rounded p-3">
+                <div className="grid-cols-2 border rounded">
                   <DescItem label="要素数">{dataset.metadata.features ?? 'N/A'}</DescItem>
                   <DescItem label="几何类型">{dataset.metadata.geometryType ?? 'N/A'}</DescItem>
                   <DescItem label="字段数" span={2}>
@@ -155,8 +150,8 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 </div>
                 {dataset.metadata.fields && dataset.metadata.fields.length > 0 && (
                   <>
-                    <h5 className="font-semibold text-sm mt-4 mb-2">字段列表</h5>
-                    <div className="grid grid-cols-2 gap-1 border rounded p-3">
+                    <h5 >字段列表</h5>
+                    <div className="grid-cols-2 border rounded">
                       {dataset.metadata.fields.map((field: any, idx: number) => (
                         <DescItem key={idx} label={field.name}>
                           <Badge variant="outline">{field.type}</Badge>
@@ -167,7 +162,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 )}
                 {dataset.metadata.attributes && (
                   <>
-                    <h5 className="font-semibold text-sm mt-4 mb-2">属性预览</h5>
+                    <h5 >属性预览</h5>
                     <pre className={styles.jsonPreview}>
                       {JSON.stringify(dataset.metadata.attributes, null, 2)}
                     </pre>

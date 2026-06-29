@@ -3,13 +3,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .filterSection {
     padding: 9px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .filterRow {
       display: flex;
@@ -23,10 +19,7 @@
 
     :global(input), :global(button[role='combobox']) {
       height: 30px;
-      border-color: var(--gw-border);
       border-radius: 999px;
-      background: var(--gw-bg-panel);
-      color: var(--gw-text);
       font-size: 12px;
     }
 
@@ -42,7 +35,6 @@
       display: grid;
       place-items: center;
       height: 100%;
-      color: var(--gw-text-tertiary);
       font-size: 12px;
     }
 
@@ -57,35 +49,26 @@
       padding: 5px 8px;
       border-radius: 6px;
       border-left: 2px solid transparent;
-      color: var(--gw-text-secondary);
       font-size: 12px;
-      transition: background-color var(--gw-duration-normal) ease;
-
-      &:hover { background: var(--gw-bg-hover); }
+      transition: background-color 0.15s ease;
 
       .logLevel {
         height: 18px;
         padding: 0 6px;
         border-radius: 999px;
-        background: var(--gw-bg-soft);
-        color: var(--gw-text);
         font-size: 10px;
         font-weight: 700;
         line-height: 18px;
       }
 
       .logTimestamp, .logModule {
-        color: var(--gw-text-tertiary);
         font-size: 11px;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
 
-      .logModule { color: var(--gw-accent); }
-
       .logMessage {
         min-width: 0;
         overflow: hidden;
-        color: var(--gw-text-secondary);
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -98,9 +81,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 10px;
-    border-top: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
-    .entryCount { color: var(--gw-text-tertiary); font-size: 11px; }
   }
 }

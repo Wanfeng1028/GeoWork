@@ -2,11 +2,6 @@
 // Search input and results list for academic paper discovery
 
 import { useState } from 'react'
-import { Input } from '../../../components/ui/input'
-import { Button } from '../../../components/ui/button'
-import { Card } from '../../../components/ui/card'
-import { Spinner } from '../../../components/ui/spinner'
-import { Empty } from '../../../components/ui/empty'
 import { Search, Globe, Zap } from 'lucide-react'
 import type { PaperSearchResult } from '../browserBridgeClient'
 import useBrowserStore from '../browserStore'
@@ -54,7 +49,7 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
           disabled={isLoading}
           onClick={handleSearch}
         >
-          {isLoading ? <Spinner size="sm" className="mr-1" /> : <Search className="h-4 w-4 mr-1" />}
+          {isLoading ? <Spinner size="sm"  /> : <Search  />}
           Search
         </Button>
       </div>
@@ -64,32 +59,32 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
         {isLoading ? (
           <div className={styles.loadingState}>
             <Spinner size="lg" />
-            <span className="text-[13px] text-[var(--gw-text-secondary)]">Searching papers...</span>
+            <span >Searching papers...</span>
           </div>
         ) : paperResults.length > 0 ? (
-          <div className="flex flex-col">
+          <div className="flex-col">
             {paperResults.map((item: PaperSearchResult, index: number) => (
               <div key={index} className={styles.resultItem}>
                 <div className={styles.resultContent}>
-                  <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+                  <h3 >
                     <Globe className={styles.resultUrlIcon} />
                     {item.title}
                   </h3>
 
                   <div className={styles.resultMeta}>
                     {item.authors.length > 0 && (
-                      <span className="text-[13px] text-[var(--gw-text-secondary)]">{item.authors.join(', ')}</span>
+                      <span >{item.authors.join(', ')}</span>
                     )}
                     {item.year && (
                       <>
                         <span className={styles.metaSeparator}> · </span>
-                        <span className="text-[13px] text-[var(--gw-text-secondary)]">{item.year}</span>
+                        <span >{item.year}</span>
                       </>
                     )}
                   </div>
 
                   {item.snippet && (
-                    <span className="text-[13px] text-[var(--gw-text-secondary)]">
+                    <span >
                       {item.snippet}
                     </span>
                   )}
@@ -100,7 +95,7 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
                     size="sm"
                     variant="link"
                   >
-                    <Globe className="h-4 w-4 mr-1" />
+                    <Globe  />
                     Open
                   </Button>
                   <Button
@@ -109,7 +104,7 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
                     disabled={isLoading}
                     title="Add to context"
                   >
-                    <Zap className="h-4 w-4 mr-1" />
+                    <Zap  />
                     To Agent
                   </Button>
                 </div>

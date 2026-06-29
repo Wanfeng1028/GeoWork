@@ -5,10 +5,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-top: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
   box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.18);
-  color: var(--gw-text);
 }
 
 .resizeHandle {
@@ -22,7 +19,6 @@
 }
 
 .resizeHandle:hover {
-  background: color-mix(in srgb, var(--gw-accent) 18%, transparent);
 }
 
 .closeBtn {
@@ -37,12 +33,9 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-tertiary);
   cursor: pointer;
 
   &:hover {
-    color: var(--gw-text);
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -60,9 +53,7 @@
   align-items: center;
   gap: 3px;
   padding: 4px 42px 4px 8px;
-  border-bottom: 1px solid var(--gw-border);
   border-radius: 0;
-  background: var(--gw-bg-sidebar);
   overflow-x: auto;
 }
 
@@ -70,7 +61,6 @@
   height: 28px;
   padding: 0 11px;
   border-radius: 6px;
-  color: var(--gw-text-secondary);
   background: transparent;
   font-size: 12px;
   font-weight: 650;
@@ -78,8 +68,6 @@
 
 .tabsList :global(button:hover),
 .tabsList :global(button[data-state='active']) {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
   box-shadow: none;
 }
 

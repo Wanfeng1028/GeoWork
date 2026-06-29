@@ -2,7 +2,6 @@
 
 import type { RuntimeEvent } from '../../../types/task'
 import { mockEvents } from '../../../mocks/tasks.mock'
-import { Badge } from '../../ui/badge'
 import styles from './RuntimeEvents.module.scss'
 
 const typeVariant: Record<string, 'info' | 'success' | 'warning' | 'accent' | 'default'> = {
@@ -15,7 +14,7 @@ const typeVariant: Record<string, 'info' | 'success' | 'warning' | 'accent' | 'd
 export function RuntimeEvents() {
   return (
     <div className={styles.panel}>
-      <div className="flex flex-col gap-1 p-2">
+      <div className="flex-col">
         {mockEvents.map((event) => (
           <div key={event.id} className={styles.eventItem}>
             <Badge variant={typeVariant[event.type] || 'default'}>

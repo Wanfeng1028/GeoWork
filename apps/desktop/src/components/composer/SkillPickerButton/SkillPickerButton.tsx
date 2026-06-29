@@ -1,8 +1,6 @@
-// GeoWork SkillPickerButton — Radix Popover picker, ported from QoderWorkCopy picker-popover.
 
 import React from 'react'
 import { Zap } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover'
 import styles from './SkillPickerButton.module.scss'
 
 interface Skill {

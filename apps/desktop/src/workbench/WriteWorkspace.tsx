@@ -1,7 +1,6 @@
 // GeoWork Desktop - Write Mode Workspace
 
 import { FileText } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import styles from './WriteWorkspace.module.scss'
 
 export default function WriteWorkspace() {
@@ -9,8 +8,8 @@ export default function WriteWorkspace() {
     <div className={styles.writeWorkspace}>
       <div className={styles.content}>
         <div className={styles.header}>
-          <h2 className="text-lg font-semibold flex items-center gap-2"><FileText className="h-5 w-5" /> 写作模式</h2>
-          <span className="text-sm text-[var(--gw-text-tertiary)]">报告生成、文档编辑和结果导出</span>
+          <h2 ><FileText  /> 写作模式</h2>
+          <span >报告生成、文档编辑和结果导出</span>
         </div>
 
         <div className={styles.panels}>

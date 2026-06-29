@@ -1,7 +1,4 @@
 import React from 'react'
-import { Button } from '../../components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
-import { Input } from '../../components/ui/input'
 import { toast } from 'sonner'
 import {
   Plus,
@@ -138,11 +135,11 @@ export default function QuickActions({
           </DialogHeader>
           {selectedAction && (
             <div className={styles.modalContent}>
-              <p className="text-sm text-muted-foreground mb-4">{selectedAction.description}</p>
+              <p >{selectedAction.description}</p>
               <div>
-                <label className="text-sm font-medium">任务描述</label>
+                <label >任务描述</label>
                 <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                  className="border"
                   placeholder="请输入任务描述..."
                   value={promptValue}
                   onChange={(e) => setPromptValue(e.target.value)}

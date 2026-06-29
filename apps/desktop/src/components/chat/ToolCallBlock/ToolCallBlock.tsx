@@ -9,9 +9,6 @@ import {
   Loader2,
   Code,
 } from 'lucide-react'
-import { Badge } from '../../ui/badge'
-import { Spinner } from '../../ui/spinner'
-import { Separator } from '../../ui/separator'
 import type { RuntimeEvent } from '../../../types/task'
 
 interface ToolCallBlockProps {
@@ -31,15 +28,15 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
   const [expanded, setExpanded] = useState(false)
 
   const statusConfig = {
-    started: { icon: <Play className="h-3.5 w-3.5" />, color: 'var(--gw-info)', label: '运行中', variant: 'info' as const },
-    completed: { icon: <CheckCircle className="h-3.5 w-3.5" />, color: 'var(--gw-accent)', label: '已完成', variant: 'success' as const },
-    failed: { icon: <XCircle className="h-3.5 w-3.5" />, color: 'var(--gw-danger)', label: '失败', variant: 'danger' as const },
-    pending: { icon: <Spinner size="xs" />, color: 'var(--gw-warning)', label: '等待中', variant: 'warning' as const },
+    started: { icon: <Play  />, color: '', label: '运行中', variant: 'info' as const },
+    completed: { icon: <CheckCircle  />, color: '', label: '已完成', variant: 'success' as const },
+    failed: { icon: <XCircle  />, color: '', label: '失败', variant: 'danger' as const },
+    pending: { icon: <Spinner size="xs" />, color: '', label: '等待中', variant: 'warning' as const },
   }
 
   const config = statusConfig[event.status as keyof typeof statusConfig] || {
-    icon: <Code className="h-3.5 w-3.5" />,
-    color: 'var(--gw-text-tertiary)',
+    icon: <Code  />,
+    color: '',
     label: event.status || '未知',
     variant: 'default' as const,
   }
@@ -50,21 +47,21 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
     <details
       open={expanded}
       onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
-      className="rounded-[var(--gw-radius-md)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-surface)]"
+      className="border"
     >
-      <summary className="flex cursor-pointer items-center gap-2 p-2">
+      <summary >
         <span style={{ color: config.color }}>{config.icon}</span>
-        <span className="text-[13px] font-semibold text-[var(--gw-text-primary)]">{event.tool || event.name || '工具调用'}</span>
+        <span >{event.tool || event.name || '工具调用'}</span>
         <Badge variant={config.variant}>{config.label}</Badge>
-        {duration && <span className="text-[12px] text-[var(--gw-text-tertiary)]">{duration}</span>}
+        {duration && <span >{duration}</span>}
       </summary>
-      <div className="px-2 pb-2">
-        <Separator className="mb-2" />
+      <div >
+        <Separator  />
 
         {event.input && (
           <div style={{ marginBottom: 8 }}>
-            <span className="text-[12px] text-[var(--gw-text-tertiary)]">输入:</span>
-            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
+            <span >输入:</span>
+            <pre style={{ padding: 8, borderRadius: 4, overflowX: 'auto' }}>
               {typeof event.input === 'string' ? event.input : JSON.stringify(event.input, null, 2)}
             </pre>
           </div>
@@ -72,8 +69,8 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
 
         {event.output && (
           <div style={{ marginBottom: 8 }}>
-            <span className="text-[12px] text-[var(--gw-text-tertiary)]">输出:</span>
-            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto' }}>
+            <span >输出:</span>
+            <pre style={{ padding: 8, borderRadius: 4, overflowX: 'auto' }}>
               {typeof event.output === 'string' ? event.output : JSON.stringify(event.output, null, 2)}
             </pre>
           </div>
@@ -81,8 +78,8 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
 
         {event.error && (
           <div style={{ marginBottom: 8 }}>
-            <span className="text-[12px] text-[var(--gw-danger)]">错误:</span>
-            <div style={{ background: 'var(--gw-danger-soft)', padding: 8, borderRadius: 4 }}>
+            <span >错误:</span>
+            <div style={{ padding: 8, borderRadius: 4 }}>
               {event.error}
             </div>
           </div>
@@ -90,8 +87,8 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
 
         {event.log && (
           <div>
-            <span className="text-[12px] text-[var(--gw-text-tertiary)]">日志:</span>
-            <pre style={{ background: 'var(--gw-bg-code)', padding: 8, borderRadius: 4, overflowX: 'auto', fontSize: 12 }}>
+            <span >日志:</span>
+            <pre style={{ padding: 8, borderRadius: 4, overflowX: 'auto', fontSize: 12 }}>
               {event.log}
             </pre>
           </div>

@@ -77,11 +77,11 @@ export function AccountSettings() {
     <div className={styles.container}>
       <Tabs defaultValue="profile">
         <TabsList>
-          <TabsTrigger value="profile"><User className="h-4 w-4 mr-1" /> 账号</TabsTrigger>
-          <TabsTrigger value="subscription"><CreditCard className="h-4 w-4 mr-1" /> 订阅</TabsTrigger>
-          <TabsTrigger value="team"><Users className="h-4 w-4 mr-1" /> 团队</TabsTrigger>
-          <TabsTrigger value="sync"><Cloud className="h-4 w-4 mr-1" /> 同步</TabsTrigger>
-          <TabsTrigger value="privacy"><Shield className="h-4 w-4 mr-1" /> 隐私与遥测</TabsTrigger>
+          <TabsTrigger value="profile"><User  /> 账号</TabsTrigger>
+          <TabsTrigger value="subscription"><CreditCard  /> 订阅</TabsTrigger>
+          <TabsTrigger value="team"><Users  /> 团队</TabsTrigger>
+          <TabsTrigger value="sync"><Cloud  /> 同步</TabsTrigger>
+          <TabsTrigger value="privacy"><Shield  /> 隐私与遥测</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -90,9 +90,9 @@ export function AccountSettings() {
               <CardTitle>个人资料</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[13px] text-[var(--gw-text-secondary)]">头像 URL</label>
+              <form onSubmit={handleProfileUpdate} >
+                <div >
+                  <label >头像 URL</label>
                   <Input
                     placeholder="https://example.com/avatar.jpg"
                     value={formValues.avatar_url}
@@ -100,23 +100,23 @@ export function AccountSettings() {
                   />
                 </div>
                 <div className={styles.avatarPreview}>
-                  <div className="h-16 w-16 rounded-full bg-[var(--gw-bg-secondary)] flex items-center justify-center overflow-hidden">
+                  <div >
                     {user.avatar_url ? (
-                      <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      <img src={user.avatar_url} alt="Avatar" className="object-cover" />
                     ) : (
-                      <User className="h-8 w-8 text-[var(--gw-text-tertiary)]" />
+                      <User  />
                     )}
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[13px] text-[var(--gw-text-secondary)]">昵称</label>
+                <div >
+                  <label >昵称</label>
                   <Input
                     value={formValues.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormValues((v) => ({ ...v, name: e.target.value }))}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[13px] text-[var(--gw-text-secondary)]">邮箱</label>
+                <div >
+                  <label >邮箱</label>
                   <Input
                     disabled
                     value={formValues.email}
@@ -136,19 +136,19 @@ export function AccountSettings() {
               <CardTitle>当前套餐</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-3">
+              <div className="flex-col">
                 <div className={styles.planInfo}>
-                  <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+                  <h3 >
                     {planLabels[user.plan]}
                     <Badge className={planColors[user.plan]}>{user.plan}</Badge>
                   </h3>
                   {plan && (
                     <>
-                      <p className="text-[13px] text-[var(--gw-text-secondary)]">价格: ¥{plan.price}/月</p>
-                      <p className="text-[13px] text-[var(--gw-text-secondary)]">
+                      <p >价格: ¥{plan.price}/月</p>
+                      <p >
                         Token 限额: {(plan.limit_tokens / 1000).toFixed(0)}K
                       </p>
-                      <p className="text-[13px] text-[var(--gw-text-secondary)]">
+                      <p >
                         功能: {plan.features.join(' / ')}
                       </p>
                     </>
@@ -167,12 +167,12 @@ export function AccountSettings() {
             </CardHeader>
             <CardContent>
               {teams.length === 0 ? (
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-500/30 bg-blue-500/10">
-                  <Users className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+                <div className="border">
+                  <Users className="shrink-0" />
                   <div>
-                    <span className="text-[13px] font-medium text-[var(--gw-text)]">暂无团队</span>
-                    <span className="text-[13px] text-[var(--gw-text-secondary)] block">您可以创建一个团队进行协作</span>
-                    <Button size="sm" className="mt-2">创建团队</Button>
+                    <span >暂无团队</span>
+                    <span >您可以创建一个团队进行协作</span>
+                    <Button size="sm" >创建团队</Button>
                   </div>
                 </div>
               ) : (
@@ -182,7 +182,7 @@ export function AccountSettings() {
                       <CardTitle>{team.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <span className="text-[13px] text-[var(--gw-text-secondary)]">所有者: {team.owner_id}</span>
+                      <span >所有者: {team.owner_id}</span>
                     </CardContent>
                   </Card>
                 ))
@@ -197,16 +197,16 @@ export function AccountSettings() {
               <CardTitle>多端同步</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-500/30 bg-blue-500/10">
-                <Cloud className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+              <div className="border">
+                <Cloud className="shrink-0" />
                 <div>
-                  <span className="text-[13px] font-medium text-[var(--gw-text)]">同步功能</span>
-                  <span className="text-[13px] text-[var(--gw-text-secondary)] block">同步您的设置、工作区元数据和任务元数据到云端</span>
+                  <span >同步功能</span>
+                  <span >同步您的设置、工作区元数据和任务元数据到云端</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-4">
+              <div >
                 <Switch defaultChecked />
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">启用云同步</span>
+                <span >启用云同步</span>
               </div>
             </CardContent>
           </Card>
@@ -218,21 +218,21 @@ export function AccountSettings() {
               <CardTitle>隐私设置</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-500/30 bg-blue-500/10">
-                <Shield className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+              <div className="border">
+                <Shield className="shrink-0" />
                 <div>
-                  <span className="text-[13px] font-medium text-[var(--gw-text)]">遥测数据收集</span>
-                  <span className="text-[13px] text-[var(--gw-text-secondary)] block">我们收集性能数据以改进产品体验，不会收集您的文件内容或个人数据</span>
+                  <span >遥测数据收集</span>
+                  <span >我们收集性能数据以改进产品体验，不会收集您的文件内容或个人数据</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-4 mt-4">
-                <div className="flex items-center gap-2">
+              <div className="flex-col">
+                <div >
                   <Switch defaultChecked />
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">允许性能遥测 (FPS、延迟等)</span>
+                  <span >允许性能遥测 (FPS、延迟等)</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div >
                   <Switch />
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">允许崩溃报告上传</span>
+                  <span >允许崩溃报告上传</span>
                 </div>
               </div>
             </CardContent>
@@ -263,17 +263,17 @@ function LoginPanel({ onLogin }: LoginPanelProps) {
   }
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">邮箱</label>
+    <form onSubmit={handleLogin} >
+      <div >
+        <label >邮箱</label>
         <Input
           placeholder="your@email.com"
           value={loginValues.email}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginValues((v) => ({ ...v, email: e.target.value }))}
         />
       </div>
-      <div className="space-y-1">
-        <label className="text-[13px] text-[var(--gw-text-secondary)]">密码</label>
+      <div >
+        <label >密码</label>
         <Input
           type="password"
           placeholder="密码"

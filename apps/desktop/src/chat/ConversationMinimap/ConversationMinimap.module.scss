@@ -4,9 +4,6 @@
   grid-column: 3;
   grid-row: 2;
   width: var(--minimap-width);
-  background: var(--gw-bg-subtle);
-  border-left: 1px solid var(--gw-border-subtle);
-  border-right: 1px solid var(--gw-border-subtle);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -26,11 +23,9 @@
 }
 
 .user {
-  background: var(--gw-accent);
 }
 
 .assistant {
-  background: var(--gw-text-tertiary);
 }
 
 .error {

@@ -21,13 +21,12 @@ interface AgentState {
 }
 
 const useAgentStore = create<AgentState>((set) => ({
-  currentPlan: null,
+  currentPlan: '',
   currentSteps: [],
   isRunning: false,
   isRecovering: false,
-  recoveryState: null,
-  error: null,
-
+  recoveryState: '',
+  error: '',
   loadPlan: async (taskId) => {
     set({ error: null })
     try {
@@ -90,12 +89,12 @@ const useAgentStore = create<AgentState>((set) => ({
 
   clear: () =>
     set({
-      currentPlan: null,
+      currentPlan: '',
       currentSteps: [],
       isRunning: false,
       isRecovering: false,
-      recoveryState: null,
-      error: null,
+      recoveryState: '',
+      error: '',
     }),
 }))
 

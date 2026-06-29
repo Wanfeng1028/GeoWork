@@ -4,16 +4,12 @@
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   overflow: hidden;
-  background: var(--gw-bg);
-  color: var(--gw-text);
 }
 
 .sidebar {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--gw-border);
-  background: var(--gw-bg-sidebar);
 }
 
 .sidebarHeader {
@@ -23,12 +19,10 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 13px;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .sidebarHeader h3 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 14px;
   line-height: 19px;
   font-weight: 700;
@@ -37,7 +31,6 @@
 .sidebarHeader span {
   display: block;
   margin-top: 2px;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
 }
 
@@ -55,14 +48,11 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-secondary);
   cursor: pointer;
 }
 
 .headerButtons button:hover,
 .tableRow button:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .sidebarContent {
@@ -82,7 +72,6 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-secondary);
   font-size: 13px;
   text-align: left;
   cursor: pointer;
@@ -90,8 +79,6 @@
 
 .treeNode:hover,
 .treeNode.selected {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .treeNode.selected {
@@ -115,7 +102,6 @@
 .treeChildren {
   margin-left: 15px;
   padding-left: 8px;
-  border-left: 1px solid var(--gw-border);
 }
 
 .mainContent {
@@ -133,13 +119,10 @@
   justify-content: space-between;
   gap: 16px;
   padding: 15px 22px;
-  border-bottom: 1px solid var(--gw-border);
-  background: color-mix(in srgb, var(--gw-bg-panel) 72%, transparent);
 }
 
 .pageHeader h2 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 22px;
   line-height: 28px;
   font-weight: 760;
@@ -147,7 +130,6 @@
 
 .pageHeader p {
   margin: 3px 0 0;
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
@@ -158,8 +140,6 @@
   gap: 6px;
   padding: 0 13px;
   border-radius: 999px;
-  background: var(--gw-text);
-  color: var(--gw-bg);
   font-size: 12px;
   font-weight: 650;
   cursor: pointer;
@@ -175,9 +155,7 @@
   display: flex;
   flex-direction: column;
   margin: 14px 22px 22px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
   overflow: hidden;
 }
 
@@ -187,7 +165,6 @@
   align-items: center;
   justify-content: flex-end;
   padding: 0 14px;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .searchBox {
@@ -196,10 +173,7 @@
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  border: 1px solid var(--gw-border);
   border-radius: 999px;
-  background: var(--gw-bg);
-  color: var(--gw-text-tertiary);
   overflow: hidden;
 }
 
@@ -213,7 +187,6 @@
   background: transparent;
   padding: 0 11px 0 0;
   box-shadow: none;
-  color: var(--gw-text);
   font-size: 12px;
 }
 
@@ -238,28 +211,22 @@
 
 .tableHead {
   height: 38px;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   font-weight: 700;
 }
 
 .tableRow {
   min-height: 56px;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-secondary);
   font-size: 12px;
   cursor: pointer;
 }
 
 .tableRow:hover {
-  background: var(--gw-bg-hover);
 }
 
 .tableRow strong {
   min-width: 0;
   overflow: hidden;
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -281,8 +248,6 @@
 }
 
 .sourceBadge {
-  color: var(--gw-accent);
-  background: var(--gw-accent-soft);
 }
 
 .tags {
@@ -293,12 +258,9 @@
 }
 
 .tags span {
-  color: var(--gw-text-secondary);
-  background: var(--gw-bg-soft);
 }
 
 .tableRow time {
-  color: var(--gw-text-tertiary);
 }
 
 .tableRow button {
@@ -311,7 +273,6 @@
 .emptyState {
   display: grid;
   place-items: center;
-  color: var(--gw-text-tertiary);
 }
 
 .loadingSmall {
@@ -334,8 +295,6 @@
 .smallDialog,
 .paperDialog {
   border-radius: 9px;
-  background: var(--gw-popup-bg);
-  color: var(--gw-text);
 }
 
 .detailDialog {
@@ -362,7 +321,6 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 650;
 }
@@ -370,10 +328,7 @@
 .field :global(input),
 .field textarea {
   min-height: 32px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
   padding: 0 10px;
   font-size: 12px;
   outline: 0;

@@ -8,18 +8,6 @@ import {
   Bot,
 } from 'lucide-react'
 import useSettingsStore from '../../../stores/settingsStore'
-import { Input } from '../../ui/input'
-import { Textarea } from '../../ui/textarea'
-import { Switch } from '../../ui/switch'
-import { Separator } from '../../ui/separator'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
-import { cn } from '../../../lib/cn'
 import styles from './SettingsPanel.module.scss'
 import type { PermissionLevel } from '../../../types/permission'
 
@@ -110,7 +98,7 @@ export function SettingsPanel() {
               </div>
             </div>
 
-            <Separator className="my-3" />
+            <Separator  />
 
             <div className={styles.settingRow}>
               <span className={styles.label}>Base URL</span>
@@ -143,7 +131,7 @@ export function SettingsPanel() {
               </div>
             </div>
 
-            <Separator className="my-3" />
+            <Separator  />
 
             <div className={styles.settingRow}>
               <span className={styles.label}>启用缓存</span>
@@ -192,7 +180,7 @@ export function SettingsPanel() {
                   max={20}
                   value={appearance.fontSize}
                   onChange={(e) => updateSetting('appearance.fontSize', Number(e.target.value))}
-                  className="w-full accent-[var(--gw-accent)]"
+                  
                 />
               </div>
             </div>
@@ -272,7 +260,7 @@ export function SettingsPanel() {
                   step={5}
                   value={workspace.autoSaveInterval}
                   onChange={(e) => updateSetting('workspace.autoSaveInterval', Number(e.target.value))}
-                  className="w-full accent-[var(--gw-accent)]"
+                  
                 />
               </div>
             </div>
@@ -333,7 +321,7 @@ export function SettingsPanel() {
                   max={200}
                   value={agent.maxSteps}
                   onChange={(e) => updateSetting('agent.maxSteps', Number(e.target.value))}
-                  className="w-full accent-[var(--gw-accent)]"
+                  
                 />
               </div>
             </div>

@@ -5,11 +5,6 @@
 
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, RotateCw, Square, Maximize, Monitor, Play } from "lucide-react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Badge } from "../../ui/badge";
-import { Empty } from "../../ui/empty";
-import { Spinner } from "../../ui/spinner";
 import styles from "./BrowserPanel.module.scss";
 
 interface BrowserState {
@@ -189,14 +184,14 @@ export function BrowserPanel() {
     <div className={styles.panel}>
       {/* Navigation bar */}
       <div className={styles.navBar}>
-        <div className="flex gap-1">
+        <div >
           <Button
             size="sm"
             variant="ghost"
             disabled
             onClick={handleGoBack}
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft  />
           </Button>
           <Button
             size="sm"
@@ -204,7 +199,7 @@ export function BrowserPanel() {
             disabled
             onClick={handleGoForward}
           >
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight  />
           </Button>
           <Button
             size="sm"
@@ -212,7 +207,7 @@ export function BrowserPanel() {
             loading={state.isNavigating}
             onClick={handleReload}
           >
-            <RotateCw className="h-3.5 w-3.5" />
+            <RotateCw  />
           </Button>
           <Button
             size="sm"
@@ -220,11 +215,11 @@ export function BrowserPanel() {
             disabled={!state.isNavigating}
             onClick={handleStop}
           >
-            <Square className="h-3.5 w-3.5" />
+            <Square  />
           </Button>
         </div>
         <div className={styles.urlBar}>
-          <div className="flex gap-1">
+          <div >
             <Input
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
@@ -237,26 +232,26 @@ export function BrowserPanel() {
               variant="primary"
               onClick={handleNavigate}
             >
-              <Play className="h-3.5 w-3.5 mr-1" />
+              <Play  />
               访问
             </Button>
           </div>
         </div>
-        <div className="flex gap-1">
+        <div >
           <Button
             size="sm"
             variant="ghost"
             title="视图"
             onClick={handleTakeScreenshot}
           >
-            <Monitor className="h-3.5 w-3.5" />
+            <Monitor  />
           </Button>
           <Button
             size="sm"
             variant="ghost"
             title="全屏"
           >
-            <Maximize className="h-3.5 w-3.5" />
+            <Maximize  />
           </Button>
         </div>
       </div>
@@ -266,7 +261,7 @@ export function BrowserPanel() {
         {state.isNavigating ? (
           <div className={styles.loadingOverlay}>
             <Spinner size="lg" />
-            <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)", marginTop: 8 }}>
+            <span style={{ fontSize: 12, marginTop: 8 }}>
               正在加载...
             </span>
           </div>
@@ -274,7 +269,7 @@ export function BrowserPanel() {
           <div className={styles.iframeArea}>
             {/* Placeholder: In production this would show the actual browser content */}
             <div className={styles.screenshotPlaceholder}>
-              <Monitor className="h-12 w-12 text-[var(--gw-text-disabled)]" />
+              <Monitor  />
               <p>页面内容预览</p>
               <span>{state.url}</span>
               <Badge variant="accent">{state.title}</Badge>
@@ -319,7 +314,7 @@ export function BrowserPanel() {
                       <span className={styles.logTime}>{log.timestamp}</span>
                       <Badge
                         variant={log.type === "error" ? "danger" : log.type === "navigation" ? "accent" : "default"}
-                        className="text-[9px] mx-1"
+                        
                       >
                         {log.type}
                       </Badge>
@@ -338,7 +333,7 @@ export function BrowserPanel() {
           className={styles.consoleToggle}
           onClick={handleConsoleToggle}
         >
-          <Square className="h-3 w-3 rotate-45" />
+          <Square  />
           控制台
         </button>
       )}

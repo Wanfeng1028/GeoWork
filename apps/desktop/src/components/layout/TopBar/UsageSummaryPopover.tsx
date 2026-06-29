@@ -1,14 +1,7 @@
-// GeoWork UsageSummaryPopover — ported from QoderWorkCopy usage-panel visual language.
 
 import { useState } from 'react'
 import { User, CreditCard, Server } from 'lucide-react'
 import { useAccountStore } from '../../../stores/accountStore'
-import { Badge } from '../../ui/badge'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../ui/popover'
 import styles from './UsageSummaryPopover.module.scss'
 
 export function UsageSummaryPopover() {
@@ -103,13 +96,7 @@ export function UsageSummaryPopover() {
             {bars.map((state, i) => (
               <span
                 key={i}
-                className={`${styles.usageBar} ${
-                  state === 'active'
-                    ? styles.usageBarActive
-                    : state === 'warn'
-                      ? styles.usageBarWarn
-                      : ''
-                }`}
+                className={`${styles.usageBar} ${ state === 'active' ? styles.usageBarActive : state === 'warn' ? styles.usageBarWarn : '' }`}
               />
             ))}
           </div>

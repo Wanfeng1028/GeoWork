@@ -28,7 +28,6 @@ import { useState } from 'react'
 import useShellStore from '../../../stores/shellStore'
 import useSettingsStore from '../../../stores/settingsStore'
 import { runAction } from '../../../services/actionRegistry'
-import type { GeoWorkTheme, GeoWorkThemeFamily } from '../../../design/types'
 import styles from './LeftSidebar.module.scss'
 
 const THEME_MODES: { value: 'light' | 'dark' | 'auto'; label: string; icon: typeof Sun }[] = [

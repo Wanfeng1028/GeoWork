@@ -3,10 +3,6 @@
 
 import React, { useState } from 'react'
 import { Check, X, AlertTriangle, Save, Eye } from 'lucide-react'
-import { Card, CardContent } from '../ui/card'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { Textarea } from '../ui/textarea'
 import usePermissionStore from '../../stores/permissionStore'
 import type { PermissionRequest, RiskLevel } from '../../types/permission'
 import styles from './PermissionApprovalCard.module.scss'
@@ -71,14 +67,14 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
 
   return (
     <Card className={styles.card}>
-      <CardContent className="p-3 px-4">
+      <CardContent >
         {/* Header */}
         <div className={styles.header}>
-          <div className="flex items-center gap-2">
+          <div >
             <AlertTriangle className={styles.warningIcon} />
             <span className={styles.title}>权限审批请求</span>
           </div>
-          <div className="flex gap-1.5">
+          <div >
             <Badge variant={riskVariantMap[request.riskLevel] || 'warning'}>
               {config.icon} {config.label}
             </Badge>
@@ -87,11 +83,11 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
         </div>
 
         {/* Alert */}
-        <div className="my-2 flex items-start gap-2 rounded-[var(--gw-radius-sm)] border border-[var(--gw-warning)] bg-[var(--gw-warning-soft)] p-3 text-[13px] text-[var(--gw-warning)]">
-          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+        <div className="border">
+          <AlertTriangle className="shrink-0" />
           <div>
-            <div className="font-semibold">{request.title}</div>
-            <div className="mt-1 text-[12px]">{request.description}</div>
+            <div >{request.title}</div>
+            <div >{request.description}</div>
           </div>
         </div>
 
@@ -107,7 +103,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>命令:</span>
               <details className={styles.commandCollapse}>
-                <summary className="cursor-pointer text-[12px] text-[var(--gw-accent)]">查看命令详情</summary>
+                <summary >查看命令详情</summary>
                 <pre className={styles.commandPre}>{request.command}</pre>
               </details>
             </div>
@@ -137,13 +133,13 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
-          <div className={`${styles.actionButtons} flex flex-wrap gap-2`}>
+          <div className={`${styles.actionButtons} flex-wrap`}>
             <Button
               variant="primary"
               onClick={handleApprove}
               loading={loading}
             >
-              <Check className="h-3.5 w-3.5" />
+              <Check  />
               允许一次
             </Button>
             <Button
@@ -158,7 +154,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
               }}
               loading={loading}
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save  />
               始终允许此工作区
             </Button>
             <Button
@@ -166,7 +162,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
               onClick={handleDeny}
               loading={loading}
             >
-              <X className="h-3.5 w-3.5" />
+              <X  />
               拒绝
             </Button>
             <Button
@@ -176,7 +172,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
               }}
               loading={loading}
             >
-              <Eye className="h-3.5 w-3.5" />
+              <Eye  />
               查看详情
             </Button>
           </div>

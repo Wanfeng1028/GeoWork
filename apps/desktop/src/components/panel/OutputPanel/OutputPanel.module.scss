@@ -3,8 +3,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .header {
     min-height: 38px;
@@ -13,8 +11,6 @@
     justify-content: space-between;
     gap: 8px;
     padding: 6px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .headerLeft .channelSelect { width: 120px; }
     .headerRight { display: flex; gap: 5px; }
@@ -22,9 +18,6 @@
     :global(button), :global(button[role='combobox']) {
       height: 28px;
       border-radius: 999px;
-      border-color: var(--gw-border);
-      background: var(--gw-bg-panel);
-      color: var(--gw-text);
       font-size: 12px;
     }
   }
@@ -39,7 +32,6 @@
       display: grid;
       place-items: center;
       height: 100%;
-      color: var(--gw-text-tertiary);
       font-size: 12px;
     }
 
@@ -52,17 +44,10 @@
       gap: 8px;
       padding: 3px 6px;
       border-radius: 5px;
-      color: var(--gw-text-secondary);
       font-size: 12px;
       line-height: 18px;
 
-      &:hover { background: var(--gw-bg-hover); }
-
-      .linePrefix { color: var(--gw-accent); }
-      .lineTime { color: var(--gw-text-tertiary); font-size: 11px; }
-      .lineText { min-width: 0; color: var(--gw-text-secondary); white-space: pre-wrap; word-break: break-all; }
     }
   }
 
-  .empty { margin-top: 35%; color: var(--gw-text-tertiary); }
 }

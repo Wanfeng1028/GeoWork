@@ -1,13 +1,6 @@
 // GeoWork - TaskModeSelector Component
 
 import React from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
 import styles from './TaskModeSelector.module.scss'
 
 export type TaskMode = 'Research' | 'Data' | 'GeoCode' | 'Analysis' | 'Write'

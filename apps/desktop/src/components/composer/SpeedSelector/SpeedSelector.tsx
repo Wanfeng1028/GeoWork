@@ -2,14 +2,13 @@
 
 import React from 'react'
 import { Loader2 } from 'lucide-react'
-import { cn } from '../../../lib/cn'
 import styles from './SpeedSelector.module.scss'
 
 type SpeedLevel = 'fast' | 'balanced' | 'thorough'
 
 const SPEED_OPTIONS: { value: SpeedLevel; label: string; color: string; desc: string }[] = [
-  { value: 'fast', label: '快速', color: 'var(--gw-success)', desc: '最少步骤' },
-  { value: 'balanced', label: '均衡', color: 'var(--gw-info)', desc: '平衡质量' },
+  { value: 'fast', label: '快速', color: '', desc: '最少步骤' },
+  { value: 'balanced', label: '均衡', color: '', desc: '平衡质量' },
   { value: 'thorough', label: '详尽', color: '#722ed1', desc: '最大覆盖' },
 ]
 

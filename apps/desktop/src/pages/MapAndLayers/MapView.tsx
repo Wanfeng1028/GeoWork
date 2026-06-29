@@ -1,6 +1,4 @@
 import React from 'react'
-import { Button } from '../../components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
 import {
   ZoomIn,
   ZoomOut,
@@ -22,22 +20,22 @@ export function MapView() {
   return (
     <div className={styles.container}>
       <div className={styles.toolbar}>
-        <div className="flex gap-1">
+        <div >
           <Button size="sm" variant="outline" onClick={() => setView(center, zoom + 1)} title="放大">
-            <ZoomIn className="w-4 h-4" />
+            <ZoomIn  />
           </Button>
           <Button size="sm" variant="outline" onClick={() => setView(center, zoom - 1)} title="缩小">
-            <ZoomOut className="w-4 h-4" />
+            <ZoomOut  />
           </Button>
           <Button size="sm" variant="outline" onClick={() => setView([104, 35], 4)} title="重置">
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw  />
           </Button>
           <Button size="sm" variant="outline" title="全屏">
-            <Maximize className="w-4 h-4" />
+            <Maximize  />
           </Button>
         </div>
         <Select value={basemap} onValueChange={setBasemap}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -49,11 +47,11 @@ export function MapView() {
       </div>
       <div className={styles.mapArea}>
         <div className={styles.mapStatus}>
-          <span className="text-sm text-muted-foreground">MapLibre GL + Deck.gl 地图视图</span>
-          <span className="text-xs">
+          <span >MapLibre GL + Deck.gl 地图视图</span>
+          <span >
             中心: [{center[0].toFixed(2)}, {center[1].toFixed(2)}] Zoom: {zoom}
           </span>
-          <span className="text-xs">
+          <span >
             底图: {currentBasemap?.name}
           </span>
         </div>

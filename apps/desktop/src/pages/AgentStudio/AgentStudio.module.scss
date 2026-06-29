@@ -6,12 +6,8 @@
   overflow: auto;
   padding: 28px 22px 22px;
   background:
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
-    var(--gw-bg);
-  color: var(--gw-text);
 
   .content {
-    max-width: var(--gw-content-width);
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -33,7 +29,6 @@
 
     h3 {
       margin: 0;
-      color: var(--gw-text);
       font-size: 26px;
       line-height: 34px;
       font-weight: 760;
@@ -41,7 +36,6 @@
 
     p {
       margin: 4px 0 0;
-      color: var(--gw-text-secondary) !important;
       font-size: 13px;
       line-height: 20px;
     }
@@ -49,8 +43,6 @@
     :global(button) {
       height: 30px;
       border-radius: 999px;
-      background: var(--gw-text);
-      color: var(--gw-bg);
       border-color: transparent;
       font-size: 12px;
       font-weight: 650;
@@ -59,21 +51,16 @@
 
   :global([data-slot='card']),
   :global(.rounded-lg) {
-    border: 1px solid var(--gw-border) !important;
     border-radius: 8px !important;
-    background: var(--gw-bg-panel) !important;
-    color: var(--gw-text) !important;
     box-shadow: none !important;
   }
 
   :global([data-slot='card-header']) {
     min-height: 42px;
     padding: 0 12px !important;
-    border-bottom: 1px solid var(--gw-border);
   }
 
   :global([data-slot='card-title']) {
-    color: var(--gw-text);
     font-size: 13px;
     font-weight: 700;
   }
@@ -88,15 +75,12 @@
     display: flex;
     gap: 3px;
     padding: 3px;
-    border: 1px solid var(--gw-border);
     border-radius: 999px;
-    background: var(--gw-bg-soft);
   }
 
   :global([role='tab']) {
     height: 26px;
     border-radius: 999px;
-    color: var(--gw-text-secondary);
     font-size: 12px;
     font-weight: 650;
     padding: 0 10px;
@@ -104,8 +88,6 @@
 
   :global([role='tab']:hover),
   :global([role='tab'][data-state='active']) {
-    background: var(--gw-bg-panel);
-    color: var(--gw-text);
     box-shadow: none;
   }
 
@@ -120,7 +102,6 @@
   :global(.text-muted-foreground),
   :global(.text-sm),
   :global(.text-xs) {
-    color: var(--gw-text-secondary) !important;
   }
 
   :global(button) {
@@ -132,39 +113,31 @@
 
   :global(input),
   :global(textarea) {
-    border-color: var(--gw-border) !important;
     border-radius: 7px !important;
-    background: var(--gw-bg-soft) !important;
-    color: var(--gw-text) !important;
     font-size: 12px !important;
   }
 
   :global(label),
   :global(.font-semibold) {
-    color: var(--gw-text) !important;
   }
 }
 
 .workflowCard {
   min-height: 154px;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease, border-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover) !important;
-    border-color: var(--gw-border-strong) !important;
   }
 
   h4 {
     margin: 0;
-    color: var(--gw-text);
     font-size: 14px;
     line-height: 20px;
     font-weight: 700;
   }
 
   :global(.line-clamp-2) {
-    color: var(--gw-text-secondary) !important;
     font-size: 12px !important;
     line-height: 18px;
   }
@@ -184,8 +157,6 @@
   justify-content: center;
   gap: 6px;
   padding: 9px 0;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-secondary);
   font-size: 12px;
 
   &:last-child {
@@ -194,7 +165,6 @@
 
   :global(.font-medium),
   span:first-child {
-    color: var(--gw-text);
     font-size: 13px;
     font-weight: 650;
   }
@@ -202,18 +172,15 @@
 
 .workflowDetail {
   padding: 0;
-  color: var(--gw-text-secondary);
 
   h5 {
     margin: 0 0 5px;
-    color: var(--gw-text) !important;
     font-size: 12px;
     font-weight: 700;
   }
 
   p,
   span {
-    color: var(--gw-text-secondary) !important;
     font-size: 12px;
     line-height: 18px;
   }

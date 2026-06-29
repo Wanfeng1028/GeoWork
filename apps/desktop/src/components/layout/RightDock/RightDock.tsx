@@ -2,7 +2,6 @@ import {
   ListTodo, FileBox, GitCompare, Layers,
   Terminal, Globe, Radio, ScrollText, AlertTriangle, FileOutput,
 } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { TaskMonitorPanel } from '../../panel/TaskMonitorPanel/TaskMonitorPanel'
 import { ArtifactPanel } from '../../panel/ArtifactPanel/ArtifactPanel'
 import { DiffPanel } from '../../panel/DiffPanel/DiffPanel'

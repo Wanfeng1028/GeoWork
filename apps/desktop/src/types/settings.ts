@@ -1,7 +1,6 @@
 // GeoWork Types - Settings
 
 import type { PermissionLevel } from './permission'
-import type { GeoWorkTheme } from '../design/types'
 
 export interface ModelProvider {
   id: string;

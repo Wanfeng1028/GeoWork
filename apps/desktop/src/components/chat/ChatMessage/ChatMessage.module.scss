@@ -30,13 +30,9 @@
 
 .messageWrapper {
   max-width: 70%;
-  background: var(--gw-bg-card);
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: var(--gw-radius-md);
   padding: 12px 16px;
 
   &.userMessage {
-    background: var(--gw-accent);
     border: none;
     color: #fff;
 
@@ -48,14 +44,10 @@
   }
 
   &.assistantMessage {
-    background: var(--gw-bg-card);
-    border-color: var(--gw-border-subtle);
   }
 
   &.systemMessage {
     max-width: 90%;
-    background: var(--gw-bg-card);
-    border-left: 3px solid var(--gw-warning);
   }
 }
 
@@ -67,12 +59,10 @@
 }
 
 .avatar {
-  background: var(--gw-accent);
   color: #fff;
   font-size: 14px;
 
   &.system {
-    background: var(--gw-warning);
   }
 }
 
@@ -81,7 +71,6 @@
 }
 
 .messageContent {
-  color: var(--gw-text-primary);
   line-height: 1.6;
   word-break: break-word;
   white-space: pre-wrap;
@@ -91,11 +80,9 @@
   margin: 4px 0;
 
   :global(.ant-collapse-header) {
-    color: var(--gw-text-secondary);
   }
 
   :global(.ant-collapse-content-box) {
-    color: var(--gw-text-secondary);
   }
 }
 

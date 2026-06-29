@@ -18,18 +18,6 @@ import {
   runAction,
   commandPaletteActions,
 } from "../../../services/actionRegistry";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Dialog, DialogPortal, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog";
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { toast } from "sonner";
 import styles from "./TopBar.module.scss";
 
@@ -332,15 +320,15 @@ export function TopBar() {
 
       {/* Command palette dialog */}
       <Dialog open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen}>
-        <DialogContent className="max-w-[520px]">
+        <DialogContent >
           <DialogHeader>
             <DialogTitle>命令面板</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto">
+          <div >
             {commandPaletteActions.map((action) => (
               <button
                 key={action.id}
-                className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-[var(--gw-bg-hover)] transition-colors"
+                
                 onClick={() => {
                   setCommandPaletteOpen(false);
                   runAction(
@@ -350,10 +338,10 @@ export function TopBar() {
                 }}
               >
                 <div>
-                  <div className="text-[13px] text-[var(--gw-text)]">
+                  <div >
                     {action.label}
                   </div>
-                  <div className="text-[11px] text-[var(--gw-text-tertiary)]">
+                  <div >
                     {action.status === "dev" ? action.fallbackMessage : "可用"}
                   </div>
                 </div>

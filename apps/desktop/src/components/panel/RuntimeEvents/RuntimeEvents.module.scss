@@ -3,25 +3,22 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--gw-space-8);
+  gap: 8px;
 }
 
 .eventItem {
   display: flex;
   align-items: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-6) var(--gw-space-8);
-  border-bottom: 1px solid var(--gw-border-subtle);
+  gap: 8px;
+  padding: 6px 8px;
 }
 
 .eventMessage {
   flex: 1;
   font-size: 13px;
-  color: var(--gw-text-primary);
 }
 
 .eventTime {
   font-size: 11px;
-  color: var(--gw-text-tertiary);
   font-family: monospace;
 }

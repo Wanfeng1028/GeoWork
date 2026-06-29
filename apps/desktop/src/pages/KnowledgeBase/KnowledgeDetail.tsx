@@ -1,9 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Input } from '../../components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
-import { Empty } from '../../components/ui/empty'
 import { toast } from 'sonner'
 import {
   Trash2,
@@ -117,43 +112,43 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
         <h4 className={styles.detailTitle}>
           {selectedEntry.title}
         </h4>
-        <div className="flex gap-1">
-          <Button size="sm" variant="outline" onClick={handleEdit}><Edit className="w-3 h-3 mr-1" /> 编辑</Button>
-          <Button size="sm" variant="outline" onClick={handleExport}><Download className="w-3 h-3 mr-1" /> 导出</Button>
-          <Button size="sm" variant="outline" onClick={handleCiteInPaper}><FileText className="w-3 h-3 mr-1" /> 在论文中引用</Button>
-          <Button size="sm" variant="outline" className="text-destructive" onClick={handleDelete}><Trash2 className="w-3 h-3 mr-1" /> 删除</Button>
+        <div >
+          <Button size="sm" variant="outline" onClick={handleEdit}><Edit  /> 编辑</Button>
+          <Button size="sm" variant="outline" onClick={handleExport}><Download  /> 导出</Button>
+          <Button size="sm" variant="outline" onClick={handleCiteInPaper}><FileText  /> 在论文中引用</Button>
+          <Button size="sm" variant="outline"  onClick={handleDelete}><Trash2  /> 删除</Button>
         </div>
       </div>
 
       <div className={styles.detailMeta}>
-        <div className="grid grid-cols-2 gap-2 border rounded p-3 text-sm">
-          <div className="flex gap-2">
-            <span className="text-muted-foreground min-w-[80px]">来源</span>
+        <div className="grid-cols-2 border rounded">
+          <div >
+            <span >来源</span>
             <div>
               <Badge variant="secondary" className={sourceTagColor}>{sourceLabel}</Badge>
-              <span className="text-muted-foreground ml-2">{selectedEntry.source}</span>
+              <span >{selectedEntry.source}</span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <span className="text-muted-foreground min-w-[80px]">分类</span>
+          <div >
+            <span >分类</span>
             <span>{selectedEntry.category || '未分类'}</span>
           </div>
-          <div className="flex gap-2">
-            <span className="text-muted-foreground min-w-[80px]">创建时间</span>
+          <div >
+            <span >创建时间</span>
             <span>{new Date(selectedEntry.createdAt).toLocaleString('zh-CN')}</span>
           </div>
-          <div className="flex gap-2">
-            <span className="text-muted-foreground min-w-[80px]">更新时间</span>
+          <div >
+            <span >更新时间</span>
             <span>{new Date(selectedEntry.updatedAt).toLocaleString('zh-CN')}</span>
           </div>
-          <div className="flex gap-2 col-span-2">
-            <span className="text-muted-foreground min-w-[80px]">标签</span>
-            <div className="flex flex-wrap gap-1">
+          <div >
+            <span >标签</span>
+            <div className="flex-wrap">
               {selectedEntry.tags?.map((tag) => (
                 <Badge key={tag} variant="outline">{tag}</Badge>
               ))}
               {(!selectedEntry.tags || selectedEntry.tags.length === 0) && (
-                <span className="text-muted-foreground">暂无标签</span>
+                <span >暂无标签</span>
               )}
             </div>
           </div>
@@ -170,7 +165,7 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
 
       <div className={styles.detailContent}>
         {isLoading ? (
-          <span className="text-sm text-muted-foreground">加载中...</span>
+          <span >加载中...</span>
         ) : (
           <p className={styles.contentText}>
             {highlightedContent}
@@ -180,12 +175,12 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
 
       {/* Edit dialog */}
       <Dialog open={editing} onOpenChange={setEditing}>
-        <DialogContent className="max-w-[700px]">
+        <DialogContent >
           <DialogHeader>
             <DialogTitle>编辑知识条目</DialogTitle>
           </DialogHeader>
           <textarea
-            className="flex min-h-[300px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="border"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
           />

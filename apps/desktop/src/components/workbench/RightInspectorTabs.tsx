@@ -1,5 +1,4 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs'
-import { cn } from '../../lib/cn'
 
 type RightInspectorTabsProps = {
   tabs: { key: string; label: string; content: React.ReactNode }[]
@@ -13,17 +12,17 @@ export function RightInspectorTabs({ tabs, defaultValue, className }: RightInspe
       defaultValue={defaultValue ?? tabs[0]?.key}
       className={cn('flex h-full flex-col', className)}
     >
-      <TabsPrimitive.List className="flex shrink-0 border-b border-[var(--gw-border-soft)] px-2">
+      <TabsPrimitive.List className="shrink-0">
         {tabs.map((tab) => (
           <TabsPrimitive.Trigger
             key={tab.key}
             value={tab.key}
             className={cn(
-              'px-3 py-2 text-[11px] font-medium text-[var(--gw-text-tertiary)]',
+              'px-3 py-2 text-[11px] font-medium text-[""]',
               'border-b-2 border-transparent -mb-px',
               'transition-colors',
-              'data-[state=active]:border-[var(--gw-accent)] data-[state=active]:text-[var(--gw-text)]',
-              'hover:text-[var(--gw-text-secondary)]',
+              'data-[state=active]:border-[""] data-[state=active]:text-[""]',
+              'hover:text-[""]',
             )}
           >
             {tab.label}
@@ -34,7 +33,7 @@ export function RightInspectorTabs({ tabs, defaultValue, className }: RightInspe
         <TabsPrimitive.Content
           key={tab.key}
           value={tab.key}
-          className="flex-1 overflow-hidden focus-visible:outline-none"
+          className="flex-1 focus-visible:outline-none"
         >
           {tab.content}
         </TabsPrimitive.Content>

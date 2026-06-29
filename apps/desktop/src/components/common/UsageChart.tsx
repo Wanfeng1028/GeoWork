@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { Card, CardContent } from '../ui/card'
-import { Button } from '../ui/button'
 import EChartsChart, { type ChartDataItem, type ChartType } from './EChartsChart'
 import styles from './UsageChart.module.scss'
 
@@ -27,7 +25,7 @@ export default function UsageChart() {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <h3>用量统计</h3>
-        <div className="flex gap-1">
+        <div >
           <Button
             size="sm"
             variant={chartType === 'bar' ? 'primary' : 'ghost'}
@@ -45,7 +43,7 @@ export default function UsageChart() {
         </div>
       </div>
       <Card className={styles.chartCard}>
-        <CardContent className="p-2">
+        <CardContent >
           <EChartsChart
             type={chartType}
             data={chartType === 'bar' ? MODE_TASKS : COST_DISTRIBUTION}

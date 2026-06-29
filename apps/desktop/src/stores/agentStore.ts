@@ -43,11 +43,10 @@ interface AgentStudioState {
 export const useAgentStudioStore = create<AgentStudioState>()((set, get) => ({
   workflows: [],
   runs: [],
-  selectedWorkflow: null,
-  selectedRun: null,
+  selectedWorkflow: '',
+  selectedRun: '',
   loading: false,
-  error: null,
-
+  error: '',
   loadWorkflows: async () => {
     set({ loading: true, error: null })
     try {

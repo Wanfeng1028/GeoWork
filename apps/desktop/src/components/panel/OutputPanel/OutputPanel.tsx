@@ -5,9 +5,6 @@
 
 import { useState } from "react";
 import { Play, Square, Trash2, Download } from "lucide-react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../ui/select";
 import styles from "./OutputPanel.module.scss";
 
 type OutputChannel =
@@ -160,13 +157,13 @@ export function OutputPanel() {
   const getColor = (type: OutputLine["type"]) => {
     switch (type) {
       case "error":
-        return "var(--gw-danger)";
+        return null;
       case "warn":
-        return "var(--gw-warning)";
+        return null;
       case "success":
-        return "var(--gw-accent)";
+        return null;
       default:
-        return "var(--gw-text-tertiary)";
+        return null;
     }
   };
 
@@ -216,7 +213,7 @@ export function OutputPanel() {
             variant="ghost"
             onClick={handleClear}
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1" />
+            <Trash2  />
             清除
           </Button>
           <Button
@@ -224,7 +221,7 @@ export function OutputPanel() {
             variant="ghost"
             onClick={handleDownload}
           >
-            <Download className="h-3.5 w-3.5 mr-1" />
+            <Download  />
             导出
           </Button>
         </div>
@@ -240,7 +237,7 @@ export function OutputPanel() {
       >
         {output.length === 0 ? (
           <div className={styles.emptyOutput}>
-            <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无输出</span>
+            <span style={{ fontSize: 12 }}>暂无输出</span>
           </div>
         ) : (
           <div className={styles.outputLines}>

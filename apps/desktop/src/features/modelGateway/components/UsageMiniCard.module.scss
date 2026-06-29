@@ -1,12 +1,8 @@
-/* QoderWork-style model usage card. */
 .card {
   min-width: 196px;
   max-width: 320px;
   padding: 13px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   box-shadow: none;
 }
 
@@ -15,7 +11,6 @@
   gap: 18px;
   padding-bottom: 10px;
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .stat {
@@ -25,7 +20,6 @@
   gap: 2px;
 
   .label {
-    color: var(--gw-text-tertiary);
     font-size: 10px;
     line-height: 14px;
     letter-spacing: 0;
@@ -33,7 +27,6 @@
   }
 
   .value {
-    color: var(--gw-text);
     font-size: 14px;
     line-height: 20px;
     font-weight: 700;
@@ -46,7 +39,6 @@
   .sectionLabel {
     display: block;
     margin-bottom: 7px;
-    color: var(--gw-text-tertiary);
     font-size: 10px;
     line-height: 14px;
     letter-spacing: 0;
@@ -64,7 +56,6 @@
     width: 82px;
     flex-shrink: 0;
     overflow: hidden;
-    color: var(--gw-text-secondary);
     font-size: 11px;
     line-height: 16px;
     text-overflow: ellipsis;
@@ -76,21 +67,17 @@
     height: 5px;
     overflow: hidden;
     border-radius: 999px;
-    background: var(--gw-bg-soft);
 
     .modelBarFill {
       min-width: 2px;
       height: 100%;
       border-radius: 999px;
-      background: var(--gw-accent);
-      box-shadow: 0 0 10px rgba(var(--gw-accent-rgb), .28);
     }
   }
 
   .modelPct {
     width: 38px;
     flex-shrink: 0;
-    color: var(--gw-text-tertiary);
     font-size: 10px;
     line-height: 14px;
     text-align: right;
@@ -112,11 +99,9 @@
   line-height: 16px;
 
   .speedLabel {
-    color: var(--gw-text-secondary);
   }
 
   .speedCount {
-    color: var(--gw-text-tertiary);
-    font-family: var(--gw-font-mono);
+    font-family: monospace;
   }
 }

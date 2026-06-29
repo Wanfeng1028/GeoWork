@@ -1,10 +1,4 @@
 import React from 'react'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Input } from '../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Switch } from '../../components/ui/switch'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip'
 import { toast } from 'sonner'
 import {
   Eye,
@@ -62,10 +56,10 @@ function LayerItem({ layer, depth, expandedIds, toggleExpand }: LayerItemProps) 
         />
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="w-16">
+            <div >
               <input
                 type="range"
-                className="w-full accent-[var(--gw-accent)]"
+                
                 value={layer.opacity}
                 onChange={(e) => setLayerOpacity(layer.id, Number(e.target.value))}
                 min={0}
@@ -76,15 +70,15 @@ function LayerItem({ layer, depth, expandedIds, toggleExpand }: LayerItemProps) 
           </TooltipTrigger>
           <TooltipContent>透明度: {layer.opacity}%</TooltipContent>
         </Tooltip>
-        <div className="flex gap-1">
+        <div >
           <Button size="sm" variant="ghost" onClick={openRename}>
-            <Edit className="w-3.5 h-3.5" />
+            <Edit  />
           </Button>
           <Button size="sm" variant="ghost" onClick={() => { duplicateLayer(layer.id); toast.success('图层已复制') }}>
-            <Copy className="w-3.5 h-3.5" />
+            <Copy  />
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeLayer(layer.id).then(() => toast.success('图层已删除'))}>
-            <Trash2 className="w-3.5 h-3.5" />
+          <Button size="sm" variant="ghost"  onClick={() => removeLayer(layer.id).then(() => toast.success('图层已删除'))}>
+            <Trash2  />
           </Button>
         </div>
       </div>

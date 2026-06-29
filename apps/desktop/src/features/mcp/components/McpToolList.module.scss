@@ -1,21 +1,14 @@
-/* QoderWork-style MCP tool list. */
 .container {
   overflow: hidden;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .header {
   padding: 12px 14px;
-  border-bottom: 1px solid var(--gw-border);
-  background: var(--gw-bg-sidebar);
 }
 
 .title {
   margin: 0;
-  color: var(--gw-text);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
@@ -26,7 +19,6 @@
 
   :global(.ant-collapse-header) {
     padding: 10px 12px !important;
-    color: var(--gw-text) !important;
   }
 
   :global(.ant-collapse-content-box) {
@@ -48,7 +40,6 @@
   justify-content: center;
   gap: 10px;
   padding: 28px;
-  color: var(--gw-text-tertiary);
   font-size: 12px;
 }
 
@@ -57,10 +48,7 @@
   height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--gw-border);
   border-radius: 9px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 18px;
 }
 
@@ -74,8 +62,7 @@
 
 .toolName {
   overflow: hidden;
-  color: var(--gw-text);
-  font-family: var(--gw-font-mono);
+  font-family: monospace;
   font-size: 12px;
   line-height: 17px;
   font-weight: 650;
@@ -87,16 +74,12 @@
   margin: 8px 10px;
 
   :global(.ant-collapse-header) {
-    border: 1px solid var(--gw-border) !important;
     border-radius: 7px !important;
-    background: var(--gw-bg-panel) !important;
   }
 
   :global(.ant-collapse-content) {
-    border: 1px solid var(--gw-border) !important;
     border-top: 0 !important;
     border-radius: 0 0 7px 7px !important;
-    background: var(--gw-bg-panel) !important;
   }
 }
 
@@ -107,7 +90,6 @@
 }
 
 .toolDescription {
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 18px;
 }
@@ -119,9 +101,7 @@
 
 .schemaSection {
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-code);
 }
 
 .schemaTitle,
@@ -129,7 +109,6 @@
 .testResultLabel {
   display: block;
   margin-bottom: 7px;
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 16px;
   font-weight: 650;
@@ -140,8 +119,7 @@
   margin: 0;
   max-height: 200px;
   overflow: auto;
-  color: var(--gw-accent);
-  font-family: var(--gw-font-mono);
+  font-family: monospace;
   font-size: 11px;
   line-height: 17px;
   white-space: pre-wrap;
@@ -149,17 +127,13 @@
 }
 
 .testInput {
-  border: 1px solid var(--gw-border) !important;
   border-radius: 7px !important;
-  background: var(--gw-bg-code) !important;
-  color: var(--gw-text) !important;
-  font-family: var(--gw-font-mono);
+  font-family: monospace;
   font-size: 12px;
 
   :global(.ant-input) {
     border: 0 !important;
     background: transparent !important;
-    color: var(--gw-text) !important;
   }
 }
 

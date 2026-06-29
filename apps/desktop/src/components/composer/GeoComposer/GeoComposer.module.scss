@@ -1,5 +1,3 @@
-// GeoWork GeoComposer — 1:1 port of QoderWorkCopy qw-composer.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.qw-composer, lines 487-602).
 //
 // Light: 668×154, 12px radius, breathing glow, tiny-preview visible.
 // Dark:  610×88,  8px radius, flat (no glow), tiny-preview hidden.
@@ -7,19 +5,14 @@
 .composer {
   position: relative;
   width: 100%;
-  max-width: var(--gw-composer-width);
-  height: var(--gw-composer-height);
-  border: 1px solid var(--gw-border-strong);
-  border-radius: var(--gw-radius-composer);
-  background: var(--gw-bg-composer);
-  box-shadow: var(--gw-shadow-card);
+  max-width: 680px;
+  height: auto;
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  transition: border-color var(--gw-duration-normal) ease;
+  transition: border-color 0.15s ease;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--gw-border-strong) 72%, var(--gw-text-tertiary));
   }
 }
 
@@ -37,7 +30,6 @@
 
 .glow::before {
   box-shadow:
-    0 10px 30px -14px color-mix(in srgb, var(--gw-accent) 32%, transparent),
     -18px 0 42px -24px color-mix(in srgb, #e0bb86 22%, transparent),
     18px 0 42px -24px color-mix(in srgb, #a5d6a7 22%, transparent);
 }
@@ -45,7 +37,6 @@
 .glow::after {
   animation-direction: reverse;
   box-shadow:
-    0 12px 34px -12px color-mix(in srgb, var(--gw-accent) 28%, transparent),
     20px 0 48px -22px color-mix(in srgb, #efd0a3 18%, transparent),
     -20px 0 48px -22px color-mix(in srgb, #8ecf9a 18%, transparent);
 }
@@ -58,16 +49,13 @@
   width: 29px;
   height: 33px;
   border-radius: 3px;
-  border: 1px solid var(--gw-border);
   background: linear-gradient(#f6f5f1, #fffdfa);
   opacity: 0.9;
   pointer-events: none;
   display: grid;
   place-items: center;
-  color: var(--gw-text-tertiary);
 }
 
-// ---- Textarea (absolute-positioned, matches QoderWorkCopy) ----
 .textarea {
   position: absolute;
   left: 14px;
@@ -79,13 +67,11 @@
   outline: 0;
   resize: none;
   background: transparent;
-  color: var(--gw-text);
-  font-family: var(--gw-font-sans);
+  font-family: sans-serif;
   font-size: 15px;
   line-height: 23px;
 
   &::placeholder {
-    color: var(--gw-text-tertiary);
   }
 }
 
@@ -116,15 +102,11 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
-  box-shadow: 0 2px 8px rgba(45, 38, 24, 0.12), inset 0 0 0 1px var(--gw-border);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    transform var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    transform 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
     transform: translateY(-1px);
   }
 
@@ -140,25 +122,19 @@
   align-items: center;
   gap: 6px;
   border: 0;
-  border-radius: var(--gw-radius-pill);
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
   padding: 0 12px;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 }
 
-// Small dot before model name (like QoderWorkCopy .model i)
 .modelDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--gw-accent);
   flex-shrink: 0;
 }
 
@@ -173,8 +149,8 @@
   background: #171914;
   color: #fff;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    transform var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    transform 0.15s ease;
 
   &:hover {
     background: #000;
@@ -194,48 +170,4 @@
 
 // ============================================================
 // Dark-mode: flatten composer (610×88, 8px radius, no glow)
-// Mirrors QoderWorkCopy [data-resolved-theme='dark'] .qw-composer
 // ============================================================
-:global([data-resolved-theme='dark']) .composer {
-  max-width: 610px;
-  height: 88px;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-:global([data-resolved-theme='dark']) .glow::before,
-:global([data-resolved-theme='dark']) .glow::after {
-  display: none;
-}
-
-:global([data-resolved-theme='dark']) .tinyPreview {
-  display: none;
-}
-
-:global([data-resolved-theme='dark']) .textarea {
-  top: 14px;
-  height: 26px;
-  font-size: 13px;
-}
-
-:global([data-resolved-theme='dark']) .composerBar {
-  bottom: 10px;
-}
-
-:global([data-resolved-theme='dark']) .round {
-  width: 27px;
-  height: 27px;
-  background: var(--gw-bg-soft);
-}
-
-:global([data-resolved-theme='dark']) .toolPill {
-  height: 27px;
-  background: var(--gw-bg-soft);
-}
-
-:global([data-resolved-theme='dark']) .send {
-  width: 27px;
-  height: 27px;
-  background: #d7d3c7;
-  color: #171611;
-}

@@ -9,10 +9,10 @@ type StatusBarProps = {
 export function StatusBar({ left, right, className }: StatusBarProps) {
   return (
     <div
-      className={`h-[22px] shrink-0 flex items-center justify-between px-3 bg-[var(--gw-bg-shell)] border-t border-[var(--gw-border-soft)] text-[11px] select-none ${className ?? ''}`}
+      className={`shrink-0 ${className ?? ''}`}
     >
-      <div className="flex items-center gap-3">{left}</div>
-      <div className="flex items-center gap-3">{right}</div>
+      <div >{left}</div>
+      <div >{right}</div>
     </div>
   )
 }

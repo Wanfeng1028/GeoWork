@@ -15,10 +15,10 @@ const levels: { key: PermissionLevel; label: string; icon: string; desc: string;
 ]
 
 const riskColors: Record<string, string> = {
-  low: 'var(--gw-accent)',
-  medium: 'var(--gw-warning)',
-  high: 'var(--gw-danger)',
-  critical: 'var(--gw-danger)',
+  low: '',
+  medium: '',
+  high: '',
+  critical: '',
 }
 
 export const PermissionSelector: React.FC = () => {

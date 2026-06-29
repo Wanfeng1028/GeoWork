@@ -15,7 +15,7 @@ describe('api client', () => {
     await api.usageRecords()
     await api.environmentChecks()
     await api.saveModel({ provider: 'OpenAI', name: 'OpenAI' })
-    await api.saveSettings({ theme: 'dark' })
+    await api.saveSettings({ fontSize: 14 })
     await api.createAutomation({ name: 'Nightly', trigger: 'cron', target: 'Research' })
     await api.resolveSecurityDecision('sec_1', { decision: 'approved' })
 

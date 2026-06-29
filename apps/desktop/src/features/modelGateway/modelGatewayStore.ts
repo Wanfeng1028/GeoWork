@@ -21,7 +21,7 @@ export interface ModelGatewayState {
 const useModelGatewayStore = create<ModelGatewayState>((set) => ({
   providers: [],
   speedProfiles: [],
-  usageSummary: null,
+  usageSummary: '',
   isLoading: false,
   selectedProviderId: '',
   selectedSpeedProfile: '1x',

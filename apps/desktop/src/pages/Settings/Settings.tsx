@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Bot, ChevronRight, FolderOpen, KeyRound, Palette, Settings as SettingsIcon, Shield, SlidersHorizontal } from 'lucide-react'
-import { Input } from '../../components/ui/input'
-import { Switch } from '../../components/ui/switch'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
 import { toast } from 'sonner'
 import useSettingsStore from '../../stores/settingsStore'
-import type { GeoWorkTheme } from '../../design/types'
 import styles from './Settings.module.scss'
 
 const TABS = [
@@ -107,7 +103,7 @@ export function SettingsPage() {
                 </div>
               </Section>
               <Section title="显示" icon={<SlidersHorizontal size={15} />} compact>
-                <SettingRow label="字体大小" description="与 QoderWorkCopy 默认 UI 基准保持一致。"><span className={styles.settingValue}>14px</span></SettingRow>
+                <SettingRow label="字体大小" description="默认字体大小。"><span className={styles.settingValue}>14px</span></SettingRow>
                 <SettingRow label="对话缩略图"><Switch /></SettingRow>
                 <SettingRow label="紧凑侧栏"><Switch /></SettingRow>
               </Section>

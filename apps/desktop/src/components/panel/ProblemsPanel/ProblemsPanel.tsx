@@ -5,9 +5,6 @@
 
 import { useState } from "react";
 import { XCircle, AlertCircle, Info, Filter, Trash2 } from "lucide-react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Badge } from "../../ui/badge";
 import useShellStore from "../../../stores/shellStore";
 import styles from "./ProblemsPanel.module.scss";
 
@@ -77,18 +74,18 @@ export function ProblemsPanel() {
       render: (severity: ProblemSeverity) => {
         const config = {
           error: {
-            color: "var(--gw-danger)",
-            icon: <XCircle className="h-3.5 w-3.5" />,
+            color: '',
+            icon: <XCircle  />,
             label: "错误",
           },
           warning: {
-            color: "var(--gw-warning)",
-            icon: <AlertCircle className="h-3.5 w-3.5" />,
+            color: '',
+            icon: <AlertCircle  />,
             label: "警告",
           },
           info: {
-            color: "var(--gw-info)",
-            icon: <Info className="h-3.5 w-3.5" />,
+            color: '',
+            icon: <Info  />,
             label: "信息",
           },
         };
@@ -101,7 +98,7 @@ export function ProblemsPanel() {
       dataIndex: "source",
       key: "source",
       width: 80,
-      render: (source: string) => <Badge variant="default" className="text-[10px]">{source}</Badge>,
+      render: (source: string) => <Badge variant="default" >{source}</Badge>,
     },
     {
       title: "消息",
@@ -127,14 +124,14 @@ export function ProblemsPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.badges}>
-          <span className="inline-flex items-center gap-1.5 mr-3">
-            <span className="inline-flex items-center justify-center rounded-full bg-[var(--gw-danger)] text-[var(--gw-bg)] text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+          <span >
+            <span >
               {errorCount}
             </span>
             <span className={styles.badgeLabel}>错误</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 mr-3">
-            <span className="inline-flex items-center justify-center rounded-full bg-[var(--gw-warning)] text-[var(--gw-bg)] text-[10px] font-medium px-1.5 py-0.5 min-w-[18px]">
+          <span >
+            <span >
               {warningCount}
             </span>
             <span className={styles.badgeLabel}>警告</span>
@@ -147,22 +144,22 @@ export function ProblemsPanel() {
           size="sm"
           variant="ghost"
         >
-          <Trash2 className="h-3.5 w-3.5 mr-1" />
+          <Trash2  />
           清除
         </Button>
       </div>
 
       <div className={styles.filterSection}>
-        <div className="relative">
-          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
+        <div >
+          <Filter  />
           <Input
             placeholder="搜索问题..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="pl-8"
+            
           />
         </div>
-        <div className="flex gap-1">
+        <div >
           <Button
             size="sm"
             variant={severityFilter === "all" ? "primary" : "secondary"}
@@ -174,7 +171,7 @@ export function ProblemsPanel() {
             size="sm"
             variant={severityFilter === "error" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("error")}
-            className="text-[var(--gw-danger)] border-[var(--gw-danger)]"
+            
           >
             错误
           </Button>
@@ -182,7 +179,7 @@ export function ProblemsPanel() {
             size="sm"
             variant={severityFilter === "warning" ? "primary" : "secondary"}
             onClick={() => setSeverityFilter("warning")}
-            className="text-[var(--gw-warning)] border-[var(--gw-warning)]"
+            
           >
             警告
           </Button>
@@ -190,8 +187,8 @@ export function ProblemsPanel() {
       </div>
 
       <div className={styles.tableContainer}>
-        <div className="flex flex-col text-[12px]">
-          <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] font-medium text-[var(--gw-text-tertiary)] border-b border-[var(--gw-border-soft)]">
+        <div className="flex-col">
+          <div >
             {columns.map((col) => (
               <span key={col.key} style={{ width: col.width, flex: col.width ? undefined : 1 }}>
                 {col.title}
@@ -201,13 +198,13 @@ export function ProblemsPanel() {
           {filteredProblems.map((record) => (
             <div
               key={record.id}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-[var(--gw-bg-hover)] border-b border-[var(--gw-border-soft)]"
+              
             >
               {columns.map((col) => (
                 <span
                   key={col.key}
                   style={{ width: col.width, flex: col.width ? undefined : 1 }}
-                  className="truncate"
+                  
                 >
                   {col.render
                     ? col.render(record[col.dataIndex as keyof Problem] as any, record)

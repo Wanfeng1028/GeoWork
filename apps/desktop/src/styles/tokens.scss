@@ -1,9 +1,0 @@
-// GeoWork desktop design tokens.
-//
-// NOTE: This file is intentionally kept as a no-op. The canonical token +
-// theme system now lives in `src/design/tokens.css` and `src/design/themes.css`
-// (imported via `src/styles/app.css`). These were the legacy SCSS tokens with a
-// conflicting warm-tan palette (#d9ad7c accent) that have been superseded by the
-// QoderWorkCopy-ported green/neutral system. Kept here only so any lingering
-// `@use 'styles/tokens'` references don't break the build; all real tokens come
-// from the CSS files above.

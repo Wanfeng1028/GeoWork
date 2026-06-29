@@ -42,14 +42,13 @@ const DEFAULT_BANDS = { red: 'B4', nir: 'B8' }
 const DEFAULT_THRESHOLDS = { min: -1.0, max: 1.0 }
 
 export const useNdvStore = create<NdvState>()((set, get) => ({
-  projectId: null,
-  dataSource: null,
+  projectId: '',
+  dataSource: '',
   bands: { ...DEFAULT_BANDS },
   thresholds: { ...DEFAULT_THRESHOLDS },
   results: [],
   isAnalyzing: false,
-  error: null,
-
+  error: '',
   setProjectId: (id) => set({ projectId: id }),
 
   setDataSource: (source) => set({ dataSource: source }),

@@ -21,8 +21,7 @@ export const useProjectStore = create<ProjectState>()(
   persist(
     (set) => ({
       projects: [],
-      currentProject: null,
-
+      currentProject: '',
       setProjects: (projects) => set({ projects }),
 
       setCurrentProject: (project) => set({ currentProject: project }),

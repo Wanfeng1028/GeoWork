@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Spinner } from '../../components/ui/spinner'
-import { Empty } from '../../components/ui/empty'
 import { Download, FileImage, FileText } from 'lucide-react'
 import type { FileNode } from '../../services/fileService'
 import { fileService } from '../../services/fileService'
@@ -99,7 +94,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (loading) {
     return (
       <div className={styles.previewLoading}>
-        <Spinner className="w-8 h-8" />
+        <Spinner  />
       </div>
     )
   }
@@ -125,7 +120,7 @@ export function FilePreview({ file }: FilePreviewProps) {
         </div>
         {file.type === 'file' && (
           <Button size="sm" variant="outline" onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-1" /> 下载
+            <Download  /> 下载
           </Button>
         )}
       </div>
@@ -140,13 +135,13 @@ export function FilePreview({ file }: FilePreviewProps) {
         {!imageSrc && textContent === null && (
           <div className={styles.previewBinary}>
             <Empty description="该文件类型暂不支持预览" />
-            <div className="grid grid-cols-1 gap-1 border rounded p-3 mt-4 text-sm">
-              <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">文件名</span><span>{file.name}</span></div>
-              <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">类型</span><span>{file.type}</span></div>
-              {file.mimeType && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">MIME</span><span>{file.mimeType}</span></div>}
-              {file.size !== undefined && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">大小</span><span>{formatFileSize(file.size)}</span></div>}
-              {file.modifiedAt && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">修改时间</span><span>{new Date(file.modifiedAt).toLocaleString()}</span></div>}
-              {file.path && <div className="flex gap-2"><span className="text-muted-foreground min-w-[80px]">路径</span><span>{file.path}</span></div>}
+            <div className="grid-cols-1 border rounded">
+              <div ><span >文件名</span><span>{file.name}</span></div>
+              <div ><span >类型</span><span>{file.type}</span></div>
+              {file.mimeType && <div ><span >MIME</span><span>{file.mimeType}</span></div>}
+              {file.size !== undefined && <div ><span >大小</span><span>{formatFileSize(file.size)}</span></div>}
+              {file.modifiedAt && <div ><span >修改时间</span><span>{new Date(file.modifiedAt).toLocaleString()}</span></div>}
+              {file.path && <div ><span >路径</span><span>{file.path}</span></div>}
             </div>
           </div>
         )}

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Trash2, Plus, X } from 'lucide-react'
-import { Button } from '../../ui/button'
 import styles from './TerminalPanel.module.scss'
 
 interface HistoryLine {

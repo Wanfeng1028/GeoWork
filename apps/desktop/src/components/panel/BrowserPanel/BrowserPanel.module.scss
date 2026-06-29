@@ -3,8 +3,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .navBar {
     min-height: 40px;
@@ -12,8 +10,6 @@
     align-items: center;
     gap: 7px;
     padding: 6px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .urlBar { flex: 1; }
 
@@ -21,19 +17,11 @@
       width: 28px;
       height: 28px;
       border-radius: 6px;
-      border-color: var(--gw-border);
-      background: var(--gw-bg-panel);
-      color: var(--gw-text-secondary);
     }
-
-    :global(button:hover) { background: var(--gw-bg-hover); color: var(--gw-text); }
 
     :global(input) {
       height: 30px;
-      border-color: var(--gw-border);
       border-radius: 999px;
-      background: var(--gw-bg-panel);
-      color: var(--gw-text);
       font-size: 12px;
     }
   }
@@ -42,13 +30,11 @@
     flex: 1;
     overflow: auto;
     position: relative;
-    background: radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px, var(--gw-bg);
 
     .loadingOverlay {
       display: grid;
       place-items: center;
       height: 100%;
-      color: var(--gw-text-tertiary);
     }
 
     .iframeArea {
@@ -61,11 +47,8 @@
         place-items: center;
         gap: 10px;
         padding: 22px;
-        color: var(--gw-text-tertiary);
         text-align: center;
 
-        p { margin: 0; color: var(--gw-text-secondary); font-size: 13px; }
-        .viewportSize { color: var(--gw-text-tertiary); font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
       }
     }
 
@@ -76,7 +59,6 @@
     height: 160px;
     display: flex;
     flex-direction: column;
-    border-top: 1px solid var(--gw-border);
     background: #151512;
 
     .consoleHeader {
@@ -121,12 +103,8 @@
     gap: 5px;
     padding: 0 10px;
     border: 0;
-    border-top: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
-    color: var(--gw-text-secondary);
     cursor: pointer;
     font-size: 11px;
 
-    &:hover { background: var(--gw-bg-hover); color: var(--gw-text); }
   }
 }

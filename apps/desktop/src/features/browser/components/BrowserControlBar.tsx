@@ -1,9 +1,6 @@
 // GeoWork Browser Control Bar
 // Toolbar for screenshot, extract, send-to-agent, close session
 
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
 import { Camera, FileText, Zap, X, CheckCircle, Square } from 'lucide-react'
 import useBrowserStore from '../browserStore'
 import styles from './BrowserControlBar.module.scss'
@@ -48,19 +45,19 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
     <div className={`${styles.container} ${className}`}>
       <div className={styles.status}>
         {isRunning ? (
-          <Badge variant="default" className="bg-green-500/20 text-green-400">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge variant="default" >
+            <CheckCircle  />
             Active
           </Badge>
         ) : (
           <Badge variant="secondary">
-            <Square className="h-3 w-3 mr-1" />
+            <Square  />
             Closed
           </Badge>
         )}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div >
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -69,7 +66,7 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
               disabled={!isRunning || isLoading}
               onClick={handleTakeScreenshot}
             >
-              <Camera className="h-4 w-4" />
+              <Camera  />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Screenshot</TooltipContent>
@@ -83,7 +80,7 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
               disabled={!isRunning || isLoading}
               onClick={handleExtractText}
             >
-              <FileText className="h-4 w-4" />
+              <FileText  />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Extract Text</TooltipContent>
@@ -97,7 +94,7 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
               disabled={!isRunning || isLoading}
               onClick={handleAddToContext}
             >
-              <Zap className="h-4 w-4" />
+              <Zap  />
               <span className={styles.toolbarLabel}>Agent</span>
             </Button>
           </TooltipTrigger>
@@ -114,7 +111,7 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
               disabled={!isRunning}
               onClick={handleCloseSession}
             >
-              <X className="h-4 w-4" />
+              <X  />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Close Session</TooltipContent>

@@ -9,16 +9,11 @@ import {
   MinusCircle,
 } from 'lucide-react'
 import useTaskStore from '../../../stores/taskStore'
-import { Badge } from '../../ui/badge'
-import { Button } from '../../ui/button'
-import { Spinner } from '../../ui/spinner'
-import { Empty } from '../../ui/empty'
-import { Separator } from '../../ui/separator'
 import styles from './TaskMonitorPanel.module.scss'
 
 const STATUS_CONFIG: Record<string, { variant: 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'info'; label: string; icon: React.ReactNode }> = {
   pending: { variant: 'default', label: '待处理', icon: <span className={styles.dot} /> },
-  running: { variant: 'info', label: '运行中', icon: <Loader2 size={12} className="animate-spin" /> },
+  running: { variant: 'info', label: '运行中', icon: <Loader2 size={12}  /> },
   completed: { variant: 'success', label: '已完成', icon: <CheckCircle size={12} /> },
   failed: { variant: 'danger', label: '失败', icon: <XCircle size={12} /> },
   cancelled: { variant: 'default', label: '已取消', icon: <MinusCircle size={12} /> },
@@ -51,7 +46,7 @@ export function TaskMonitorPanel() {
       <div className={styles.panel}>
         <div className={styles.empty}>
           <Spinner size="md" />
-          <span className="text-[12px] text-[var(--gw-text-tertiary)] ml-2">加载中...</span>
+          <span >加载中...</span>
         </div>
       </div>
     )
@@ -84,7 +79,7 @@ export function TaskMonitorPanel() {
     <div className={styles.panel}>
       {currentTask.error && (
         <div className={styles.errorAlert}>
-          <XCircle size={14} className="text-[var(--gw-danger)]" />
+          <XCircle size={14}  />
           <span>{currentTask.error}</span>
         </div>
       )}
@@ -107,13 +102,9 @@ export function TaskMonitorPanel() {
         </div>
 
         <div className={styles.progress}>
-          <div className="h-1.5 w-full rounded-full bg-[var(--gw-bg-active)] overflow-hidden">
+          <div >
             <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                currentTask.status === 'failed' || currentTask.status === 'cancelled'
-                  ? 'bg-[var(--gw-danger)]'
-                  : 'bg-[var(--gw-accent)]'
-              }`}
+              className={`${ currentTask.status === 'failed' || currentTask.status === 'cancelled' ? 'bg-[""]' : 'bg-[""]' }`}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -125,11 +116,11 @@ export function TaskMonitorPanel() {
           任务步骤 ({completedCount}/{totalCount} 完成)
         </h4>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex-col">
           {allSteps.map((step) => (
             <div key={step.id} className={styles.stepItem}>
               <Badge variant={STEP_STATUS_VARIANT[step.status] || 'default'}>
-                {step.status === 'running' && <Loader2 size={10} className="animate-spin" />}
+                {step.status === 'running' && <Loader2 size={10}  />}
                 {step.status}
               </Badge>
               <span className={styles.stepTitle}>{step.title}</span>
@@ -161,13 +152,13 @@ export function TaskMonitorPanel() {
       {events.length > 0 && (
         <div className={styles.eventsSection}>
           <h4 className={styles.sectionTitle}>最近事件</h4>
-          <div className="flex flex-col gap-1">
+          <div className="flex-col">
             {events.slice(-10).reverse().map(event => (
-              <div key={event.id} className="flex items-start gap-2 py-1">
+              <div key={event.id} >
                 <Badge variant={event.type.includes('error') ? 'danger' : 'info'}>
                   {event.type}
                 </Badge>
-                <span className="text-[12px] text-[var(--gw-text-secondary)]">{event.message}</span>
+                <span >{event.message}</span>
               </div>
             ))}
           </div>

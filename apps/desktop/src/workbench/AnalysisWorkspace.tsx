@@ -1,7 +1,6 @@
 // GeoWork Desktop - Analysis Mode Workspace
 
 import { BarChart3 } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import styles from './AnalysisWorkspace.module.scss'
 
 export default function AnalysisWorkspace() {
@@ -9,8 +8,8 @@ export default function AnalysisWorkspace() {
     <div className={styles.analysisWorkspace}>
       <div className={styles.content}>
         <div className={styles.header}>
-          <h2 className="text-lg font-semibold flex items-center gap-2"><BarChart3 className="h-5 w-5" /> 分析模式</h2>
-          <span className="text-sm text-(--gw-text-tertiary)">栅格/矢量分析、NDVI 计算和变化检测</span>
+          <h2 ><BarChart3  /> 分析模式</h2>
+          <span >栅格/矢量分析、NDVI 计算和变化检测</span>
         </div>
 
         <div className={styles.panels}>

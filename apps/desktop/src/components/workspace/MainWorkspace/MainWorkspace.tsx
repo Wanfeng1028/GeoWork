@@ -13,14 +13,14 @@ import { WorkbenchHome } from './WorkbenchHome'
 
 function ComingSoonView({ title }: { title: string }) {
   return (
-    <div className="flex-1 min-h-0 flex items-center justify-center p-6 bg-[var(--gw-bg-canvas)]">
-      <div className="max-w-[400px] w-full p-8 rounded-[9px] border border-[var(--gw-border)] bg-[var(--gw-bg-panel)] shadow-[var(--gw-shadow-card)] text-center">
-        <div className="flex justify-center mb-4">
+    <div className="flex-1">
+      <div className="border">
+        <div >
           <GeoMascot size="lg" state="thinking" />
         </div>
         <DevBadge mode="short" />
-        <h2 className="text-[18px] font-semibold text-[var(--gw-text)] mt-3 mb-2">{title}</h2>
-        <p className="text-[13px] text-[var(--gw-text-tertiary)] leading-relaxed">
+        <h2 >{title}</h2>
+        <p >
           该能力仍在开发中。入口已保留，后续会接入真实功能。
         </p>
       </div>
@@ -38,19 +38,19 @@ function ImChannelsView() {
   ]
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto bg-[var(--gw-bg-canvas)] text-[var(--gw-text)]">
-      <div className="mx-auto mt-[52px] w-[545px] max-w-[calc(100%-32px)] text-center">
-        <div className="mb-7 flex justify-center"><GeoMascot size="xl" state="idle" /></div>
-        <h1 className="m-0 text-[24px] font-semibold leading-8">IM 频道</h1>
-        <p className="mx-auto mt-2 mb-9 w-[430px] max-w-full text-[13px] leading-5 text-[var(--gw-text-secondary)]">
+    <div className="flex-1">
+      <div >
+        <div ><GeoMascot size="xl" state="idle" /></div>
+        <h1 >IM 频道</h1>
+        <p >
           配置 IM 频道，让 QoderWork 接收来自钉钉、飞书等平台的消息。频道配置信息仅存储在本地，不会上传到云端。
         </p>
-        <div className="flex flex-col gap-3 text-left">
+        <div className="flex-col">
           {items.map(([name, desc]) => (
-            <div key={name} className="grid min-h-[58px] grid-cols-[34px_minmax(0,1fr)_54px] items-center gap-3 rounded-[7px] border border-[var(--gw-border)] bg-[var(--gw-bg-panel)] px-4">
-              <div className="grid h-[28px] w-[28px] place-items-center rounded-[6px] bg-[var(--gw-bg-soft)] text-[12px] font-bold text-[var(--gw-accent)]">{name.slice(0, 1)}</div>
-              <div className="min-w-0"><strong className="block text-[13px] leading-[18px]">{name}</strong><span className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-4 text-[var(--gw-text-secondary)]">{desc}</span></div>
-              <button className="h-[28px] rounded-full bg-[var(--gw-bg-soft)] px-3 text-[12px] font-semibold text-[var(--gw-text)] hover:bg-[var(--gw-bg-hover)]">配置</button>
+            <div key={name} className="grid-cols-[34px_minmax(0,1fr)_54px] border">
+              <div >{name.slice(0, 1)}</div>
+              <div ><strong >{name}</strong><span >{desc}</span></div>
+              <button >配置</button>
             </div>
           ))}
         </div>
@@ -102,7 +102,7 @@ export function MainWorkspace() {
   }
 
   return (
-    <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-[var(--gw-bg)]">
+    <main className="flex-1 flex-col">
       {renderContent()}
     </main>
   )

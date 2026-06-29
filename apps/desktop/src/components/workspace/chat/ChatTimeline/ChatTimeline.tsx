@@ -15,10 +15,6 @@ import {
 import useChatStore from "../../../../stores/chatStore";
 import ToolCallBlock from "../../../chat/ToolCallBlock/ToolCallBlock";
 import ApprovalCard from "../../../chat/ApprovalCard/ApprovalCard";
-import { Spinner } from "../../../ui/spinner";
-import { Empty } from "../../../ui/empty";
-import { Badge } from "../../../ui/badge";
-import { Separator } from "../../../ui/separator";
 import styles from "./ChatTimeline.module.scss";
 
 export function ChatTimeline() {
@@ -55,9 +51,7 @@ export function ChatTimeline() {
       return (
         <div
           key={msg.id}
-          className={`${styles.toolCallContainer} ${
-            isUser ? styles.userToolCall : ""
-          }`}
+          className={`${styles.toolCallContainer} ${ isUser ? styles.userToolCall : "" }`}
         >
           <ToolCallBlock
             event={msg.toolCall}
@@ -93,17 +87,15 @@ export function ChatTimeline() {
     return (
       <div
         key={msg.id}
-        className={`${styles.messageRow} ${
-          isUser ? styles.userMessage : isSystem ? styles.systemMessage : ""
-        }`}
+        className={`${styles.messageRow} ${ isUser ? styles.userMessage : isSystem ? styles.systemMessage : "" }`}
       >
-        <div className={`${styles.messageAvatar} flex h-7 w-7 items-center justify-center rounded-full bg-[var(--gw-bg-active)]`}>
+        <div className={`${styles.messageAvatar}`}>
           {isUser ? (
-            <User className="h-3.5 w-3.5" />
+            <User  />
           ) : isSystem ? (
-            <AlertCircle className="h-3.5 w-3.5" />
+            <AlertCircle  />
           ) : (
-            <Bot className="h-3.5 w-3.5" />
+            <Bot  />
           )}
         </div>
         <div className={styles.messageContent}>
@@ -174,16 +166,16 @@ function DeliveryChecklist({ delivery }: { delivery: any }) {
   return (
     <div className={styles.deliveryChecklist}>
       <div className={styles.deliveryHeader}>
-        <CheckCircle style={{ color: "var(--gw-accent)", fontSize: 14 }} className="h-4 w-4" />
+        <CheckCircle style={{ fontSize: 14 }}  />
         <span className={styles.deliveryTitle}>交付物清单</span>
         <Badge variant="success">任务完成</Badge>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex-col">
         {categories
           .filter((cat) => cat.items && cat.items.length > 0)
           .map((cat) => (
             <details key={cat.label}>
-              <summary className="cursor-pointer py-1">
+              <summary >
                 <span className={styles.deliveryCategory}>
                   {cat.label} ({cat.items.length})
                 </span>

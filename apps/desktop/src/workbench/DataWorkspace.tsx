@@ -1,7 +1,6 @@
 // GeoWork Desktop - Data Mode Workspace
 
 import { Database } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import styles from './DataWorkspace.module.scss'
 
 export default function DataWorkspace() {
@@ -9,8 +8,8 @@ export default function DataWorkspace() {
     <div className={styles.dataWorkspace}>
       <div className={styles.content}>
         <div className={styles.header}>
-          <h2 className="text-lg font-semibold flex items-center gap-2"><Database className="h-5 w-5" /> 数据模式</h2>
-          <span className="text-sm text-[var(--gw-text-tertiary)]">数据集管理、注册和元数据浏览</span>
+          <h2 ><Database  /> 数据模式</h2>
+          <span >数据集管理、注册和元数据浏览</span>
         </div>
 
         <div className={styles.panels}>

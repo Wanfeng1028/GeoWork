@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: var(--gw-text);
 }
 
 .empty {
@@ -20,16 +19,12 @@
   height: 38px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--gw-border);
   border-radius: 9px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-tertiary);
   font-size: 18px;
 }
 
 .emptyText {
   margin: 0;
-  color: var(--gw-text-secondary);
   font-size: 13px;
   line-height: 18px;
   font-weight: 650;
@@ -37,7 +32,6 @@
 
 .emptyHint {
   margin: 0;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   line-height: 16px;
 }
@@ -50,7 +44,6 @@
 }
 
 .diffLabel {
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 16px;
   font-weight: 650;
@@ -63,14 +56,11 @@
 
   :global(.ant-select-selector) {
     height: 28px !important;
-    border-color: var(--gw-border) !important;
     border-radius: 999px !important;
-    background: var(--gw-bg-panel) !important;
     box-shadow: none !important;
   }
 
   :global(.ant-select-selection-item) {
-    color: var(--gw-text) !important;
     font-size: 12px;
   }
 }
@@ -82,44 +72,31 @@
   justify-content: space-between;
   gap: 10px;
   padding: 6px 8px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
 }
 
 .actionCount {
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
 .tableWrapper {
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
 }
 
 .diffTable {
   :global(.ant-table) {
-    background: var(--gw-bg-panel) !important;
-    color: var(--gw-text) !important;
     font-size: 12px !important;
   }
 
   :global(.ant-table-thead > tr > th) {
     padding: 7px 8px !important;
-    border-bottom: 1px solid var(--gw-border) !important;
-    background: var(--gw-bg-sidebar) !important;
-    color: var(--gw-text-tertiary) !important;
     font-size: 11px !important;
   }
 
   :global(.ant-table-tbody > tr > td) {
     padding: 6px 8px !important;
-    border-bottom: 1px solid var(--gw-border-soft) !important;
-    background: var(--gw-bg-panel) !important;
-    color: var(--gw-text-secondary) !important;
   }
 }
 
@@ -128,8 +105,7 @@
   max-width: 150px;
   display: inline-block;
   overflow: hidden;
-  color: var(--gw-text);
-  font-family: var(--gw-font-mono);
+  font-family: monospace;
   font-size: 11px;
   line-height: 16px;
   text-overflow: ellipsis;
@@ -137,11 +113,9 @@
 }
 
 .acceptBtn :global(.ant-btn-icon) {
-  color: var(--gw-accent);
 }
 
 .rejectBtn :global(.ant-btn-icon) {
-  color: var(--gw-danger);
 }
 
 .detailSection {
@@ -152,7 +126,6 @@
 
 .sectionTitle {
   margin: 0;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 17px;
   font-weight: 650;
@@ -167,7 +140,6 @@
 .diffCollapse {
   :global(.ant-collapse-header) {
     padding: 5px 0 !important;
-    color: var(--gw-text) !important;
   }
 
   :global(.ant-collapse-content-box) {
@@ -195,10 +167,8 @@
   overflow: auto;
   margin: 0;
   padding: 8px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-code);
-  font-family: var(--gw-font-mono);
+  font-family: monospace;
   font-size: 11px;
   line-height: 17px;
   white-space: pre-wrap;
@@ -206,9 +176,7 @@
 }
 
 .oldContent pre {
-  color: var(--gw-danger);
 }
 
 .newContent pre {
-  color: var(--gw-accent);
 }

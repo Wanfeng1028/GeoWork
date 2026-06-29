@@ -1,8 +1,9 @@
 // GeoWork Global Styles
-
-:root {
-  font-family: var(--gw-font-sans);
-}
+//
+// Phase 1 cleanup: the legacy `--gw-*` design token system has been removed.
+// This file now only carries layout primitives (box-sizing, body margins,
+// scroll handling). Visual tokens (colors, fonts, focus outline) are deferred
+// to the upcoming Ant Design integration and intentionally omitted here.
 
 * {
   box-sizing: border-box;
@@ -11,8 +12,6 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--gw-bg);
-  color: var(--gw-text);
   overflow: hidden;
 }
 
@@ -35,27 +34,10 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gw-border-strong);
   border-radius: 999px;
-
-  &:hover {
-    background: var(--gw-text-tertiary);
-  }
 }
 
-// === Selection ===
-::selection {
-  background: rgba(var(--gw-accent-rgb), 0.3);
-  color: var(--gw-text);
-}
-
-// === Focus ===
-:focus-visible {
-  outline: 2px solid var(--gw-accent);
-  outline-offset: 2px;
-}
-
-// === Animations ===
+// === Animations (layout-only, no color) ===
 @keyframes gw-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -74,14 +56,5 @@ select {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes gw-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(var(--gw-accent-rgb), 0.15);
-  }
-  50% {
-    box-shadow: 0 0 38px rgba(var(--gw-accent-rgb), 0.25);
   }
 }

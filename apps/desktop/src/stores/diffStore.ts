@@ -5,8 +5,8 @@ import type { Diff, DiffState } from '../types/diff'
 
 const useDiffStore = create<DiffState>((set, get) => ({
   diffs: [],
-  currentDiff: null,
-  activeDiffId: null,
+  currentDiff: '',
+  activeDiffId: '',
   acceptedFiles: new Set<string>(),
   rejectedFiles: new Set<string>(),
 

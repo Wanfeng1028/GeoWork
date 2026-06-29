@@ -5,10 +5,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Play, CheckCircle, XCircle, Loader2, Filter, ChevronRight } from "lucide-react";
-import { Button } from "../../../ui/button";
-import { Badge } from "../../../ui/badge";
-import { Empty } from "../../../ui/empty";
-import { Input } from "../../../ui/input";
 import useTaskStore from "../../../../stores/taskStore";
 import useChatStore from "../../../../stores/chatStore";
 import sseClient from "../../../../services/sseClient";
@@ -19,58 +15,58 @@ const EVENT_TYPE_CONFIG: Record<
   { icon: React.ReactNode; color: string; label: string }
 > = {
   "task.started": {
-    icon: <Play className="h-3.5 w-3.5" />,
-    color: "var(--gw-info)",
+    icon: <Play  />,
+    color: '',
     label: "任务启动",
   },
   "task.progress": {
-    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    color: "var(--gw-accent)",
+    icon: <Loader2  />,
+    color: '',
     label: "任务进度",
   },
   "task.completed": {
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-accent)",
+    icon: <CheckCircle  />,
+    color: '',
     label: "任务完成",
   },
   "task.failed": {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-danger)",
+    icon: <XCircle  />,
+    color: '',
     label: "任务失败",
   },
   "task.cancelled": {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-warning)",
+    icon: <XCircle  />,
+    color: '',
     label: "任务取消",
   },
   "tool.call.started": {
-    icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    color: "var(--gw-info)",
+    icon: <Loader2  />,
+    color: '',
     label: "工具调用",
   },
   "tool.call.completed": {
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-accent)",
+    icon: <CheckCircle  />,
+    color: '',
     label: "工具完成",
   },
   "tool.call.failed": {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-danger)",
+    icon: <XCircle  />,
+    color: '',
     label: "工具失败",
   },
   "permission.request": {
-    icon: <Filter className="h-3.5 w-3.5" />,
-    color: "var(--gw-warning)",
+    icon: <Filter  />,
+    color: '',
     label: "权限请求",
   },
   "permission.approved": {
-    icon: <CheckCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-accent)",
+    icon: <CheckCircle  />,
+    color: '',
     label: "权限通过",
   },
   "permission.denied": {
-    icon: <XCircle className="h-3.5 w-3.5" />,
-    color: "var(--gw-danger)",
+    icon: <XCircle  />,
+    color: '',
     label: "权限拒绝",
   },
 };
@@ -124,10 +120,10 @@ export function RuntimeEvents() {
         className={styles.collapsedBtn}
         onClick={() => setCollapsed(false)}
       >
-        <span className="relative inline-flex">
+        <span >
           <span className={styles.collapsedIcon}>&#9889;</span>
-          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full text-[9px] font-medium px-1 py-0 min-w-[14px]"
-            style={{ backgroundColor: connected ? "var(--gw-accent)" : "var(--gw-text-disabled)", color: "var(--gw-bg)" }}
+          <span className="-top-1 -right-1"
+            
           >
             {events.length}
           </span>
@@ -141,10 +137,10 @@ export function RuntimeEvents() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span className={styles.title}>&#9889; 运行时事件</span>
-          <span className="inline-flex items-center gap-1.5 text-[11px]">
+          <span >
             <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: connected ? "var(--gw-accent)" : "var(--gw-text-disabled)" }}
+              
+              
             />
             {connected ? "已连接" : "未连接"}
           </span>
@@ -168,13 +164,13 @@ export function RuntimeEvents() {
 
       {/* Filter section */}
       <div className={styles.filterSection}>
-        <div className="relative">
-          <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
+        <div >
+          <Filter  />
           <Input
             placeholder="搜索事件消息..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="pl-8"
+            
           />
         </div>
         <div className={styles.typeFilters}>
@@ -190,12 +186,8 @@ export function RuntimeEvents() {
             return (
               <span
                 key={type}
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium cursor-pointer transition-opacity"
-                style={{
-                  backgroundColor: config?.color || "var(--gw-text-tertiary)",
-                  color: "var(--gw-bg)",
-                  opacity: eventTypeFilter === type ? 1 : 0.6,
-                }}
+                
+                style={{ opacity: eventTypeFilter === type ? 1 : 0.6 }}
                 onClick={() =>
                   setEventTypeFilter(eventTypeFilter === type ? "all" : type)
                 }
@@ -221,19 +213,15 @@ export function RuntimeEvents() {
           <div className={styles.eventScrollArea}>
             {filteredEvents.map((evt) => {
               const config = EVENT_TYPE_CONFIG[evt.type] || {
-                icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-                color: "var(--gw-text-tertiary)",
+                icon: <Loader2  />,
+                color: '',
                 label: evt.type,
               };
 
               return (
                 <div
                   key={evt.id}
-                  className={`${styles.eventItem} ${
-                    evt.type?.includes("error") || evt.type?.includes("failed")
-                      ? styles.eventError
-                      : ""
-                  }`}
+                  className={`${styles.eventItem} ${ evt.type?.includes("error") || evt.type?.includes("failed") ? styles.eventError : "" }`}
                 >
                   <span
                     className={styles.eventIcon}
@@ -245,8 +233,8 @@ export function RuntimeEvents() {
                     <div className={styles.eventMessage}>{evt.message}</div>
                     <div className={styles.eventMeta}>
                       <span
-                        className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium"
-                        style={{ backgroundColor: config.color, color: "var(--gw-bg)" }}
+                        
+                        style={{ backgroundColor: config.color }}
                       >
                         {config.label}
                       </span>

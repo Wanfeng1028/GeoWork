@@ -3,8 +3,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactNode, useEffect } from 'react'
 import useSettingsStore from '../stores/settingsStore'
-import { setGeoWorkTheme } from '../design/theme-init'
-import { resolveTheme } from '../design/types'
 
 const queryClient = new QueryClient({
   defaultOptions: {

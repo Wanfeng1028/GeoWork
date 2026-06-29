@@ -2,14 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 13px;
-  color: var(--gw-text);
 }
 
 .metadataSection :global(.grid),
 .metadataSection :global(.border) {
-  border-color: var(--gw-border) !important;
   border-radius: 7px !important;
-  background: var(--gw-bg-soft);
 }
 
 .metadataSection :global(.p-3) {
@@ -17,23 +14,19 @@
 }
 
 .metadataSection :global(.text-sm) {
-  color: var(--gw-text-secondary);
   font-size: 12px !important;
   line-height: 18px;
 }
 
 .metadataSection :global(.text-muted-foreground) {
-  color: var(--gw-text-tertiary) !important;
 }
 
 .metadataSection :global(.font-semibold) {
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 700;
 }
 
 .metadataSection :global(.bg-muted\/50) {
-  background: var(--gw-bg-subtle) !important;
 }
 
 .metadataSection :global(.rounded) {
@@ -45,12 +38,10 @@
 }
 
 .metadataSection :global(.w-12) {
-  color: var(--gw-text-tertiary) !important;
 }
 
 .sectionTitle {
   margin: 8px 0 4px;
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -62,12 +53,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px dashed var(--gw-border-strong);
   border-radius: 8px;
   background:
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
-    var(--gw-bg-subtle);
-  color: var(--gw-text-tertiary);
   font-size: 12px;
 }
 
@@ -76,10 +63,7 @@
   overflow: auto;
   margin: 0;
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 17px;
   white-space: pre-wrap;
@@ -87,5 +71,5 @@
 
 :global([role='dialog']) :global([data-state]) + .metadataSection,
 :global([role='dialog']) .metadataSection {
-  font-family: var(--gw-font-sans);
+  font-family: sans-serif;
 }

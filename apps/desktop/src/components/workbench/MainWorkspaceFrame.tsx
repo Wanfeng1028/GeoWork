@@ -1,4 +1,3 @@
-import { cn } from '../../lib/cn'
 
 type MainWorkspaceFrameProps = {
   children: React.ReactNode
@@ -8,12 +7,12 @@ type MainWorkspaceFrameProps = {
 
 export function MainWorkspaceFrame({ children, className, noPadding }: MainWorkspaceFrameProps) {
   return (
-    <main className="min-w-0 flex-1 bg-[var(--gw-bg-shell)]">
+    <main className="flex-1">
       <div className={cn('h-full', !noPadding && 'p-2')}>
         <div
           className={cn(
-            'h-full overflow-hidden rounded-[var(--gw-radius-lg)]',
-            'border border-[var(--gw-border-soft)] bg-[var(--gw-bg-panel)]',
+            'h-full overflow-hidden rounded-[""]',
+            'border border-[""] bg-[""]',
             className,
           )}
         >

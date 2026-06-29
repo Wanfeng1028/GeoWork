@@ -1,6 +1,4 @@
-// GeoWork GeoComposer — 1:1 port of QoderWorkCopy's qw-composer.
 // Business logic (createTask / drop / Ctrl+Enter) preserved, but the visual
-// layout matches QoderWorkCopy exactly: fixed-size card, tiny-preview,
 // textarea, composer-bar of round + tool-pill + mic + send.
 
 import { useState } from 'react'

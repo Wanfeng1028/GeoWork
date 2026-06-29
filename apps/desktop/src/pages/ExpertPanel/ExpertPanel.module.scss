@@ -3,8 +3,6 @@
   min-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--gw-bg-canvas);
-  color: var(--gw-text);
 }
 
 // ---- Top toolbar (refresh + search + create) ----
@@ -16,7 +14,6 @@
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  background: var(--gw-bg-canvas);
 }
 
 .refresh {
@@ -27,12 +24,9 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--gw-text-secondary);
   cursor: pointer;
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }
 
@@ -43,12 +37,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--gw-border);
-  border-radius: var(--gw-radius-full);
-  color: var(--gw-text-tertiary);
   padding: 0 12px;
   font-size: 12px;
-  background: var(--gw-bg-panel);
 }
 
 .searchInput {
@@ -57,18 +47,15 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--gw-text);
   font: inherit;
   font-size: 12px;
 
   &::placeholder {
-    color: var(--gw-text-tertiary);
   }
 }
 
 // ---- Content column (centered, 655px) ----
 .content {
-  width: var(--gw-content-width);
   max-width: calc(100% - 32px);
   margin: 18px auto 48px;
 }
@@ -78,12 +65,10 @@
   font-size: 24px;
   line-height: 32px;
   font-weight: 650;
-  color: var(--gw-text);
 }
 
 .subtitle {
   margin: 4px 0 18px;
-  color: var(--gw-text-tertiary);
   font-size: 13px;
 }
 
@@ -96,21 +81,17 @@
   margin-bottom: 18px;
   overflow: hidden;
   border-radius: 6px;
-  border: 1px solid var(--gw-border);
-  background: color-mix(in srgb, var(--gw-bg-panel) 88%, var(--gw-bg-soft));
   padding-left: 17px;
 
   strong {
     display: block;
     font-size: 15px;
     line-height: 22px;
-    color: var(--gw-text);
   }
 
   span {
     display: block;
     margin-top: 4px;
-    color: var(--gw-text-secondary);
     font-size: 12px;
   }
 
@@ -140,16 +121,14 @@
   button {
     border: 0;
     background: transparent;
-    color: var(--gw-text-secondary);
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     padding: 0;
-    transition: color var(--gw-duration-normal) ease;
+    transition: color 0.15s ease;
 
     &:hover,
     &.active {
-      color: var(--gw-text);
     }
   }
 }
@@ -164,29 +143,22 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    border: 1px solid var(--gw-border);
     border-radius: 6px;
     padding: 0 9px;
-    background: var(--gw-bg-panel);
-    color: var(--gw-text-secondary);
     font-size: 12px;
     cursor: pointer;
 
     &:hover {
-      background: var(--gw-bg-hover);
-      color: var(--gw-text);
     }
   }
 }
 
 .sectionLabel {
   margin: 6px 0 10px;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 650;
 }
 
-// ---- Expert grid (3 columns, QoderWorkCopy skill-grid) ----
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -215,8 +187,6 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.22);
   cursor: pointer;
   z-index: 40;
@@ -230,12 +200,10 @@
   padding: 4px;
 
   strong {
-    color: var(--gw-text);
   }
 }
 
 .modalDesc {
-  color: var(--gw-text-secondary);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -248,20 +216,16 @@
 
 .modalSkill {
   padding: 8px 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 6px;
-  background: var(--gw-bg-panel);
 
   strong {
     display: block;
     font-size: 13px;
-    color: var(--gw-text);
   }
 
   span {
     display: block;
     margin-top: 2px;
-    color: var(--gw-text-secondary);
     font-size: 12px;
   }
 }
@@ -269,6 +233,5 @@
 .emptyState {
   padding: 48px 16px;
   text-align: center;
-  color: var(--gw-text-tertiary);
   font-size: 13px;
 }

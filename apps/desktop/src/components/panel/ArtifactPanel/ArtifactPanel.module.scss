@@ -5,8 +5,6 @@
   gap: 12px;
   padding: 12px;
   overflow-y: auto;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .empty {
@@ -21,14 +19,11 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-soft);
 }
 
 .deliveryTitle {
   margin: 0;
-  color: var(--gw-text);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
@@ -48,19 +43,15 @@
   align-content: center;
   column-gap: 8px;
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-panel);
 }
 
 .deliveryIcon {
   grid-row: 1 / span 2;
-  color: var(--gw-accent);
   font-size: 14px;
 }
 
 .deliveryCount {
-  color: var(--gw-text);
   font-size: 15px;
   line-height: 21px;
   font-weight: 760;
@@ -68,14 +59,11 @@
 }
 
 .deliveryLabel {
-  color: var(--gw-text-secondary);
   font-size: 11px;
 }
 
 .typeGroup {
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-soft);
   overflow: hidden;
 }
 
@@ -85,18 +73,15 @@
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .typeIcon {
-  color: var(--gw-text-secondary);
   display: grid;
   place-items: center;
 }
 
 .typeLabel {
   flex: 1;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 700;
 }
@@ -104,9 +89,8 @@
 .artifactItem {
   position: relative;
   padding: 9px 10px;
-  border-bottom: 1px solid var(--gw-border);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 }
 
 .artifactItem:last-child {
@@ -115,7 +99,6 @@
 
 .artifactItem:hover,
 .artifactItem.selected {
-  background: var(--gw-bg-hover);
 }
 
 .artifactHeader {
@@ -129,7 +112,6 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -147,7 +129,6 @@
 .artifactDate {
   min-width: 0;
   overflow: hidden;
-  color: var(--gw-text-tertiary);
   font-size: 10px;
   line-height: 15px;
   text-overflow: ellipsis;
@@ -165,13 +146,10 @@
   place-items: center;
   border: 0;
   border-radius: 6px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-accent);
   cursor: pointer;
 }
 
 .acceptBtn:hover {
-  background: var(--gw-bg-active);
 }
 
 .previewPanel {
@@ -186,14 +164,11 @@
   justify-content: space-between;
   gap: 8px;
   padding: 0 10px;
-  border-bottom: 1px solid var(--gw-border);
-  background: var(--gw-bg-soft);
 }
 
 .previewTitle {
   min-width: 0;
   overflow: hidden;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -208,13 +183,10 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-tertiary);
   cursor: pointer;
 }
 
 .previewClose:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .previewContent {
@@ -242,10 +214,7 @@
   display: grid;
   place-items: center;
   gap: 4px;
-  border: 1px dashed var(--gw-border-strong);
   border-radius: 8px;
-  background: radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px, var(--gw-bg-subtle);
-  color: var(--gw-text-secondary);
   text-align: center;
   font-size: 12px;
 }
@@ -253,12 +222,10 @@
 .mapIcon,
 .imageIcon,
 .htmlIcon {
-  color: var(--gw-accent);
 }
 
 .previewHint {
   margin: 0;
-  color: var(--gw-text-tertiary);
   font-size: 10px;
   font-style: normal;
 }
@@ -271,10 +238,7 @@
   overflow: auto;
   margin: 0;
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 17px;
   white-space: pre-wrap;
@@ -283,5 +247,4 @@
 .geojsonPlaceholder code,
 .codePlaceholder code {
   display: block;
-  color: var(--gw-text-secondary);
 }

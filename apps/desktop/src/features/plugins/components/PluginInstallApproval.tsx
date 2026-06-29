@@ -2,11 +2,6 @@
 // Approval card for plugin installation with permission review
 
 import { useState } from 'react'
-import { Card } from '../../../components/ui/card'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
-import { Input } from '../../../components/ui/input'
-import { Spinner } from '../../../components/ui/spinner'
 import { Check, X, AlertTriangle, Save } from 'lucide-react'
 import type { Plugin } from '../pluginClient'
 import styles from './PluginInstallApproval.module.scss'
@@ -144,26 +139,26 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
 
   return (
     <Card className={styles.card}>
-      <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        <span className="font-semibold">插件安装审批</span>
+      <div >
+        <AlertTriangle  />
+        <span >插件安装审批</span>
         <Badge className={getBadgeClass(maxRiskColor)}>
           {riskCount > 0 ? '高风险' : medRiskCount > 0 ? '中风险' : '低风险'}
         </Badge>
       </div>
 
-      <div className={`flex items-start gap-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 ${styles.alert}`}>
-        <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5 shrink-0" />
-        <div className="flex flex-col gap-1">
-          <span className="text-[13px] font-medium text-[var(--gw-text)]">{plugin.name}</span>
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+      <div className={`border ${styles.alert}`}>
+        <AlertTriangle className="shrink-0" />
+        <div className="flex-col">
+          <span >{plugin.name}</span>
+          <span >
             {plugin.description}
           </span>
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <span >
             版本: v{plugin.version} | 作者: {plugin.author}
           </span>
           {plugin.permissions.length > 0 && (
-            <span className="text-[13px] text-[var(--gw-text-secondary)]">
+            <span >
               请求权限: {plugin.permissions.length} 项
             </span>
           )}
@@ -173,7 +168,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
       {/* Permissions list */}
       {plugin.permissions.length > 0 && (
         <div className={styles.permissionsList}>
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <span >
             请求的权限及风险评估：
           </span>
           {permissionsWithRisk.map((perm: { name: string; level: string; color: string }) => (
@@ -194,7 +189,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={2}
-          className={`w-full rounded-md border border-[var(--gw-border)] bg-[var(--gw-bg-secondary)] p-2 text-[13px] ${styles.reasonInput}`}
+          className={`border ${styles.reasonInput}`}
         />
         <div className={styles.rememberRow}>
           <input
@@ -208,12 +203,12 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-2">
+      <div >
         <Button
           onClick={handleApprove}
           disabled={loading === 'approve'}
         >
-          {loading === 'approve' ? <Spinner className="h-4 w-4 mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+          {loading === 'approve' ? <Spinner  /> : <Check  />}
           批准
         </Button>
         <Button
@@ -221,7 +216,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           onClick={handleDeny}
           disabled={loading === 'deny'}
         >
-          {loading === 'deny' ? <Spinner className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
+          {loading === 'deny' ? <Spinner  /> : <X  />}
           拒绝
         </Button>
         <Button
@@ -232,7 +227,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           }}
           disabled={loading === 'approve'}
         >
-          {loading === 'approve' ? <Spinner className="h-4 w-4 mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+          {loading === 'approve' ? <Spinner  /> : <Save  />}
           批准并记住
         </Button>
       </div>
@@ -240,10 +235,10 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
       {/* Allow for this task */}
       {hasHighRisk && (
         <div className={styles.warning}>
-          <AlertTriangle className="h-4 w-4" />
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <AlertTriangle  />
+          <span >
             此插件需要{' '}
-            <Badge className="bg-pink-500/20 text-pink-400">
+            <Badge >
               {riskCount}
             </Badge>
             个高风险权限，请确认权限必要性后再批准

@@ -17,8 +17,7 @@ interface PluginState {
 const usePluginStore = create<PluginState>((set) => ({
   plugins: [],
   isLoading: false,
-  error: null,
-
+  error: '',
   loadPlugins: async () => {
     set({ isLoading: true, error: null })
     try {

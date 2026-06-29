@@ -2,12 +2,6 @@
 // Displays installed and available plugins as a searchable, filterable grid
 
 import { useState, useMemo, useCallback } from 'react'
-import { Card } from '../../../components/ui/card'
-import { Badge } from '../../../components/ui/badge'
-import { Input } from '../../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../../components/ui/select'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
-import { Empty } from '../../../components/ui/empty'
 import { Search, Download, CheckCircle, Settings } from 'lucide-react'
 import usePluginStore from '../pluginStore'
 import type { Plugin } from '../pluginClient'
@@ -98,15 +92,12 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <span
             key={i}
-            style={{
-              color: i < stars ? RATING_COLORS[stars - 1] : '#334',
-              fontSize: 12,
-            }}
+            style={{ color: i < stars ? RATING_COLORS[stars - 1] : '#334', fontSize: 12 }}
           >
             ★
           </span>
         ))}
-        <span className="text-[13px] text-[var(--gw-text-secondary)] ml-1">
+        <span >
           {rating.toFixed(1)}
         </span>
       </div>
@@ -125,10 +116,10 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+          <h3 >
             插件市场
           </h3>
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <span >
             {filteredPlugins.length} 个插件
           </span>
         </div>
@@ -145,13 +136,13 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
               ))}
             </SelectContent>
           </Select>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--gw-text-tertiary)]" />
+          <div >
+            <Search  />
             <Input
               placeholder="搜索插件..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className={`pl-8 ${styles.searchInput}`}
+              className={`${styles.searchInput}`}
             />
           </div>
         </div>
@@ -172,15 +163,15 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
               <div className={styles.pluginHeader}>
                 <div className={styles.pluginIcon}>
                   {plugin.installed ? (
-                    <CheckCircle className="h-5 w-5" />
+                    <CheckCircle  />
                   ) : (
-                    <Settings className="h-5 w-5" />
+                    <Settings  />
                   )}
                 </div>
                 <div className={styles.pluginTitleWrap}>
                   <span className={styles.pluginName}>{plugin.name}</span>
                   {plugin.installed && (
-                    <Badge className="bg-green-500/20 text-green-400">已安装</Badge>
+                    <Badge >已安装</Badge>
                   )}
                 </div>
               </div>
@@ -189,10 +180,10 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
 
               <div className={styles.pluginMeta}>
                 <div className={styles.metaLeft}>
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
+                  <span >
                     v{plugin.version}
                   </span>
-                  <span className="text-[13px] text-[var(--gw-text-secondary)] ml-2">
+                  <span >
                     {plugin.author}
                   </span>
                 </div>
@@ -201,8 +192,8 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
                   {plugin.installCount !== undefined && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 text-[13px] text-[var(--gw-text-tertiary)]">
-                          <Download className="h-3 w-3" />
+                        <div >
+                          <Download  />
                           <span>{getInstallCountText(plugin.installCount)}</span>
                         </div>
                       </TooltipTrigger>

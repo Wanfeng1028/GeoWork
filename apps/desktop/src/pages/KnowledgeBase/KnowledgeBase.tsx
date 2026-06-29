@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
-import { Spinner } from '../../components/ui/spinner'
-import { Empty } from '../../components/ui/empty'
 import { toast } from 'sonner'
 import { Folder, File, Download, Plus, Upload, Search, Trash2, BookOpen } from 'lucide-react'
 import { useKnowledgeBaseStore, type KnowledgeCategory, type KnowledgeEntry } from './store'
@@ -117,7 +112,7 @@ export function KnowledgeBase() {
           </div>
         </div>
         <div className={styles.sidebarContent}>
-          {isLoading ? <div className={styles.loadingSmall}><Spinner className="w-5 h-5" /></div> : <div>{treeData}</div>}
+          {isLoading ? <div className={styles.loadingSmall}><Spinner  /></div> : <div>{treeData}</div>}
           <button className={`${styles.treeNode} ${!selectedCategory ? styles.selected : ''}`} onClick={() => handleSelectCategory(null)}>
             <File className={styles.treeIcon} />
             <span className={styles.treeLabel}>全部条目</span>
@@ -152,7 +147,7 @@ export function KnowledgeBase() {
 
           <div className={styles.entryList}>
             {isLoading ? (
-              <div className={styles.loadingState}><Spinner className="w-8 h-8" /></div>
+              <div className={styles.loadingState}><Spinner  /></div>
             ) : filteredEntries.length === 0 ? (
               <div className={styles.emptyRows}><BookOpen size={24} /><span>暂无知识条目</span></div>
             ) : (

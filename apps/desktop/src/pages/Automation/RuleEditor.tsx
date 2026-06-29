@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Switch } from '../../components/ui/switch'
 import { toast } from 'sonner'
 import { useAutomationStore, AutomationRule, TriggerType } from './store'
 import styles from './RuleEditor.module.scss'
@@ -100,16 +96,16 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
           <button className={styles.closeBtn} onClick={onClose}>×</button>
         </div>
 
-        <div className="space-y-4">
+        <div >
           <div>
-            <label className="text-sm font-medium">名称</label>
+            <label >名称</label>
             <Input placeholder="例如：每日 NDVI 监测" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
           </div>
 
           <div>
-            <label className="text-sm font-medium">描述</label>
+            <label >描述</label>
             <textarea
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="border"
               placeholder="规则描述（可选）"
               value={formState.description}
               onChange={(e) => setFormState({ ...formState, description: e.target.value })}
@@ -117,7 +113,7 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">触发条件</label>
+            <label >触发条件</label>
             <Select value={formState.trigger} onValueChange={(v) => setFormState({ ...formState, trigger: v as TriggerType })}>
               <SelectTrigger>
                 <SelectValue />
@@ -131,7 +127,7 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">执行目标</label>
+            <label >执行目标</label>
             <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
               <SelectTrigger>
                 <SelectValue placeholder="选择执行目标" />
@@ -145,19 +141,19 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">参数配置</label>
+            <label >参数配置</label>
             <textarea
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="border"
               placeholder='{"band": "NIR", "threshold": 0.3}'
               value={formState.params}
               onChange={(e) => setFormState({ ...formState, params: e.target.value })}
             />
-            <span className="text-xs text-muted-foreground">JSON 格式，例如：{'{"band": "NIR"}'}</span>
+            <span >JSON 格式，例如：{'{"band": "NIR"}'}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div >
             <Switch checked={formState.enabled} onCheckedChange={(v) => setFormState({ ...formState, enabled: v })} />
-            <label className="text-sm font-medium">启用</label>
+            <label >启用</label>
           </div>
 
           <div className={styles.actions}>

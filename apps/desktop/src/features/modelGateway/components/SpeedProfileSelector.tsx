@@ -1,8 +1,6 @@
 // GeoWork Model Gateway - Speed Profile Selector
 // Visual selector for speed/rate-limit profiles
 
-import { Badge } from '../../../components/ui/badge'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../../components/ui/tooltip'
 import { AlertTriangle } from 'lucide-react'
 import useModelGatewayStore from '../modelGatewayStore'
 import styles from './SpeedProfileSelector.module.scss'
@@ -55,7 +53,7 @@ export function SpeedProfileSelector() {
                   </div>
                 </div>
               </TooltipTrigger>
-              <TooltipContent className="max-w-[240px]">
+              <TooltipContent >
                 {PROFILE_DESCRIPTIONS[profile.id] || profile.name}
               </TooltipContent>
             </Tooltip>

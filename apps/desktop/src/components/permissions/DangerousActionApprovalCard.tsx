@@ -3,10 +3,6 @@
 
 import React, { useState } from 'react'
 import { AlertCircle, X, Lock, AlertTriangle } from 'lucide-react'
-import { Card, CardContent } from '../ui/card'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { Textarea } from '../ui/textarea'
 import usePermissionStore from '../../stores/permissionStore'
 import type { RiskLevel, DangerousAction } from '../../types/permission'
 import styles from './DangerousActionApprovalCard.module.scss'
@@ -64,21 +60,21 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
 
   return (
     <Card className={`${styles.card} ${isCritical ? styles.critical : ''}`}>
-      <CardContent className="p-3 px-4">
+      <CardContent >
         {/* Critical warning banner */}
         {isCritical && (
-          <div className="mb-3 flex items-start gap-2 rounded-[var(--gw-radius-sm)] border border-[var(--gw-danger)] bg-[var(--gw-danger-soft)] p-3 text-[13px] text-[var(--gw-danger)]">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="border">
+            <AlertTriangle className="shrink-0" />
             <div>
-              <div className="font-semibold">⚠️ 危险操作确认</div>
-              <div className="mt-1 text-[12px]">此操作可能影响系统安全或数据完整性，请仔细确认后再操作。</div>
+              <div >⚠️ 危险操作确认</div>
+              <div >此操作可能影响系统安全或数据完整性，请仔细确认后再操作。</div>
             </div>
           </div>
         )}
 
         {/* Header */}
         <div className={styles.header}>
-          <div className="flex items-center gap-2">
+          <div >
             <AlertCircle className={styles.warningIcon} />
             <span className={styles.title}>{title || dangerousActionLabels[action]}</span>
           </div>
@@ -87,11 +83,11 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
 
         {/* Alert */}
         {description && (
-          <div className="my-2 flex items-start gap-2 rounded-[var(--gw-radius-sm)] border border-[var(--gw-accent)] bg-[var(--gw-accent-soft)] p-3 text-[13px] text-[var(--gw-accent)]">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="border">
+            <AlertCircle className="shrink-0" />
             <div>
-              <div className="font-semibold">操作说明</div>
-              <div className="mt-1 text-[12px]">{description}</div>
+              <div >操作说明</div>
+              <div >{description}</div>
             </div>
           </div>
         )}
@@ -156,7 +152,7 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
-          <div className={`${styles.actionButtons} flex flex-wrap gap-2`}>
+          <div className={`${styles.actionButtons} flex-wrap`}>
             <Button
               variant="primary"
               onClick={async () => {
@@ -168,9 +164,9 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
                 }
               }}
               loading={loading}
-              className={isCritical ? 'bg-[var(--gw-danger)] hover:bg-[var(--gw-danger)]/80 text-white' : ''}
+              className={isCritical ? 'bg-[""] hover:bg-[""]/80 text-white' : ''}
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock  />
               允许一次
             </Button>
             <Button
@@ -185,7 +181,7 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
               }}
               loading={loading}
             >
-              <X className="h-3.5 w-3.5" />
+              <X  />
               拒绝
             </Button>
           </div>

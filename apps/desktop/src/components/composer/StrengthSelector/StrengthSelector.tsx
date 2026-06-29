@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { Zap, Flame } from 'lucide-react'
-import { cn } from '../../../lib/cn'
 import styles from './StrengthSelector.module.scss'
 
 type StrengthLevel = 'low' | 'normal' | 'high'

@@ -3,8 +3,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .header {
     min-height: 38px;
@@ -13,14 +11,11 @@
     justify-content: space-between;
     gap: 8px;
     padding: 7px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .title {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--gw-text);
       font-size: 13px;
       line-height: 18px;
       font-weight: 700;
@@ -34,21 +29,17 @@
       border: 0;
       border-radius: 6px;
       background: transparent;
-      color: var(--gw-text-tertiary);
       cursor: pointer;
       font-size: 13px;
       line-height: 1;
 
       &:hover {
-        background: var(--gw-bg-hover);
-        color: var(--gw-text);
       }
     }
   }
 
   .taskStatus {
     padding: 10px;
-    border-bottom: 1px solid var(--gw-border);
 
     .taskHeader {
       display: flex;
@@ -63,8 +54,7 @@
         align-items: center;
         gap: 6px;
         overflow: hidden;
-        color: var(--gw-text);
-        font-family: var(--gw-font-mono);
+        font-family: monospace;
         font-size: 12px;
         line-height: 17px;
         text-overflow: ellipsis;
@@ -79,7 +69,6 @@
       margin-bottom: 8px;
 
       .progressText {
-        color: var(--gw-text-tertiary);
         font-size: 11px;
         line-height: 16px;
         text-align: right;
@@ -91,12 +80,10 @@
 
       :global(.ant-collapse-header) {
         padding: 5px 0 !important;
-        color: var(--gw-text) !important;
       }
 
       :global(.ant-collapse-content) {
         background: transparent !important;
-        border-color: var(--gw-border) !important;
       }
 
       .stepItem {
@@ -108,8 +95,6 @@
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: var(--gw-bg-soft);
-          color: var(--gw-text-tertiary);
           font-size: 10px;
           line-height: 18px;
           text-align: center;
@@ -117,23 +102,19 @@
 
         .stepTitle {
           flex: 1;
-          color: var(--gw-text-secondary);
           font-size: 12px;
         }
 
         .stepStatus,
         .stepTime {
-          color: var(--gw-text-tertiary);
           font-size: 10px;
         }
 
         .stepCompleted {
-          color: var(--gw-accent);
           font-size: 11px;
         }
 
         .stepFailed {
-          color: var(--gw-danger);
           font-size: 11px;
         }
       }
@@ -154,7 +135,6 @@
       align-items: center;
       justify-content: center;
       padding: 20px 0;
-      color: var(--gw-text-tertiary);
       font-size: 12px;
     }
   }
@@ -168,7 +148,6 @@
 
     .eventsTitle {
       margin-bottom: 8px;
-      color: var(--gw-text);
       font-size: 12px;
       line-height: 17px;
       font-weight: 700;
@@ -180,13 +159,11 @@
       font-size: 12px;
 
       .eventMessage {
-        color: var(--gw-text-secondary);
         line-height: 17px;
       }
 
       .eventTime {
-        color: var(--gw-text-tertiary);
-        font-family: var(--gw-font-mono);
+        font-family: monospace;
         font-size: 10px;
       }
     }
@@ -198,11 +175,8 @@
   align-items: center;
   gap: 4px;
   padding: 8px;
-  border: 1px solid var(--gw-border);
   border-left: 0;
   border-radius: 8px 0 0 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text-secondary);
   cursor: pointer;
   font-size: 12px;
 
@@ -221,7 +195,5 @@
   }
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }

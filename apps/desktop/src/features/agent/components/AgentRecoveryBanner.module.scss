@@ -1,4 +1,3 @@
-/* QoderWork-style recovery banner. */
 .banner {
   min-height: 42px;
   display: flex;
@@ -7,21 +6,14 @@
   gap: 12px;
   padding: 9px 12px;
   margin-bottom: 12px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .recoverable {
-  border-color: color-mix(in srgb, var(--gw-warning) 30%, var(--gw-border));
-  background: color-mix(in srgb, var(--gw-warning-soft) 45%, var(--gw-bg-panel));
 }
 
 .read-only,
 .failed {
-  border-color: color-mix(in srgb, var(--gw-danger) 30%, var(--gw-border));
-  background: color-mix(in srgb, var(--gw-danger-soft) 45%, var(--gw-bg-panel));
 }
 
 .content {
@@ -39,8 +31,6 @@
   place-items: center;
   flex-shrink: 0;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-warning);
   font-size: 13px;
 }
 
@@ -52,7 +42,6 @@
 }
 
 .title {
-  color: var(--gw-text);
   font-size: 12px;
   line-height: 17px;
   font-weight: 700;
@@ -60,7 +49,6 @@
 
 .description {
   overflow: hidden;
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 16px;
   text-overflow: ellipsis;
@@ -76,9 +64,6 @@
 .recoverBtn {
   height: 28px;
   border-radius: 999px !important;
-  border-color: color-mix(in srgb, var(--gw-warning) 32%, var(--gw-border)) !important;
-  background: color-mix(in srgb, var(--gw-warning-soft) 60%, var(--gw-bg-soft)) !important;
-  color: var(--gw-warning) !important;
   font-size: 12px !important;
   font-weight: 650 !important;
 

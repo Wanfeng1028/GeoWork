@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react'
-import { cn } from '../../lib/cn'
 
 export type GeoMascotSize = 'sm' | 'md' | 'lg' | 'xl' | number
 export type GeoMascotGender = 'girl' | 'boy'
@@ -177,17 +176,7 @@ export function GeoMascot({
   return (
     <span
       className={cn('geo-agent-mascot', className)}
-      style={{
-        display: 'inline-flex',
-        width: px,
-        height: px,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: Math.max(10, px * 0.2),
-        filter: animated ? 'drop-shadow(0 10px 20px rgba(11, 26, 61, 0.18))' : undefined,
-        animation: animated ? 'geoAgentBreathe 3.2s ease-in-out infinite' : undefined,
-        ...style,
-      }}
+      style={{ display: 'inline-flex', width: px, height: px, alignItems: 'center', justifyContent: 'center', borderRadius: Math.max(10, px * 0.2), filter: animated ? 'drop-shadow(0 10px 20px rgba(11, 26, 61, 0.18))' : undefined, animation: animated ? 'geoAgentBreathe 3.2s ease-in-out infinite' : undefined, ...style }}
       data-geo-agent-gender={gender}
       data-geo-agent-state={state}
     >

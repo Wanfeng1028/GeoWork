@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
-import { Input } from '../../components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
 import { toast } from 'sonner'
 import {
   FolderPlus,
@@ -39,7 +34,7 @@ export function ProjectFiles() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode | null } | null>(null)
   const [renameModal, setRenameModal] = useState<{ open: boolean; node: FileNode | null; newName: string }>({
     open: false,
-    node: null,
+    node: '',
     newName: ''
   })
   const [createFolderModal, setCreateFolderModal] = useState<{ open: boolean; parentId: string }>({
@@ -201,13 +196,13 @@ export function ProjectFiles() {
     return (
       <div key={node.id}>
         <div
-          className={`${styles.treeNode} cursor-pointer hover:bg-muted/50 px-2 py-1 rounded`}
+          className={`${styles.treeNode} rounded`}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onClick={() => handleTreeSelect(node)}
           onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, node }) }}
         >
           {hasChildren && (
-            <span className="mr-1 text-xs" onClick={(e) => { e.stopPropagation(); setExpandedKeys(prev => { const next = new Set(prev); if (next.has(node.id)) next.delete(node.id); else next.add(node.id); return next }) }}>
+            <span  onClick={(e) => { e.stopPropagation(); setExpandedKeys(prev => { const next = new Set(prev); if (next.has(node.id)) next.delete(node.id); else next.add(node.id); return next }) }}>
               {isExpanded ? '▼' : '▶'}
             </span>
           )}
@@ -227,18 +222,18 @@ export function ProjectFiles() {
     <div className={styles.container}>
       {/* Top toolbar */}
       <div className={styles.toolbar}>
-        <div className="flex gap-2">
+        <div >
           <Button onClick={() => setCreateFolderModal({ open: true, parentId: '' })} disabled={isLoading}>
-            <FolderPlus className="w-4 h-4 mr-1" /> 新建文件夹
+            <FolderPlus  /> 新建文件夹
           </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-            <Upload className="w-4 h-4 mr-1" /> 上传文件
+            <Upload  /> 上传文件
           </Button>
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            className="hidden"
+            
             onChange={(e) => {
               if (e.target.files) {
                 Array.from(e.target.files).forEach(handleFileUpload)
@@ -247,24 +242,24 @@ export function ProjectFiles() {
             }}
           />
           <Button variant="outline" onClick={() => refreshTree()} disabled={isLoading}>
-            <RefreshCw className="w-4 h-4 mr-1" /> 刷新
+            <RefreshCw  /> 刷新
           </Button>
         </div>
         <Input
           placeholder="搜索文件..."
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="w-[200px]"
+          
         />
       </div>
 
       {/* Breadcrumb */}
       {breadcrumbs.length > 0 && (
         <div className={styles.breadcrumb}>
-          <div className="flex items-center gap-1 text-sm">
+          <div >
             {breadcrumbs.map((crumb, i) => (
               <span key={i}>
-                {i > 0 && <span className="mx-1 text-muted-foreground">/</span>}
+                {i > 0 && <span >/</span>}
                 {crumb}
               </span>
             ))}
@@ -282,7 +277,7 @@ export function ProjectFiles() {
       >
         {dragOver && (
           <div className={styles.dragOverlay}>
-            <Upload className="w-12 h-12 text-blue-500" />
+            <Upload  />
             <p>拖放文件到此处上传</p>
           </div>
         )}
@@ -363,8 +358,8 @@ export function ProjectFiles() {
           <DialogHeader>
             <DialogTitle>新建文件夹</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">文件夹将创建在: {createFolderModal.parentId ? '指定位置' : '项目根目录'}</p>
-          <p className="text-sm text-muted-foreground">请在右键菜单中输入文件夹名称</p>
+          <p >文件夹将创建在: {createFolderModal.parentId ? '指定位置' : '项目根目录'}</p>
+          <p >请在右键菜单中输入文件夹名称</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateFolderModal({ open: false, parentId: '' })}>取消</Button>
             <Button onClick={handleCreateFolderSubmit}>确定</Button>

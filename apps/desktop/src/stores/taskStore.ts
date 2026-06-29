@@ -18,7 +18,7 @@ export interface ToolCallInfo {
 
 const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
-  currentTask: null,
+  currentTask: '',
   events: [],
   toolCalls: [],
   pendingSteps: [],
@@ -26,8 +26,7 @@ const useTaskStore = create<TaskState>((set, get) => ({
   completedSteps: [],
   failedSteps: [],
   isLoading: false,
-  error: null,
-
+  error: '',
   // Load task list from Go Core
   loadTasks: async () => {
     set({ isLoading: true, error: null })

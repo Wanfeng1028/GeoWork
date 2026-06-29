@@ -4,18 +4,13 @@
   flex-direction: column;
   gap: 10px;
   padding: 13px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease, border-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .paperCard:hover,
 .paperCard.selected {
-  background: var(--gw-bg-hover);
-  border-color: var(--gw-border-strong);
 }
 
 .paperHeader {
@@ -27,7 +22,6 @@
 
 .paperHeader h4 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
@@ -50,13 +44,10 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-secondary);
   cursor: pointer;
 }
 
 .iconActions button:hover {
-  background: var(--gw-bg-active);
-  color: var(--gw-text);
 }
 
 .iconActions button:disabled {
@@ -74,7 +65,6 @@
   grid-template-columns: minmax(0, 1fr) minmax(90px, .6fr) 48px auto;
   align-items: center;
   gap: 8px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
@@ -91,7 +81,6 @@
 }
 
 .paperMeta b {
-  color: var(--gw-text);
   font-size: 12px;
 }
 
@@ -103,20 +92,16 @@
   align-items: center;
   padding: 0 8px;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .paperCollapse {
-  border-top: 1px solid var(--gw-border);
   padding-top: 8px;
 }
 
 .paperCollapse summary {
-  color: var(--gw-text-secondary);
   font-size: 12px;
   font-weight: 650;
   cursor: pointer;
@@ -124,7 +109,6 @@
 
 .paperCollapse p {
   margin: 7px 0 0;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 18px;
   display: -webkit-box;
@@ -155,8 +139,6 @@
   gap: 5px;
   border: 0;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   padding: 0 9px;
   font-size: 11px;
   font-weight: 650;
@@ -164,6 +146,4 @@
 }
 
 .linkRow button:hover {
-  background: var(--gw-bg-active);
-  color: var(--gw-text);
 }

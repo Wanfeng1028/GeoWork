@@ -3,7 +3,6 @@
 import { create } from 'zustand'
 import type { SettingsState } from '../types/settings'
 import { mockSettings } from '../mocks/settings.mock'
-import { DEFAULT_THEME, resolveTheme, type GeoWorkTheme, type ResolvedTheme } from '../design/types'
 
 const THEME_KEY = 'geowork.theme'
 

@@ -5,23 +5,19 @@
 
 import { useState, useMemo } from "react";
 import { Image, FileText, FileSpreadsheet, FileCode, Folder, Download, Cpu, ChevronRight, ChevronDown } from "lucide-react";
-import { Button } from "../../../ui/button";
-import { Badge } from "../../../ui/badge";
-import { Empty } from "../../../ui/empty";
-import { Tooltip, TooltipTrigger, TooltipContent } from "../../../ui/tooltip";
 import useArtifactStore from "../../../../stores/artifactStore";
 import styles from "./ArtifactPanel.module.scss";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  map: <Image className="h-3.5 w-3.5" />,
-  code: <FileCode className="h-3.5 w-3.5" />,
-  document: <FileText className="h-3.5 w-3.5" />,
-  data: <FileSpreadsheet className="h-3.5 w-3.5" />,
-  image: <Image className="h-3.5 w-3.5" />,
-  ppt: <FileText className="h-3.5 w-3.5" />,
-  pdf: <FileText className="h-3.5 w-3.5" />,
-  diff: <FileCode className="h-3.5 w-3.5" />,
-  log: <FileText className="h-3.5 w-3.5" />,
+  map: <Image  />,
+  code: <FileCode  />,
+  document: <FileText  />,
+  data: <FileSpreadsheet  />,
+  image: <Image  />,
+  ppt: <FileText  />,
+  pdf: <FileText  />,
+  diff: <FileCode  />,
+  log: <FileText  />,
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -84,12 +80,12 @@ export function ArtifactPanel() {
       <div className={styles.panel}>
         <div className={styles.header}>
           <span className={styles.title}>
-            <Folder className="h-4 w-4" /> 产物
+            <Folder  /> 产物
           </span>
         </div>
         <div className={styles.emptyState}>
           <Empty description="暂无产物" />
-          <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>
+          <span style={{ fontSize: 12 }}>
             任务完成后产物将在此显示
           </span>
         </div>
@@ -112,37 +108,37 @@ export function ArtifactPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>
-          <Folder className="h-4 w-4" /> 产物
+          <Folder  /> 产物
         </span>
         <span className={styles.artifactCount}>{artifacts.length} 个文件</span>
       </div>
 
       <div className={styles.treeContainer}>
-        <div className="flex flex-col text-[12px]">
+        <div className="flex-col">
           {Object.entries(groupedArtifacts).map(([type, items]) => (
             <div key={type}>
               <div
-                className="flex items-center gap-1 px-2 py-1 cursor-pointer hover:bg-[var(--gw-bg-hover)]"
+                
                 onClick={() => toggleGroup(type)}
               >
                 {expandedGroups.has(type) ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
+                  <ChevronDown  />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5 text-[var(--gw-text-tertiary)]" />
+                  <ChevronRight  />
                 )}
-                {TYPE_ICONS[type] || <Folder className="h-3.5 w-3.5" />}
+                {TYPE_ICONS[type] || <Folder  />}
                 <span>{TYPE_LABELS[type] || type}</span>
-                <Badge variant="accent" className="ml-1 text-[10px]">{items.length}</Badge>
+                <Badge variant="accent" >{items.length}</Badge>
               </div>
               {expandedGroups.has(type) && (
-                <div className="ml-4">
+                <div >
                   {items.map((artifact) => (
                     <div
                       key={artifact.id}
                       className={styles.artifactItem}
                       onClick={() => handleOpenArtifact(artifact)}
                     >
-                      {TYPE_ICONS[artifact.type] || <FileText className="h-3.5 w-3.5" />}
+                      {TYPE_ICONS[artifact.type] || <FileText  />}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className={styles.artifactName}>{artifact.name}</span>
@@ -150,7 +146,7 @@ export function ArtifactPanel() {
                         <TooltipContent>{artifact.name}</TooltipContent>
                       </Tooltip>
                       {currentPreview?.id === artifact.id && (
-                        <Badge variant="success" className="text-[10px] ml-1">
+                        <Badge variant="success" >
                           预览中
                         </Badge>
                       )}
@@ -194,7 +190,7 @@ export function ArtifactPanel() {
                       variant="ghost"
                       onClick={() => handleOpenArtifact(artifact)}
                     >
-                      <Cpu className="h-3.5 w-3.5 mr-1" />
+                      <Cpu  />
                       打开
                     </Button>
                   </TooltipTrigger>
@@ -207,7 +203,7 @@ export function ArtifactPanel() {
                       variant="ghost"
                       onClick={() => handleSaveToWorkspace(artifact)}
                     >
-                      <Download className="h-3.5 w-3.5 mr-1" />
+                      <Download  />
                       保存
                     </Button>
                   </TooltipTrigger>
@@ -219,7 +215,7 @@ export function ArtifactPanel() {
                       size="sm"
                       variant="primary"
                     >
-                      <Folder className="h-3.5 w-3.5 mr-1" />
+                      <Folder  />
                       知识库
                     </Button>
                   </TooltipTrigger>

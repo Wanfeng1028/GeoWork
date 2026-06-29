@@ -14,9 +14,6 @@ import {
 import useArtifactStore from '../../../stores/artifactStore'
 import useShellStore from '../../../stores/shellStore'
 import type { Artifact, ArtifactType } from '../../../types/artifact'
-import { Badge } from '../../ui/badge'
-import { Empty } from '../../ui/empty'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip'
 import styles from './ArtifactPanel.module.scss'
 
 const typeVariant: Record<ArtifactType, 'success' | 'info' | 'accent' | 'warning' | 'danger' | 'default'> = {
@@ -140,7 +137,7 @@ export function ArtifactPanel() {
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex-col">
         {sortedTypes.map((type) => {
           const typeKey = type as ArtifactType
           const items = groupedByType[typeKey] || []
@@ -151,7 +148,7 @@ export function ArtifactPanel() {
                 <span className={styles.typeLabel}>{typeLabels[typeKey]}</span>
                 <Badge variant={typeVariant[typeKey]}>{items.length}</Badge>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex-col">
                 {items.map((artifact) => {
                   const isSelected = selectedId === artifact.id
                   const ext = getFileExtension(artifact.path)

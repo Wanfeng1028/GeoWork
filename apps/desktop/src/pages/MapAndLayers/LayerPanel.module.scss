@@ -13,11 +13,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  border-bottom: 1px solid var(--gw-border);
 
   h3 {
     margin: 0;
-    color: var(--gw-text);
     font-size: 13px;
     line-height: 18px;
     font-weight: 650;
@@ -25,7 +23,6 @@
 }
 
 .reorderHint {
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   font-weight: 500;
 }
@@ -42,7 +39,6 @@
 
   &::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    background: var(--gw-scrollbar-thumb);
   }
 }
 
@@ -51,20 +47,16 @@
   display: grid;
   place-items: center;
   margin: 4px;
-  border: 1px dashed var(--gw-border-strong);
   border-radius: 8px;
-  color: var(--gw-text-tertiary);
-  background: var(--gw-bg-subtle);
   font-size: 12px;
 }
 
 .layerItem {
   user-select: none;
   border-radius: 7px;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -88,12 +80,9 @@
     border: 0;
     border-radius: 5px;
     background: transparent;
-    color: var(--gw-text-secondary);
   }
 
   :global(button:hover) {
-    background: var(--gw-bg-active);
-    color: var(--gw-text);
   }
 
   :global(input[type='range']) {
@@ -104,7 +93,6 @@
 .dragHandle {
   width: 14px;
   height: 14px;
-  color: var(--gw-text-tertiary);
   cursor: grab;
 }
 
@@ -114,8 +102,6 @@
   display: grid;
   place-items: center;
   border-radius: 5px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-accent);
 
   svg {
     width: 13px;
@@ -125,7 +111,6 @@
 
 .layerName {
   min-width: 0;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -134,6 +119,5 @@
   white-space: nowrap;
 
   &:hover {
-    color: var(--gw-accent);
   }
 }

@@ -3,12 +3,10 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  color: var(--gw-text);
 }
 
 .section {
   padding: 10px 0;
-  border-bottom: 1px solid var(--gw-border);
 
   &:last-child {
     border-bottom: 0;
@@ -27,15 +25,12 @@
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-accent);
   font-size: 13px;
   flex-shrink: 0;
 }
 
 .sectionLabel {
   flex: 1;
-  color: var(--gw-text);
   font-size: 12px;
   line-height: 17px;
   font-weight: 700;
@@ -47,8 +42,6 @@
   align-items: center;
   padding: 0 7px;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-tertiary);
   font-size: 10px;
   line-height: 18px;
 }
@@ -67,21 +60,18 @@
   gap: 8px;
   padding: 5px 8px;
   border-radius: 7px;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 }
 
 .itemIcon {
-  color: var(--gw-text-tertiary);
   font-size: 12px;
   flex-shrink: 0;
 }
 
 .itemText {
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 18px;
 }
@@ -94,7 +84,6 @@
   justify-content: center;
   gap: 8px;
   padding: 28px 16px;
-  color: var(--gw-text-tertiary);
 }
 
 .emptyItem {
@@ -109,15 +98,12 @@
   gap: 8px;
   padding: 10px 12px;
   margin-top: 6px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
 }
 
 .summaryStats {
   display: flex;
   align-items: center;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 17px;
 }
@@ -127,19 +113,15 @@
   height: 5px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
 }
 
 .progressFill {
   height: 100%;
   border-radius: 999px;
-  background: var(--gw-accent);
-  box-shadow: 0 0 10px rgba(var(--gw-accent-rgb), .24);
-  transition: width var(--gw-duration-slow) var(--gw-ease-out);
+  transition: width 0.3s ease-out;
 }
 
 .progressText {
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   line-height: 16px;
   text-align: right;

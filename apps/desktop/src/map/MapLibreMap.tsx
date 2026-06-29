@@ -1,6 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { Target, Globe, Ruler, PanelLeftClose, PanelLeft, ZoomIn, ZoomOut } from 'lucide-react'
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
 import maplibregl from 'maplibre-gl'
 import DeckGlOverlay from './DeckGlOverlay'
 import type { DeckGeoJsonFeature, MapLayerItem } from './layers'
@@ -166,7 +165,7 @@ const MapLibreMap = memo(function MapLibreMap({
         onClick={() => setCollapsed(!collapsed)}
         title={collapsed ? '展开图层面板' : '折叠图层面板'}
       >
-        {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        {collapsed ? <PanelLeft  /> : <PanelLeftClose  />}
       </button>
 
       {/* Layer panel */}
@@ -191,7 +190,7 @@ const MapLibreMap = memo(function MapLibreMap({
                   onClick={() => onLayerToggle?.(layer.id)}
                   title={layer.visible ? '隐藏图层' : '显示图层'}
                 >
-                  {layer.visible ? <Globe className="h-3.5 w-3.5" /> : <Target className="h-3.5 w-3.5" />}
+                  {layer.visible ? <Globe  /> : <Target  />}
                 </button>
                 <span className={styles.layerName} title={layer.name}>
                   {layer.name}
@@ -221,7 +220,7 @@ const MapLibreMap = memo(function MapLibreMap({
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomIn()}
             >
-              <ZoomIn className="h-4 w-4" />
+              <ZoomIn  />
             </button>
           </TooltipTrigger>
           <TooltipContent>放大</TooltipContent>
@@ -232,7 +231,7 @@ const MapLibreMap = memo(function MapLibreMap({
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomOut()}
             >
-              <ZoomOut className="h-4 w-4" />
+              <ZoomOut  />
             </button>
           </TooltipTrigger>
           <TooltipContent>缩小</TooltipContent>
@@ -249,7 +248,7 @@ const MapLibreMap = memo(function MapLibreMap({
                 }
               }}
             >
-              <Ruler className="h-4 w-4" />
+              <Ruler  />
             </button>
           </TooltipTrigger>
           <TooltipContent>{measuring ? '停止测距' : '测距工具'}</TooltipContent>

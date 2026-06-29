@@ -2,10 +2,6 @@
 // Displays and manages tools for a specific MCP server
 
 import { useState } from 'react'
-import { Button } from '../../../components/ui/button'
-import { Input } from '../../../components/ui/input'
-import { Badge } from '../../../components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog'
 import { Copy, Play, ChevronDown, ChevronUp, Code } from 'lucide-react'
 import { toast } from 'sonner'
 import type { McpTool } from '../mcpClient'
@@ -75,7 +71,7 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
     return (
       <div className={styles.empty}>
         <Code className={styles.emptyIcon} />
-        <span className="text-[13px] text-[var(--gw-text-secondary)]">No tools available for this server</span>
+        <span >No tools available for this server</span>
       </div>
     )
   }
@@ -84,12 +80,12 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
     <>
       <div className={styles.container}>
         <div className={styles.header}>
-          <span className="text-[13px] font-semibold text-[var(--gw-text)]">
+          <span >
             Tools ({tools.length})
           </span>
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex-col">
           {tools.map((tool) => (
             <details
               key={tool.id}
@@ -99,17 +95,17 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
             >
               <summary className={styles.toolRow}>
                 <span className={styles.toolName}>{tool.name}</span>
-                <div className="flex items-center gap-1">
+                <div >
                   {tool.inputSchema && (
-                    <Badge className="bg-blue-500/20 text-blue-400">
-                      <Code className="h-3 w-3" /> Schema
+                    <Badge >
+                      <Code  /> Schema
                     </Badge>
                   )}
                 </div>
               </summary>
               <div className={styles.toolDetail}>
                 {tool.description && (
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">{tool.description}</span>
+                  <span >{tool.description}</span>
                 )}
 
                 <div className={styles.toolActions}>
@@ -118,21 +114,21 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
                     variant="ghost"
                     onClick={() => handleCopySchema(tool)}
                   >
-                    <Copy className="h-4 w-4 mr-1" />
+                    <Copy  />
                     Copy Schema
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => handleTestClick(tool)}
                   >
-                    <Play className="h-4 w-4 mr-1" />
+                    <Play  />
                     Test Call
                   </Button>
                 </div>
 
                 {tool.inputSchema && Object.keys(tool.inputSchema).length > 0 && (
                   <div className={styles.schemaSection}>
-                    <span className="text-[13px] text-[var(--gw-text-secondary)]">Input Schema</span>
+                    <span >Input Schema</span>
                     <pre className={styles.schemaCode}>
                       {JSON.stringify(tool.inputSchema, null, 2)}
                     </pre>
@@ -145,24 +141,24 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
       </div>
 
       <Dialog open={testModalOpen} onOpenChange={setTestModalOpen}>
-        <DialogContent className="max-w-[600px]">
+        <DialogContent >
           <DialogHeader>
             <DialogTitle>Test: {selectedTool?.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <div >
+            <span >
               Enter JSON arguments to pass to the tool:
             </span>
             <textarea
               value={testArgs}
               onChange={(e) => setTestArgs(e.target.value)}
               rows={8}
-              className={`w-full rounded-md border border-[var(--gw-border)] bg-[var(--gw-bg-secondary)] p-2 text-[13px] font-mono ${styles.testInput}`}
+              className={`border ${styles.testInput}`}
               placeholder='{"key": "value"}'
             />
             {testResult && (
               <div className={styles.testResult}>
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">Result:</span>
+                <span >Result:</span>
                 <pre className={styles.testResultCode}>{testResult}</pre>
               </div>
             )}

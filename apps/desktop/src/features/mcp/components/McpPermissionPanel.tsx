@@ -2,11 +2,6 @@
 // Displays and manages permission requests for MCP tool calls
 
 import { useState } from 'react'
-import { Button } from '../../../components/ui/button'
-import { Card } from '../../../components/ui/card'
-import { Badge } from '../../../components/ui/badge'
-import { Input } from '../../../components/ui/input'
-import { Spinner } from '../../../components/ui/spinner'
 import { CheckCircle, XCircle, AlertTriangle, Info, ChevronDown, ChevronUp } from 'lucide-react'
 import type { McpPermissionRequest } from '../mcpClient'
 import styles from './McpPermissionPanel.module.scss'
@@ -50,9 +45,9 @@ function classifyRisk(toolName: string, args: Record<string, unknown>): { level:
 
 function getRiskTag(level: 'low' | 'medium' | 'high') {
   const config: Record<string, { className: string; icon: React.ReactNode; text: string }> = {
-    low: { className: 'bg-blue-500/20 text-blue-400', icon: <Info className="h-3 w-3" />, text: 'Low Risk' },
-    medium: { className: 'bg-orange-500/20 text-orange-400', icon: <AlertTriangle className="h-3 w-3" />, text: 'Medium Risk' },
-    high: { className: 'bg-red-500/20 text-red-400', icon: <AlertTriangle className="h-3 w-3" />, text: 'High Risk' },
+    low: { className: 'bg-blue-500/20 text-blue-400', icon: <Info  />, text: 'Low Risk' },
+    medium: { className: 'bg-orange-500/20 text-orange-400', icon: <AlertTriangle  />, text: 'Medium Risk' },
+    high: { className: 'bg-red-500/20 text-red-400', icon: <AlertTriangle  />, text: 'High Risk' },
   }
   const c = config[level]
   return <Badge className={c.className}>{c.icon} {c.text}</Badge>
@@ -107,7 +102,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
   return (
     <Card className={styles.container}>
       <div className={styles.header}>
-        <div className="flex items-center gap-2">
+        <div >
           <span className={styles.serverBadge}>{request.serverName}</span>
           {riskTag}
         </div>
@@ -115,10 +110,10 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
 
       <div className={styles.content}>
         <div className={styles.toolInfo}>
-          <span className="text-[13px] font-semibold text-[var(--gw-text)]">
+          <span >
             {request.toolName}
           </span>
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <span >
             Args: {summarizeArgs(request.args)}
           </span>
         </div>
@@ -129,7 +124,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
           className={styles.expandBtn}
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+          {expanded ? <ChevronUp  /> : <ChevronDown  />}
           {expanded ? 'Hide details' : 'Show details'}
         </Button>
 
@@ -141,21 +136,17 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
           </div>
         )}
 
-        <div className={`flex items-start gap-3 p-3 rounded-lg border ${
-          risk.level === 'high' ? 'border-red-500/30 bg-red-500/10' :
-          risk.level === 'medium' ? 'border-blue-500/30 bg-blue-500/10' :
-          'border-green-500/30 bg-green-500/10'
-        } ${styles.riskAlert}`}>
+        <div className={styles.riskAlert}>
           {risk.level === 'high' ? (
-            <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
+            <AlertTriangle className="shrink-0" />
           ) : (
-            <Info className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+            <Info className="shrink-0" />
           )}
           <div>
-            <span className="text-[13px] font-medium text-[var(--gw-text)]">
+            <span >
               Category: {risk.category}
             </span>
-            <span className="text-[13px] text-[var(--gw-text-secondary)] block">
+            <span >
               {risk.level === 'high'
                 ? 'This tool has access to sensitive system resources. Review carefully before approving.'
                 : risk.level === 'medium'
@@ -167,12 +158,12 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
       </div>
 
       <div className={styles.actions}>
-        <label className="flex items-center gap-2 text-[13px] text-[var(--gw-text-secondary)]">
+        <label >
           <input
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="rounded border-[var(--gw-border)]"
+            className="rounded"
           />
           Remember this decision
         </label>
@@ -183,7 +174,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
             disabled={!denyReason.trim() || denying}
             onClick={handleDeny}
           >
-            {denying ? <Spinner className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+            {denying ? <Spinner  /> : <XCircle  />}
             Deny
           </Button>
           <Input
@@ -196,7 +187,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
             disabled={approving}
             onClick={handleApprove}
           >
-            {approving ? <Spinner className="h-4 w-4 mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+            {approving ? <Spinner  /> : <CheckCircle  />}
             Approve
           </Button>
         </div>

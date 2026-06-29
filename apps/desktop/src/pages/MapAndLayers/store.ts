@@ -57,8 +57,8 @@ export const BASEMAP_OPTIONS = [
 
 export const useMapViewStore = create<MapViewState>((set, get) => ({
   layers: [],
-  selectedLayer: null,
-  activeTool: null,
+  selectedLayer: '',
+  activeTool: '',
   center: [104.0, 35.0],
   zoom: 4,
   basemap: 'satellite',

@@ -8,17 +8,6 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
-import { Input } from '../../ui/input'
-import { Button } from '../../ui/button'
-import { Badge } from '../../ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
-import { cn } from '../../../lib/cn'
 import styles from './LogsPanel.module.scss'
 
 type LogLevel = 'info' | 'debug' | 'warn' | 'error' | 'fatal'
@@ -114,13 +103,13 @@ export function LogsPanel() {
     <div className={styles.panel}>
       <div className={styles.filterSection}>
         <div className={styles.filterRow}>
-          <div className="relative flex-1">
-            <Filter size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--gw-text-disabled)]" />
+          <div className="flex-1">
+            <Filter size={14}  />
             <Input
               placeholder="搜索日志内容..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="pl-7"
+              
             />
           </div>
           <Select value={levelFilter} onValueChange={setLevelFilter as (v: string) => void}>
@@ -173,7 +162,7 @@ export function LogsPanel() {
       <div className={styles.logArea}>
         {filteredLogs.length === 0 ? (
           <div className={styles.emptyLogs}>
-            <span className="text-[12px] text-[var(--gw-text-disabled)]">无匹配日志</span>
+            <span >无匹配日志</span>
           </div>
         ) : (
           <div className={styles.logEntries}>
@@ -195,7 +184,7 @@ export function LogsPanel() {
         <span className={styles.entryCount}>
           显示 {filteredLogs.length}/{logs.length} 条
         </span>
-        <div className="flex items-center gap-1">
+        <div >
           <Button variant="ghost" size="sm" onClick={() => console.log('Log cleared')}>
             <Trash2 size={14} /> 清除
           </Button>

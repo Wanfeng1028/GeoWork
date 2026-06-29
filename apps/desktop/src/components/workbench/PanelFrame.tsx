@@ -1,4 +1,3 @@
-import { cn } from '../../lib/cn'
 
 type PanelFrameProps = {
   title?: string
@@ -20,11 +19,11 @@ export function PanelFrame({
   return (
     <div className={cn('flex h-full flex-col overflow-hidden', className)}>
       {(title || toolbar) && (
-        <div className="flex h-9 shrink-0 items-center justify-between border-b border-[var(--gw-border-soft)] px-3">
+        <div className="shrink-0">
           {title && (
-            <span className="text-[12px] font-medium text-[var(--gw-text)]">{title}</span>
+            <span >{title}</span>
           )}
-          {toolbar && <div className="flex items-center gap-1">{toolbar}</div>}
+          {toolbar && <div >{toolbar}</div>}
         </div>
       )}
       <div

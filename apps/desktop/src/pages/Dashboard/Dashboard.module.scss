@@ -6,13 +6,9 @@
   padding: 28px 22px 22px;
   overflow: auto;
   background:
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
-    var(--gw-bg);
-  color: var(--gw-text);
 }
 
 .dashboard > * {
-  max-width: var(--gw-content-width);
   width: 100%;
   margin-left: auto;
   margin-right: auto;
@@ -24,21 +20,16 @@
   align-items: center;
   gap: 14px;
   padding: 14px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
 
   :global(.rounded-full) {
     width: 44px !important;
     height: 44px !important;
-    background: var(--gw-accent-soft) !important;
-    color: var(--gw-accent) !important;
   }
 
   :global(.rounded-full svg) {
     width: 22px !important;
     height: 22px !important;
-    color: var(--gw-accent) !important;
   }
 
   .welcomeText {
@@ -47,7 +38,6 @@
 
     .greeting {
       margin: 0;
-      color: var(--gw-text);
       font-size: 20px;
       line-height: 27px;
       font-weight: 760;
@@ -55,7 +45,6 @@
 
     .subtitle {
       margin: 3px 0 0;
-      color: var(--gw-text-secondary);
       font-size: 12px;
       line-height: 18px;
     }
@@ -64,38 +53,28 @@
   :global(button) {
     height: 30px;
     border-radius: 999px;
-    border-color: var(--gw-border);
-    background: var(--gw-bg-panel);
-    color: var(--gw-text);
     font-size: 12px;
     font-weight: 650;
     box-shadow: none;
   }
 
   :global(button:last-child) {
-    background: var(--gw-text);
-    color: var(--gw-bg);
     border-color: transparent;
   }
 }
 
 .dashboard :global([data-slot='card']),
 .dashboard :global(.rounded-lg) {
-  border: 1px solid var(--gw-border) !important;
   border-radius: 8px !important;
-  background: var(--gw-bg-panel) !important;
-  color: var(--gw-text) !important;
   box-shadow: none !important;
 }
 
 .dashboard :global([data-slot='card-header']) {
   min-height: 42px;
   padding: 0 12px !important;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .dashboard :global([data-slot='card-title']) {
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -111,33 +90,27 @@
 .dashboard :global(.text-muted-foreground),
 .dashboard :global(.text-sm),
 .dashboard :global(.text-xs) {
-  color: var(--gw-text-secondary) !important;
 }
 
 .dashboard :global(.text-2xl) {
-  color: var(--gw-text);
   font-size: 20px !important;
   line-height: 25px;
   font-weight: 760;
 }
 
 .dashboard :global(.h-1) {
-  background: var(--gw-bg-soft) !important;
 }
 
 .dashboard :global(.bg-gradient-to-r) {
-  background: var(--gw-accent) !important;
 }
 
 .sectionTitle {
   margin: 0 0 10px;
-  color: var(--gw-text);
   font-size: 15px;
   line-height: 22px;
   font-weight: 720;
 
   .viewAll {
-    color: var(--gw-accent);
     font-size: 12px;
     font-weight: 600;
   }
@@ -156,7 +129,6 @@
 .contentGrid :global(.flex.gap-3) {
   min-height: 58px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .contentGrid :global(.flex.gap-3:last-child) {
@@ -176,16 +148,12 @@
     justify-content: center;
     gap: 5px;
     padding: 14px;
-    border: 1px solid var(--gw-border);
     border-radius: 8px;
-    background: var(--gw-bg-panel);
     cursor: pointer;
     text-align: left;
-    transition: background-color var(--gw-duration-normal) ease, border-color var(--gw-duration-normal) ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 
     &:hover {
-      border-color: var(--gw-border-strong);
-      background: var(--gw-bg-hover);
       transform: none;
       box-shadow: none;
     }
@@ -193,18 +161,15 @@
     .linkIcon {
       width: 26px;
       height: 26px;
-      color: var(--gw-accent);
       margin-bottom: 3px;
     }
 
     .linkLabel {
-      color: var(--gw-text);
       font-size: 13px;
       font-weight: 700;
     }
 
     .linkDesc {
-      color: var(--gw-text-secondary);
       font-size: 12px;
       line-height: 18px;
     }

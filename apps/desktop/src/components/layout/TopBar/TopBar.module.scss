@@ -1,23 +1,15 @@
-// GeoWork TopBar — ported from QoderWorkCopy visual language.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.topbar, .top-icon,
 // .window-btn, .earn-pill, .plain-action, .win-gap).
 
 .topbar {
-  height: var(--gw-titlebar-height);
-  min-height: var(--gw-titlebar-height);
-  max-height: var(--gw-titlebar-height);
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   overflow: hidden;
   box-sizing: border-box;
-  background: var(--gw-bg-titlebar);
-  border-bottom: 1px solid var(--gw-border);
-  font-family: var(--gw-font-sans);
+  font-family: sans-serif;
   user-select: none;
   position: relative;
-  z-index: var(--gw-z-titlebar);
   -webkit-app-region: drag;
 }
 
@@ -66,21 +58,18 @@
   padding: 0;
   margin: 0;
   background: transparent;
-  color: var(--gw-text);
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    color 0.15s ease;
   -webkit-app-region: no-drag;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 }
 
 .isSelected {
-  background: var(--gw-bg-active);
 }
 
 // ---- Window control buttons (square, no radius) ----
@@ -104,16 +93,14 @@
   padding: 0;
   margin: 0;
   background: transparent;
-  color: var(--gw-text);
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    color 0.15s ease;
   -webkit-app-region: no-drag;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -132,14 +119,11 @@
   align-items: center;
   gap: 6px;
   padding: 0 13px;
-  border-radius: var(--gw-radius-full);
-  background: var(--gw-accent-soft);
-  color: var(--gw-accent);
   font-weight: 650;
   font-size: 13px;
   white-space: nowrap;
   cursor: pointer;
-  transition: filter var(--gw-duration-normal) ease;
+  transition: filter 0.15s ease;
   -webkit-app-region: no-drag;
 
   &:hover {
@@ -154,18 +138,16 @@
   padding: 0 3px;
   border: 0;
   background: transparent;
-  color: var(--gw-text);
   font-size: 12px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   white-space: nowrap;
   cursor: pointer;
-  transition: color var(--gw-duration-normal) ease;
+  transition: color 0.15s ease;
   -webkit-app-region: no-drag;
 
   &:hover {
-    color: var(--gw-accent);
   }
 }
 
@@ -175,26 +157,17 @@
   width: 1px;
   height: 21px;
   margin: 0 3px;
-  background: var(--gw-border);
 }
 
 // ---- Dropdown / popover containers ----
 .appMenuContent {
   width: 180px;
   padding: 6px;
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-popup-border-strong);
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
 }
 
 .starPopover {
   width: 340px;
   padding: 0;
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-popup-border-strong);
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
 }
 
 .starPopoverInner {
@@ -207,14 +180,12 @@
 
   h3 {
     margin: 0 0 4px;
-    color: var(--gw-text);
     font-size: 14px;
     font-weight: 600;
   }
 
   p {
     margin: 0;
-    color: var(--gw-text-secondary);
     font-size: 12px;
     line-height: 1.6;
   }
@@ -233,10 +204,6 @@
 // ---- Usage popover ----
 .usagePopover {
   width: 320px;
-  border-radius: var(--gw-radius-lg);
-  border: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
-  box-shadow: var(--gw-popup-shadow);
   overflow: hidden;
 }
 
@@ -247,7 +214,6 @@
 
   h4 {
     margin: 0;
-    color: var(--gw-text);
     font-size: 13px;
     font-weight: 650;
   }
@@ -259,17 +225,14 @@
   justify-content: space-between;
   gap: 12px;
   min-height: 26px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
 
   strong {
-    color: var(--gw-text);
     font-weight: 600;
   }
 }
 
 .green {
-  color: var(--gw-accent) !important;
 }
 
 .usageDetailButton {
@@ -326,16 +289,12 @@
 .githubPopover {
   width: 318px;
   padding: 0;
-  border: 1px solid var(--gw-popup-border-strong);
   border-radius: 9px;
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
   overflow: hidden;
 }
 
 .githubCard {
   padding: 14px;
-  color: var(--gw-text);
 }
 
 .githubHero {
@@ -346,7 +305,6 @@
   gap: 11px;
   padding: 8px;
   border-radius: 7px;
-  background: color-mix(in srgb, var(--gw-bg-soft) 56%, transparent);
 }
 
 .githubMark {
@@ -355,9 +313,6 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
-  box-shadow: inset 0 0 0 1px var(--gw-border);
 }
 
 .githubMark svg {
@@ -381,14 +336,12 @@
 
 .githubHero span {
   margin-top: 1px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 17px;
 }
 
 .githubDesc {
   margin: 12px 2px 12px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 19px;
 }
@@ -407,9 +360,7 @@
   flex-direction: column;
   justify-content: center;
   padding: 0 8px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-panel);
 }
 
 .githubStats b,
@@ -421,14 +372,12 @@
 }
 
 .githubStats b {
-  color: var(--gw-text);
   font-size: 12px;
   line-height: 17px;
   font-weight: 650;
 }
 
 .githubStats em {
-  color: var(--gw-text-tertiary);
   font-size: 10px;
   line-height: 14px;
   font-style: normal;
@@ -444,41 +393,27 @@
   flex: 1;
   border: 0;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .githubActions button:first-child {
-  background: var(--gw-text);
-  color: var(--gw-bg);
 }
 
 .githubActions button:hover {
   filter: brightness(.96);
 }
 
-:global([data-resolved-theme='dark']) .githubActions button:first-child {
-  background: #ebe7d9;
-  color: #171611;
-}
-
-/* QoderWorkCopy fidelity pass: usage popover and feedback modal. */
 .usagePopover {
   width: 320px;
   padding: 0;
   border-radius: 12px;
-  border: 1px solid var(--gw-popup-border-strong);
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
   overflow: hidden;
 }
 
 .usagePanel {
   padding: 14px 15px 12px;
-  color: var(--gw-text);
 }
 
 .usageHead {
@@ -499,20 +434,16 @@
   width: 23px;
   height: 23px;
   border-radius: 5px;
-  color: var(--gw-text-secondary);
   background: transparent;
   font-size: 16px;
   line-height: 20px;
 }
 
 .usageHead button:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .usageItem {
   padding: 9px 0 12px;
-  border-bottom: 1px solid var(--gw-border);
 }
 
 .usageItem:last-of-type {
@@ -528,14 +459,12 @@
 }
 
 .usageTitle span {
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 650;
 }
 
 .usageTitle b {
   margin-left: auto;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   font-weight: 500;
 }
@@ -546,8 +475,6 @@
   align-items: center;
   border-radius: 4px;
   padding: 0 6px;
-  color: var(--gw-accent);
-  background: var(--gw-accent-soft);
   font-size: 10px;
   font-style: normal;
   font-weight: 650;
@@ -566,7 +493,6 @@
   display: block;
   min-width: 2px;
   border-radius: 1px;
-  background: color-mix(in srgb, var(--gw-text-tertiary) 18%, transparent);
 }
 
 .usageNumbers {
@@ -574,13 +500,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 18px;
 }
 
 .usageNumbers strong {
-  color: var(--gw-text);
   font-weight: 700;
 }
 
@@ -597,15 +521,12 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
-  transition: filter var(--gw-duration-normal) ease,
-    background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: filter 0.15s ease,;
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .usageRefresh:focus-visible {
-  outline: 1px solid var(--gw-accent);
   outline-offset: 2px;
 }
 
@@ -615,8 +536,6 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: var(--gw-text);
-  color: var(--gw-bg);
   font-size: 13px;
   font-weight: 650;
 }
@@ -629,27 +548,19 @@
 .feedbackOverlay {
   position: fixed;
   inset: 0;
-  z-index: var(--gw-z-modal);
-  background: var(--gw-overlay-bg, rgba(8, 8, 7, .62));
-  backdrop-filter: blur(6px) saturate(110%);
-  animation: gw-fade-in 160ms ease-out;
+      animation: gw-fade-in 160ms ease-out;
 }
 
 .feedbackCard {
   position: fixed;
   left: 50%;
   top: 50%;
-  z-index: var(--gw-z-modal);
   width: 410px;
   max-width: calc(100vw - 32px);
   transform: translate(-50%, -50%);
-  border: 1px solid var(--gw-popup-border-strong);
   border-radius: 9px;
-  background: var(--gw-popup-bg);
-  color: var(--gw-text);
-  box-shadow: var(--gw-popup-shadow);
   padding: 22px 18px 14px;
-  animation: gw-scale-in 160ms var(--gw-ease-out);
+  animation: gw-scale-in 160ms ease-out;
 }
 
 .feedbackCard h3 {
@@ -661,7 +572,6 @@
 
 .feedbackCard p {
   margin: 0 0 12px;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 18px;
 }
@@ -669,7 +579,6 @@
 .feedbackCard label {
   display: block;
   margin: 13px 0 7px;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 650;
 }
@@ -679,10 +588,7 @@
   height: 104px;
   min-height: 104px;
   resize: none;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
   padding: 12px;
   font-size: 13px;
   line-height: 19px;
@@ -691,7 +597,6 @@
 
 .feedbackTextarea::placeholder,
 .feedbackInput::placeholder {
-  color: var(--gw-text-tertiary);
 }
 
 .uploadRow {
@@ -703,12 +608,8 @@
 .thumbShot {
   width: 103px;
   height: 102px;
-  border: 1px solid var(--gw-border-soft);
   border-radius: 7px;
   background:
-    linear-gradient(var(--gw-bg-panel), var(--gw-bg-panel)) 0 0 / 100% 25px no-repeat,
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 50% 59% / 13px 13px,
-    var(--gw-bg-soft);
 }
 
 .dropZone {
@@ -718,27 +619,19 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 1px dashed var(--gw-border-strong);
   border-radius: 7px;
-  background: var(--gw-bg-subtle);
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   line-height: 16px;
   text-align: center;
 }
 
 .dropZone:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text-secondary);
 }
 
 .feedbackInput {
   width: 100%;
   height: 31px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
   padding: 0 11px;
   font-size: 13px;
   outline: 0;
@@ -755,20 +648,15 @@
   height: 30px;
   border-radius: 999px;
   padding: 0 14px;
-  color: var(--gw-text-secondary);
   background: transparent;
   font-size: 13px;
   font-weight: 600;
 }
 
 .feedbackActions button:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .feedbackActions button:last-child {
-  color: var(--gw-bg);
-  background: var(--gw-text);
 }
 
 .feedbackClose {
@@ -780,12 +668,9 @@
   display: grid;
   place-items: center;
   border-radius: 5px;
-  color: var(--gw-text-tertiary);
 }
 
 .feedbackClose:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .feedbackMascot {
@@ -867,15 +752,4 @@
   height: 7px;
   border-bottom: 2px solid #171511;
   transform: rotate(18deg);
-}
-
-:global([data-resolved-theme='dark']) .feedbackCard {
-  width: 410px;
-  background: color-mix(in srgb, var(--gw-popup-bg) 94%, #4f4935);
-}
-
-:global([data-resolved-theme='dark']) .usageDetailButton,
-:global([data-resolved-theme='dark']) .feedbackActions button:last-child {
-  background: #ebe7d9;
-  color: #171611;
 }

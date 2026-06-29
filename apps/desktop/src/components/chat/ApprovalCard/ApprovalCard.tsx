@@ -3,10 +3,6 @@
 
 import React, { useState } from 'react'
 import { AlertTriangle, Check, X, Save } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card'
-import { Button } from '../../ui/button'
-import { Badge } from '../../ui/badge'
-import { Input } from '../../ui/input'
 import usePermissionStore from '../../../stores/permissionStore'
 import type { PermissionRequest } from '../../../types/permission'
 
@@ -60,11 +56,11 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
   }
 
   return (
-    <Card className="mb-2" style={{ border: '1px solid var(--gw-warning)' }}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-[13px]">
-            <AlertTriangle className="h-4 w-4 text-[var(--gw-warning)]" />
+    <Card  >
+      <CardHeader >
+        <div >
+          <CardTitle >
+            <AlertTriangle  />
             <span>权限审批请求</span>
             <Badge
               variant={request.riskLevel === 'critical' ? 'danger' : request.riskLevel === 'high' ? 'danger' : request.riskLevel === 'medium' ? 'warning' : 'success'}
@@ -75,50 +71,50 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
           <Badge variant="default">{actionLabels[request.action] || request.action}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-start gap-2 p-3 rounded-[var(--gw-radius-sm)] bg-[var(--gw-warning-soft)] border border-[var(--gw-warning)]/20 text-[var(--gw-warning)] text-[12px] mb-3">
-          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+      <CardContent >
+        <div className="border">
+          <AlertTriangle className="shrink-0" />
           <div>
-            <div className="font-medium">{request.title}</div>
-            <div className="mt-1 opacity-80">{request.description}</div>
+            <div >{request.title}</div>
+            <div >{request.description}</div>
           </div>
         </div>
 
         {request.command && (
-          <details className="mb-3">
-            <summary className="text-[12px] cursor-pointer text-[var(--gw-text-secondary)] hover:text-[var(--gw-text)]">
+          <details >
+            <summary >
               命令详情
             </summary>
-            <pre className="mt-1 bg-[var(--gw-bg-code)] p-2 rounded-[var(--gw-radius-sm)] text-[11px] overflow-x-auto">
+            <pre >
               {request.command}
             </pre>
           </details>
         )}
 
-        <div className="flex flex-col gap-2">
+        <div className="flex-col">
           <textarea
             placeholder="审批理由（可选）"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={2}
-            className="flex w-full rounded-[var(--gw-radius-sm)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-input)] px-2.5 py-1.5 text-[13px] text-[var(--gw-text)] placeholder:text-[var(--gw-text-disabled)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gw-accent)]/30"
+            className={styles.textarea}
           />
-          <div className="flex items-center gap-2">
+          <div >
             <input
               type="checkbox"
               id="remember"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            <label htmlFor="remember" className="text-[12px]">记住此决定</label>
+            <label htmlFor="remember" >记住此决定</label>
           </div>
-          <div className="flex gap-2">
+          <div >
             <Button
               variant="primary"
               loading={loading}
               onClick={handleApprove}
             >
-              <Check className="h-3.5 w-3.5 mr-1" />
+              <Check  />
               批准
             </Button>
             <Button
@@ -126,7 +122,7 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
               loading={loading}
               onClick={handleDeny}
             >
-              <X className="h-3.5 w-3.5 mr-1" />
+              <X  />
               拒绝
             </Button>
             <Button
@@ -137,7 +133,7 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
                 handleApprove()
               }}
             >
-              <Save className="h-3.5 w-3.5 mr-1" />
+              <Save  />
               批准并记住
             </Button>
           </div>

@@ -3,8 +3,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 
   .header {
     min-height: 38px;
@@ -13,8 +11,6 @@
     justify-content: space-between;
     gap: 8px;
     padding: 7px 10px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .headerLeft {
       min-width: 0;
@@ -24,7 +20,6 @@
 
       .title {
         overflow: hidden;
-        color: var(--gw-text);
         font-size: 13px;
         line-height: 18px;
         font-weight: 700;
@@ -41,9 +36,6 @@
       :global(.ant-btn) {
         height: 26px !important;
         border-radius: 999px !important;
-        background: var(--gw-bg-panel) !important;
-        border-color: var(--gw-border) !important;
-        color: var(--gw-text-secondary) !important;
         font-size: 11px !important;
       }
 
@@ -55,14 +47,11 @@
         border: 0;
         border-radius: 6px;
         background: transparent;
-        color: var(--gw-text-tertiary);
         cursor: pointer;
         font-size: 13px;
         line-height: 1;
 
         &:hover {
-          background: var(--gw-bg-hover);
-          color: var(--gw-text);
         }
       }
     }
@@ -70,8 +59,6 @@
 
   .filterSection {
     padding: 8px;
-    border-bottom: 1px solid var(--gw-border);
-    background: var(--gw-bg-panel);
 
     .searchInput {
       margin-bottom: 6px;
@@ -80,9 +67,6 @@
       :global(.ant-input-affix-wrapper) {
         height: 28px !important;
         border-radius: 999px !important;
-        border-color: var(--gw-border) !important;
-        background: var(--gw-bg-soft) !important;
-        color: var(--gw-text) !important;
         font-size: 12px !important;
       }
     }
@@ -103,7 +87,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--gw-text-tertiary);
       font-size: 12px;
     }
 
@@ -123,23 +106,18 @@
         padding: 7px 8px;
         border: 1px solid transparent;
         border-radius: 7px;
-        transition: background-color var(--gw-duration-normal) ease,
-          border-color var(--gw-duration-normal) ease;
+        transition: background-color 0.15s ease,;
+          border-color 0.15s ease;
 
         &:hover {
-          border-color: var(--gw-border);
-          background: var(--gw-bg-hover);
         }
 
         &.eventError {
-          border-color: color-mix(in srgb, var(--gw-danger) 24%, var(--gw-border));
-          background: var(--gw-danger-soft);
         }
 
         .eventIcon {
           margin-top: 1px;
           flex-shrink: 0;
-          color: var(--gw-text-tertiary);
           font-size: 13px;
         }
 
@@ -149,7 +127,6 @@
 
           .eventMessage {
             overflow: hidden;
-            color: var(--gw-text-secondary);
             font-size: 12px;
             line-height: 17px;
             text-overflow: ellipsis;
@@ -163,8 +140,7 @@
             margin-top: 2px;
 
             .eventTime {
-              color: var(--gw-text-tertiary);
-              font-family: var(--gw-font-mono);
+              font-family: monospace;
               font-size: 10px;
               line-height: 14px;
             }
@@ -173,7 +149,6 @@
 
         .eventDataBadge {
           flex-shrink: 0;
-          color: var(--gw-text-disabled);
           font-size: 12px;
         }
       }
@@ -187,18 +162,15 @@
     justify-content: space-between;
     gap: 8px;
     padding: 6px 10px;
-    border-top: 1px solid var(--gw-border);
-    background: var(--gw-bg-sidebar);
 
     .footerStat,
     .footerTask {
-      color: var(--gw-text-tertiary);
       font-size: 11px;
       line-height: 16px;
     }
 
     .footerTask {
-      font-family: var(--gw-font-mono);
+      font-family: monospace;
     }
   }
 }
@@ -207,11 +179,8 @@
   position: relative;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--gw-border);
   border-left: 0;
   border-radius: 8px 0 0 8px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text-secondary);
   cursor: pointer;
 
   .collapsedIcon {
@@ -219,7 +188,5 @@
   }
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }

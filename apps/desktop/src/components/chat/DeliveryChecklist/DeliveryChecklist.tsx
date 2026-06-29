@@ -10,7 +10,6 @@ import {
   Folder,
   FileCheck,
 } from 'lucide-react'
-import { Separator } from '../../ui/separator'
 import styles from './DeliveryChecklist.module.scss'
 
 export interface DeliveryChecklistItem {
@@ -26,11 +25,11 @@ export interface DeliveryChecklistProps {
 }
 
 const SECTION_CONFIG = [
-  { key: 'maps', label: '地图文件', icon: <Folder className="h-4 w-4" />, color: 'var(--gw-accent-map)' },
-  { key: 'codes', label: '代码脚本', icon: <Code className="h-4 w-4" />, color: 'var(--gw-accent-blue)' },
-  { key: 'documents', label: '文档资料', icon: <FileText className="h-4 w-4" />, color: 'var(--gw-text-secondary)' },
-  { key: 'datasets', label: '数据集', icon: <Database className="h-4 w-4" />, color: 'var(--gw-warning)' },
-  { key: 'logs', label: '运行日志', icon: <FileCheck className="h-4 w-4" />, color: 'var(--gw-text-tertiary)' },
+  { key: 'maps', label: '地图文件', icon: <Folder  />, color: '' },
+  { key: 'codes', label: '代码脚本', icon: <Code  />, color: '' },
+  { key: 'documents', label: '文档资料', icon: <FileText  />, color: '' },
+  { key: 'datasets', label: '数据集', icon: <Database  />, color: '' },
+  { key: 'logs', label: '运行日志', icon: <FileCheck  />, color: '' },
 ] as const
 
 const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
@@ -38,8 +37,8 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
-          <FileCheck style={{ fontSize: 32, color: 'var(--gw-text-tertiary)' }} />
-          <span className="text-[13px] text-[var(--gw-text-tertiary)]">暂无交付清单信息</span>
+          <FileCheck style={{ fontSize: 32 }} />
+          <span >暂无交付清单信息</span>
         </div>
       </div>
     )
@@ -68,11 +67,11 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             </div>
           </div>
 
-          <Separator className="my-2" />
+          <Separator  />
 
           {section.items.length === 0 ? (
             <div className={styles.emptyItem}>
-              <span className="text-[12px] text-[var(--gw-text-tertiary)]">
+              <span >
                 暂无{section.label}
               </span>
             </div>
@@ -80,7 +79,7 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             <div className={styles.sectionItems}>
               {section.items.map((item, index) => (
                 <div key={index} className={styles.item}>
-                  <CheckCircle className={styles.itemIcon} style={{ color: 'var(--gw-accent)' }} />
+                  <CheckCircle className={styles.itemIcon}  />
                   <span className={styles.itemText}>{item}</span>
                 </div>
               ))}
@@ -91,9 +90,9 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
 
       <div className={styles.summary}>
         <div className={styles.summaryStats}>
-          <CheckCircle style={{ color: 'var(--gw-accent)', marginRight: 'var(--gw-space-8)' }} className="h-4 w-4" />
-          <span className="text-[13px] font-semibold text-[var(--gw-text-primary)]">已完成: {totalCount} 项</span>
-          <span className="text-[12px] text-[var(--gw-text-tertiary)]" style={{ marginLeft: 'var(--gw-space-12)' }}>
+          <CheckCircle   />
+          <span >已完成: {totalCount} 项</span>
+          <span  >
             (12 项)
           </span>
         </div>
@@ -103,7 +102,7 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             style={{ width: `${Math.round((filledSections / sections.length) * 100)}%` }}
           />
         </div>
-        <span className={`${styles.progressText} text-[12px] text-[var(--gw-text-tertiary)]`}>
+        <span className={`${styles.progressText}`}>
           {Math.round((filledSections / sections.length) * 100)}%
         </span>
       </div>

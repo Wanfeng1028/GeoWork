@@ -1,21 +1,13 @@
-// GeoWork LeftSidebar — ported from QoderWorkCopy visual language.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.side, .side-action,
 // .mode-switch, .history-item, .profile, .profile-menu, .menu-row, .theme-row).
 
 .sidebar {
   position: relative;
-  width: var(--gw-sidebar-width);
-  min-width: var(--gw-sidebar-width);
-  max-width: var(--gw-sidebar-width);
   height: 100%;
 
   display: flex;
   flex-direction: column;
 
-  background: var(--gw-bg-sidebar);
-  border-right: 1px solid var(--gw-border);
 
-  color: var(--gw-text);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -41,16 +33,14 @@
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--gw-text);
   font-size: 14px;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
   margin-bottom: 2px;
 
   &:hover,
   &.active {
-    background: var(--gw-bg-hover);
   }
 
   svg {
@@ -76,7 +66,6 @@
   }
 
   .chevron {
-    color: var(--gw-text-secondary);
     flex-shrink: 0;
   }
 }
@@ -92,9 +81,7 @@
     width: 100%;
     padding: 0 7px;
     border: 0;
-    border-radius: var(--gw-radius-sm);
     background: transparent;
-    color: var(--gw-text);
     font-size: 14px;
     font-weight: 520;
     text-align: left;
@@ -103,7 +90,6 @@
     &:hover,
     &.active {
       background: transparent;
-      color: var(--gw-text);
     }
   }
 }
@@ -116,8 +102,6 @@
   gap: 3px;
   margin: 10px 0 9px;
   padding: 3px;
-  border-radius: var(--gw-radius-sm);
-  background: var(--gw-bg-soft);
 }
 
 .modeTab {
@@ -128,17 +112,14 @@
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: var(--gw-text);
   font-size: 13px;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--gw-bg-panel) 58%, transparent);
   }
 
   &.active {
-    background: var(--gw-bg-panel);
     box-shadow: 0 1px 2px rgba(45, 38, 24, 0.09);
   }
 }
@@ -168,37 +149,29 @@
   gap: 7px;
   padding: 0 9px;
   border: 0;
-  border-radius: var(--gw-radius-sm);
   background: transparent;
-  color: var(--gw-text-secondary);
   font-size: 13px;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 
   &.active {
-    background: var(--gw-bg-active);
-    color: var(--gw-text);
     font-weight: 520;
   }
 
   &.warning {
     color: #c05a3e;
-    background: color-mix(in srgb, #e9ded0 60%, transparent);
   }
 }
 
 .wechatRow {
-  color: var(--gw-text);
 }
 
 .wechatDot {
@@ -220,8 +193,6 @@
   gap: 3px;
   padding: 0 6px;
   border-radius: 5px;
-  background: var(--gw-accent-soft);
-  color: var(--gw-accent);
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
@@ -233,7 +204,6 @@
 }
 
 .commandRest {
-  color: var(--gw-text-tertiary);
   font-size: 13px;
   min-width: 0;
   overflow: hidden;
@@ -247,7 +217,6 @@
   display: flex;
   align-items: center;
   padding: 0 8px;
-  color: var(--gw-text-tertiary);
   font-size: 12px;
   font-weight: 500;
 }
@@ -264,13 +233,11 @@
   text-align: left;
   border-radius: 0;
   background: transparent;
-  color: var(--gw-text);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover,
   &.active {
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -295,36 +262,27 @@
 
 .profilePlan {
   display: block;
-  color: var(--gw-text-tertiary);
   font-size: 12px;
   margin-top: 1px;
 }
 
-// ---- Profile dropdown menu (Radix) — styled to match QoderWorkCopy profile-menu ----
 .userMenu {
   width: 220px;
   padding: 8px;
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-popup-border-strong);
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
 }
 
 .planSummary {
   padding: 5px 7px 9px;
-  border-bottom: 1px solid var(--gw-border);
   margin-bottom: 7px;
 
   span {
     display: block;
-    color: var(--gw-text-secondary);
     font-size: 11px;
     line-height: 17px;
   }
 
   strong {
     display: block;
-    color: var(--gw-text);
     font-size: 13px;
     line-height: 18px;
   }
@@ -334,7 +292,6 @@
   color: #ff6b5f !important;
 
   &:hover {
-    background: color-mix(in srgb, #ff5b50 12%, transparent) !important;
   }
 }
 
@@ -346,12 +303,10 @@
   padding: 6px 7px 2px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--gw-text-tertiary);
   text-transform: none;
   letter-spacing: 0;
 }
 
-// QoderWork profile cascading menus.
 .open {}
 .active {}
 .danger {}
@@ -371,10 +326,7 @@
   width: 199px;
   padding: 7px;
   border-radius: 7px;
-  border: 1px solid var(--gw-border-strong);
-  background: var(--gw-bg-panel);
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
-  color: var(--gw-text);
 }
 
 .profileMenu {
@@ -397,7 +349,6 @@
 .profileMenuSection {
   padding: 4px 6px 8px;
   margin-bottom: 5px;
-  border-bottom: 1px solid var(--gw-border);
 
   span,
   strong {
@@ -406,13 +357,11 @@
   }
 
   span {
-    color: var(--gw-text-secondary);
     font-size: 12px;
     font-weight: 520;
   }
 
   strong {
-    color: var(--gw-text);
     font-size: 13px;
     font-weight: 700;
   }
@@ -430,7 +379,6 @@
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 560;
   text-align: left;
@@ -449,7 +397,6 @@
 
   &:hover,
   &.active {
-    background: var(--gw-bg-hover);
   }
 
   &.danger {
@@ -461,7 +408,6 @@
   font-weight: 540;
 
   &.checked {
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -477,45 +423,4 @@
 .submenuDivider {
   height: 1px;
   margin: 6px 4px;
-  background: var(--gw-border);
-}
-
-html[data-theme^='dark'] {
-  .profileMenu,
-  .preferenceMenu,
-  .themeMenu {
-    border-color: rgba(255, 255, 255, 0.08);
-    background: #181712;
-    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
-  }
-
-  .profileMenuSection,
-  .submenuDivider {
-    border-color: rgba(255, 255, 255, 0.08);
-    background-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .menuRow:hover,
-  .menuRow.active,
-  .themeRow:hover,
-  .themeRow.active,
-  .themeRow.checked {
-    background: #343126;
-  }
-}
-
-:global([data-resolved-theme='dark']) .profileMenu,
-:global([data-resolved-theme='dark']) .preferenceMenu,
-:global([data-resolved-theme='dark']) .themeMenu {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: #181712;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
-}
-
-:global([data-resolved-theme='dark']) .menuRow:hover,
-:global([data-resolved-theme='dark']) .menuRow.active,
-:global([data-resolved-theme='dark']) .themeRow:hover,
-:global([data-resolved-theme='dark']) .themeRow.active,
-:global([data-resolved-theme='dark']) .themeRow.checked {
-  background: #343126;
 }

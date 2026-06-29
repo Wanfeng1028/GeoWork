@@ -5,13 +5,9 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: var(--gw-radius-md);
-  background: var(--gw-bg-card);
 }
 
 .icon {
-  color: var(--gw-accent-secondary);
   font-size: 13px;
 }
 
@@ -29,11 +25,9 @@
   }
 
   :global(.ant-select-selection-item) {
-    color: var(--gw-text-primary);
     padding-left: 0;
   }
 
   :global(.ant-select-arrow) {
-    color: var(--gw-text-tertiary);
   }
 }

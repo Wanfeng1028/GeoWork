@@ -1,6 +1,4 @@
 import React from 'react'
-import { Card, CardContent } from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
 import {
   Folder,
   Clock,
@@ -74,7 +72,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           <p className={styles.description}>{project.description}</p>
           <div className={styles.cardFooter}>
             <span className={styles.time}>
-              <Clock className="w-3.5 h-3.5" />
+              <Clock  />
               {formatRelativeTime(project.lastModified)}
             </span>
             <Badge variant="secondary" className={statusInfo.color}>

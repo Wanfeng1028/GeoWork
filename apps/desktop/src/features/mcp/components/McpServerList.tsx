@@ -2,12 +2,6 @@
 // Displays configured MCP servers with status, tool count, and management controls
 
 import { useState, useEffect } from 'react'
-import { Button } from '../../../components/ui/button'
-import { Switch } from '../../../components/ui/switch'
-import { Card } from '../../../components/ui/card'
-import { Input } from '../../../components/ui/input'
-import { Badge } from '../../../components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../components/ui/dialog'
 import { Plus, Trash, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import useMcpStore from '../mcpStore'
@@ -70,29 +64,29 @@ export function McpServerList() {
 
   const getRiskTag = (toolCount: number) => {
     if (toolCount === 0) return <Badge variant="secondary">0 tools</Badge>
-    if (toolCount <= 3) return <Badge className="bg-blue-500/20 text-blue-400">{toolCount} tool{toolCount > 1 ? 's' : ''}</Badge>
-    return <Badge className="bg-cyan-500/20 text-cyan-400">{toolCount} tools</Badge>
+    if (toolCount <= 3) return <Badge >{toolCount} tool{toolCount > 1 ? 's' : ''}</Badge>
+    return <Badge >{toolCount} tools</Badge>
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+        <h3 >
           MCP Servers
         </h3>
         <Button
           onClick={() => setAddModalOpen(true)}
         >
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus  />
           Add Server
         </Button>
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex-col">
         {servers.length === 0 && !isLoading && (
           <div className={styles.empty}>
             <Settings className={styles.emptyIcon} />
-            <span className="text-[13px] text-[var(--gw-text-secondary)]">No MCP servers configured. Add one to get started.</span>
+            <span >No MCP servers configured. Add one to get started.</span>
           </div>
         )}
 
@@ -111,7 +105,7 @@ export function McpServerList() {
                 <span className={styles.serverName}>{server.name}</span>
                 <span className={styles.serverCommand}>{server.command}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div >
                 {getRiskTag(server.tools.length)}
                 <Switch
                   checked={server.enabled}
@@ -120,29 +114,29 @@ export function McpServerList() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-[var(--gw-danger)]"
+                  
                   onClick={(e) => {
                     e.stopPropagation()
                     handleRemove(server.id)
                   }}
                 >
-                  <Trash className="h-4 w-4" />
+                  <Trash  />
                 </Button>
               </div>
             </summary>
             <div className={styles.toolsSection}>
-              <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
-                <Settings className="h-4 w-4 inline mr-1" /> Available Tools
+              <h4 >
+                <Settings className="inline" /> Available Tools
               </h4>
               {server.tools.length === 0 ? (
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">No tools available</span>
+                <span >No tools available</span>
               ) : (
                 <div className={styles.toolsGrid}>
                   {server.tools.map((tool) => (
                     <div key={tool.id} className={styles.toolItem}>
-                      <span className="text-[13px] text-[var(--gw-text)]">{tool.name}</span>
+                      <span >{tool.name}</span>
                       {tool.description && (
-                        <span className="text-[13px] text-[var(--gw-text-secondary)]">{tool.description}</span>
+                        <span >{tool.description}</span>
                       )}
                     </div>
                   ))}
@@ -151,19 +145,19 @@ export function McpServerList() {
             </div>
             {server.env && Object.keys(server.env).length > 0 && (
               <div className={styles.envSection}>
-                <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">Environment</h4>
+                <h4 >Environment</h4>
                 <div className={styles.envGrid}>
                   {Object.entries(server.env).map(([key, value]) => (
                     <div key={key} className={styles.envItem}>
-                      <span className="text-[13px] font-semibold text-[var(--gw-text)]">{key}</span>
-                      <span className="text-[13px] text-[var(--gw-text-secondary)]">{value}</span>
+                      <span >{key}</span>
+                      <span >{value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
             {server.lastConnected && (
-              <span className="text-[13px] text-[var(--gw-text-secondary)]">
+              <span >
                 Last connected: {server.lastConnected}
               </span>
             )}
@@ -176,25 +170,25 @@ export function McpServerList() {
           <DialogHeader>
             <DialogTitle>Add MCP Server</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[13px] text-[var(--gw-text-secondary)]">Name</label>
+          <div >
+            <div >
+              <label >Name</label>
               <Input
                 placeholder="My MCP Server"
                 value={formValues.name}
                 onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[13px] text-[var(--gw-text-secondary)]">Command</label>
+            <div >
+              <label >Command</label>
               <Input
                 placeholder="node"
                 value={formValues.command}
                 onChange={(e) => setFormValues((v) => ({ ...v, command: e.target.value }))}
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[13px] text-[var(--gw-text-secondary)]">Arguments</label>
+            <div >
+              <label >Arguments</label>
               <Input
                 placeholder="comma-separated args (e.g. server1.js, --port=3000)"
                 value={formValues.args}

@@ -16,12 +16,6 @@ import {
   PauseCircle,
   FileSearch,
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "../../ui/tooltip";
 import useChatStore from "../../../stores/chatStore";
 import useTaskStore from "../../../stores/taskStore";
 import type { RuntimeEvent } from "../../../types/task";
@@ -41,17 +35,17 @@ export type NavItemType =
   | "step-start";
 
 const ICON_MAP: Record<NavItemType, React.ReactNode> = {
-  "user-question": <User className="h-3.5 w-3.5" />,
-  "agent-plan": <Bot className="h-3.5 w-3.5" />,
-  "tool-call": <Wrench className="h-3.5 w-3.5" />,
-  artifact: <FileText className="h-3.5 w-3.5" />,
-  diff: <FileSearch className="h-3.5 w-3.5" />,
-  error: <XCircle className="h-3.5 w-3.5" />,
-  checkpoint: <CheckCircle className="h-3.5 w-3.5" />,
-  permission: <AlertTriangle className="h-3.5 w-3.5" />,
-  "task-started": <Zap className="h-3.5 w-3.5" />,
-  "task-completed": <CheckCircle className="h-3.5 w-3.5" />,
-  "step-start": <PauseCircle className="h-3.5 w-3.5" />,
+  "user-question": <User  />,
+  "agent-plan": <Bot  />,
+  "tool-call": <Wrench  />,
+  artifact: <FileText  />,
+  diff: <FileSearch  />,
+  error: <XCircle  />,
+  checkpoint: <CheckCircle  />,
+  permission: <AlertTriangle  />,
+  "task-started": <Zap  />,
+  "task-completed": <CheckCircle  />,
+  "step-start": <PauseCircle  />,
 };
 
 const TOOLTIP_MAP: Record<NavItemType, string> = {
@@ -69,16 +63,16 @@ const TOOLTIP_MAP: Record<NavItemType, string> = {
 };
 
 const COLOR_MAP: Record<NavItemType, string> = {
-  "user-question": "var(--gw-info)",
+  "user-question": null,
   "agent-plan": "#722ed1",
   "tool-call": "#fa8c16",
-  artifact: "var(--gw-accent)",
+  artifact: '',
   diff: "#13c2c2",
-  error: "var(--gw-danger)",
-  checkpoint: "var(--gw-accent)",
-  permission: "var(--gw-warning)",
-  "task-started": "var(--gw-info)",
-  "task-completed": "var(--gw-accent)",
+  error: '',
+  checkpoint: '',
+  permission: '',
+  "task-started": null,
+  "task-completed": null,
   "step-start": "#722ed1",
 };
 
@@ -243,16 +237,14 @@ export function ConversationMinimap() {
         <div className={styles.minimapBody}>
           {builtItems.length === 0 ? (
             <div className={styles.emptyState}>
-              <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无导航项</span>
+              <span style={{ fontSize: 12 }}>暂无导航项</span>
             </div>
           ) : (
             <ul className={styles.navList}>
               {builtItems.map((item, index) => (
                 <li
                   key={item.id}
-                  className={`${styles.navItem} ${
-                    hoveredIndex === index ? styles.hovered : ""
-                  } ${activeIndex === index ? styles.active : ""}`}
+                  className={`${styles.navItem} ${ hoveredIndex === index ? styles.hovered : "" } ${activeIndex === index ? styles.active : ""}`}
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
                   onClick={() => {
@@ -276,7 +268,7 @@ export function ConversationMinimap() {
                       <div>
                         <div>{TOOLTIP_MAP[item.type]}</div>
                         {item.summary && (
-                          <div style={{ fontSize: 11, color: "var(--gw-text-tertiary)", marginTop: 2 }}>
+                          <div style={{ fontSize: 11, marginTop: 2 }}>
                             {item.summary.slice(0, 40)}
                             {item.summary.length > 40 ? "..." : ""}
                           </div>

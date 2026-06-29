@@ -1,8 +1,6 @@
 // GeoWork ContextPanel - Shows current Agent context
 
 import { FileText, Image, FileSpreadsheet, Database } from 'lucide-react'
-import { Badge } from '../../ui/badge'
-import { Empty } from '../../ui/empty'
 import styles from './ContextPanel.module.scss'
 
 interface ContextItem {
@@ -27,11 +25,11 @@ const mockContext: ContextItem[] = [
 ]
 
 const typeIcons: Record<string, React.ReactNode> = {
-  file: <FileText className="h-3.5 w-3.5" />,
-  layer: <Image className="h-3.5 w-3.5" />,
-  paper: <FileText className="h-3.5 w-3.5" />,
-  knowledge: <Database className="h-3.5 w-3.5" />,
-  mcp: <Database className="h-3.5 w-3.5" />,
+  file: <FileText  />,
+  layer: <Image  />,
+  paper: <FileText  />,
+  knowledge: <Database  />,
+  mcp: <Database  />,
 }
 
 const typeColors: Record<string, string> = {
@@ -65,7 +63,7 @@ export function ContextPanel() {
             <span className={styles.groupLabel}>{typeLabels[type] || type}</span>
             <Badge variant={typeColors[type] as any}>{items.length}</Badge>
           </div>
-          <div className="flex flex-col">
+          <div className="flex-col">
             {items.map((item) => (
               <div key={item.id} className={styles.contextItem}>
                 <span className={styles.contextIcon}>{typeIcons[item.type]}</span>

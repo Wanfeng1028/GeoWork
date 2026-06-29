@@ -1,6 +1,4 @@
-// QoderWork-style model provider form.
 .form {
-  color: var(--gw-text);
 
   :global(.ant-form-item) {
     margin-bottom: 12px;
@@ -10,7 +8,6 @@
     padding-bottom: 5px;
 
     label {
-      color: var(--gw-text-secondary) !important;
       font-size: 12px;
       line-height: 17px;
       font-weight: 650;
@@ -22,18 +19,13 @@
   :global(.ant-input-number),
   :global(.ant-input-affix-wrapper) {
     height: 32px;
-    border-color: var(--gw-border) !important;
     border-radius: 8px !important;
-    background: var(--gw-bg-panel) !important;
-    color: var(--gw-text) !important;
     box-shadow: none !important;
     font-size: 12px;
 
     &:hover,
     &:focus,
     &:focus-within {
-      border-color: var(--gw-border-strong) !important;
-      background: var(--gw-bg-hover) !important;
     }
   }
 
@@ -47,16 +39,11 @@
   :global(.ant-select) {
     .ant-select-selector {
       height: 32px !important;
-      border-color: var(--gw-border) !important;
       border-radius: 8px !important;
-      background: var(--gw-bg-panel) !important;
-      color: var(--gw-text) !important;
       box-shadow: none !important;
       font-size: 12px;
 
       &:hover {
-        border-color: var(--gw-border-strong) !important;
-        background: var(--gw-bg-hover) !important;
       }
     }
   }

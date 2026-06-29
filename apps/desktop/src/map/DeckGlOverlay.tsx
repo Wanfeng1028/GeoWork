@@ -137,7 +137,7 @@ const DeckGlOverlay = memo(function DeckGlOverlay({
       zoom: zoom as number,
       bearing: bearing as number,
       pitch: pitch as number,
-      transitionInterpolator: null,
+      transitionInterpolator: '',
     } as any
   }, [map])
 

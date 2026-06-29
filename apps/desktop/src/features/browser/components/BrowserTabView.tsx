@@ -2,10 +2,6 @@
 // URL bar, navigation controls, screenshot preview, and action buttons
 
 import { useState } from 'react'
-import { Input } from '../../../components/ui/input'
-import { Button } from '../../../components/ui/button'
-import { Spinner } from '../../../components/ui/spinner'
-import { Card } from '../../../components/ui/card'
 import { ArrowLeft, ArrowRight, RefreshCw, Zap, Copy } from 'lucide-react'
 import useBrowserStore from '../browserStore'
 import styles from './BrowserTabView.module.scss'
@@ -54,20 +50,20 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
     <div className={`${styles.container} ${className}`}>
       {/* Navigation bar */}
       <div className={styles.navBar}>
-        <div className="flex items-center gap-1">
+        <div >
           <Button
             size="sm"
             variant="ghost"
             disabled={!isRunning}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft  />
           </Button>
           <Button
             size="sm"
             variant="ghost"
             disabled={!isRunning}
           >
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight  />
           </Button>
           <Button
             size="sm"
@@ -75,7 +71,7 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
             disabled={!isRunning || isLoading}
             onClick={handleScreenshot}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw  />
           </Button>
         </div>
 
@@ -108,10 +104,10 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
         ) : (
           <div className={styles.placeholder}>
             <Copy
-              className="h-12 w-12"
-              style={{ color: 'var(--gw-text-secondary)', opacity: 0.3 }}
+              
+              style={{ opacity: 0.3 }}
             />
-            <span className="text-[13px] text-[var(--gw-text-secondary)]">
+            <span >
               {isRunning ? 'Navigate to a page to see preview' : 'Start a browser session'}
             </span>
           </div>
@@ -120,7 +116,7 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
 
       {/* Action buttons */}
       <div className={styles.actionBar}>
-        <div className="flex gap-2">
+        <div >
           <Button
             size="sm"
             variant="ghost"

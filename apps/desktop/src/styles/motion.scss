@@ -46,7 +46,6 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--gw-shadow-popover);
   }
 }
 
@@ -77,9 +76,6 @@ $gw-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 .gw-shimmer {
   background: linear-gradient(
     90deg,
-    var(--gw-bg-card) 25%,
-    var(--gw-bg-panel) 50%,
-    var(--gw-bg-card) 75%
   );
   background-size: 200% 100%;
   animation: gw-shimmer 1.5s ease-in-out infinite;

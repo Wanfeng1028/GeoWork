@@ -6,13 +6,12 @@ import runtimeClient from '../services/runtimeClient'
 
 const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   workspaces: [],
-  currentWorkspace: null,
-  fileTree: null,
+  currentWorkspace: '',
+  fileTree: '',
   branch: 'main',
   recentFiles: [],
   isLoading: false,
-  error: null,
-
+  error: '',
   // Load workspace list from Go Core
   loadWorkspaces: async () => {
     set({ isLoading: true, error: null })

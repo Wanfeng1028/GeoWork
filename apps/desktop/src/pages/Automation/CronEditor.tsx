@@ -1,9 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Switch } from '../../components/ui/switch'
-import { Badge } from '../../components/ui/badge'
 import { toast } from 'sonner'
 import { useAutomationStore, CronJob } from './store'
 import styles from './CronEditor.module.scss'
@@ -87,14 +82,14 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           <button className={styles.closeBtn} onClick={onClose}>×</button>
         </div>
 
-        <div className="space-y-4">
+        <div >
           <div>
-            <label className="text-sm font-medium">名称</label>
+            <label >名称</label>
             <Input placeholder="例如：每日数据备份" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
           </div>
 
           <div>
-            <label className="text-sm font-medium">Cron 表达式</label>
+            <label >Cron 表达式</label>
             <Input
               value={expression}
               onChange={(e) => setExpression(e.target.value)}
@@ -122,13 +117,13 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
 
           {/* Common presets */}
           <div>
-            <label className="text-sm font-medium">常用表达式</label>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <label >常用表达式</label>
+            <div className="flex-wrap">
               {COMMON_PRESETS.map((preset) => (
                 <Badge
                   key={preset.value}
                   variant="secondary"
-                  className="cursor-pointer"
+                  
                   onClick={() => setExpression(preset.value)}
                 >
                   {preset.label}
@@ -138,7 +133,7 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           </div>
 
           <div>
-            <label className="text-sm font-medium">执行目标</label>
+            <label >执行目标</label>
             <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
               <SelectTrigger>
                 <SelectValue placeholder="选择执行目标" />
@@ -156,21 +151,21 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           </div>
 
           <div>
-            <label className="text-sm font-medium">参数配置</label>
+            <label >参数配置</label>
             <textarea
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="border"
               placeholder='{"band": "NIR"}'
               value={formState.params}
               onChange={(e) => setFormState({ ...formState, params: e.target.value })}
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div >
             <Switch checked={formState.enabled} onCheckedChange={(v) => {
               setFormState({ ...formState, enabled: v })
               if (editingJob) toggleJob(editingJob.id)
             }} />
-            <label className="text-sm font-medium">启用</label>
+            <label >启用</label>
           </div>
 
           <div className={styles.actions}>

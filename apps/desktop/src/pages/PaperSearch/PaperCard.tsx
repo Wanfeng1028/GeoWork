@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip'
 import { toast } from 'sonner'
 import { Star, Download, Database, Link, FileText } from 'lucide-react'
 import { PaperResult } from './store'

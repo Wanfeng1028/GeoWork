@@ -5,16 +5,13 @@
 
 import { useState, useMemo } from "react";
 import { Check, X, Save, GitBranch, Diff, ChevronDown, ChevronRight } from "lucide-react";
-import { Button } from "../../../ui/button";
-import { Badge } from "../../../ui/badge";
-import { Tooltip, TooltipTrigger, TooltipContent } from "../../../ui/tooltip";
 import useDiffStore from "../../../../stores/diffStore";
 import styles from "./DiffPanel.module.scss";
 
 const STATUS_COLORS: Record<string, string> = {
-  modified: "var(--gw-warning)",
-  added: "var(--gw-accent)",
-  deleted: "var(--gw-danger)",
+  modified: '',
+  added: '',
+  deleted: '',
 };
 
 export function DiffPanel() {
@@ -86,12 +83,12 @@ export function DiffPanel() {
       <div className={styles.panel}>
         <div className={styles.header}>
           <span className={styles.title}>
-            <Diff className="h-4 w-4" /> 差异对比
+            <Diff  /> 差异对比
           </span>
         </div>
         <div className={styles.emptyState}>
-          <Diff className="h-8 w-8 text-[var(--gw-text-disabled)]" />
-          <span style={{ fontSize: 12, color: "var(--gw-text-tertiary)" }}>暂无差异对比</span>
+          <Diff  />
+          <span style={{ fontSize: 12 }}>暂无差异对比</span>
         </div>
       </div>
     );
@@ -101,7 +98,7 @@ export function DiffPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>
-          <Diff className="h-4 w-4" /> 差异对比
+          <Diff  /> 差异对比
         </span>
         <span className={styles.diffCount}>
           {selectedDiff?.files.length || 0} 个文件
@@ -113,12 +110,7 @@ export function DiffPanel() {
         {diffs.map((diff) => (
           <div
             key={diff.id}
-            className={`${styles.diffListItem} ${
-              selectedDiffId === diff.id ||
-              (!selectedDiffId && currentDiff?.id === diff.id)
-                ? styles.diffListSelected
-                : ""
-            }`}
+            className={`${styles.diffListItem} ${ selectedDiffId === diff.id || (!selectedDiffId && currentDiff?.id === diff.id) ? styles.diffListSelected : "" }`}
             onClick={() => {
               setSelectedDiffId(diff.id);
               setExpandedFiles(new Set(diff.files.map((f) => f.path)));
@@ -138,13 +130,13 @@ export function DiffPanel() {
         <div className={styles.diffContent}>
           {/* Action bar */}
           <div className={styles.diffActions}>
-            <div className="flex gap-1">
+            <div >
               <Button
                 size="sm"
                 variant="primary"
                 onClick={handleAcceptAll}
               >
-                <Check className="h-3.5 w-3.5 mr-1" />
+                <Check  />
                 全部接受
               </Button>
               <Button
@@ -152,7 +144,7 @@ export function DiffPanel() {
                 variant="danger"
                 onClick={handleRejectAll}
               >
-                <X className="h-3.5 w-3.5 mr-1" />
+                <X  />
                 全部拒绝
               </Button>
               <Tooltip>
@@ -162,7 +154,7 @@ export function DiffPanel() {
                     variant="ghost"
                     onClick={handleSavePatch}
                   >
-                    <Save className="h-3.5 w-3.5 mr-1" />
+                    <Save  />
                     保存
                   </Button>
                 </TooltipTrigger>
@@ -175,7 +167,7 @@ export function DiffPanel() {
                     variant="ghost"
                     onClick={handleBranchSnapshot}
                   >
-                    <GitBranch className="h-3.5 w-3.5 mr-1" />
+                    <GitBranch  />
                     快照
                   </Button>
                 </TooltipTrigger>
@@ -203,20 +195,20 @@ export function DiffPanel() {
                       return next;
                     });
                   }}
-                  className="border-b border-[var(--gw-border-soft)]"
+                  
                 >
-                  <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[var(--gw-bg-hover)]">
+                  <summary >
                     <div className={styles.fileDiffHeader}>
                       <span className={styles.fileName}>{file.path}</span>
-                      <div className="flex gap-1 items-center">
+                      <div >
                         <Badge
                           variant={file.status === "added" ? "success" : file.status === "deleted" ? "danger" : "warning"}
-                          className="text-[10px]"
+                          
                         >
                           {file.status}
                         </Badge>
-                        {isAccepted && <Badge variant="success" className="text-[10px]">&#10003;</Badge>}
-                        {isRejected && <Badge variant="danger" className="text-[10px]">&#10007;</Badge>}
+                        {isAccepted && <Badge variant="success" >&#10003;</Badge>}
+                        {isRejected && <Badge variant="danger" >&#10007;</Badge>}
                       </div>
                     </div>
                   </summary>
@@ -234,7 +226,7 @@ export function DiffPanel() {
                       disabled={isAccepted}
                       onClick={() => handleAcceptFile(file.path)}
                     >
-                      <Check className="h-3.5 w-3.5 mr-1" />
+                      <Check  />
                       接受
                     </Button>
                     <Button
@@ -243,7 +235,7 @@ export function DiffPanel() {
                       disabled={isRejected}
                       onClick={() => handleRejectFile(file.path)}
                     >
-                      <X className="h-3.5 w-3.5 mr-1" />
+                      <X  />
                       拒绝
                     </Button>
                   </div>

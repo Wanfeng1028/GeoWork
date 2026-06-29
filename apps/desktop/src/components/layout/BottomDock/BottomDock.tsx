@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { Terminal } from '../../common/Terminal'
 import { RuntimeEvents } from '../../panel/RuntimeEvents/RuntimeEvents'
 import { BrowserPanel } from '../../panel/BrowserPanel/BrowserPanel'

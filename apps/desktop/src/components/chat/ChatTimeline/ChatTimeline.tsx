@@ -3,8 +3,6 @@
 import { AlertCircle, Terminal, User, Bot } from 'lucide-react'
 import useChatStore from '../../../stores/chatStore'
 import type { ChatMessage } from '../../../types/chat'
-import { Empty } from '../../ui/empty'
-import { Badge } from '../../ui/badge'
 import styles from './ChatTimeline.module.scss'
 
 export function ChatTimeline() {
@@ -23,10 +21,10 @@ export function ChatTimeline() {
 
   return (
     <div className={styles.timeline}>
-      <div className="flex flex-col gap-2">
+      <div className="flex-col">
         {messages.map((msg) => (
           <div key={msg.id} className={`${styles.messageItem} ${styles.messageCard} ${styles[`${msg.role}Msg`]} ${styles[`${msg.type}Msg`]}`}>
-            <div className="rounded-[var(--gw-radius-md)] border border-[var(--gw-border-soft)] bg-[var(--gw-bg-surface)] p-3">
+            <div className="border">
               <div className={styles.messageHeader}>
                 <Badge variant={
                   msg.role === 'user' ? 'info' : msg.role === 'system' ? 'danger' : 'success'
@@ -38,7 +36,7 @@ export function ChatTimeline() {
                 </span>
               </div>
 
-              <p className="mt-2 text-[13px] text-[var(--gw-text-primary)]">
+              <p >
                 {msg.content}
               </p>
 
@@ -48,7 +46,7 @@ export function ChatTimeline() {
                   className={styles.toolCall}
                   open={msg.toolCall.status === 'running'}
                 >
-                  <summary className="cursor-pointer py-1">
+                  <summary >
                     <span>
                       {msg.toolCall.status === 'running' ? (
                         <span className={styles.runningIndicator}>
@@ -56,11 +54,11 @@ export function ChatTimeline() {
                         </span>
                       ) : msg.toolCall.status === 'failed' ? (
                         <span className={styles.failedIndicator}>
-                          <AlertCircle className="inline h-3.5 w-3.5" /> 失败: {msg.toolCall.toolName}
+                          <AlertCircle className="inline" /> 失败: {msg.toolCall.toolName}
                         </span>
                       ) : (
                         <span>
-                          <Terminal className="inline h-3.5 w-3.5" /> 工具调用: {msg.toolCall.toolName}
+                          <Terminal className="inline" /> 工具调用: {msg.toolCall.toolName}
                         </span>
                       )}
                     </span>

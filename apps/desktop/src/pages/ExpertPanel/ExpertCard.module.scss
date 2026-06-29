@@ -1,21 +1,15 @@
-// ExpertCard — ported from QoderWorkCopy .skill-card visual language.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.skill-card, .market-icon, .card-plus).
 
 .card {
   position: relative;
   display: block;
   min-height: 116px;
   padding: 16px 14px 12px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-panel);
   cursor: pointer;
-  transition: border-color var(--gw-duration-normal) ease,
-    background-color var(--gw-duration-normal) ease;
+  transition: border-color 0.15s ease,;
+    background-color 0.15s ease;
 
   &:hover {
-    border-color: var(--gw-border-strong);
-    background: color-mix(in srgb, var(--gw-bg-panel) 88%, var(--gw-bg-hover));
   }
 }
 
@@ -26,8 +20,6 @@
   place-items: center;
   margin-bottom: 10px;
   border-radius: 5px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
 }
 
 .plus {
@@ -42,14 +34,11 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-secondary);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }
 
@@ -59,13 +48,11 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 18px;
-  color: var(--gw-text);
 }
 
 .category {
   display: block;
   margin-top: 1px;
-  color: var(--gw-text-tertiary);
   font-style: normal;
   font-size: 11px;
   line-height: 15px;
@@ -75,7 +62,6 @@
   display: block;
   height: 38px;
   margin-top: 8px;
-  color: var(--gw-text-secondary);
   font-size: 11px;
   line-height: 18px;
   overflow: hidden;
@@ -84,6 +70,5 @@
 .skillCount {
   display: block;
   margin-top: 10px;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
 }

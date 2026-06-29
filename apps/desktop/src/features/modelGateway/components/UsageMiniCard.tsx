@@ -28,7 +28,7 @@ export function UsageMiniCard() {
       <div className={styles.statsRow}>
         <div className={styles.stat}>
           <span className={styles.label}>Tokens</span>
-          <span className={styles.value} style={{ color: 'var(--gw-accent)' }}>
+          <span className={styles.value} >
             {formatTokens(totalTokens)}
           </span>
         </div>

@@ -1,5 +1,1 @@
-@import "tailwindcss";
-
-@import "../design/tokens.css";
-@import "../design/themes.css";
-@import "../design/base.css";
+/* GeoWork global style entry. Design tokens / themes removed in phase 1 cleanup. */

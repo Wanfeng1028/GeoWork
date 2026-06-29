@@ -9,7 +9,7 @@ import styles from './AgentStepTimeline.module.scss'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   completed: <CheckCircle className={`${styles.icon} ${styles.completed}`} />,
-  running: <Loader2 className={`${styles.icon} ${styles.running} animate-spin`} />,
+  running: <Loader2 className={`${styles.icon} ${styles.running}`} />,
   failed: <XCircle className={`${styles.icon} ${styles.failed}`} />,
   pending: <Clock className={`${styles.icon} ${styles.pending}`} />,
 }
@@ -51,10 +51,10 @@ export const AgentStepTimeline: React.FC = () => {
         {displaySteps.map((step, index) => {
           const isLast = index === displaySteps.length - 1
           const statusColor =
-            step.status === 'completed' ? 'var(--gw-accent)'
-              : step.status === 'running' ? 'var(--gw-accent-blue)'
-              : step.status === 'failed' ? 'var(--gw-danger)'
-              : 'var(--gw-text-tertiary)'
+            step.status === 'completed' ? null
+              : step.status === 'running' ? null
+              : step.status === 'failed' ? null
+              : null
 
           return (
             <React.Fragment key={step.id}>

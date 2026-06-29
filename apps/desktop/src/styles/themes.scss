@@ -1,7 +1,0 @@
-// GeoWork theme-specific global component bridges.
-//
-// NOTE: This file is intentionally kept as a no-op. The canonical theme system
-// now lives in `src/design/themes.css` (imported via `src/styles/app.css`).
-// The previous content only set a background color + Ant Design overrides
-// (`.ant-modal-content` etc.) — Ant Design is not used in GeoWork's current
-// stack, so those overrides were dead code.

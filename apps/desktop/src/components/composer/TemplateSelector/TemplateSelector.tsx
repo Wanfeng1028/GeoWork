@@ -2,13 +2,6 @@
 
 import React from 'react'
 import { FileText } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
 import styles from './TemplateSelector.module.scss'
 
 const TEMPLATES = [

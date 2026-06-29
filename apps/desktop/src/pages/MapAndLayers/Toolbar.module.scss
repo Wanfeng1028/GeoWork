@@ -4,13 +4,10 @@
   align-items: center;
   gap: 10px;
   padding: 7px 12px;
-  border-top: 1px solid var(--gw-border);
-  background: color-mix(in srgb, var(--gw-bg-panel) 82%, transparent);
 }
 
 .label {
   flex: 0 0 auto;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   font-weight: 650;
 }
@@ -26,16 +23,12 @@
   :global(button) {
     height: 28px;
     border-radius: 999px;
-    border-color: var(--gw-border);
-    background: var(--gw-bg-panel);
-    color: var(--gw-text);
     font-size: 12px;
     font-weight: 620;
     box-shadow: none;
   }
 
   :global(button:hover) {
-    background: var(--gw-bg-hover);
   }
 }
 
@@ -43,13 +36,11 @@
   flex: 0 1 auto;
   max-width: 320px;
   overflow: hidden;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 
   strong {
-    color: var(--gw-text);
     font-weight: 650;
   }
 }

@@ -74,8 +74,7 @@ export const useAutomationStore = create<AutomationState>((set, get) => ({
   jobs: [],
   runs: [],
   loading: false,
-  error: null,
-
+  error: '',
   // ── Rules ────────────────────────────────────────────────────────────────
 
   fetchRules: async () => {

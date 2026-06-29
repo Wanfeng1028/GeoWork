@@ -2,14 +2,6 @@
 
 import React, { useState } from 'react'
 import { Settings } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select'
-import { Badge } from '../../ui/badge'
 import useSettingsStore from '../../../stores/settingsStore'
 import styles from './ModelSelector.module.scss'
 

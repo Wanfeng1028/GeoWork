@@ -28,23 +28,11 @@
   justify-content: space-between;
 }
 
-// === Glass Effect ===
-@mixin glass($blur: 12px, $alpha: 0.85) {
-  background: rgba(16, 23, 34, $alpha);
-  backdrop-filter: blur($blur);
-  -webkit-backdrop-filter: blur($blur);
-  border: 1px solid var(--gw-border-subtle);
-}
-
 // === Card Style ===
 @mixin card {
-  background: var(--gw-bg-card);
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: var(--gw-radius-md);
-  padding: var(--gw-space-16);
+  padding: 16px;
   
   &:hover {
-    border-color: var(--gw-border-strong);
   }
 }
 
@@ -53,19 +41,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--gw-space-8);
-  padding: var(--gw-space-8) var(--gw-space-16);
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: var(--gw-radius-sm);
+  gap: 8px;
+  padding: 8px 16px;
   background: transparent;
-  color: var(--gw-text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 14px;
   
   &:hover {
-    background: var(--gw-bg-card);
-    border-color: var(--gw-border-strong);
   }
   
   &:disabled {
@@ -77,19 +60,13 @@
 // === Input Base ===
 @mixin input-base {
   width: 100%;
-  padding: var(--gw-space-8) var(--gw-space-12);
-  border: 1px solid var(--gw-border-subtle);
-  border-radius: var(--gw-radius-sm);
-  background: var(--gw-bg-input);
-  color: var(--gw-text-primary);
+  padding: 8px 12px;
   transition: border-color 0.15s ease;
   
   &:focus {
-    border-color: var(--gw-border-active);
     outline: none;
   }
   
   &::placeholder {
-    color: var(--gw-text-tertiary);
   }
 }

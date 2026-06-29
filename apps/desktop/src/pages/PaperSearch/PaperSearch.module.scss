@@ -6,14 +6,11 @@
   gap: 14px;
   overflow: auto;
   padding: 28px 22px 22px;
-  background: var(--gw-bg);
-  color: var(--gw-text);
 }
 
 .pageHeader,
 .searchPanel,
 .resultsArea {
-  max-width: var(--gw-content-width);
   width: 100%;
   margin: 0 auto;
 }
@@ -27,7 +24,6 @@
 
 .pageHeader h2 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 26px;
   line-height: 34px;
   font-weight: 760;
@@ -35,7 +31,6 @@
 
 .pageHeader p {
   margin: 4px 0 0;
-  color: var(--gw-text-secondary);
   font-size: 13px;
   line-height: 20px;
 }
@@ -46,9 +41,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 3px;
   padding: 3px;
-  border: 1px solid var(--gw-border);
   border-radius: 999px;
-  background: var(--gw-bg-soft);
 }
 
 .viewSwitch button,
@@ -67,7 +60,6 @@
   border-radius: 999px;
   padding: 0 11px;
   background: transparent;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   font-weight: 650;
   cursor: pointer;
@@ -75,14 +67,10 @@
 
 .viewSwitch button.active,
 .viewSwitch button:hover {
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .searchPanel {
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
   overflow: hidden;
 }
 
@@ -100,10 +88,7 @@
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
-  border: 1px solid var(--gw-border);
   border-radius: 999px;
-  background: var(--gw-bg);
-  color: var(--gw-text-tertiary);
   overflow: hidden;
 }
 
@@ -117,30 +102,23 @@
   background: transparent;
   box-shadow: none;
   padding: 0 12px 0 0;
-  color: var(--gw-text);
   font-size: 12px;
 }
 
 .primaryButton {
   height: 32px;
-  background: var(--gw-text);
-  color: var(--gw-bg);
   padding: 0 14px;
 }
 
 .ghostButton,
 .resultsHeader button {
   height: 32px;
-  border: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   padding: 0 13px;
 }
 
 .ghostButton:hover,
 .ghostButton.advancedActive,
 .resultsHeader button:hover {
-  background: var(--gw-bg-hover);
 }
 
 .advancedPanel {
@@ -148,8 +126,6 @@
   grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   gap: 10px;
   padding: 13px 14px 14px;
-  border-top: 1px solid var(--gw-border);
-  background: var(--gw-bg-subtle);
 }
 
 .field {
@@ -157,7 +133,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  color: var(--gw-text-secondary);
   font-size: 11px;
   font-weight: 650;
 }
@@ -165,10 +140,7 @@
 .field :global(input),
 .field :global(button[role='combobox']) {
   height: 31px;
-  border-color: var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   font-size: 12px;
 }
 
@@ -180,17 +152,12 @@
 
 .advancedActions button {
   height: 31px;
-  border: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .resultsArea {
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-panel);
   overflow: hidden;
 }
 
@@ -200,7 +167,6 @@
   display: grid;
   place-items: center;
   gap: 9px;
-  color: var(--gw-text-tertiary);
   font-size: 12px;
 }
 
@@ -210,13 +176,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
 .resultsHeader strong {
-  color: var(--gw-text);
   font-weight: 760;
 }
 
@@ -237,23 +200,18 @@
 
 .tableHead {
   height: 38px;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   font-weight: 700;
 }
 
 .tableRow {
   min-height: 58px;
-  border-bottom: 1px solid var(--gw-border);
-  color: var(--gw-text-secondary);
   font-size: 12px;
   cursor: pointer;
 }
 
 .tableRow:hover,
 .tableRow.selectedRow {
-  background: var(--gw-bg-hover);
 }
 
 .tableRow strong,
@@ -266,18 +224,15 @@
 }
 
 .tableRow strong {
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 650;
 }
 
 .tableRow em {
-  color: var(--gw-text-secondary);
   font-style: normal;
 }
 
 .tableRow b {
-  color: var(--gw-text);
   font-size: 12px;
 }
 
@@ -290,8 +245,6 @@
   justify-content: center;
   padding: 0 8px;
   border-radius: 999px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 11px;
   font-weight: 700;
 }
@@ -309,12 +262,9 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-secondary);
 }
 
 .rowActions button:hover {
-  background: var(--gw-bg-active);
-  color: var(--gw-text);
 }
 
 .filledStar {
@@ -338,26 +288,19 @@
   justify-content: center;
   gap: 6px;
   padding: 9px;
-  border-top: 1px solid var(--gw-border);
 }
 
 .paginationContainer button {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
-  color: var(--gw-text-secondary);
 }
 
 .paginationContainer button.active,
 .paginationContainer button:hover {
-  background: var(--gw-text);
-  color: var(--gw-bg);
 }
 
 .paginationContainer span {
-  color: var(--gw-text-tertiary);
   font-size: 12px;
 }
 
@@ -366,8 +309,6 @@
   max-height: 80vh;
   overflow-y: auto;
   border-radius: 9px;
-  background: var(--gw-popup-bg);
-  color: var(--gw-text);
 }
 
 .detailPanel {
@@ -385,7 +326,6 @@
 
 .detailHeader h3 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 15px;
   line-height: 22px;
   font-weight: 720;
@@ -399,12 +339,9 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--gw-text-tertiary);
 }
 
 .detailHeader button:hover {
-  background: var(--gw-bg-hover);
-  color: var(--gw-text);
 }
 
 .detailActions {
@@ -415,9 +352,6 @@
 
 .detailActions button {
   height: 29px;
-  border: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
 }
 
 .detailMeta {
@@ -425,9 +359,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
 }
 
 .detailMeta div {
@@ -435,13 +367,11 @@
 }
 
 .detailMeta dt {
-  color: var(--gw-text-tertiary);
   font-size: 11px;
 }
 
 .detailMeta dd {
   margin: 2px 0 0;
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 17px;
   overflow: hidden;
@@ -450,7 +380,6 @@
 }
 
 .strongValue {
-  color: var(--gw-text) !important;
   font-weight: 700;
 }
 
@@ -468,7 +397,6 @@
 
 .detailSection h4 {
   margin: 0;
-  color: var(--gw-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -476,10 +404,7 @@
 .detailSection p,
 .detailSection pre {
   margin: 0;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 19px;
   padding: 10px;

@@ -17,8 +17,7 @@ interface McpState {
 const useMcpStore = create<McpState>((set) => ({
   servers: [],
   isLoading: false,
-  error: null,
-
+  error: '',
   loadServers: async () => {
     set({ isLoading: true, error: null })
     try {

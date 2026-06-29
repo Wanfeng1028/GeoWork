@@ -1,5 +1,3 @@
-// Extensions — ported from QoderWorkCopy connector-market visual language.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.extension-page,
 // .extension-content, .connector-grid, .connector-card, .connector-icon).
 
 .extensions {
@@ -7,8 +5,6 @@
   min-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--gw-bg-canvas);
-  color: var(--gw-text);
 }
 
 // ---- Top toolbar ----
@@ -20,7 +16,6 @@
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  background: var(--gw-bg-canvas);
 }
 
 .refresh {
@@ -31,12 +26,9 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--gw-text-secondary);
   cursor: pointer;
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }
 
@@ -47,12 +39,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--gw-border);
-  border-radius: var(--gw-radius-full);
-  color: var(--gw-text-tertiary);
   padding: 0 12px;
   font-size: 12px;
-  background: var(--gw-bg-panel);
 }
 
 .searchInput {
@@ -61,12 +49,10 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--gw-text);
   font: inherit;
   font-size: 12px;
 
   &::placeholder {
-    color: var(--gw-text-tertiary);
   }
 }
 
@@ -75,7 +61,6 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: var(--gw-radius-full);
   background: #171914;
   color: #fff;
   padding: 0 15px;
@@ -83,7 +68,7 @@
   font-size: 13px;
   border: 0;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
     background: #000;
@@ -92,7 +77,6 @@
 
 // ---- Content column ----
 .content {
-  width: var(--gw-content-width);
   max-width: calc(100% - 32px);
   margin: 18px auto 48px;
 }
@@ -102,12 +86,10 @@
   font-size: 24px;
   line-height: 32px;
   font-weight: 650;
-  color: var(--gw-text);
 }
 
 .subtitle {
   margin: 4px 0 18px;
-  color: var(--gw-text-tertiary);
   font-size: 13px;
 }
 
@@ -120,21 +102,17 @@
   margin-bottom: 18px;
   overflow: hidden;
   border-radius: 6px;
-  border: 1px solid var(--gw-border);
-  background: color-mix(in srgb, var(--gw-bg-panel) 88%, var(--gw-bg-soft));
   padding-left: 17px;
 
   strong {
     display: block;
     font-size: 15px;
     line-height: 22px;
-    color: var(--gw-text);
   }
 
   span {
     display: block;
     margin-top: 4px;
-    color: var(--gw-text-secondary);
     font-size: 12px;
   }
 
@@ -164,21 +142,18 @@
   button {
     border: 0;
     background: transparent;
-    color: var(--gw-text-secondary);
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     padding: 0;
-    transition: color var(--gw-duration-normal) ease;
+    transition: color 0.15s ease;
 
     &:hover,
     &.active {
-      color: var(--gw-text);
     }
 
     em {
       margin-left: 7px;
-      color: var(--gw-text-tertiary);
       font-size: 10px;
       font-style: normal;
     }
@@ -195,29 +170,21 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    border: 1px solid var(--gw-border);
     border-radius: 6px;
     padding: 0 9px;
-    background: var(--gw-bg-panel);
-    color: var(--gw-text-secondary);
     font-size: 12px;
     cursor: pointer;
 
     &:hover {
-      background: var(--gw-bg-hover);
-      color: var(--gw-text);
     }
 
     &.active {
-      background: var(--gw-bg-active);
-      color: var(--gw-text);
     }
   }
 }
 
 .sectionLabel {
   margin: 6px 0 10px;
-  color: var(--gw-text);
   font-size: 12px;
   font-weight: 650;
 }
@@ -243,16 +210,12 @@
   align-items: center;
   gap: 11px;
   padding: 10px 12px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-panel);
   cursor: pointer;
-  transition: border-color var(--gw-duration-normal) ease,
-    background-color var(--gw-duration-normal) ease;
+  transition: border-color 0.15s ease,;
+    background-color 0.15s ease;
 
   &:hover {
-    border-color: var(--gw-border-strong);
-    background: color-mix(in srgb, var(--gw-bg-panel) 90%, var(--gw-bg-hover));
   }
 }
 
@@ -263,8 +226,6 @@
   place-items: center;
   overflow: hidden;
   border-radius: 6px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text);
 }
 
 .cardBody {
@@ -274,14 +235,12 @@
     display: block;
     font-size: 13px;
     line-height: 18px;
-    color: var(--gw-text);
   }
 
   span {
     display: block;
     max-width: 210px;
     margin-top: 2px;
-    color: var(--gw-text-secondary);
     font-size: 11px;
     line-height: 16px;
     white-space: nowrap;
@@ -298,33 +257,26 @@
   padding: 0;
   border: 0;
   border-radius: 6px;
-  color: var(--gw-text-secondary);
   background: transparent;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease,
-    color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease,;
+    color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
-    color: var(--gw-text);
   }
 }
 
 // ---- Installed section ----
 .installedCard {
-  border: 1px solid var(--gw-border);
   border-radius: 9px;
-  background: var(--gw-bg-panel);
   margin-top: 22px;
   overflow: hidden;
 }
 
 .installedHead {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--gw-border);
   font-size: 14px;
   font-weight: 600;
-  color: var(--gw-text);
 }
 
 .installedRow {
@@ -333,7 +285,6 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--gw-border);
 
   &:last-child {
     border-bottom: 0;
@@ -348,13 +299,11 @@
 
   strong {
     font-size: 13px;
-    color: var(--gw-text);
   }
 
   span {
     display: block;
     font-size: 11px;
-    color: var(--gw-text-tertiary);
     margin-top: 1px;
   }
 }
@@ -365,9 +314,6 @@
   align-items: center;
   gap: 4px;
   padding: 0 8px;
-  border-radius: var(--gw-radius-full);
-  background: var(--gw-accent-soft);
-  color: var(--gw-accent);
   font-size: 11px;
   font-weight: 600;
   flex-shrink: 0;
@@ -383,8 +329,6 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.22);
   cursor: pointer;
   z-index: 40;
@@ -393,11 +337,9 @@
 .emptyState {
   padding: 48px 16px;
   text-align: center;
-  color: var(--gw-text-tertiary);
   font-size: 13px;
 }
 
-/* QoderWorkCopy fidelity pass: extension/skill/connector variants. */
 .extensions {
   height: 100%;
 }
@@ -407,7 +349,6 @@
 }
 
 .content {
-  width: var(--gw-content-width);
   margin: 24px auto 48px;
 }
 
@@ -416,7 +357,6 @@
   height: 118px;
   grid-template-columns: minmax(0, 1fr) 220px;
   padding: 0 18px;
-  background: color-mix(in srgb, var(--gw-bg-panel) 90%, var(--gw-bg-soft));
 }
 
 .heroArt {
@@ -434,10 +374,7 @@
   width: 58px;
   height: 78px;
   border-radius: 8px;
-  border: 1px solid var(--gw-border);
-  background: linear-gradient(145deg, var(--gw-bg-soft), var(--gw-bg-panel));
   transform: rotate(-15deg);
-  box-shadow: var(--gw-shadow-sm);
 }
 
 .heroArt span:nth-child(2) {
@@ -451,7 +388,6 @@
   height: 44px;
   border-radius: 50%;
   transform: rotate(0) translateY(12px);
-  background: var(--gw-accent-soft);
 }
 
 .grid.rows {
@@ -494,7 +430,6 @@
 .cardBody small {
   display: block;
   margin-top: 1px;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   line-height: 15px;
 }
@@ -502,7 +437,6 @@
 .cardBody em {
   display: block;
   margin-top: 15px;
-  color: var(--gw-text-secondary);
   font-style: normal;
   font-size: 11px;
 }

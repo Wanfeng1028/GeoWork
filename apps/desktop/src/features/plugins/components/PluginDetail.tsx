@@ -2,13 +2,6 @@
 // Detailed view for a single plugin with actions, permissions, and reviews
 
 import { useState } from 'react'
-import { Card } from '../../../components/ui/card'
-import { Button } from '../../../components/ui/button'
-import { Badge } from '../../../components/ui/badge'
-import { Separator } from '../../../components/ui/separator'
-import { Switch } from '../../../components/ui/switch'
-import { Empty } from '../../../components/ui/empty'
-import { Spinner } from '../../../components/ui/spinner'
 import { CheckCircle, Download, User, Globe, Shield, Star, AlertTriangle } from 'lucide-react'
 import type { Plugin } from '../pluginClient'
 import usePluginStore from '../pluginStore'
@@ -130,11 +123,11 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
       <div className={styles.header}>
         <div className={styles.headerMain}>
           <div className={styles.pluginIcon}>
-            <Download className="h-5 w-5" />
+            <Download  />
           </div>
           <div className={styles.headerInfo}>
             <div className={styles.headerTitle}>
-              <h3 className="text-[15px] font-semibold text-[var(--gw-text)]">
+              <h3 >
                 {plugin.name}
               </h3>
               {plugin.installed && (
@@ -143,21 +136,21 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">{plugin.author}</span>
+            <div >
+              <div >
+                <User  />
+                <span >{plugin.author}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4" />
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">
+              <div >
+                <Star  />
+                <span >
                   {plugin.rating !== undefined ? `${plugin.rating.toFixed(1)} 分` : '暂无评分'}
                 </span>
               </div>
               {plugin.installCount !== undefined && (
-                <div className="flex items-center gap-1">
-                  <Download className="h-4 w-4" />
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
+                <div >
+                  <Download  />
+                  <span >
                     {getInstallCountText(plugin.installCount)} 次安装
                   </span>
                 </div>
@@ -174,40 +167,40 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
       <div className={styles.body}>
         {/* Description */}
         <section className={styles.section}>
-          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
+          <h4 >
             简介
           </h4>
-          <p className="text-[13px] text-[var(--gw-text-secondary)]">
+          <p >
             {plugin.description || '暂无描述'}
           </p>
         </section>
 
         {/* Info */}
         <section className={styles.section}>
-          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
+          <h4 >
             信息
           </h4>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
-              <span className="text-[13px] text-[var(--gw-text-secondary)]">版本</span>
-              <span className="text-[13px] text-[var(--gw-text)]">v{plugin.version}</span>
+              <span >版本</span>
+              <span >v{plugin.version}</span>
             </div>
             {plugin.category && (
               <div className={styles.infoItem}>
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">分类</span>
-                <span className="text-[13px] text-[var(--gw-text)]">{plugin.category}</span>
+                <span >分类</span>
+                <span >{plugin.category}</span>
               </div>
             )}
             {plugin.license && (
               <div className={styles.infoItem}>
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">许可证</span>
-                <span className="text-[13px] text-[var(--gw-text)]">{plugin.license}</span>
+                <span >许可证</span>
+                <span >{plugin.license}</span>
               </div>
             )}
             {plugin.homepage && (
               <div className={styles.infoItem}>
-                <Globe className="h-4 w-4" />
-                <span className="text-[13px] text-[var(--gw-text-secondary)]">官网</span>
+                <Globe  />
+                <span >官网</span>
                 <a href={plugin.homepage} target="_blank" rel="noreferrer">
                   访问
                 </a>
@@ -218,17 +211,17 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
 
         {/* Permissions */}
         <section className={styles.section}>
-          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
-            <Shield className="h-4 w-4 inline mr-1" />
+          <h4 >
+            <Shield className="inline" />
             权限要求
           </h4>
 
           {hasHighRisk && (
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10">
-              <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5 shrink-0" />
+            <div className="border">
+              <AlertTriangle className="shrink-0" />
               <div>
-                <span className="text-[13px] font-medium text-[var(--gw-text)]">此插件需要访问高风险权限</span>
-                <span className="text-[13px] text-[var(--gw-text-secondary)] block">安装前请仔细检查以下权限的必要性</span>
+                <span >此插件需要访问高风险权限</span>
+                <span >安装前请仔细检查以下权限的必要性</span>
               </div>
             </div>
           )}
@@ -242,14 +235,14 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                     <span className={styles.permissionName}>{perm}</span>
                     <Badge className={getBadgeClass(info.color)}>{info.level}</Badge>
                   </div>
-                  <span className="text-[13px] text-[var(--gw-text-secondary)]">
+                  <span >
                     {info.description}
                   </span>
                 </div>
               )
             })}
             {plugin.permissions.length === 0 && (
-              <span className="text-[13px] text-[var(--gw-text-secondary)]">此插件不需要额外权限</span>
+              <span >此插件不需要额外权限</span>
             )}
           </div>
         </section>
@@ -259,9 +252,9 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
           <Separator />
           <div className={styles.actions}>
             {plugin.installed ? (
-              <div className="flex flex-col w-full gap-3">
+              <div className="flex-col">
                 <div className={styles.actionRow}>
-                  <span className="text-[13px] text-[var(--gw-text)]">启用/禁用</span>
+                  <span >启用/禁用</span>
                   <Switch
                     checked={plugin.enabled}
                     onCheckedChange={handleToggle}
@@ -270,7 +263,7 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                 </div>
                 <Button
                   variant="danger"
-                  className="w-full"
+                  
                   onClick={handleUninstall}
                   disabled={isLoading || (showConfirm !== 'uninstall' && showConfirm !== null)}
                 >
@@ -281,12 +274,12 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
               </div>
             ) : (
               <Button
-                className="w-full"
+                
                 size="lg"
                 onClick={handleInstall}
                 disabled={isLoading || showConfirm !== null}
               >
-                {isLoading ? <Spinner className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+                {isLoading ? <Spinner  /> : <Download  />}
                 {showConfirm === 'install'
                   ? '安装中...'
                   : '安装插件'}
@@ -298,13 +291,13 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
         {/* Reviews placeholder */}
         <section className={styles.section}>
           <Separator />
-          <h4 className="text-[13px] font-semibold text-[var(--gw-text)]">
+          <h4 >
             用户评价
           </h4>
           <Empty
             description="暂无评价"
           />
-          <span className="text-[13px] text-[var(--gw-text-secondary)]">
+          <span >
             评价功能即将上线
           </span>
         </section>

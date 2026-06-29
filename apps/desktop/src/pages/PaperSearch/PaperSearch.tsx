@@ -1,9 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
-import { Spinner } from '../../components/ui/spinner'
 import { toast } from 'sonner'
 import { Search, Filter, Download, Database, Star, Link, RefreshCw, X, Table2, PanelsTopLeft } from 'lucide-react'
 import { usePaperSearchStore, PaperResult } from './store'
@@ -142,7 +137,7 @@ export function PaperSearch() {
 
       <section className={styles.resultsArea}>
         {isLoading && results.length === 0 ? (
-          <div className={styles.loadingContainer}><Spinner className="w-8 h-8" /><span>正在搜索论文...</span></div>
+          <div className={styles.loadingContainer}><Spinner  /><span>正在搜索论文...</span></div>
         ) : results.length === 0 && !isLoading ? (
           <div className={styles.emptyContainer}><span>{query ? '未找到相关论文，请尝试其他关键词' : '输入关键词开始搜索 OpenAlex 学术数据库'}</span></div>
         ) : (

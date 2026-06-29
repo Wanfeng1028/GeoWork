@@ -1,7 +1,4 @@
 import React from 'react'
-import { Button } from '../../components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../../components/ui/select'
-import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip'
 import { toast } from 'sonner'
 import {
   Maximize,

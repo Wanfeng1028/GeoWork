@@ -1,5 +1,3 @@
-// SkillPickerButton — ported from QoderWorkCopy picker-popover visual language.
-// Canonical source: QoderWorkCopy/src/styles/qoder-work.css (.picker-popover, .picker-row).
 
 .container {
   position: relative;
@@ -7,7 +5,6 @@
   align-items: center;
 }
 
-// ---- Round trigger button (32px, like QoderWorkCopy .round) ----
 .trigger {
   width: 32px;
   height: 32px;
@@ -15,14 +12,10 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: var(--gw-bg-panel);
-  color: var(--gw-text);
-  box-shadow: 0 2px 8px rgba(45, 38, 24, 0.12), inset 0 0 0 1px var(--gw-border);
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease, transform var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease, transform 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
     transform: translateY(-1px);
   }
 
@@ -31,9 +24,6 @@
   }
 
   &.custom {
-    background: var(--gw-accent-soft);
-    color: var(--gw-accent);
-    box-shadow: inset 0 0 0 1px var(--gw-accent);
   }
 }
 
@@ -48,20 +38,14 @@
   height: 16px;
   padding: 0 4px;
   border-radius: 8px;
-  background: var(--gw-accent);
   color: #fff;
   font-size: 10px;
   font-weight: 600;
 }
 
-// ---- Picker popover (358px, QoderWorkCopy .picker-popover) ----
 .popover {
   width: 320px;
   padding: 10px;
-  border-radius: var(--gw-radius-md);
-  border: 1px solid var(--gw-popup-border-strong);
-  background: var(--gw-popup-bg);
-  box-shadow: var(--gw-popup-shadow);
 }
 
 .popoverHead {
@@ -70,7 +54,6 @@
   justify-content: space-between;
   padding: 0 4px 8px;
   font-size: 11px;
-  color: var(--gw-text-tertiary);
 
   span {
     font-weight: 600;
@@ -79,13 +62,11 @@
   button {
     border: 0;
     background: transparent;
-    color: var(--gw-text-secondary);
     font-size: 11px;
     cursor: pointer;
     padding: 0;
 
     &:hover {
-      color: var(--gw-text);
     }
   }
 }
@@ -99,20 +80,16 @@
   align-items: center;
   gap: 9px;
   border: 0;
-  border-radius: var(--gw-radius-sm);
   padding: 7px 8px;
   background: transparent;
-  color: var(--gw-text);
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--gw-duration-normal) ease;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: var(--gw-bg-hover);
   }
 
   &.active {
-    background: var(--gw-bg-active);
   }
 }
 
@@ -121,8 +98,6 @@
   height: 28px;
   display: grid;
   place-items: center;
-  border-radius: var(--gw-radius-sm);
-  background: var(--gw-bg-soft);
   font-size: 15px;
 }
 
@@ -133,7 +108,6 @@
     display: block;
     font-size: 13px;
     line-height: 18px;
-    color: var(--gw-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -141,7 +115,6 @@
 
   span {
     display: block;
-    color: var(--gw-text-tertiary);
     font-size: 11px;
     line-height: 15px;
     margin-top: 1px;
@@ -154,13 +127,9 @@
   display: inline-flex;
   align-items: center;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--gw-accent) 14%, transparent);
-  color: var(--gw-accent);
   font-size: 10px;
   font-weight: 600;
 
   &.off {
-    background: var(--gw-bg-soft);
-    color: var(--gw-text-tertiary);
   }
 }

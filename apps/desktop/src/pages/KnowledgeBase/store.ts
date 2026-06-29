@@ -58,12 +58,11 @@ interface KnowledgeBaseState {
 export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   categories: [],
   entries: [],
-  selectedCategory: null,
-  selectedEntry: null,
+  selectedCategory: '',
+  selectedEntry: '',
   searchQuery: '',
   isLoading: false,
-  error: null,
-
+  error: '',
   setCategories: (cats) => set({ categories: cats }),
   setEntries: (entries) => set({ entries }),
   setSelectedCategory: (id) => set({ selectedCategory: id }),

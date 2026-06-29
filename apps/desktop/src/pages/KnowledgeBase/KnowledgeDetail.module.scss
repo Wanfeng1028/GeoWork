@@ -3,8 +3,6 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--gw-popup-bg);
-  color: var(--gw-text);
 }
 
 .detailHeader {
@@ -13,12 +11,10 @@
   align-items: flex-start;
   gap: 12px;
   padding: 0 0 13px;
-  border-bottom: 1px solid var(--gw-border);
 
   .detailTitle {
     margin: 0;
     min-width: 0;
-    color: var(--gw-text);
     font-size: 15px;
     line-height: 22px;
     font-weight: 720;
@@ -35,37 +31,28 @@
   :global(button) {
     height: 28px;
     border-radius: 999px;
-    border-color: var(--gw-border);
-    background: var(--gw-bg-panel);
-    color: var(--gw-text);
     font-size: 12px;
     font-weight: 650;
   }
 
   :global(button:hover) {
-    background: var(--gw-bg-hover);
   }
 }
 
 .detailMeta {
   padding: 13px 0;
-  border-bottom: 1px solid var(--gw-border);
 
   :global(.grid) {
-    border-color: var(--gw-border) !important;
     border-radius: 7px !important;
-    background: var(--gw-bg-soft);
     padding: 10px !important;
   }
 
   :global(.text-sm) {
-    color: var(--gw-text-secondary);
     font-size: 12px !important;
     line-height: 18px;
   }
 
   :global(.text-muted-foreground) {
-    color: var(--gw-text-tertiary) !important;
   }
 
   :global(.badge),
@@ -76,14 +63,10 @@
 
 .detailSearch {
   padding: 12px 0;
-  border-bottom: 1px solid var(--gw-border);
 
   :global(input) {
     height: 32px;
-    border-color: var(--gw-border);
     border-radius: 999px;
-    background: var(--gw-bg-soft);
-    color: var(--gw-text);
     font-size: 12px;
   }
 }
@@ -98,10 +81,7 @@
 .contentText {
   margin: 0;
   padding: 12px;
-  border: 1px solid var(--gw-border);
   border-radius: 7px;
-  background: var(--gw-bg-soft);
-  color: var(--gw-text-secondary);
   font-size: 12px;
   line-height: 19px;
   white-space: pre-wrap;
@@ -111,16 +91,10 @@
 .highlight {
   padding: 1px 3px;
   border-radius: 3px;
-  background: color-mix(in srgb, #f2b84b 26%, transparent);
-  color: var(--gw-text);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f2b84b 36%, transparent);
 }
 
 :global([role='dialog']) textarea {
-  border-color: var(--gw-border) !important;
   border-radius: 7px !important;
-  background: var(--gw-bg-soft) !important;
-  color: var(--gw-text) !important;
   font-size: 12px !important;
   line-height: 19px !important;
 }

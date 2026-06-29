@@ -1,6 +1,5 @@
 import React from 'react';
 import { User, Bot, AlertTriangle, Wrench } from 'lucide-react';
-import { Badge } from '../../ui/badge';
 import styles from './ChatMessage.module.scss';
 
 export interface ChatMessageData {
@@ -29,13 +28,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const getRoleIcon = (role: string): React.ReactNode => {
     switch (role) {
       case 'user':
-        return <User className="h-3.5 w-3.5" />;
+        return <User  />;
       case 'assistant':
-        return <Bot className="h-3.5 w-3.5" />;
+        return <Bot  />;
       case 'system':
-        return <AlertTriangle className="h-3.5 w-3.5" />;
+        return <AlertTriangle  />;
       default:
-        return <Bot className="h-3.5 w-3.5" />;
+        return <Bot  />;
     }
   };
 
@@ -55,7 +54,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const getTypeTag = (type: string): React.ReactNode => {
     switch (type) {
       case 'tool_call':
-        return <Badge variant="info"><Wrench className="h-3 w-3" /> Tool Call</Badge>;
+        return <Badge variant="info"><Wrench  /> Tool Call</Badge>;
       case 'approval':
         return <Badge variant="warning">Approval</Badge>;
       default:
@@ -68,7 +67,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       return (
         <details className={styles.toolCallBlock}>
           <summary>{getTypeTag(message.type)}</summary>
-          <span className="text-[12px] text-[var(--gw-text-tertiary)]">
+          <span >
             {message.content}
           </span>
         </details>
@@ -88,13 +87,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     >
       <div className={styles.messageWrapper}>
         <div className={styles.messageHeader}>
-          <div className={`${styles.avatar} flex h-6 w-6 items-center justify-center rounded-full bg-[var(--gw-bg-active)]`}>
+          <div className={`${styles.avatar}`}>
             {getRoleIcon(message.role)}
           </div>
-          <span className="text-[12px] font-semibold text-[var(--gw-text-primary)]">
+          <span >
             {getRoleLabel(message.role)}
           </span>
-          <Badge variant="default" className="ml-auto">
+          <Badge variant="default" >
             {message.type}
           </Badge>
         </div>
@@ -104,7 +103,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         </div>
 
         <div className={styles.timestampRow}>
-          <span className="text-[11px] text-[var(--gw-text-tertiary)]">
+          <span >
             {formatTimestamp(message.timestamp)}
           </span>
         </div>

@@ -8,9 +8,6 @@
   padding: 12px;
   overflow: hidden;
   background:
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
-    var(--gw-bg);
-  color: var(--gw-text);
 }
 
 .leftPanel,
@@ -45,10 +42,7 @@
 
 .analysisLayout :global([data-slot='card']),
 .analysisLayout :global(.rounded-lg) {
-  border: 1px solid var(--gw-border) !important;
   border-radius: 8px !important;
-  background: var(--gw-bg-panel) !important;
-  color: var(--gw-text) !important;
   box-shadow: none !important;
   overflow: hidden;
 }
@@ -58,12 +52,9 @@
   display: flex;
   justify-content: center;
   padding: 0 12px !important;
-  border-bottom: 1px solid var(--gw-border);
-  background: var(--gw-bg-panel);
 }
 
 .analysisLayout :global([data-slot='card-title']) {
-  color: var(--gw-text);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
@@ -74,7 +65,6 @@
 }
 
 .analysisLayout :global(label) {
-  color: var(--gw-text-secondary) !important;
   font-size: 12px !important;
   font-weight: 650 !important;
 }
@@ -82,16 +72,12 @@
 .analysisLayout :global(.text-xs),
 .analysisLayout :global(.text-sm),
 .analysisLayout :global(.text-muted-foreground) {
-  color: var(--gw-text-secondary) !important;
 }
 
 .analysisLayout :global(input),
 .analysisLayout :global(button[role='combobox']) {
   height: 32px;
-  border-color: var(--gw-border) !important;
   border-radius: 7px !important;
-  background: var(--gw-bg-soft) !important;
-  color: var(--gw-text) !important;
   font-size: 12px !important;
   box-shadow: none !important;
 }
@@ -119,11 +105,8 @@
   min-height: 330px;
   flex: 1;
   overflow: hidden;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
   background:
-    radial-gradient(var(--gw-dot-color) 1px, transparent 1px) 0 0 / 13px 13px,
-    var(--gw-bg-soft);
 }
 
 .mapPlaceholder {
@@ -134,12 +117,10 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  color: var(--gw-text-tertiary);
   font-size: 13px;
 
   svg {
     opacity: .5;
-    color: var(--gw-accent);
   }
 }
 
@@ -151,25 +132,20 @@
   justify-content: center;
   gap: 2px;
   padding: 10px;
-  border: 1px solid var(--gw-border);
   border-radius: 8px;
-  background: var(--gw-bg-soft);
 
   .statLabel {
-    color: var(--gw-text-tertiary);
     font-size: 11px;
     line-height: 15px;
   }
 
   .statValue {
-    color: var(--gw-accent) !important;
     font-size: 18px;
     line-height: 23px;
     font-weight: 760;
   }
 
   .statUnit {
-    color: var(--gw-text-tertiary);
     font-size: 10px;
     line-height: 14px;
   }
@@ -178,41 +154,31 @@
 .bottomPanel :global(table) {
   width: 100%;
   border-collapse: collapse;
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
 .bottomPanel :global(th) {
   height: 34px;
   padding: 0 9px !important;
-  border-bottom: 1px solid var(--gw-border) !important;
-  color: var(--gw-text-tertiary);
   font-size: 11px;
   font-weight: 700;
   text-align: left;
-  background: var(--gw-bg-sidebar);
 }
 
 .bottomPanel :global(td) {
   height: 38px;
   padding: 0 9px !important;
-  border-bottom: 1px solid var(--gw-border) !important;
-  color: var(--gw-text-secondary);
   font-size: 12px;
 }
 
 .bottomPanel :global(tr:hover td) {
-  background: var(--gw-bg-hover);
 }
 
 .bottomPanel :global(.text-center) {
-  color: var(--gw-text-tertiary) !important;
 }
 
 .rightPanel :global(.rounded) {
   border-radius: 8px !important;
-  border-color: var(--gw-border) !important;
-  background: var(--gw-bg-soft) !important;
 }
 
 .chartContainer {
