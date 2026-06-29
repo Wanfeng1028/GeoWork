@@ -22,7 +22,7 @@ export default defineConfig({
   },
   renderer: {
     root: __dirname,
-    plugins: [react(), tailwindcss()],
+    plugins: [react()],
     build: {
       rollupOptions: {
         input: resolve(__dirname, 'index.html')
