@@ -85,9 +85,8 @@ export default function DataCenter() {
         <div className={styles.tableToolbar}>
           <div className={styles.searchBox}>
             <Search size={14} />
-            <Input
+            <input
               placeholder="搜索数据集名称或路径..."
-              value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
@@ -131,39 +130,39 @@ export default function DataCenter() {
         </div>
       </section>
 
-      <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
-        <DialogContent className={styles.registerDialog}>
-          <DialogHeader>
-            <DialogTitle>登记新数据集</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div className={styles.registerDialog}>
+          <div>
+            <div>登记新数据集</div>
+          </div>
           <div className={styles.formGrid}>
             <Field label="名称">
-              <Input placeholder="例如: Sentinel-2 NDVI 2024" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
+              <input placeholder="例如: Sentinel-2 NDVI 2024" onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
             </Field>
             <Field label="类型">
-              <Select value={formState.type} onValueChange={(v) => setFormState({ ...formState, type: v })}>
-                <SelectTrigger><SelectValue placeholder="选择数据类型" /></SelectTrigger>
-                <SelectContent>
-                  {DATASET_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                value={formState.type}
+                onChange={(e) => setFormState({ ...formState, type: e.target.value })}
+              >
+                {DATASET_TYPES.map((type) => <option key={type}>{type}</option>)}
+              </select>
             </Field>
             <Field label="路径">
-              <Input placeholder="C:\\data\\sensor\\image.tif" value={formState.path} onChange={(e) => setFormState({ ...formState, path: e.target.value })} />
+              <input placeholder="C:\\data\\sensor\\image.tif" onChange={(e) => setFormState({ ...formState, path: e.target.value })} />
             </Field>
             <Field label="CRS">
-              <Input placeholder="EPSG:4326" value={formState.crs} onChange={(e) => setFormState({ ...formState, crs: e.target.value })} />
+              <input placeholder="EPSG:4326" onChange={(e) => setFormState({ ...formState, crs: e.target.value })} />
             </Field>
             <Field label="文件大小 (bytes)">
-              <Input type="number" placeholder="1048576" value={formState.size} onChange={(e) => setFormState({ ...formState, size: e.target.value })} />
+              <input type="number" placeholder="1048576" onChange={(e) => setFormState({ ...formState, size: e.target.value })} />
             </Field>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRegisterModalOpen(false)}>取消</Button>
-            <Button onClick={handleRegister}>登记</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setRegisterModalOpen(false)}>取消</button>
+            <button onClick={handleRegister}>登记</button>
+          </div>
+        </div>
+      </div>
 
       <DataPreview dataset={selectedDataset} open={!!selectedDataset} onClose={() => setSelectedDataset(null)} />
     </div>

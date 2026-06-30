@@ -9,7 +9,7 @@ type StatusBarProps = {
 export function StatusBar({ left, right, className }: StatusBarProps) {
   return (
     <div
-      className={`shrink-0 ${className ?? ''}`}
+      className={`${className ?? ''}`}
     >
       <div >{left}</div>
       <div >{right}</div>

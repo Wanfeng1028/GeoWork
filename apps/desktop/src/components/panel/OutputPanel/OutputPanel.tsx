@@ -184,46 +184,32 @@ export function OutputPanel() {
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <Select
-            value={activeChannel}
-            onValueChange={(value) => handleChannelChange(value as OutputChannel)}
-          >
-            <SelectTrigger className={styles.channelSelect}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {channels.map((ch) => (
-                <SelectItem key={ch.value} value={ch.value}>
-                  {ch.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select value={activeChannel} onChange={(e) => handleChannelChange(e.target.value as OutputChannel)}>
+            {channels.map((ch) => (
+              <option key={ch.value}>
+                {ch.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className={styles.headerRight}>
-          <Button
-            size="sm"
-            variant={isAutoScroll ? "primary" : "ghost"}
+          <button
             onClick={() => setIsAutoScroll(!isAutoScroll)}
           >
             自动滚动
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </button>
+          <button
             onClick={handleClear}
           >
-            <Trash2  />
+            <Trash2 />
             清除
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </button>
+          <button
             onClick={handleDownload}
           >
-            <Download  />
+            <Download />
             导出
-          </Button>
+          </button>
         </div>
       </div>
 

@@ -36,31 +36,6 @@ const THEME_MODES: { value: 'light' | 'dark' | 'auto'; label: string; icon: type
   { value: 'auto', label: '自动', icon: Monitor },
 ]
 
-const THEME_FAMILIES: { value: GeoWorkThemeFamily; label: string }[] = [
-  { value: 'default', label: '默认' },
-  { value: 'glass', label: '清透' },
-  { value: 'classic', label: '经典' },
-  { value: 'parchment', label: '羊皮纸' },
-]
-
-function themeModeOf(theme: GeoWorkTheme): 'light' | 'dark' | 'auto' {
-  if (theme === 'auto') return 'auto'
-  return theme.includes('dark') ? 'dark' : 'light'
-}
-
-function themeFamilyOf(theme: GeoWorkTheme): GeoWorkThemeFamily {
-  if (theme.includes('glass')) return 'glass'
-  if (theme.includes('classic')) return 'classic'
-  if (theme.includes('parchment')) return 'parchment'
-  return 'default'
-}
-
-function composeTheme(mode: 'light' | 'dark' | 'auto', family: GeoWorkThemeFamily): GeoWorkTheme {
-  if (mode === 'auto') return 'auto'
-  if (family === 'default') return mode
-  return `${mode}-${family}` as GeoWorkTheme
-}
-
 const TASKS = [
   'NDVI 时序分析 · Sentinel-2',
   '土地覆盖分类训练',
@@ -82,8 +57,8 @@ export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
   const setTheme = useSettingsStore((s) => s.setTheme)
   const openNav = (key: string) => runAction('switchMainModule', key)
 
-  const activeMode = themeModeOf(currentTheme)
-  const activeFamily = themeFamilyOf(currentTheme)
+  // Simple light/dark detection from theme string
+  const activeMode: 'light' | 'dark' | 'auto' = currentTheme === 'auto' ? 'auto' : currentTheme.includes('dark') ? 'dark' : 'light'
 
   const [railMode, setRailMode] = useState<'tasks' | 'channels'>('tasks')
   const [extensionOpen, setExtensionOpen] = useState(false)
@@ -199,17 +174,7 @@ export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
               icon={icon}
               label={label}
               checked={activeMode === value}
-              onClick={() => setTheme(composeTheme(value, activeFamily))}
-            />
-          ))}
-          <div className={styles.submenuDivider} />
-          {THEME_FAMILIES.map(({ value, label }) => (
-            <ThemeRow
-              key={value}
-              dot
-              label={label}
-              checked={activeFamily === value}
-              onClick={() => setTheme(composeTheme(activeMode, value))}
+              onClick={() => setTheme(value)}
             />
           ))}
         </div>

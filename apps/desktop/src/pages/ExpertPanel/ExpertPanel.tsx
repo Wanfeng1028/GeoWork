@@ -216,8 +216,8 @@ export default function ExpertPanel({
       </button>
 
       {/* Detail modal */}
-      <Dialog open={modalVisible} onOpenChange={setModalVisible}>
-        <DialogContent >
+      <div>
+        <div >
           {selectedExpert && (
             <div className={styles.modalBody}>
               <div>
@@ -234,13 +234,13 @@ export default function ExpertPanel({
                   </div>
                 ))}
               </div>
-              <Button variant="primary" onClick={handleModalCall}>
+              <button onClick={handleModalCall}>
                 <Bot size={14} /> 调用 {selectedExpert.name}
-              </Button>
+              </button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   )
 }

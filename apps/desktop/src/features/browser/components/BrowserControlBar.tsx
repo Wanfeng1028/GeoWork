@@ -45,77 +45,65 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
     <div className={`${styles.container} ${className}`}>
       <div className={styles.status}>
         {isRunning ? (
-          <Badge variant="default" >
+          <span >
             <CheckCircle  />
             Active
-          </Badge>
+          </span>
         ) : (
-          <Badge variant="secondary">
+          <span>
             <Square  />
             Closed
-          </Badge>
+          </span>
         )}
       </div>
 
       <div >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={!isRunning || isLoading}
+        <div>
+          <span asChild>
+            <button
               onClick={handleTakeScreenshot}
             >
               <Camera  />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Screenshot</TooltipContent>
-        </Tooltip>
+            </button>
+          </span>
+          <div>Screenshot</div>
+        </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={!isRunning || isLoading}
+        <div>
+          <span asChild>
+            <button
               onClick={handleExtractText}
             >
               <FileText  />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Extract Text</TooltipContent>
-        </Tooltip>
+            </button>
+          </span>
+          <div>Extract Text</div>
+        </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={!isRunning || isLoading}
+        <div>
+          <span asChild>
+            <button
               onClick={handleAddToContext}
             >
               <Zap  />
               <span className={styles.toolbarLabel}>Agent</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Send to Agent</TooltipContent>
-        </Tooltip>
+            </button>
+          </span>
+          <div>Send to Agent</div>
+        </div>
 
         <div className={styles.toolbarDivider} />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={!isRunning}
+        <div>
+          <span asChild>
+            <button
               onClick={handleCloseSession}
             >
               <X  />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Close Session</TooltipContent>
-        </Tooltip>
+            </button>
+          </span>
+          <div>Close Session</div>
+        </div>
       </div>
     </div>
   )

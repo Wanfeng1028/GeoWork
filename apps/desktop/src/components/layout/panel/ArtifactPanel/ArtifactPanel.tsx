@@ -84,7 +84,7 @@ export function ArtifactPanel() {
           </span>
         </div>
         <div className={styles.emptyState}>
-          <Empty description="暂无产物" />
+          <div description="暂无产物" />
           <span style={{ fontSize: 12 }}>
             任务完成后产物将在此显示
           </span>
@@ -114,7 +114,7 @@ export function ArtifactPanel() {
       </div>
 
       <div className={styles.treeContainer}>
-        <div className="flex-col">
+        <div >
           {Object.entries(groupedArtifacts).map(([type, items]) => (
             <div key={type}>
               <div
@@ -128,7 +128,7 @@ export function ArtifactPanel() {
                 )}
                 {TYPE_ICONS[type] || <Folder  />}
                 <span>{TYPE_LABELS[type] || type}</span>
-                <Badge variant="accent" >{items.length}</Badge>
+                <span >{items.length}</span>
               </div>
               {expandedGroups.has(type) && (
                 <div >
@@ -139,16 +139,16 @@ export function ArtifactPanel() {
                       onClick={() => handleOpenArtifact(artifact)}
                     >
                       {TYPE_ICONS[artifact.type] || <FileText  />}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      <div>
+                        <span asChild>
                           <span className={styles.artifactName}>{artifact.name}</span>
-                        </TooltipTrigger>
-                        <TooltipContent>{artifact.name}</TooltipContent>
-                      </Tooltip>
+                        </span>
+                        <div>{artifact.name}</div>
+                      </div>
                       {currentPreview?.id === artifact.id && (
-                        <Badge variant="success" >
+                        <span >
                           预览中
-                        </Badge>
+                        </span>
                       )}
                     </div>
                   ))}
@@ -168,7 +168,7 @@ export function ArtifactPanel() {
             <div className={styles.detailPanel}>
               <div className={styles.detailHeader}>
                 <span className={styles.detailTitle}>{artifact.name}</span>
-                <Badge variant="accent">{artifact.type}</Badge>
+                <span>{artifact.type}</span>
               </div>
               <div className={styles.detailInfo}>
                 <div className={styles.detailRow}>
@@ -183,44 +183,38 @@ export function ArtifactPanel() {
                 </div>
               </div>
               <div className={styles.detailActions}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                <div>
+                  <span asChild>
+                    <button
                       onClick={() => handleOpenArtifact(artifact)}
                     >
                       <Cpu  />
                       打开
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>在编辑器中打开</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                    </button>
+                  </span>
+                  <div>在编辑器中打开</div>
+                </div>
+                <div>
+                  <span asChild>
+                    <button
                       onClick={() => handleSaveToWorkspace(artifact)}
                     >
                       <Download  />
                       保存
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>保存到工作空间</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="primary"
+                    </button>
+                  </span>
+                  <div>保存到工作空间</div>
+                </div>
+                <div>
+                  <span asChild>
+                    <button
                     >
                       <Folder  />
                       知识库
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>添加到知识库</TooltipContent>
-                </Tooltip>
+                    </button>
+                  </span>
+                  <div>添加到知识库</div>
+                </div>
               </div>
             </div>
           );

@@ -51,32 +51,22 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
       {/* Navigation bar */}
       <div className={styles.navBar}>
         <div >
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isRunning}
+          <button
           >
             <ArrowLeft  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isRunning}
+          </button>
+          <button
           >
             <ArrowRight  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isRunning || isLoading}
+          </button>
+          <button
             onClick={handleScreenshot}
           >
             <RefreshCw  />
-          </Button>
+          </button>
         </div>
 
-        <Input
-          value={urlInput}
+        <input
           onChange={(e) => setUrlInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleNavigate()}
           placeholder="Enter URL and press Enter"
@@ -89,7 +79,7 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
       <div className={styles.previewArea}>
         {isLoading && (
           <div className={styles.loadingOverlay}>
-            <Spinner size="lg" />
+            <div />
           </div>
         )}
 
@@ -117,22 +107,16 @@ export function BrowserTabView({ className = '' }: BrowserTabViewProps) {
       {/* Action buttons */}
       <div className={styles.actionBar}>
         <div >
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isRunning}
+          <button
             onClick={handleScreenshot}
           >
             Screenshot
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!isRunning}
+          </button>
+          <button
             onClick={handleExtractText}
           >
             Extract Text
-          </Button>
+          </button>
         </div>
       </div>
     </div>

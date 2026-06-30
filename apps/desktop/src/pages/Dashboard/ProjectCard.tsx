@@ -48,11 +48,11 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   }
 
   return (
-    <Card
+    <div
       className={styles.card}
       onClick={handleClick}
     >
-      <CardContent>
+      <div>
         {project.thumbnail ? (
           <img
             alt={project.name}
@@ -67,7 +67,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
         <div className={styles.cardBody}>
           <div className={styles.cardHeader}>
             <span className={styles.projectName}>{project.name}</span>
-            <Badge variant="secondary" className={MODE_COLORS[project.mode] || ''}>{project.mode}</Badge>
+            <span className={MODE_COLORS[project.mode] || ''}>{project.mode}</span>
           </div>
           <p className={styles.description}>{project.description}</p>
           <div className={styles.cardFooter}>
@@ -75,13 +75,13 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
               <Clock  />
               {formatRelativeTime(project.lastModified)}
             </span>
-            <Badge variant="secondary" className={statusInfo.color}>
+            <span className={statusInfo.color}>
               {statusInfo.icon} {statusInfo.text}
-            </Badge>
+            </span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

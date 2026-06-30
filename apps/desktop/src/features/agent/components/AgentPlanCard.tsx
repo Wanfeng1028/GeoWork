@@ -3,7 +3,6 @@
 
 import React, { useMemo } from 'react'
 import { CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
-import { GwCard } from '../../../components/foundation/GwCard/GwCard'
 import useAgentStore from '../agentStore'
 import styles from './AgentPlanCard.module.scss'
 
@@ -34,27 +33,27 @@ export const AgentPlanCard: React.FC = () => {
 
   if (!currentPlan) {
     return (
-      <GwCard variant="outlined" bordered title="Execution Plan" className={styles.planCard}>
+      <div className={styles.planCard}>
         {error && <div className={styles.error}>{error}</div>}
         {!error && isRunning && <div className={styles.empty}>No plan available yet.</div>}
-      </GwCard>
+      </div>
     )
   }
 
   return (
-    <GwCard variant="outlined" bordered title="Execution Plan" className={styles.planCard}>
+    <div className={styles.planCard}>
       {modeInfo && (
         <div className={styles.modeBanner} style={{ borderColor: modeInfo.color, background: `color-mix(in srgb, ${modeInfo.color} 14%, transparent)` }}>
-          <Badge className={styles.modeTag} style={{ backgroundColor: `color-mix(in srgb, ${modeInfo.color} 24%, transparent)`, color: modeInfo.color }}>
+          <span className={styles.modeTag} style={{ backgroundColor: `color-mix(in srgb, ${modeInfo.color} 24%, transparent)`, color: modeInfo.color }}>
             {modeInfo.label}
-          </Badge>
+          </span>
         </div>
       )}
-      <div className="flex-col">
+      <div >
         {currentPlan.steps.map((step) => {
           const statusInfo = STEP_STATUS_MAP[step.status] ?? STEP_STATUS_MAP.pending
           const toolTag = step.tool ? (
-            <Badge className={styles.toolTag}>{step.tool}</Badge>
+            <span className={styles.toolTag}>{step.tool}</span>
           ) : null
 
           return (
@@ -77,7 +76,7 @@ export const AgentPlanCard: React.FC = () => {
         })}
       </div>
       {error && <div className={styles.error}>{error}</div>}
-    </GwCard>
+    </div>
   )
 }
 

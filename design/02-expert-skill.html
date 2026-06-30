@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GeoWork — 专家 &amp; 技能设计稿</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--gw-bg-body);
+    color: var(--gw-text-primary);
+    font-size: var(--gw-font-size-base);
+    line-height: var(--gw-line-height-normal);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .theme-toggle {
+    position: fixed; top: 12px; right: 16px; z-index: 9999;
+    background: var(--gw-bg-elevated); border: 1px solid var(--gw-border-default);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer;
+    color: var(--gw-text-secondary); gap: 6px; display: flex; align-items: center;
+    box-shadow: var(--gw-shadow-sm);
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--gw-text-primary); }
+  .page-subtitle { font-size: 13px; color: var(--gw-text-secondary); margin-top: 2px; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+  }
+  .search-box {
+    flex: 1; max-width: 320px; height: 34px; padding: 0 12px;
+    border: 1px solid var(--gw-border-default); border-radius: var(--gw-border-radius);
+    background: var(--gw-bg-container); font-size: 13px; color: var(--gw-text-primary);
+    outline: none; display: flex; align-items: center; gap: 8px;
+  }
+  .search-box:focus-within { border-color: var(--gw-color-primary-6); box-shadow: var(--gw-shadow-focus); }
+  .filter-btn {
+    height: 34px; padding: 0 14px; border-radius: var(--gw-border-radius);
+    border: 1px solid var(--gw-border-default); background: var(--gw-bg-container);
+    font-size: 12px; color: var(--gw-text-secondary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all var(--gw-transition-fast);
+  }
+  .filter-btn:hover { border-color: var(--gw-color-primary-6); color: var(--gw-color-primary-6); }
+  .filter-btn.active { background: var(--gw-bg-active); border-color: var(--gw-color-primary-6); color: var(--gw-color-primary-6); }
+  .add-btn {
+    height: 34px; padding: 0 16px; border-radius: var(--gw-border-radius);
+    border: none; background: var(--gw-color-primary-6); color: white;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    box-shadow: 0 2px 6px rgba(13,110,253,0.3);
+    transition: all var(--gw-transition-fast);
+  }
+  .add-btn:hover { background: var(--gw-color-primary-7); transform: translateY(-1px); }
+
+  /* ── Section Tabs ── */
+  .section-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--gw-border-default);
+    margin-bottom: 20px;
+  }
+  .sec-tab {
+    height: 38px; padding: 0 18px; border: none; background: transparent;
+    font-size: 13px; color: var(--gw-text-secondary); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all var(--gw-transition-fast);
+  }
+  .sec-tab.active { color: var(--gw-color-primary-6); border-bottom-color: var(--gw-color-primary-6); font-weight: 500; }
+  .sec-tab:hover { color: var(--gw-text-primary); }
+
+  /* ── Expert Cards Grid ── */
+  .cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px; margin-bottom: 40px;
+  }
+
+  .expert-card {
+    background: var(--gw-bg-container);
+    border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-xl);
+    padding: 20px;
+    box-shadow: var(--gw-shadow-xs);
+    cursor: pointer;
+    transition: all var(--gw-transition-normal);
+    position: relative;
+    overflow: hidden;
+  }
+  .expert-card:hover {
+    border-color: var(--gw-color-primary-6);
+    box-shadow: var(--gw-shadow-md);
+    transform: translateY(-2px);
+  }
+  .expert-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: var(--gw-border-radius-xl) var(--gw-border-radius-xl) 0 0;
+  }
+  .expert-card.geo::before { background: linear-gradient(90deg, #3AD9FF, #8BFFE2); }
+  .expert-card.gee::before { background: linear-gradient(90deg, #4285F4, #8BFFE2); }
+  .expert-card.qgis::before { background: linear-gradient(90deg, #589632, #a8e063); }
+  .expert-card.paper::before { background: linear-gradient(90deg, #6f42c1, #d0a6f3); }
+  .expert-card.data::before { background: linear-gradient(90deg, #fd7e14, #ffc107); }
+  .expert-card.map::before { background: linear-gradient(90deg, #20c997, #3AD9FF); }
+  .expert-card.write::before { background: linear-gradient(90deg, #e83e8c, #fd7e14); }
+  .expert-card.qa::before { background: linear-gradient(90deg, #dc3545, #fd7e14); }
+
+  .card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .expert-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .expert-avatar.geo { background: linear-gradient(135deg, #e7f9fd, #c0f5ea); }
+  .expert-avatar.gee { background: linear-gradient(135deg, #e7f1ff, #c4dcff); }
+  .expert-avatar.qgis { background: linear-gradient(135deg, #d9f0c8, #b8e09a); }
+  .expert-avatar.paper { background: linear-gradient(135deg, #f0e8ff, #dfc5ff); }
+  .expert-avatar.data { background: linear-gradient(135deg, #fff0e0, #ffd9a8); }
+  .expert-avatar.map { background: linear-gradient(135deg, #e0faf4, #b8f5e5); }
+  .expert-avatar.write { background: linear-gradient(135deg, #fde8f4, #f9b8dc); }
+  .expert-avatar.qa { background: linear-gradient(135deg, #fde8e8, #f9b8b8); }
+
+  .card-meta { flex: 1; min-width: 0; }
+  .card-name { font-size: 14px; font-weight: 600; color: var(--gw-text-primary); margin-bottom: 2px; }
+  .card-role { font-size: 12px; color: var(--gw-text-secondary); }
+
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+  .tag {
+    height: 20px; padding: 0 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 500; display: flex; align-items: center;
+    background: var(--gw-bg-tag); color: var(--gw-color-primary-6);
+  }
+
+  .card-stats { display: flex; gap: 16px; }
+  .stat-item { text-align: center; }
+  .stat-val { font-size: 16px; font-weight: 700; color: var(--gw-text-primary); }
+  .stat-label { font-size: 10px; color: var(--gw-text-tertiary); margin-top: 1px; }
+
+  .card-footer {
+    margin-top: 14px; padding-top: 10px;
+    border-top: 1px solid var(--gw-border-light);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-model {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--gw-text-secondary);
+  }
+  .model-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gw-color-primary-6); }
+  .card-action {
+    height: 26px; padding: 0 12px; border-radius: 13px;
+    border: 1px solid var(--gw-color-primary-6); background: transparent;
+    color: var(--gw-color-primary-6); font-size: 11px; font-weight: 500;
+    cursor: pointer; transition: all var(--gw-transition-fast);
+  }
+  .card-action:hover { background: var(--gw-color-primary-6); color: white; }
+
+  .card-badge {
+    position: absolute; top: 14px; right: 14px;
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+  }
+  .badge-builtin { background: var(--gw-bg-tag); color: var(--gw-color-primary-6); }
+  .badge-custom { background: var(--gw-color-success-bg); color: var(--gw-color-success); }
+
+  /* ── Skill Section ── */
+  .skill-section-title {
+    font-size: 14px; font-weight: 600; color: var(--gw-text-primary);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .skill-count {
+    font-size: 11px; background: var(--gw-bg-tag); color: var(--gw-color-primary-6);
+    padding: 1px 8px; border-radius: 10px; font-weight: 600;
+  }
+
+  .skill-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 24px; }
+
+  .skill-card {
+    background: var(--gw-bg-container);
+    border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-lg);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all var(--gw-transition-fast);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .skill-card:hover {
+    border-color: var(--gw-color-primary-6);
+    box-shadow: var(--gw-shadow-sm);
+  }
+  .skill-head { display: flex; align-items: center; gap: 10px; }
+  .skill-icon {
+    width: 34px; height: 34px; border-radius: var(--gw-border-radius-lg);
+    display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+  }
+  .skill-name { font-size: 13px; font-weight: 600; color: var(--gw-text-primary); }
+  .skill-cat { font-size: 11px; color: var(--gw-text-secondary); }
+  .skill-desc { font-size: 12px; color: var(--gw-text-secondary); line-height: 1.5; }
+  .skill-footer { display: flex; align-items: center; justify-content: space-between; }
+  .skill-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .skill-tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 8px;
+    background: var(--gw-bg-mask); color: var(--gw-text-secondary);
+  }
+  .skill-run-btn {
+    height: 24px; padding: 0 12px; border-radius: 12px;
+    border: none; background: var(--gw-color-primary-6); color: white;
+    font-size: 11px; font-weight: 500; cursor: pointer;
+    transition: all var(--gw-transition-fast);
+  }
+  .skill-run-btn:hover { background: var(--gw-color-primary-7); }
+
+  .annotation {
+    position: fixed; bottom: 16px; right: 16px;
+    background: var(--gw-color-neutral-11); color: var(--gw-text-inverse);
+    font-size: 11px; padding: 6px 12px; border-radius: var(--gw-border-radius);
+    box-shadow: var(--gw-shadow-md); z-index: 9998;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">
+  <span id="theme-icon">☀️</span> <span id="theme-label">亮色</span>
+</button>
+
+<!-- ═══════════════════ EXPERT PAGE ═══════════════════ -->
+<div class="page-header">
+  <div>
+    <div class="page-title">专家</div>
+    <div class="page-subtitle">12 个内置专家角色 · 可自定义工具、模型与知识库绑定</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <span style="color:var(--gw-text-tertiary)">⌕</span>
+    <input type="text" placeholder="搜索专家..." style="border:none;background:transparent;outline:none;font-size:13px;color:var(--gw-text-primary);flex:1;font-family:inherit;" />
+  </div>
+  <button class="filter-btn active">全部 <span style="background:var(--gw-color-primary-6);color:white;padding:0 5px;border-radius:8px;font-size:10px;">12</span></button>
+  <button class="filter-btn">遥感</button>
+  <button class="filter-btn">GIS</button>
+  <button class="filter-btn">论文</button>
+  <button class="filter-btn">写作</button>
+  <div style="flex:1;"></div>
+  <button class="add-btn">＋ 自定义专家</button>
+</div>
+
+<div class="cards-grid">
+
+  <!-- 总控专家 -->
+  <div class="expert-card geo">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar geo">🤖</div>
+      <div class="card-meta">
+        <div class="card-name">总控专家</div>
+        <div class="card-role">任务规划 · 步骤编排 · 结果汇总</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">规划</span>
+      <span class="tag">编排</span>
+      <span class="tag">协调</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">98%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">2.4s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">142</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>Qwen3.7-Max</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- GEE 专家 -->
+  <div class="expert-card gee">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar gee">🛰️</div>
+      <div class="card-meta">
+        <div class="card-name">GEE 专家</div>
+        <div class="card-role">Google Earth Engine 脚本生成</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">GEE</span>
+      <span class="tag">遥感</span>
+      <span class="tag">云端</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">94%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">18.2s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">87</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>DeepSeek-V3</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- QGIS 专家 -->
+  <div class="expert-card qgis">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar qgis">🗺️</div>
+      <div class="card-meta">
+        <div class="card-name">QGIS 专家</div>
+        <div class="card-role">QGIS Processing · 本地 GIS 分析</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">QGIS</span>
+      <span class="tag">矢量</span>
+      <span class="tag">栅格</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">91%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">8.7s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">63</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>Qwen3-Coder</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- 论文专家 -->
+  <div class="expert-card paper">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar paper">📚</div>
+      <div class="card-meta">
+        <div class="card-name">论文专家</div>
+        <div class="card-role">文献搜索 · 综述生成 · 引用管理</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">论文</span>
+      <span class="tag">OpenAlex</span>
+      <span class="tag">综述</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">96%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">12.1s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">108</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>Claude-3.7-Sonnet</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- 遥感分析专家 -->
+  <div class="expert-card geo">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar geo">🌿</div>
+      <div class="card-meta">
+        <div class="card-name">遥感分析专家</div>
+        <div class="card-role">指数计算 · 分类 · 变化检测</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">NDVI</span>
+      <span class="tag">分类</span>
+      <span class="tag">变化检测</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">93%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">15.4s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">76</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>Qwen3.7-Max</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- 数据专家 -->
+  <div class="expert-card data">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar data">🗄️</div>
+      <div class="card-meta">
+        <div class="card-name">数据专家</div>
+        <div class="card-role">数据推荐 · 下载 · 质量检查</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">数据</span>
+      <span class="tag">STAC</span>
+      <span class="tag">元数据</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-success);">89%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">6.3s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">54</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>DeepSeek-V3</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- 地图制图专家 -->
+  <div class="expert-card map">
+    <span class="card-badge badge-builtin">内置</span>
+    <div class="card-head">
+      <div class="expert-avatar map">🎨</div>
+      <div class="card-meta">
+        <div class="card-name">地图制图专家</div>
+        <div class="card-role">专题地图 · 图例 · 比例尺 · 导出</div>
+      </div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">制图</span>
+      <span class="tag">布局</span>
+      <span class="tag">导出</span>
+    </div>
+    <div class="card-stats">
+      <div class="stat-item"><div class="stat-val" style="color:var(--gw-color-warning);">87%</div><div class="stat-label">成功率</div></div>
+      <div class="stat-item"><div class="stat-val">22.8s</div><div class="stat-label">均耗时</div></div>
+      <div class="stat-item"><div class="stat-val">41</div><div class="stat-label">调用次数</div></div>
+    </div>
+    <div class="card-footer">
+      <div class="card-model"><span class="model-dot"></span>Qwen3.7-Max</div>
+      <button class="card-action">配置</button>
+    </div>
+  </div>
+
+  <!-- 自定义专家 placeholder -->
+  <div class="expert-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:180px;flex-direction:column;gap:8px;cursor:pointer;">
+    <div style="width:44px;height:44px;border-radius:12px;border:2px dashed var(--gw-border-strong);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gw-text-tertiary);">＋</div>
+    <div style="font-size:13px;font-weight:500;color:var(--gw-text-secondary);">创建自定义专家</div>
+    <div style="font-size:11px;color:var(--gw-text-tertiary);">绑定工具、模型与知识库</div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════ SKILL PAGE ═══════════════════ -->
+<div class="page-header" style="margin-top:16px;">
+  <div>
+    <div class="page-title">技能</div>
+    <div class="page-subtitle">12 个官方内置 Skill · 按需加载 · 支持自定义</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search-box">
+    <span style="color:var(--gw-text-tertiary)">⌕</span>
+    <input type="text" placeholder="搜索技能..." style="border:none;background:transparent;outline:none;font-size:13px;color:var(--gw-text-primary);flex:1;font-family:inherit;" />
+  </div>
+  <button class="filter-btn active">全部</button>
+  <button class="filter-btn">遥感指数</button>
+  <button class="filter-btn">GEE 工作流</button>
+  <button class="filter-btn">GIS 分析</button>
+  <button class="filter-btn">论文 / 写作</button>
+  <div style="flex:1;"></div>
+  <button class="add-btn">＋ 导入技能包</button>
+</div>
+
+<div class="skill-section-title">
+  遥感 &amp; GEE <span class="skill-count">6</span>
+</div>
+<div class="skill-cards">
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(46,204,113,0.12);">🌿</div>
+      <div>
+        <div class="skill-name">NDVI 时序分析</div>
+        <div class="skill-cat">遥感指数 · GEE</div>
+      </div>
+    </div>
+    <div class="skill-desc">从 Sentinel-2 或 Landsat 提取和分析 NDVI 时间序列，支持趋势检验与报告生成</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">NDVI</span>
+        <span class="skill-tag">GEE</span>
+        <span class="skill-tag">时序</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(66,133,244,0.12);">☁️</div>
+      <div>
+        <div class="skill-name">Sentinel-2 无云合成</div>
+        <div class="skill-cat">遥感指数 · GEE</div>
+      </div>
+    </div>
+    <div class="skill-desc">使用 GEE 时序合成创建无云合成影像，支持自定义时间段和云量阈值</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">Sentinel-2</span>
+        <span class="skill-tag">合成</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(230,126,34,0.12);">🌡️</div>
+      <div>
+        <div class="skill-name">Landsat 地表温度反演</div>
+        <div class="skill-cat">遥感指数 · Landsat</div>
+      </div>
+    </div>
+    <div class="skill-desc">从 Landsat 热波段反演地表温度（LST），支持城市热岛效应分析</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">LST</span>
+        <span class="skill-tag">热红外</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(52,152,219,0.12);">💧</div>
+      <div>
+        <div class="skill-name">水体提取 NDWI</div>
+        <div class="skill-cat">遥感指数 · GEE</div>
+      </div>
+    </div>
+    <div class="skill-desc">使用归一化差异水体指数提取水体，支持面积统计与变化分析</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">NDWI</span>
+        <span class="skill-tag">水体</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(231,76,60,0.12);">🏙️</div>
+      <div>
+        <div class="skill-name">城市扩张分析</div>
+        <div class="skill-cat">GIS · 变化检测</div>
+      </div>
+    </div>
+    <div class="skill-desc">使用多时相影像检测并量化城市扩张，生成变化图与统计报告</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">城市</span>
+        <span class="skill-tag">变化检测</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(52,73,94,0.12);">⛰️</div>
+      <div>
+        <div class="skill-name">DEM 地形分析</div>
+        <div class="skill-cat">GIS · 地形</div>
+      </div>
+    </div>
+    <div class="skill-desc">从 DEM 数据进行坡度、坡向、阴影和流域分析，支持 SRTM/ALOS/Copernicus</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">DEM</span>
+        <span class="skill-tag">地形</span>
+        <span class="skill-tag">QGIS</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+</div>
+
+<div class="skill-section-title">
+  论文 &amp; 写作 <span class="skill-count">4</span>
+</div>
+<div class="skill-cards">
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(111,66,193,0.12);">📰</div>
+      <div>
+        <div class="skill-name">地理论文精读</div>
+        <div class="skill-cat">论文阅读</div>
+      </div>
+    </div>
+    <div class="skill-desc">地理学和 GIS 论文的结构化阅读和分析，提取研究方法、数据和结论</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">PDF</span>
+        <span class="skill-tag">阅读</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(111,66,193,0.12);">📚</div>
+      <div>
+        <div class="skill-name">遥感文献综述</div>
+        <div class="skill-cat">论文写作</div>
+      </div>
+    </div>
+    <div class="skill-desc">构建和撰写遥感主题的文献综述，支持研究空白分析与综述矩阵生成</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">综述</span>
+        <span class="skill-tag">引用</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(232,62,140,0.12);">🎓</div>
+      <div>
+        <div class="skill-name">本科生实验报告</div>
+        <div class="skill-cat">学术写作</div>
+      </div>
+    </div>
+    <div class="skill-desc">生成包含图表和分析的格式化实验报告，支持 NDVI、地形分析等标准模板</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">报告</span>
+        <span class="skill-tag">DOCX</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(232,62,140,0.12);">📝</div>
+      <div>
+        <div class="skill-name">研究生论文大纲</div>
+        <div class="skill-cat">学术写作</div>
+      </div>
+    </div>
+    <div class="skill-desc">构建和规划研究生论文的章节大纲，支持绪论、研究方法、结果讨论章节设计</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">大纲</span>
+        <span class="skill-tag">论文</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+</div>
+
+<div class="skill-section-title">
+  地图制图 <span class="skill-count">1</span>
+</div>
+<div class="skill-cards">
+  <div class="skill-card">
+    <div class="skill-head">
+      <div class="skill-icon" style="background:rgba(32,201,151,0.12);">🗺️</div>
+      <div>
+        <div class="skill-name">地图布局与导出</div>
+        <div class="skill-cat">地图制图 · QGIS</div>
+      </div>
+    </div>
+    <div class="skill-desc">专业地图设计和高品质导出，支持图例、比例尺、指北针、坐标格网自动配置</div>
+    <div class="skill-footer">
+      <div class="skill-tags">
+        <span class="skill-tag">制图</span>
+        <span class="skill-tag">导出</span>
+        <span class="skill-tag">QGIS</span>
+      </div>
+      <button class="skill-run-btn">▶ 运行</button>
+    </div>
+  </div>
+</div>
+
+<div class="annotation">设计稿 · 专家 &amp; 技能页 · Ant Design v6</div>
+
+<script>
+let isDark = false;
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isDark ? '暗色' : '亮色';
+}
+</script>
+</body>
+</html>

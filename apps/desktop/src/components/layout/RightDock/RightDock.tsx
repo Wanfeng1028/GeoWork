@@ -33,39 +33,36 @@ export function RightDock() {
 
   return (
     <aside className={styles.dock}>
-      <Tabs
-        defaultValue={activeRightPanel}
-        onValueChange={(key) => setActiveRightPanel(key as any)}
+      <div
+        onClick={() => setActiveRightPanel('task')}
         className={styles.tabs}
       >
-        <TabsList className={styles.tabsList}>
+        <div className={styles.tabsList}>
           {PANELS.map((panel) => {
             const Icon = panel.icon
             return (
-              <TabsTrigger
+              <button
                 key={panel.key}
-                value={panel.key}
-                title={panel.label}
                 className={styles.tabTrigger}
               >
                 <Icon size={14} />
-              </TabsTrigger>
+              </button>
             )
           })}
-        </TabsList>
-        <div className={styles.content}>
-          <TabsContent value="task" className={styles.panelContent}><TaskMonitorPanel /></TabsContent>
-          <TabsContent value="artifacts" className={styles.panelContent}><ArtifactPanel /></TabsContent>
-          <TabsContent value="diff" className={styles.panelContent}><DiffPanel /></TabsContent>
-          <TabsContent value="context" className={styles.panelContent}><ContextPanel /></TabsContent>
-          <TabsContent value="terminal" className={styles.panelContent}><TerminalComponent title="任务终端" /></TabsContent>
-          <TabsContent value="browser" className={styles.panelContent}><BrowserPanel /></TabsContent>
-          <TabsContent value="events" className={styles.panelContent}><RuntimeEvents /></TabsContent>
-          <TabsContent value="logs" className={styles.panelContent}><LogsPanel /></TabsContent>
-          <TabsContent value="problems" className={styles.panelContent}><ProblemsPanel /></TabsContent>
-          <TabsContent value="output" className={styles.panelContent}><OutputPanel /></TabsContent>
         </div>
-      </Tabs>
+        <div className={styles.content}>
+          <div className={styles.panelContent}><TaskMonitorPanel /></div>
+          <div className={styles.panelContent}><ArtifactPanel /></div>
+          <div className={styles.panelContent}><DiffPanel /></div>
+          <div className={styles.panelContent}><ContextPanel /></div>
+          <div className={styles.panelContent}><TerminalComponent title="任务终端" /></div>
+          <div className={styles.panelContent}><BrowserPanel /></div>
+          <div className={styles.panelContent}><RuntimeEvents /></div>
+          <div className={styles.panelContent}><LogsPanel /></div>
+          <div className={styles.panelContent}><ProblemsPanel /></div>
+          <div className={styles.panelContent}><OutputPanel /></div>
+        </div>
+      </div>
     </aside>
   )
 }

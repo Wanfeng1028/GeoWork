@@ -114,25 +114,20 @@ export default function NdvAnalysis() {
     <div className={styles.analysisLayout}>
       {/* Left Panel */}
       <div className={styles.leftPanel}>
-        <Card>
-          <CardHeader>
-            <CardTitle>项目与数据源</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div>
+          <div>
+            <div>项目与数据源</div>
+          </div>
+          <div>
             <div >
               <div>
                 <label >项目 <span >*</span></label>
                 <div >
-                  <Select value={selectedProjectId || ''} onValueChange={(val) => setSelectedProjectId(val)}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="选择或输入项目" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="proj-research">GeoWork Research Project</SelectItem>
-                      <SelectItem value="proj-sample">Sentinel-2 NDVI Sample</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" onClick={() => {
+                  <select value={selectedProjectId || ''} onChange={(e) => setSelectedProjectId(e.target.value)}>
+                    <option>GeoWork Research Project</option>
+                    <option>Sentinel-2 NDVI Sample</option>
+                  </select>
+                  <button onClick={() => {
                     const name = window.prompt('输入新项目名称')
                     if (name) {
                       const newId = `proj-${Date.now()}`
@@ -141,95 +136,90 @@ export default function NdvAnalysis() {
                       toast.success(`项目 "${name}" 已创建`)
                     }
                   }}>
-                    <FolderOpen  /> 新建
-                  </Button>
+                    <FolderOpen /> 新建
+                  </button>
                 </div>
               </div>
 
               <div>
                 <label >遥感数据源 <span >*</span></label>
-                <Select value={dataSource || ''} onValueChange={handleDataSourceChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择数据源" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DATA_SOURCES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={dataSource} onChange={(e) => handleDataSourceChange(e.target.value as 'sentinel2' | 'landsat')}>
+                  <option value="">选择数据源</option>
+                  {DATA_SOURCES.map((s) => (
+                    <option key={s.value}>{s.label}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label >波段配置</label>
-                <div className="grid-cols-2">
+                <div >
                   <div>
                     <label >红光波段</label>
-                    <Input value={bands?.red || ''} onChange={(e) => handleBandChange('red', e.target.value)} placeholder="如 B4" />
+                    <input onChange={(e) => handleBandChange('red', e.target.value)} placeholder="如 B4" />
                   </div>
                   <div>
                     <label >近红外波段</label>
-                    <Input value={bands?.nir || ''} onChange={(e) => handleBandChange('nir', e.target.value)} placeholder="如 B8" />
+                    <input onChange={(e) => handleBandChange('nir', e.target.value)} placeholder="如 B8" />
                   </div>
                 </div>
               </div>
 
               <div>
                 <label >NDVI 阈值</label>
-                <div className="grid-cols-2">
+                <div >
                   <div>
                     <label >最小值</label>
-                    <Input type="number" value={thresholds.min} onChange={(e) => handleThresholdChange('min', e.target.value)} step={0.01} min={-1} max={1} />
+                    <input type="number" onChange={(e) => handleThresholdChange('min', e.target.value)} step={0.01} min={-1} max={1} />
                   </div>
                   <div>
                     <label >最大值</label>
-                    <Input type="number" value={thresholds.max} onChange={(e) => handleThresholdChange('max', e.target.value)} step={0.01} min={-1} max={1} />
+                    <input type="number" onChange={(e) => handleThresholdChange('max', e.target.value)} step={0.01} min={-1} max={1} />
                   </div>
                 </div>
               </div>
 
               <div >
-                <Button
-                  className="flex-1"
-                  disabled={!selectedProjectId || !dataSource || isAnalyzing}
+                <button
+                  
                   onClick={handleAnalyze}
                 >
-                  {isAnalyzing ? <><Spinner  /> 分析中...</> : <><Zap  /> 开始 NDVI 分析</>}
-                </Button>
-                <Button variant="outline" onClick={clearResults} disabled={results.length === 0}>
+                  {isAnalyzing ? <><div  /> 分析中...</> : <><Zap  /> 开始 NDVI 分析</>}
+                </button>
+                <button onClick={clearResults}>
                   <RefreshCw  /> 清除
-                </Button>
+                </button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent>
+        <div>
+          <div>
             <div >
               <div><strong>NDVI 公式:</strong> (NIR - Red) / (NIR + Red)</div>
               <div><strong>范围:</strong> [-1, 1]，值越高植被越茂密</div>
               <div><strong>Sentinel-2:</strong> 红光 B4 / 近红外 B8 (10m)</div>
               <div><strong>Landsat:</strong> 红光 B4 / 近红外 B5 (30m)</div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Center Panel */}
       <div className={styles.centerPanel}>
-        <Card>
-          <CardHeader>
+        <div>
+          <div>
             <div >
-              <CardTitle >
+              <div >
                 <Database  /> 地图预览
-              </CardTitle>
-              <Badge variant="secondary">
+              </div>
+              <span>
                 {dataSource ? `${dataSource} 预览` : '等待数据源选择'}
-              </Badge>
+              </span>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className={styles.mapContainer}>
               {dataSource ? (
                 <MapLibreMap layers={[]} width={undefined} height={undefined} />
@@ -240,63 +230,63 @@ export default function NdvAnalysis() {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle >
+        <div>
+          <div>
+            <div >
               <FlaskConical  /> NDVI 时序分析
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
+          </div>
+          <div>
             <NDVIChart />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Right Panel */}
       <div className={styles.rightPanel}>
-        <Card>
-          <CardHeader>
-            <CardTitle>分析参数</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div>
+          <div>
+            <div>分析参数</div>
+          </div>
+          <div>
             <div >
               <div>
                 <div >项目 ID</div>
-                <Badge variant="outline" >{selectedProjectId || '未选择'}</Badge>
+                <span >{selectedProjectId || '未选择'}</span>
               </div>
               <div>
                 <div >数据源</div>
-                <Badge variant="secondary" className={dataSource === 'sentinel2' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}>
+                <span className={dataSource === 'sentinel2' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}>
                   {dataSource || '未选择'}
-                </Badge>
+                </span>
               </div>
               <div>
                 <div >波段</div>
                 <div >
-                  <Badge variant="outline">Red: {bands?.red || '-'}</Badge>
-                  <Badge variant="outline">NIR: {bands?.nir || '-'}</Badge>
+                  <span>Red: {bands?.red || '-'}</span>
+                  <span>NIR: {bands?.nir || '-'}</span>
                 </div>
               </div>
               <div>
                 <div >阈值范围</div>
-                <Badge variant="outline" >[{thresholds.min}, {thresholds.max}]</Badge>
+                <span >[{thresholds.min}, {thresholds.max}]</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {error && (
-          <div className="rounded border">
+          <div >
             <div >分析错误</div>
             <div >{error}</div>
           </div>
         )}
 
         {latestResult?.status === 'success' && (
-          <div className="rounded border">
+          <div >
             <div >
               <CheckCircle  /> 分析完成
             </div>
@@ -307,24 +297,24 @@ export default function NdvAnalysis() {
 
       {/* Bottom Panel */}
       <div className={styles.bottomPanel}>
-        <Card>
-          <CardHeader>
+        <div>
+          <div>
             <div >
-              <CardTitle >
-                <FileImage  /> 分析结果
-                {isAnalyzing && <Spinner  />}
-              </CardTitle>
               <div >
-                <Button size="sm" variant={activeTab === 'config' ? 'secondary' : 'outline'} onClick={() => setActiveTab('config')}>参数配置</Button>
-                <Button size="sm" variant={activeTab === 'results' ? 'secondary' : 'outline'} onClick={() => setActiveTab('results')}>分析结果 ({results.length})</Button>
+                <FileImage  /> 分析结果
+                {isAnalyzing && <div  />}
+              </div>
+              <div >
+                <button onClick={() => setActiveTab('config')}>参数配置</button>
+                <button onClick={() => setActiveTab('results')}>分析结果 ({results.length})</button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             {activeTab === 'results' && (
               <>
                 {latestStats && (
-                  <div className="grid-cols-4">
+                  <div >
                     <StatBox label="均值" value={latestStats.mean?.toFixed(3)} />
                     <StatBox label="中位数" value={latestStats.median?.toFixed(3)} />
                     <StatBox label="标准差" value={latestStats.std?.toFixed(3)} />
@@ -354,18 +344,18 @@ export default function NdvAnalysis() {
                         <tr key={r.id} >
                           <td >{new Date(r.timestamp).toLocaleString('zh-CN')}</td>
                           <td >
-                            <Badge variant="secondary" className={r.dataSource === 'sentinel2' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}>
+                            <span className={r.dataSource === 'sentinel2' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}>
                               {r.dataSource === 'sentinel2' ? 'Sentinel-2' : 'Landsat'}
-                            </Badge>
+                            </span>
                           </td>
                           <td >{r.bands.red}/{r.bands.nir}</td>
                           <td >{r.statistics?.mean?.toFixed(3) ?? '-'}</td>
                           <td >{r.statistics?.max?.toFixed(3) ?? '-'}</td>
                           <td >{r.statistics?.validPixels?.toLocaleString() ?? '-'}</td>
                           <td >
-                            <Badge variant={r.status === 'success' ? 'default' : 'destructive'}>
+                            <span>
                               {r.status === 'success' ? '成功' : '失败'}
-                            </Badge>
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -388,8 +378,8 @@ export default function NdvAnalysis() {
                 <p >NDVI = (NIR - Red) / (NIR + Red)，值域 [-1, 1]</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -173,18 +173,18 @@ export default function Dashboard({
   if (loading) {
     return (
       <div >
-        <Spinner  />
+        <div  />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="border">
+      <div >
         <div >
           <AlertTriangle  />
           <span >加载失败</span>
-          <Button size="sm" variant="outline" >重试</Button>
+          <button >重试</button>
         </div>
         <p >{error}</p>
       </div>
@@ -208,15 +208,15 @@ export default function Dashboard({
           </p>
         </div>
         <div >
-          <Button variant="outline" onClick={onContinueAnalysis}>
+          <button onClick={onContinueAnalysis}>
             <Zap  /> 继续分析
-          </Button>
-          <Button variant="outline" onClick={onViewReport}>
+          </button>
+          <button onClick={onViewReport}>
             <FileText  /> 查看报告
-          </Button>
-          <Button onClick={onNewProject}>
+          </button>
+          <button onClick={onNewProject}>
             <Plus  /> 新建项目
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -224,9 +224,9 @@ export default function Dashboard({
       <QuickActions onAction={handleQuickAction} />
 
       {/* Stats Cards */}
-      <div className="grid-cols-1">
-        <Card>
-          <CardContent >
+      <div >
+        <div>
+          <div >
             <div >
               <Folder  />
               <div>
@@ -234,10 +234,10 @@ export default function Dashboard({
                 <div >{stats.totalProjects}</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent >
+          </div>
+        </div>
+        <div>
+          <div >
             <div >
               <RefreshCw  />
               <div>
@@ -245,10 +245,10 @@ export default function Dashboard({
                 <div >{stats.activeTasks}</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent >
+          </div>
+        </div>
+        <div>
+          <div >
             <div >
               <Zap  />
               <div>
@@ -256,13 +256,13 @@ export default function Dashboard({
                 <div >{stats.monthlyApiCalls}</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent >
+          </div>
+        </div>
+        <div>
+          <div >
             <div >
               <AlertTriangle  />
-              <div className="flex-1">
+              <div >
                 <div >存储空间</div>
                 <div >
                   {storageValue}
@@ -271,9 +271,9 @@ export default function Dashboard({
                   </span>
                 </div>
                 <div >
-                  <div className="rounded">
+                  <div >
                     <div
-                      className="rounded"
+                      
                       style={{ width: `${(stats.storageUsed / stats.storageTotal) * 100}%` }}
                     />
                   </div>
@@ -283,45 +283,45 @@ export default function Dashboard({
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Content Grid: Projects + Tasks */}
       <div className={styles.contentGrid}>
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <div>
+          <div>
+            <div>
               最近项目
               <span >查看全部</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
+          </div>
+          <div>
             {projects.length > 0 ? (
-              <div className="flex-col">
+              <div >
                 {projects.map((project) => (
                   <ProjectCard key={project.id} project={project} onClick={handleProjectClick} />
                 ))}
               </div>
             ) : (
-              <Empty description="暂无项目" />
+              <div description="暂无项目" />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <div>
+          <div>
+            <div>
               最近任务
               <span >查看全部</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
+          </div>
+          <div>
             {tasks.length > 0 ? (
               <div >
                 {tasks.map((task) => (
                   <div key={task.id} >
-                    <div className="flex-col">
+                    <div >
                       {task.status === 'completed' ? (
                         <CheckCircle  />
                       ) : task.status === 'running' ? (
@@ -332,18 +332,14 @@ export default function Dashboard({
                         <Clock  />
                       )}
                     </div>
-                    <div className="flex-1">
+                    <div >
                       <div >
                         <span >{task.name}</span>
-                        <Badge variant={
-                          task.status === 'completed' ? 'default' :
-                          task.status === 'running' ? 'secondary' :
-                          task.status === 'failed' ? 'destructive' : 'outline'
-                        }>
+                        <span>
                           {task.status === 'completed' ? '已完成' :
                            task.status === 'running' ? '运行中' :
                            task.status === 'failed' ? '失败' : '等待中'}
-                        </Badge>
+                        </span>
                       </div>
                       {task.description && (
                         <div >{task.description}</div>
@@ -356,21 +352,21 @@ export default function Dashboard({
                 ))}
               </div>
             ) : (
-              <Empty description="暂无任务" />
+              <div description="暂无任务" />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Usage Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>用量统计</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div>
+        <div>
+          <div>用量统计</div>
+        </div>
+        <div>
           <UsageChart />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Quick Links */}
       <div>

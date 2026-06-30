@@ -138,18 +138,18 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
   }
 
   return (
-    <Card className={styles.card}>
+    <div className={styles.card}>
       <div >
         <AlertTriangle  />
         <span >插件安装审批</span>
-        <Badge className={getBadgeClass(maxRiskColor)}>
+        <span className={getBadgeClass(maxRiskColor)}>
           {riskCount > 0 ? '高风险' : medRiskCount > 0 ? '中风险' : '低风险'}
-        </Badge>
+        </span>
       </div>
 
-      <div className={`border ${styles.alert}`}>
-        <AlertTriangle className="shrink-0" />
-        <div className="flex-col">
+      <div className={`${styles.alert}`}>
+        <AlertTriangle  />
+        <div >
           <span >{plugin.name}</span>
           <span >
             {plugin.description}
@@ -174,9 +174,9 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           {permissionsWithRisk.map((perm: { name: string; level: string; color: string }) => (
             <div key={perm.name} className={styles.permissionRow}>
               <code className={styles.permissionName}>{perm.name}</code>
-              <Badge className={getBadgeClass(perm.color)}>
+              <span className={getBadgeClass(perm.color)}>
                 {perm.level}
-              </Badge>
+              </span>
             </div>
           ))}
         </div>
@@ -189,7 +189,7 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={2}
-          className={`border ${styles.reasonInput}`}
+          className={`${styles.reasonInput}`}
         />
         <div className={styles.rememberRow}>
           <input
@@ -204,32 +204,28 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
 
       {/* Action buttons */}
       <div >
-        <Button
+        <button
           onClick={handleApprove}
-          disabled={loading === 'approve'}
         >
-          {loading === 'approve' ? <Spinner  /> : <Check  />}
+          {loading === 'approve' ? <div  /> : <Check  />}
           批准
-        </Button>
-        <Button
-          variant="danger"
+        </button>
+        <button
           onClick={handleDeny}
-          disabled={loading === 'deny'}
         >
-          {loading === 'deny' ? <Spinner  /> : <X  />}
+          {loading === 'deny' ? <div  /> : <X  />}
           拒绝
-        </Button>
-        <Button
-          variant="ghost"
+        </button>
+        <button
           onClick={() => {
             setRemember(true)
             handleApprove()
           }}
           disabled={loading === 'approve'}
         >
-          {loading === 'approve' ? <Spinner  /> : <Save  />}
+          {loading === 'approve' ? <div  /> : <Save  />}
           批准并记住
-        </Button>
+        </button>
       </div>
 
       {/* Allow for this task */}
@@ -238,14 +234,14 @@ export function PluginInstallApproval({ plugin, onApprove, onDeny }: PluginInsta
           <AlertTriangle  />
           <span >
             此插件需要{' '}
-            <Badge >
+            <span >
               {riskCount}
-            </Badge>
+            </span>
             个高风险权限，请确认权限必要性后再批准
           </span>
         </div>
       )}
-    </Card>
+    </div>
   )
 }
 

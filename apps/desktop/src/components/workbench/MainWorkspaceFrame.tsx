@@ -7,15 +7,9 @@ type MainWorkspaceFrameProps = {
 
 export function MainWorkspaceFrame({ children, className, noPadding }: MainWorkspaceFrameProps) {
   return (
-    <main className="flex-1">
-      <div className={cn('h-full', !noPadding && 'p-2')}>
-        <div
-          className={cn(
-            'h-full overflow-hidden rounded-[""]',
-            'border border-[""] bg-[""]',
-            className,
-          )}
-        >
+    <main className="h-full w-full overflow-auto">
+      <div className={noPadding ? 'h-full' : 'h-full p-2'}>
+        <div className="h-full">
           {children}
         </div>
       </div>

@@ -98,7 +98,7 @@ export function ProblemsPanel() {
       dataIndex: "source",
       key: "source",
       width: 80,
-      render: (source: string) => <Badge variant="default" >{source}</Badge>,
+      render: (source: string) => <span >{source}</span>,
     },
     {
       title: "消息",
@@ -140,54 +140,45 @@ export function ProblemsPanel() {
             共 {filteredProblems.length} 项
           </span>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
+        <button
         >
           <Trash2  />
           清除
-        </Button>
+        </button>
       </div>
 
       <div className={styles.filterSection}>
         <div >
           <Filter  />
-          <Input
+          <input
             placeholder="搜索问题..."
-            value={filter}
             onChange={(e) => setFilter(e.target.value)}
             
           />
         </div>
         <div >
-          <Button
-            size="sm"
-            variant={severityFilter === "all" ? "primary" : "secondary"}
+          <button
             onClick={() => setSeverityFilter("all")}
           >
             全部
-          </Button>
-          <Button
-            size="sm"
-            variant={severityFilter === "error" ? "primary" : "secondary"}
+          </button>
+          <button
             onClick={() => setSeverityFilter("error")}
             
           >
             错误
-          </Button>
-          <Button
-            size="sm"
-            variant={severityFilter === "warning" ? "primary" : "secondary"}
+          </button>
+          <button
             onClick={() => setSeverityFilter("warning")}
             
           >
             警告
-          </Button>
+          </button>
         </div>
       </div>
 
       <div className={styles.tableContainer}>
-        <div className="flex-col">
+        <div >
           <div >
             {columns.map((col) => (
               <span key={col.key} style={{ width: col.width, flex: col.width ? undefined : 1 }}>

@@ -199,15 +199,15 @@ const TerminalPanel: React.FC = () => {
       <div className={styles.header}>
         <span className={styles.title}>Terminal</span>
         <div className={styles.actions}>
-          <Button variant="ghost" size="icon-sm" onClick={handleClear} title="Clear">
+          <button onClick={handleClear}>
             <Trash2 size={14} />
-          </Button>
-          <Button variant="ghost" size="icon-sm" onClick={handleNewTab} title="New Tab">
+          </button>
+          <button onClick={handleNewTab}>
             <Plus size={14} />
-          </Button>
-          <Button variant="ghost" size="icon-sm" title="Close">
+          </button>
+          <button>
             <X size={14} />
-          </Button>
+          </button>
         </div>
       </div>
 

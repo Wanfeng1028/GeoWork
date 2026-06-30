@@ -13,8 +13,8 @@ import { WorkbenchHome } from './WorkbenchHome'
 
 function ComingSoonView({ title }: { title: string }) {
   return (
-    <div className="flex-1">
-      <div className="border">
+    <div >
+      <div >
         <div >
           <GeoMascot size="lg" state="thinking" />
         </div>
@@ -38,16 +38,16 @@ function ImChannelsView() {
   ]
 
   return (
-    <div className="flex-1">
+    <div >
       <div >
         <div ><GeoMascot size="xl" state="idle" /></div>
         <h1 >IM 频道</h1>
         <p >
           配置 IM 频道，让 QoderWork 接收来自钉钉、飞书等平台的消息。频道配置信息仅存储在本地，不会上传到云端。
         </p>
-        <div className="flex-col">
+        <div >
           {items.map(([name, desc]) => (
-            <div key={name} className="grid-cols-[34px_minmax(0,1fr)_54px] border">
+            <div key={name} className="grid-cols-[34px_minmax(0,1fr)_54px]">
               <div >{name.slice(0, 1)}</div>
               <div ><strong >{name}</strong><span >{desc}</span></div>
               <button >配置</button>
@@ -102,7 +102,7 @@ export function MainWorkspace() {
   }
 
   return (
-    <main className="flex-1 flex-col">
+    <main >
       {renderContent()}
     </main>
   )

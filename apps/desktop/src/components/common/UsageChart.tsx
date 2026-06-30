@@ -26,24 +26,20 @@ export default function UsageChart() {
       <div className={styles.toolbar}>
         <h3>用量统计</h3>
         <div >
-          <Button
-            size="sm"
-            variant={chartType === 'bar' ? 'primary' : 'ghost'}
+          <button
             onClick={() => setChartType('bar')}
           >
             柱状图
-          </Button>
-          <Button
-            size="sm"
-            variant={chartType === 'pie' ? 'primary' : 'ghost'}
+          </button>
+          <button
             onClick={() => setChartType('pie')}
           >
             饼图
-          </Button>
+          </button>
         </div>
       </div>
-      <Card className={styles.chartCard}>
-        <CardContent >
+      <div className={styles.chartCard}>
+        <div >
           <EChartsChart
             type={chartType}
             data={chartType === 'bar' ? MODE_TASKS : COST_DISTRIBUTION}
@@ -51,8 +47,8 @@ export default function UsageChart() {
             title={chartType === 'bar' ? '各模式任务数' : '成本分布'}
             height={340}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

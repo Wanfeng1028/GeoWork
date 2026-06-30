@@ -146,13 +146,11 @@ export function RuntimeEvents() {
           </span>
         </div>
         <div className={styles.headerRight}>
-          <Button
-            size="sm"
-            variant="ghost"
+          <button
             onClick={handleClear}
           >
             清空
-          </Button>
+          </button>
           <button
             className={styles.collapseBtn}
             onClick={() => setCollapsed(true)}
@@ -166,21 +164,18 @@ export function RuntimeEvents() {
       <div className={styles.filterSection}>
         <div >
           <Filter  />
-          <Input
+          <input
             placeholder="搜索事件消息..."
-            value={filter}
             onChange={(e) => setFilter(e.target.value)}
             
           />
         </div>
         <div className={styles.typeFilters}>
-          <Button
-            size="sm"
-            variant={eventTypeFilter === "all" ? "primary" : "ghost"}
+          <button
             onClick={() => setEventTypeFilter("all")}
           >
             全部
-          </Button>
+          </button>
           {eventTypes.map((type) => {
             const config = EVENT_TYPE_CONFIG[type];
             return (
@@ -203,7 +198,7 @@ export function RuntimeEvents() {
       <div className={styles.eventList}>
         {filteredEvents.length === 0 ? (
           <div className={styles.emptyState}>
-            <Empty
+            <div
               description={
                 events.length === 0 ? "暂无运行时事件" : "无匹配的事件"
               }

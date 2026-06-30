@@ -24,18 +24,16 @@ export const TaskModeSelector: React.FC<TaskModeSelectorProps> = ({
 }) => {
   return (
     <div className={styles.container}>
-      <Select value={value} onValueChange={onChange as (v: string) => void}>
-        <SelectTrigger className={styles.modeSelect}>
-          <SelectValue placeholder="选择模式" />
-        </SelectTrigger>
-        <SelectContent>
-          {MODES.map(m => (
-            <SelectItem key={m.value} value={m.value}>
-              {m.icon} {m.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <select
+        value={value}
+        onChange={(e) => onChange?.(e.target.value as TaskMode)}
+      >
+        {MODES.map(m => (
+          <option key={m.value}>
+            {m.icon} {m.label}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }

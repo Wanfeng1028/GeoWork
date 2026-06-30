@@ -27,37 +27,33 @@ export function RightInspector({
 
   if (!open) {
     return (
-      <div className={cn('flex h-full flex-col items-center py-2 gap-1', className)}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.key
-          return (
-            <button
-              key={tab.key}
-              title={tab.label}
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-[""] transition-colors',
-                isActive
-                  ? 'bg-[""] text-[""]'
-                  : 'text-[""] hover:bg-[""] hover:text-[""]',
-              )}
-              onClick={() => {
-                setActiveTab(tab.key)
-                onToggle()
-              }}
-            >
-              <Icon  />
-            </button>
-          )
-        })}
-        <div className="flex-1" />
-        <button
-          
-          onClick={onToggle}
-          title="展开面板"
-        >
-          <ChevronLeft  />
-        </button>
+      <div className={`flex flex-col border-l border-border/40 w-12 ${className || ''}`}>
+        <div className="flex flex-col py-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.key}
+                title={tab.label}
+                className="h-8 w-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+                onClick={() => {
+                  setActiveTab(tab.key)
+                  onToggle()
+                }}
+              >
+                <Icon className="w-4 h-4" />
+              </button>
+            )
+          })}
+          <div className="h-px mx-2 my-1 bg-border/40" />
+          <button
+            className="h-8 w-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={onToggle}
+            title="展开面板"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     )
   }
@@ -65,8 +61,8 @@ export function RightInspector({
   const current = tabs.find((t) => t.key === activeTab)
 
   return (
-    <div className={cn('flex h-full flex-col', className)}>
-      <div className="shrink-0">
+    <div className={`flex flex-col border-l border-border/40 w-80 ${className || ''}`}>
+      <div className="flex items-center h-9 px-3 border-b border-border/40 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
@@ -74,30 +70,25 @@ export function RightInspector({
             <button
               key={tab.key}
               title={tab.label}
-              className={cn(
-                'flex h-7 items-center gap-1.5 rounded-[""] px-2 text-[11px] font-medium transition-colors',
-                isActive
-                  ? 'bg-[""] text-[""]'
-                  : 'text-[""] hover:bg-[""] hover:text-[""]',
-              )}
+              className={`h-7 px-2 flex items-center gap-1.5 text-xs rounded ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
               onClick={() => setActiveTab(tab.key)}
             >
-              <Icon  />
-              <span >{tab.label}</span>
+              <Icon className="w-3.5 h-3.5" />
+              <span className="truncate">{tab.label}</span>
             </button>
           )
         })}
-        <div className="flex-1" />
+        <div className="h-px mx-2 bg-border/40" />
         <button
-          
+          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded"
           onClick={onToggle}
           title="折叠面板"
         >
-          <ChevronRight  />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 overflow-auto p-3">
         {current?.content}
       </div>
     </div>

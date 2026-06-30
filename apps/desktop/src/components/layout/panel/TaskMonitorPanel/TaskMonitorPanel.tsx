@@ -94,11 +94,10 @@ export function TaskMonitorPanel() {
                 </span>
                 {currentTask.id}
               </span>
-              <Badge
-                variant={currentTaskStatus === "completed" ? "success" : currentTaskStatus === "failed" ? "danger" : "warning"}
+              <span
               >
                 {statusConfig.label}
-              </Badge>
+              </span>
             </div>
 
             {currentTaskStatus === "running" && (
@@ -134,7 +133,7 @@ export function TaskMonitorPanel() {
                     </summary>
                     <div >
                       {step.status === "running" && (
-                        <Spinner size="sm"  />
+                        <div  />
                       )}
                       {step.status === "completed" && (
                         <span className={styles.stepCompleted}>&#10003; 已完成</span>
@@ -155,8 +154,8 @@ export function TaskMonitorPanel() {
 
             {/* Error Display */}
             {error && (
-              <div className="border">
-                <XCircle className="shrink-0" />
+              <div >
+                <XCircle  />
                 <div>
                   <div >任务错误</div>
                   <div >{error}</div>
@@ -167,23 +166,19 @@ export function TaskMonitorPanel() {
             {/* Actions */}
             <div className={styles.actions}>
               {currentTaskStatus === "running" && (
-                <Button
-                  size="sm"
-                  variant="danger"
+                <button
                   onClick={handleCancel}
                 >
                   <Square  />
                   取消任务
-                </Button>
+                </button>
               )}
               {currentTaskStatus === "failed" && (
-                <Button
-                  size="sm"
-                  variant="primary"
+                <button
                 >
                   <RefreshCw  />
                   恢复任务
-                </Button>
+                </button>
               )}
             </div>
           </>
@@ -203,14 +198,14 @@ export function TaskMonitorPanel() {
           <div className={styles.eventTimeline}>
             {recentEvents.map((evt, index) => (
               <div key={evt.id || index} >
-                <div className="flex-col">
+                <div >
                   {evt.type?.includes("error") ? (
                     <XCircle  />
                   ) : (
                     <Loader2  />
                   )}
                   {index < recentEvents.length - 1 && (
-                    <div className="flex-1" />
+                    <div  />
                   )}
                 </div>
                 <div>

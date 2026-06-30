@@ -39,38 +39,36 @@ export function BottomDock() {
       <button className={styles.closeBtn} onClick={() => {}} aria-label="关闭底部面板">
         <X size={14} />
       </button>
-      <Tabs
-        defaultValue={activeBottomPanel}
-        onValueChange={setActiveBottomPanel}
+      <div
         className={styles.tabs}
       >
-        <TabsList className={styles.tabsList}>
-          <TabsTrigger value="terminal">终端</TabsTrigger>
-          <TabsTrigger value="browser">浏览器</TabsTrigger>
-          <TabsTrigger value="events">事件</TabsTrigger>
-          <TabsTrigger value="logs">日志</TabsTrigger>
-          <TabsTrigger value="problems">问题</TabsTrigger>
-          <TabsTrigger value="output">输出</TabsTrigger>
-        </TabsList>
-        <TabsContent value="terminal">
+        <div className={styles.tabsList}>
+          <button>终端</button>
+          <button>浏览器</button>
+          <button>事件</button>
+          <button>日志</button>
+          <button>问题</button>
+          <button>输出</button>
+        </div>
+        <div>
           <Terminal title={`任务终端 — ${activeMode}`} />
-        </TabsContent>
-        <TabsContent value="browser">
+        </div>
+        <div>
           <BrowserPanel />
-        </TabsContent>
-        <TabsContent value="events">
+        </div>
+        <div>
           <RuntimeEvents />
-        </TabsContent>
-        <TabsContent value="logs">
+        </div>
+        <div>
           <LogsPanel />
-        </TabsContent>
-        <TabsContent value="problems">
+        </div>
+        <div>
           <ProblemsPanel />
-        </TabsContent>
-        <TabsContent value="output">
+        </div>
+        <div>
           <OutputPanel />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </footer>
   )
 }

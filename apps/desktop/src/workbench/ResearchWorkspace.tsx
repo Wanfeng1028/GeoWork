@@ -13,30 +13,30 @@ export default function ResearchWorkspace() {
         </div>
 
         <div className={styles.panels}>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>知识索引</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Empty title="暂无索引数据" />
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>论文搜索</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Empty title="搜索论文和学术资源" />
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>文献矩阵</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Empty title="文献对比矩阵" />
-            </CardContent>
-          </Card>
+          <div className={styles.panel}>
+            <div>
+              <div>知识索引</div>
+            </div>
+            <div>
+              <div />
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>论文搜索</div>
+            </div>
+            <div>
+              <div />
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>文献矩阵</div>
+            </div>
+            <div>
+              <div />
+            </div>
+          </div>
         </div>
       </div>
     </div>

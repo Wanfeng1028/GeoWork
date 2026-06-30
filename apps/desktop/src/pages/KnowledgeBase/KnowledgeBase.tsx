@@ -95,7 +95,7 @@ export function KnowledgeBase() {
   }, [entries, searchQuery])
 
   if (error) {
-    return <div className={styles.emptyState}><Empty description={`加载失败: ${error}`} /></div>
+    return <div className={styles.emptyState}><div description={`加载失败: ${error}`} /></div>
   }
 
   return (
@@ -112,7 +112,7 @@ export function KnowledgeBase() {
           </div>
         </div>
         <div className={styles.sidebarContent}>
-          {isLoading ? <div className={styles.loadingSmall}><Spinner  /></div> : <div>{treeData}</div>}
+          {isLoading ? <div className={styles.loadingSmall}><div  /></div> : <div>{treeData}</div>}
           <button className={`${styles.treeNode} ${!selectedCategory ? styles.selected : ''}`} onClick={() => handleSelectCategory(null)}>
             <File className={styles.treeIcon} />
             <span className={styles.treeLabel}>全部条目</span>
@@ -141,13 +141,13 @@ export function KnowledgeBase() {
           <div className={styles.toolbar}>
             <div className={styles.searchBox}>
               <Search size={14} />
-              <Input placeholder="搜索知识条目..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              <input placeholder="搜索知识条目..." onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
           </div>
 
           <div className={styles.entryList}>
             {isLoading ? (
-              <div className={styles.loadingState}><Spinner  /></div>
+              <div className={styles.loadingState}><div  /></div>
             ) : filteredEntries.length === 0 ? (
               <div className={styles.emptyRows}><BookOpen size={24} /><span>暂无知识条目</span></div>
             ) : (
@@ -168,41 +168,41 @@ export function KnowledgeBase() {
         </section>
       </main>
 
-      <Dialog open={detailVisible} onOpenChange={setDetailVisible}>
-        <DialogContent className={styles.detailDialog}>
+      <div>
+        <div className={styles.detailDialog}>
           <KnowledgeDetail visible={detailVisible} onClose={() => setDetailVisible(false)} />
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
-      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className={styles.smallDialog}>
-          <DialogHeader><DialogTitle>新建知识分类</DialogTitle></DialogHeader>
+      <div>
+        <div className={styles.smallDialog}>
+          <div><div>新建知识分类</div></div>
           <div className={styles.formStack}>
-            <Field label="分类名称"><Input placeholder="例如：遥感算法、NDVI 研究" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} /></Field>
-            <Field label="父分类"><Input placeholder="留空表示顶级分类" value={newCatParent} onChange={(e) => setNewCatParent(e.target.value)} /></Field>
+            <Field label="分类名称"><input placeholder="例如：遥感算法、NDVI 研究" onChange={(e) => setNewCatName(e.target.value)} /></Field>
+            <Field label="父分类"><input placeholder="留空表示顶级分类" onChange={(e) => setNewCatParent(e.target.value)} /></Field>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setCreateModalOpen(false); setNewCatName(''); setNewCatParent('') }}>取消</Button>
-            <Button onClick={handleCreateCategory}>创建</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => { setCreateModalOpen(false); setNewCatName(''); setNewCatParent('') }}>取消</button>
+            <button onClick={handleCreateCategory}>创建</button>
+          </div>
+        </div>
+      </div>
 
-      <Dialog open={paperIndexModalOpen} onOpenChange={setPaperIndexModalOpen}>
-        <DialogContent className={styles.paperDialog}>
-          <DialogHeader><DialogTitle>从论文索引到知识库</DialogTitle></DialogHeader>
+      <div>
+        <div className={styles.paperDialog}>
+          <div><div>从论文索引到知识库</div></div>
           <div className={styles.formStack}>
-            <Field label="论文 ID"><Input placeholder="例如：paper_ndvi_review" value={paperForm.paperId} onChange={(e) => setPaperForm({ ...paperForm, paperId: e.target.value })} /></Field>
-            <Field label="标题"><Input placeholder="知识条目标题" value={paperForm.title} onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} /></Field>
+            <Field label="论文 ID"><input placeholder="例如：paper_ndvi_review" onChange={(e) => setPaperForm({ ...paperForm, paperId: e.target.value })} /></Field>
+            <Field label="标题"><input placeholder="知识条目标题" onChange={(e) => setPaperForm({ ...paperForm, title: e.target.value })} /></Field>
             <Field label="内容"><textarea placeholder="知识条目的正文内容" value={paperForm.content} onChange={(e) => setPaperForm({ ...paperForm, content: e.target.value })} /></Field>
-            <Field label="标签"><Input placeholder="多个标签用逗号分隔" value={paperForm.tags} onChange={(e) => setPaperForm({ ...paperForm, tags: e.target.value })} /></Field>
+            <Field label="标签"><input placeholder="多个标签用逗号分隔" onChange={(e) => setPaperForm({ ...paperForm, tags: e.target.value })} /></Field>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setPaperIndexModalOpen(false); setPaperForm({ paperId: '', title: '', content: '', tags: '' }) }}>取消</Button>
-            <Button onClick={handleIndexFromPaper}>索引</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => { setPaperIndexModalOpen(false); setPaperForm({ paperId: '', title: '', content: '', tags: '' }) }}>取消</button>
+            <button onClick={handleIndexFromPaper}>索引</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

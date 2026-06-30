@@ -31,18 +31,18 @@ export const AgentRecoveryBanner: React.FC<{ taskId: string }> = ({ taskId }) =>
       </div>
       <div className={styles.actions}>
         {stateType !== 'failed' && (
-          <Button
+          <button
             onClick={() => recoverTask(taskId)}
             className={styles.recoverBtn}
             disabled={isRecovering}
           >
             <RefreshCw className={`${isRecovering ? 'animate-spin' : ''}`} />
             恢复任务
-          </Button>
+          </button>
         )}
-        <Button variant="ghost" onClick={() => console.log('查看只读快照', recoveryState)}>
+        <button onClick={() => console.log('查看只读快照', recoveryState)}>
           查看只读快照
-        </Button>
+        </button>
       </div>
     </div>
   )

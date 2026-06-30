@@ -85,13 +85,12 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
         <div >
           <div>
             <label >名称</label>
-            <Input placeholder="例如：每日数据备份" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
+            <input placeholder="例如：每日数据备份" onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
           </div>
 
           <div>
             <label >Cron 表达式</label>
-            <Input
-              value={expression}
+            <input
               onChange={(e) => setExpression(e.target.value)}
               placeholder="分 时 日 月 星期"
               className={styles.cronInput}
@@ -116,63 +115,66 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
           )}
 
           {/* Common presets */}
-          <div>
-            <label >常用表达式</label>
-            <div className="flex-wrap">
+          <div className={styles.presetSection}>
+            <label className={styles.label}>常用表达式</label>
+            <div className={styles.presetList}>
               {COMMON_PRESETS.map((preset) => (
-                <Badge
+                <span
                   key={preset.value}
-                  variant="secondary"
-                  
+                  className={`${styles.presetTag} ${expression === preset.value ? styles.active : ''}`}
                   onClick={() => setExpression(preset.value)}
                 >
                   {preset.label}
-                </Badge>
+                </span>
               ))}
             </div>
           </div>
 
-          <div>
-            <label >执行目标</label>
-            <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="选择执行目标" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Research">Research 专家</SelectItem>
-                <SelectItem value="Data">Data 专家</SelectItem>
-                <SelectItem value="GeoCode">GeoCode 专家</SelectItem>
-                <SelectItem value="Analysis">Analysis 专家</SelectItem>
-                <SelectItem value="Write">Write 专家</SelectItem>
-                <SelectItem value="skill">自定义 Skill</SelectItem>
-                <SelectItem value="script">自定义脚本</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className={styles.field}>
+            <label className={styles.label}>执行目标</label>
+            <select
+              value={formState.target}
+              onChange={(e) => setFormState({ ...formState, target: e.target.value })}
+            >
+              <option>Research 专家</option>
+              <option>Data 专家</option>
+              <option>GeoCode 专家</option>
+              <option>Analysis 专家</option>
+              <option>Write 专家</option>
+              <option>自定义 Skill</option>
+              <option>自定义脚本</option>
+            </select>
           </div>
 
           <div>
             <label >参数配置</label>
             <textarea
-              className="border"
+              
               placeholder='{"band": "NIR"}'
               value={formState.params}
               onChange={(e) => setFormState({ ...formState, params: e.target.value })}
             />
           </div>
 
-          <div >
-            <Switch checked={formState.enabled} onCheckedChange={(v) => {
-              setFormState({ ...formState, enabled: v })
-              if (editingJob) toggleJob(editingJob.id)
-            }} />
-            <label >启用</label>
+          <div className={styles.toggleRow}>
+            <button
+              type="button"
+              onClick={() => {
+                setFormState({ ...formState, enabled: !formState.enabled })
+                if (editingJob) toggleJob(editingJob.id, !formState.enabled)
+              }}
+              className={formState.enabled ? styles.enabled : ''}
+            >
+              {formState.enabled ? 'ON' : 'OFF'}
+            </button>
+            <label className={styles.label}>启用</label>
           </div>
 
           <div className={styles.actions}>
-            <Button variant="outline" onClick={onClose}>取消</Button>
-            <Button onClick={handleFinish} disabled={loading}>
+            <button onClick={onClose}>取消</button>
+            <button onClick={handleFinish}>
               {editingJob ? '保存' : '创建'}
-            </Button>
+            </button>
           </div>
         </div>
       </div>

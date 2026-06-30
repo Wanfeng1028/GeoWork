@@ -22,16 +22,16 @@ export function UsageSummaryPopover() {
 
   if (loginState !== 'authenticated' || !user) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <div>
+        <button asChild>
           <button className={styles.avatarBtn} title="账号">
             <User size={16} />
           </button>
-        </PopoverTrigger>
-        <PopoverContent align="end" sideOffset={6} className={styles.popoverContent}>
+        </button>
+        <div align="end" sideOffset={6} className={styles.popoverContent}>
           <div className={styles.loginPrompt}>登录以查看账号信息</div>
-        </PopoverContent>
-      </Popover>
+        </div>
+      </div>
     )
   }
 
@@ -48,13 +48,13 @@ export function UsageSummaryPopover() {
   })
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <div>
+      <button asChild>
         <button className={styles.avatarBtn} title="用量">
           <User size={16} />
         </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={6} className={styles.popoverContent}>
+      </button>
+      <div align="end" sideOffset={6} className={styles.popoverContent}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.avatarCircle}>
@@ -71,9 +71,9 @@ export function UsageSummaryPopover() {
           <span className={styles.label}>
             <Server size={14} /> 当前套餐
           </span>
-          <Badge variant={planVariant[user.plan] ?? 'default'}>
+          <span>
             {planLabels[user.plan]}
-          </Badge>
+          </span>
         </div>
 
         {/* Credits */}
@@ -106,7 +106,7 @@ export function UsageSummaryPopover() {
           </div>
           <button className={styles.detailBtn}>查看详细用量</button>
         </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+    </div>
   )
 }

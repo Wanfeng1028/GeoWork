@@ -1,51 +1,27 @@
 // GeoWork Store - Settings Store
 
 import { create } from 'zustand'
-import type { SettingsState } from '../types/settings'
+import type { Settings } from '../types/settings'
 import { mockSettings } from '../mocks/settings.mock'
 
-const THEME_KEY = 'geowork.theme'
-
-const VALID_THEMES: GeoWorkTheme[] = [
-  'light', 'dark', 'auto',
-  'light-glass', 'dark-glass',
-  'classic-light', 'classic-dark',
-  'light-parchment', 'dark-parchment',
-]
-
-function isGeoWorkTheme(value: string | null): value is GeoWorkTheme {
-  return value !== null && (VALID_THEMES as string[]).includes(value)
-}
-
-const savedTheme = (() => {
-  try {
-    const theme = window.localStorage.getItem(THEME_KEY)
-    // Backward-compat: legacy 'system' value maps to 'auto'.
-    if (theme === 'system') return 'auto' as GeoWorkTheme
-    return isGeoWorkTheme(theme) ? theme : mockSettings.appearance.theme
-  } catch {
-    return mockSettings.appearance.theme
-  }
-})()
-
-function resolve(theme: GeoWorkTheme): ResolvedTheme {
-  return resolveTheme(theme)
-}
-
-const useSettingsStore = create<SettingsState>((set) => ({
+const useSettingsStore = create<{
+  settings: Settings
+  isLoading: boolean
+  setTheme: (theme: Settings['appearance']['theme']) => void
+  updateSetting: (path: string, value: unknown) => void
+}>((set) => ({
   settings: {
     ...mockSettings,
     appearance: {
       ...mockSettings.appearance,
-      theme: savedTheme
+      theme: 'dark'
     }
   },
   isLoading: false,
-  resolvedTheme: resolve(savedTheme),
 
   setTheme: (theme) => {
     try {
-      window.localStorage.setItem(THEME_KEY, theme)
+      window.localStorage.setItem('geowork.theme', theme)
     } catch {
       // localStorage can be unavailable in test environments.
     }
@@ -56,12 +32,9 @@ const useSettingsStore = create<SettingsState>((set) => ({
           ...state.settings.appearance,
           theme
         }
-      },
-      resolvedTheme: resolve(theme)
+      }
     }))
   },
-
-  setResolvedTheme: (resolvedTheme) => set({ resolvedTheme }),
 
   updateSetting: (path: string, value: unknown) => {
     set((state) => {
@@ -80,6 +53,3 @@ const useSettingsStore = create<SettingsState>((set) => ({
 }))
 
 export default useSettingsStore
-
-// Re-export so existing imports from settingsStore keep working.
-export { DEFAULT_THEME }

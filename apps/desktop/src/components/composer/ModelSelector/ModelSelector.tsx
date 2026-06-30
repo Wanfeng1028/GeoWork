@@ -21,26 +21,26 @@ export const ModelSelector: React.FC = () => {
     <div className={styles.container}>
       <Settings size={14} className={styles.icon} />
       <div className={styles.selectors}>
-        <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-          <SelectTrigger className={styles.providerSelect}>
-            <SelectValue placeholder="选择供应商" />
-          </SelectTrigger>
-          <SelectContent>
+        <select>
+          <div className={styles.providerSelect}>
+            <span placeholder="选择供应商" />
+          </div>
+          <div>
             {providers.map(p => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              <option key={p.id}>{p.name}</option>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={selectedModel || models[0]} onValueChange={setSelectedModel}>
-          <SelectTrigger className={styles.modelSelect}>
-            <SelectValue placeholder="选择模型" />
-          </SelectTrigger>
-          <SelectContent>
+          </div>
+        </select>
+        <select>
+          <div className={styles.modelSelect}>
+            <span placeholder="选择模型" />
+          </div>
+          <div>
             {models.map(m => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+              <option key={m}>{m}</option>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </select>
       </div>
     </div>
   )

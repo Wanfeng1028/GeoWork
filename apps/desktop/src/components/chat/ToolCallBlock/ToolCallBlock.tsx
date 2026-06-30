@@ -31,7 +31,7 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
     started: { icon: <Play  />, color: '', label: '运行中', variant: 'info' as const },
     completed: { icon: <CheckCircle  />, color: '', label: '已完成', variant: 'success' as const },
     failed: { icon: <XCircle  />, color: '', label: '失败', variant: 'danger' as const },
-    pending: { icon: <Spinner size="xs" />, color: '', label: '等待中', variant: 'warning' as const },
+    pending: { icon: <div />, color: '', label: '等待中', variant: 'warning' as const },
   }
 
   const config = statusConfig[event.status as keyof typeof statusConfig] || {
@@ -47,16 +47,16 @@ const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ event }) => {
     <details
       open={expanded}
       onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
-      className="border"
+      
     >
       <summary >
         <span style={{ color: config.color }}>{config.icon}</span>
         <span >{event.tool || event.name || '工具调用'}</span>
-        <Badge variant={config.variant}>{config.label}</Badge>
+        <span>{config.label}</span>
         {duration && <span >{duration}</span>}
       </summary>
       <div >
-        <Separator  />
+        <hr  />
 
         {event.input && (
           <div style={{ marginBottom: 8 }}>

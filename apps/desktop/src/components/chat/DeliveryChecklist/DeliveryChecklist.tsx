@@ -67,7 +67,7 @@ const DeliveryChecklist: React.FC<DeliveryChecklistProps> = ({ checklist }) => {
             </div>
           </div>
 
-          <Separator  />
+          <hr  />
 
           {section.items.length === 0 ? (
             <div className={styles.emptyItem}>

@@ -25,29 +25,36 @@ const DEFAULT_ITEMS: DockToolbarItem[] = [
   { icon: <Share2 size={14} />, label: '分享' },
 ]
 
+function classNames(...classes: (string | boolean | undefined | null | Record<string, boolean | undefined | null>)[]): string {
+  return classes.flatMap((c) => {
+    if (typeof c === 'boolean' || c == null) return []
+    if (typeof c === 'string') return [c]
+    return Object.entries(c)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+  }).join(' ')
+}
+
 export const DockToolbar: React.FC<DockToolbarProps> = ({ items, className }) => {
   const displayItems = items && items.length > 0 ? items : DEFAULT_ITEMS
 
   return (
-    <div className={cn(styles.toolbar, className)}>
+    <div className={classNames(styles.toolbar, className)}>
       {displayItems.map((item, index) => (
-        <Tooltip key={index}>
-          <TooltipTrigger asChild>
-            <button
-              className={cn(styles.item, {
-                [styles.active]: item.active,
-                [styles.disabled]: item.disabled,
-              })}
-              onClick={item.onClick}
-              disabled={item.disabled}
-              type="button"
-            >
-              <span className={styles.icon}>{item.icon}</span>
-              <span className={styles.label}>{item.label}</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>{item.label}</TooltipContent>
-        </Tooltip>
+        <button
+          key={index}
+          className={classNames(styles.item, {
+            [styles.active]: item.active,
+            [styles.disabled]: item.disabled,
+          })}
+          onClick={item.onClick}
+          disabled={item.disabled}
+          type="button"
+          title={item.label}
+        >
+          <span className={styles.icon}>{item.icon}</span>
+          <span className={styles.label}>{item.label}</span>
+        </button>
       ))}
     </div>
   )

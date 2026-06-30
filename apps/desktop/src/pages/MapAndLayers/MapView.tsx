@@ -21,29 +21,29 @@ export function MapView() {
     <div className={styles.container}>
       <div className={styles.toolbar}>
         <div >
-          <Button size="sm" variant="outline" onClick={() => setView(center, zoom + 1)} title="放大">
+          <button onClick={() => setView(center, zoom + 1)} title="放大">
             <ZoomIn  />
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setView(center, zoom - 1)} title="缩小">
+          </button>
+          <button onClick={() => setView(center, zoom - 1)} title="缩小">
             <ZoomOut  />
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setView([104, 35], 4)} title="重置">
+          </button>
+          <button onClick={() => setView([104, 35], 4)} title="重置">
             <RefreshCw  />
-          </Button>
-          <Button size="sm" variant="outline" title="全屏">
+          </button>
+          <button>
             <Maximize  />
-          </Button>
+          </button>
         </div>
-        <Select value={basemap} onValueChange={setBasemap}>
-          <SelectTrigger >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+        <select>
+          <div >
+            <span />
+          </div>
+          <div>
             {BASEMAP_OPTIONS.map((b) => (
-              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              <option key={b.id}>{b.name}</option>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </select>
       </div>
       <div className={styles.mapArea}>
         <div className={styles.mapStatus}>

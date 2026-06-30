@@ -85,89 +85,82 @@ export function ModelProviderForm({ provider, onSuccess, onCancel }: ModelProvid
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <div >
-        <label >名称</label>
-        <Input
+      <div className={styles.field}>
+        <label className={styles.label}>名称</label>
+        <input
           placeholder="例如: OpenAI API, Local Ollama"
-          value={formValues.name || ''}
+          value={formValues.name}
           onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
         />
       </div>
 
-      <div >
-        <label >类型</label>
-        <Select
-          value={formValues.kind || 'openai_compatible'}
-          onValueChange={(val) => setFormValues((v) => ({ ...v, kind: val as ModelProvider['kind'] }))}
+      <div className={styles.field}>
+        <label className={styles.label}>类型</label>
+        <select
+          value={formValues.kind}
+          onChange={(e) => setFormValues((v) => ({ ...v, kind: e.target.value as ModelProvider['kind'] }))}
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PROVIDER_KINDS.map((kind) => (
-              <SelectItem key={kind.value} value={kind.value}>
-                {kind.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {PROVIDER_KINDS.map((kind) => (
+            <option key={kind.value}>
+              {kind.label}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div >
-        <label >Base URL</label>
-        <Input
+      <div className={styles.field}>
+        <label className={styles.label}>Base URL</label>
+        <input
           placeholder="https://api.openai.com"
-          value={formValues.baseUrl || ''}
+          value={formValues.baseUrl}
           onChange={(e) => setFormValues((v) => ({ ...v, baseUrl: e.target.value }))}
         />
       </div>
 
-      <div >
-        <label >API Key</label>
-        <Input
+      <div className={styles.field}>
+        <label className={styles.label}>API Key</label>
+        <input
           type="password"
           placeholder="sk-... (可选)"
-          value={formValues.apiKeyRef || ''}
+          value={formValues.apiKeyRef}
           onChange={(e) => setFormValues((v) => ({ ...v, apiKeyRef: e.target.value }))}
         />
       </div>
 
-      <div >
-        <label >默认模型</label>
-        <Input
+      <div className={styles.field}>
+        <label className={styles.label}>默认模型</label>
+        <input
           placeholder="gpt-4, llama3 等 (可选)"
-          value={formValues.defaultModel || ''}
+          value={formValues.defaultModel}
           onChange={(e) => setFormValues((v) => ({ ...v, defaultModel: e.target.value }))}
         />
       </div>
 
       {provider?.id && (
         <div className={styles.testRow}>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            disabled={testing}
             onClick={handleTestConnection}
             className={styles.testBtn}
           >
-            <Link  />
+            <Link />
             测试连接
-          </Button>
+          </button>
           {testResult && (
-            <Badge className={testResult.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
-              {testResult.ok ? <CheckCircle  /> : <XCircle  />}
+            <span className={testResult.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+              {testResult.ok ? <CheckCircle /> : <XCircle />}
               {testResult.ok ? '连接成功' : '连接失败'}
-            </Badge>
+            </span>
           )}
         </div>
       )}
 
       <div className={styles.actions}>
-        <div >
-          <Button type="button" variant="ghost" onClick={onCancel}>取消</Button>
-          <Button type="submit">
+        <div className={styles.actionGroup}>
+          <button type="button" onClick={onCancel}>取消</button>
+          <button type="submit">
             {provider?.id ? '保存' : '添加'}
-          </Button>
+          </button>
         </div>
       </div>
     </form>

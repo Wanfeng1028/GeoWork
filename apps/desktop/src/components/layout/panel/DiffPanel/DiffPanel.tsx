@@ -117,7 +117,7 @@ export function DiffPanel() {
             }}
           >
             <span className={styles.diffListId}>{diff.id.slice(0, 8)}...</span>
-            <Badge variant="accent">{diff.files.length} files</Badge>
+            <span>{diff.files.length} files</span>
             <span className={styles.diffListTime}>
               {new Date(diff.createdAt).toLocaleDateString("zh-CN")}
             </span>
@@ -131,48 +131,40 @@ export function DiffPanel() {
           {/* Action bar */}
           <div className={styles.diffActions}>
             <div >
-              <Button
-                size="sm"
-                variant="primary"
+              <button
                 onClick={handleAcceptAll}
               >
                 <Check  />
                 全部接受
-              </Button>
-              <Button
-                size="sm"
-                variant="danger"
+              </button>
+              <button
                 onClick={handleRejectAll}
               >
                 <X  />
                 全部拒绝
-              </Button>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
+              </button>
+              <div>
+                <span asChild>
+                  <button
                     onClick={handleSavePatch}
                   >
                     <Save  />
                     保存
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>保存为 patch 文件</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  </button>
+                </span>
+                <div>保存为 patch 文件</div>
+              </div>
+              <div>
+                <span asChild>
+                  <button
                     onClick={handleBranchSnapshot}
                   >
                     <GitBranch  />
                     快照
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>创建分支快照</TooltipContent>
-              </Tooltip>
+                  </button>
+                </span>
+                <div>创建分支快照</div>
+              </div>
             </div>
           </div>
 
@@ -201,14 +193,13 @@ export function DiffPanel() {
                     <div className={styles.fileDiffHeader}>
                       <span className={styles.fileName}>{file.path}</span>
                       <div >
-                        <Badge
-                          variant={file.status === "added" ? "success" : file.status === "deleted" ? "danger" : "warning"}
+                        <span
                           
                         >
                           {file.status}
-                        </Badge>
-                        {isAccepted && <Badge variant="success" >&#10003;</Badge>}
-                        {isRejected && <Badge variant="danger" >&#10007;</Badge>}
+                        </span>
+                        {isAccepted && <span >&#10003;</span>}
+                        {isRejected && <span >&#10007;</span>}
                       </div>
                     </div>
                   </summary>
@@ -220,24 +211,18 @@ export function DiffPanel() {
                     <pre className={styles.newContent}>{file.newContent}</pre>
                   </div>
                   <div className={styles.fileActions}>
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      disabled={isAccepted}
+                    <button
                       onClick={() => handleAcceptFile(file.path)}
                     >
                       <Check  />
                       接受
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      disabled={isRejected}
+                    </button>
+                    <button
                       onClick={() => handleRejectFile(file.path)}
                     >
                       <X  />
                       拒绝
-                    </Button>
+                    </button>
                   </div>
                 </details>
               );

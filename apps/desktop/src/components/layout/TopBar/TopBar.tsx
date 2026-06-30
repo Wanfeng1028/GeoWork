@@ -94,32 +94,32 @@ export function TopBar() {
     <header className={styles.topbar}>
       {/* Column 1: Left cluster */}
       <div className={styles.left}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <div>
+          <button asChild>
             <button className={styles.iconBtn} title="菜单">
               <Menu size={15} />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
+          </button>
+          <div
             side="bottom"
             align="start"
             sideOffset={4}
             className={styles.appMenuContent}
           >
-            <DropdownMenuItem onClick={() => toast.info("已是最新版本")}>
+            <button onClick={() => toast.info("已是最新版本")}>
               <RefreshCw size={14} /> 检查更新
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+            </button>
+            <button onClick={() => setFeedbackOpen(true)}>
               <MessageSquare size={14} /> 问题反馈
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
+            </button>
+            <hr />
+            <button
               onClick={() => runAction("switchMainModule", "about")}
             >
               <Info size={14} /> 关于
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </button>
+          </div>
+        </div>
 
         <button
           className={`${styles.iconBtn} ${sidebarCollapsed ? "" : styles.isSelected}`}
@@ -157,8 +157,8 @@ export function TopBar() {
 
       {/* Column 3: Right actions */}
       <div className={styles.rightActions}>{/* GitHub */}
-        <Popover>
-          <PopoverTrigger asChild>
+        <div>
+          <button asChild>
             <button
               className={styles.earnPill}
               type="button"
@@ -169,8 +169,8 @@ export function TopBar() {
               </svg>
               <span className={styles.earnPillText}>Github</span>
             </button>
-          </PopoverTrigger>
-          <PopoverContent
+          </button>
+          <div
             side="bottom"
             align="end"
             sideOffset={8}
@@ -199,8 +199,8 @@ export function TopBar() {
                 <button onClick={() => toast.info('稍后接入 issue 列表')}>问题列表</button>
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
 
         {/* Feedback */}
         <button
@@ -226,8 +226,8 @@ export function TopBar() {
         </button>
 
         {/* Usage */}
-        <Popover open={usageOpen} onOpenChange={setUsageOpen}>
-          <PopoverTrigger asChild>
+        <div>
+          <button asChild>
             <button className={styles.iconBtn} type="button" title="用量">
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
                 <path
@@ -242,8 +242,8 @@ export function TopBar() {
                 />
               </svg>
             </button>
-          </PopoverTrigger>
-          <PopoverContent
+          </button>
+          <div
             side="bottom"
             align="end"
             sideOffset={6}
@@ -279,8 +279,8 @@ export function TopBar() {
                 <button className={styles.usageDetailButton} onClick={() => toast.info("详情页开发中")}>查看详情 ↗</button>
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
       </div>
 
       {/* Column 4: Window controls */}
@@ -319,11 +319,11 @@ export function TopBar() {
       </div>
 
       {/* Command palette dialog */}
-      <Dialog open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen}>
-        <DialogContent >
-          <DialogHeader>
-            <DialogTitle>命令面板</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div >
+          <div>
+            <div>命令面板</div>
+          </div>
           <div >
             {commandPaletteActions.map((action) => (
               <button
@@ -348,20 +348,19 @@ export function TopBar() {
               </button>
             ))}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
       {/* Feedback dialog */}
-      <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+      <div>
         <DialogPortal>
           <DialogPrimitive.Overlay className={styles.feedbackOverlay} />
           <DialogPrimitive.Content className={styles.feedbackCard}>
             <QoderMiniMascot />
             <h3>问题反馈</h3>
             <p>如果您在使用过程中遇到任何问题，请随时反馈给我们。您的反馈将帮助我们不断改进和优化产品。</p>
-            <Textarea
+            <textarea
               placeholder="请输入您的问题或建议"
-              value={feedbackText}
               onChange={(e) => setFeedbackText(e.target.value)}
               className={styles.feedbackTextarea}
             />
@@ -374,9 +373,8 @@ export function TopBar() {
               </button>
             </div>
             <label>联系邮箱</label>
-            <Input
+            <input
               placeholder="请输入您的邮箱地址"
-              value={feedbackEmail}
               onChange={(e) => setFeedbackEmail(e.target.value)}
               className={styles.feedbackInput}
             />
@@ -387,7 +385,7 @@ export function TopBar() {
             <DialogPrimitive.Close className={styles.feedbackClose}><X size={14} /></DialogPrimitive.Close>
           </DialogPrimitive.Content>
         </DialogPortal>
-      </Dialog>
+      </div>
     </header>
   );
 }

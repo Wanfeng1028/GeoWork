@@ -8,10 +8,10 @@ export function AppShell() {
   const { rightDockVisible, sidebarCollapsed } = useShellStore()
 
   return (
-    <div className="flex-col">
+    <div >
       <TopBar />
 
-      <div className="flex-1">
+      <div >
         <LeftSidebar collapsed={sidebarCollapsed} />
         <MainWorkspace />
         {rightDockVisible && <RightDock />}

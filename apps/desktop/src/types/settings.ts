@@ -12,13 +12,6 @@ export interface ModelProvider {
   enabled: boolean;
 }
 
-export interface SpeedProfile {
-  id: '1x' | '2x';
-  maxParallelRequests: number;
-  tokenBudgetMultiplier: number;
-  rateLimitMultiplier: number;
-}
-
 export interface Settings {
   modelApi: {
     providers: ModelProvider[];
@@ -26,8 +19,7 @@ export interface Settings {
     cacheEnabled: boolean;
   };
   appearance: {
-    /** Theme variant — one of the 9 GeoWork themes (default/auto + families × light/dark). */
-    theme: GeoWorkTheme;
+    theme: string;
     fontSize: number;
     sidebarCollapsed: boolean;
     conversationMinimapEnabled: boolean;
@@ -44,13 +36,4 @@ export interface Settings {
     maxSteps: number;
     timeout: number;
   };
-}
-
-export interface SettingsState {
-  settings: Settings;
-  isLoading: boolean;
-  resolvedTheme: 'dark' | 'light';
-  setTheme: (theme: Settings['appearance']['theme']) => void;
-  setResolvedTheme: (theme: 'dark' | 'light') => void;
-  updateSetting: (path: string, value: unknown) => void;
 }

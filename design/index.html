@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GeoWork — 设计系统总览</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--gw-bg-body);
+    color: var(--gw-text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .theme-toggle {
+    position: fixed; top: 14px; right: 20px; z-index: 9999;
+    background: var(--gw-bg-elevated); border: 1px solid var(--gw-border-default);
+    border-radius: 20px; padding: 5px 16px; font-size: 12px; cursor: pointer;
+    color: var(--gw-text-secondary); gap: 6px; display: flex; align-items: center;
+    box-shadow: var(--gw-shadow-sm); transition: all 0.2s;
+  }
+  .theme-toggle:hover { color: var(--gw-color-primary-6); border-color: var(--gw-color-primary-6); }
+
+  /* ── Hero Header ── */
+  .hero {
+    background: linear-gradient(135deg, #071225 0%, #0d1f42 60%, #071225 100%);
+    padding: 60px 64px 52px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(58,217,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 30% 80%, rgba(139,255,226,0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero-logo { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+  .hero-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, #3AD9FF 0%, #8BFFE2 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; color: #071225;
+    box-shadow: 0 0 30px rgba(58,217,255,0.35);
+  }
+  .hero-wordmark { font-size: 30px; font-weight: 700; color: white; letter-spacing: -0.02em; }
+  .hero-wordmark span { color: #8BFFE2; }
+
+  .hero-tagline {
+    font-size: 16px; color: rgba(255,255,255,0.7); margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .hero-version {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; color: rgba(255,255,255,0.5);
+    margin-bottom: 32px;
+  }
+  .hero-brand-colors { display: flex; gap: 8px; }
+  .brand-swatch {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    font-size: 11px; color: rgba(255,255,255,0.7);
+  }
+  .swatch-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Main Content ── */
+  .content { max-width: 1200px; margin: 0 auto; padding: 40px 48px; }
+
+  /* ── File Cards ── */
+  .section-title {
+    font-size: 12px; font-weight: 700; color: var(--gw-text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--gw-border-default);
+  }
+
+  .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 40px; }
+
+  .file-card {
+    background: var(--gw-bg-container);
+    border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-xl);
+    overflow: hidden; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none; display: block;
+    box-shadow: var(--gw-shadow-xs);
+  }
+  .file-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--gw-shadow-lg);
+    border-color: var(--gw-color-primary-6);
+  }
+  .file-preview {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    font-size: 56px;
+  }
+  .file-preview::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.15) 100%);
+  }
+  .file-body { padding: 14px 16px; }
+  .file-name { font-size: 14px; font-weight: 600; color: var(--gw-text-primary); margin-bottom: 4px; }
+  .file-desc { font-size: 12px; color: var(--gw-text-secondary); line-height: 1.5; margin-bottom: 10px; }
+  .file-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .file-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 8px;
+    background: var(--gw-bg-mask); color: var(--gw-text-secondary);
+  }
+  .file-arrow {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 8px 14px 12px; color: var(--gw-color-primary-6);
+    font-size: 12px; gap: 4px; font-weight: 500;
+  }
+
+  /* ── Color Palette ── */
+  .color-section { margin-bottom: 40px; }
+  .palette-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .color-chip {
+    display: flex; flex-direction: column; gap: 4px; align-items: center;
+    cursor: pointer;
+  }
+  .color-swatch {
+    width: 48px; height: 48px; border-radius: 10px;
+    box-shadow: var(--gw-shadow-sm);
+    transition: transform 0.15s;
+  }
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-hex { font-size: 10px; color: var(--gw-text-tertiary); font-family: monospace; }
+  .color-name { font-size: 10px; color: var(--gw-text-secondary); }
+
+  /* ── Component Showcase ── */
+  .component-section { margin-bottom: 40px; }
+  .component-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .component-card {
+    background: var(--gw-bg-container); border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-lg); padding: 16px; text-align: center;
+  }
+  .component-preview { margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; min-height: 44px; }
+  .component-name { font-size: 11px; color: var(--gw-text-tertiary); }
+
+  /* Button samples */
+  .btn-prim { height: 32px; padding: 0 16px; border-radius: 6px; border: none; background: var(--gw-color-primary-6); color: white; font-size: 13px; cursor: pointer; }
+  .btn-deft { height: 32px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--gw-border-default); background: var(--gw-bg-container); color: var(--gw-text-primary); font-size: 13px; cursor: pointer; }
+  .btn-dang { height: 32px; padding: 0 16px; border-radius: 6px; border: none; background: var(--gw-color-error); color: white; font-size: 13px; cursor: pointer; }
+  .btn-link { height: 32px; padding: 0 12px; border-radius: 6px; border: none; background: transparent; color: var(--gw-color-primary-6); font-size: 13px; cursor: pointer; }
+
+  /* Tag samples */
+  .tag-blue { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; font-size: 11px; background: var(--gw-bg-tag); color: var(--gw-color-primary-6); }
+  .tag-green { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; font-size: 11px; background: var(--gw-color-success-bg); color: var(--gw-color-success); }
+  .tag-orange { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; font-size: 11px; background: var(--gw-color-warning-bg); color: #856404; }
+  .tag-red { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; font-size: 11px; background: var(--gw-color-error-bg); color: var(--gw-color-error); }
+
+  /* Status badge */
+  .status-ok { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 10px; font-size: 11px; background: var(--gw-color-success-bg); color: var(--gw-color-success); }
+  .status-run { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 10px; font-size: 11px; background: rgba(13,110,253,0.1); color: var(--gw-color-primary-6); }
+
+  /* Input sample */
+  .input-sample { width: 100%; height: 32px; padding: 0 10px; border: 1px solid var(--gw-border-default); border-radius: 6px; background: var(--gw-bg-container); font-size: 12px; color: var(--gw-text-primary); outline: none; font-family: inherit; }
+  .input-sample:focus { border-color: var(--gw-color-primary-6); box-shadow: 0 0 0 3px rgba(13,110,253,0.12); }
+
+  /* ── Typography ── */
+  .type-section { margin-bottom: 40px; }
+  .type-row { padding: 10px 0; border-bottom: 1px solid var(--gw-border-light); display: flex; align-items: baseline; gap: 20px; }
+  .type-row:last-child { border-bottom: none; }
+  .type-meta { min-width: 120px; font-size: 11px; color: var(--gw-text-tertiary); font-family: monospace; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--gw-border-default);
+    padding: 24px 48px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--gw-text-tertiary);
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">
+  <span id="theme-icon">☀️</span> <span id="theme-label">亮色主题</span>
+</button>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-logo">
+    <div class="hero-icon">G</div>
+    <div class="hero-wordmark">Geo<span>Work</span></div>
+  </div>
+  <div class="hero-tagline">面向 GIS / 遥感 / 科研工作流的本地优先 AI Agent 工作台</div>
+  <div class="hero-version">
+    <span>🎨</span> UI 设计系统 · Ant Design v6 · Bootstrap + Dark 双主题
+  </div>
+  <div class="hero-brand-colors">
+    <div class="brand-swatch"><span class="swatch-dot" style="background:#071225;border:1px solid rgba(255,255,255,0.2);"></span>#071225 深海军蓝</div>
+    <div class="brand-swatch"><span class="swatch-dot" style="background:#8BFFE2;"></span>#8BFFE2 地理青</div>
+    <div class="brand-swatch"><span class="swatch-dot" style="background:#3AD9FF;"></span>#3AD9FF 信号蓝</div>
+    <div class="brand-swatch"><span class="swatch-dot" style="background:#F4D77E;"></span>#F4D77E 沙金</div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+
+  <!-- Design Files -->
+  <div class="section-title">设计文件</div>
+  <div class="file-grid">
+
+    <a href="01-workbench.html" class="file-card">
+      <div class="file-preview" style="background: linear-gradient(135deg, #071225, #0d2040);">
+        🖥️
+      </div>
+      <div class="file-body">
+        <div class="file-name">01 · 工作台主界面</div>
+        <div class="file-desc">三栏布局 · 对话/计划/成果 · GEE工具调用 · 权限确认卡片</div>
+        <div class="file-tags">
+          <span class="file-tag">TopBar</span>
+          <span class="file-tag">Sidebar</span>
+          <span class="file-tag">Chat</span>
+          <span class="file-tag">Composer</span>
+          <span class="file-tag">RightDock</span>
+          <span class="file-tag">BottomBar</span>
+        </div>
+      </div>
+      <div class="file-arrow">打开设计稿 →</div>
+    </a>
+
+    <a href="02-expert-skill.html" class="file-card">
+      <div class="file-preview" style="background: linear-gradient(135deg, #1a2a4a, #2a1a4a);">
+        🤖
+      </div>
+      <div class="file-body">
+        <div class="file-name">02 · 专家 &amp; 技能</div>
+        <div class="file-desc">12个内置专家卡片 · 成功率/耗时统计 · 技能分类列表</div>
+        <div class="file-tags">
+          <span class="file-tag">Expert Cards</span>
+          <span class="file-tag">Skill List</span>
+          <span class="file-tag">Stats</span>
+        </div>
+      </div>
+      <div class="file-arrow">打开设计稿 →</div>
+    </a>
+
+    <a href="03-plugin-model.html" class="file-card">
+      <div class="file-preview" style="background: linear-gradient(135deg, #0d2a1a, #1a2a0d);">
+        🧩
+      </div>
+      <div class="file-body">
+        <div class="file-name">03 · 插件市场 &amp; 模型 API</div>
+        <div class="file-desc">插件权限声明 · 安装状态 · 模型供应商配置 · API 测试</div>
+        <div class="file-tags">
+          <span class="file-tag">Plugin Market</span>
+          <span class="file-tag">Model Config</span>
+          <span class="file-tag">API Key</span>
+        </div>
+      </div>
+      <div class="file-arrow">打开设计稿 →</div>
+    </a>
+
+    <a href="04-settings-usage.html" class="file-card">
+      <div class="file-preview" style="background: linear-gradient(135deg, #1a1a2a, #2a1a1a);">
+        ⚙️
+      </div>
+      <div class="file-body">
+        <div class="file-name">04 · 设置 &amp; 用量统计</div>
+        <div class="file-desc">外观主题切换 · 本地环境检测 · 定时任务 · Token消耗图表</div>
+        <div class="file-tags">
+          <span class="file-tag">Settings</span>
+          <span class="file-tag">Usage Chart</span>
+          <span class="file-tag">Automation</span>
+          <span class="file-tag">Env Check</span>
+        </div>
+      </div>
+      <div class="file-arrow">打开设计稿 →</div>
+    </a>
+
+    <a href="tokens.css" class="file-card" style="cursor:default;" onclick="return false;">
+      <div class="file-preview" style="background: linear-gradient(135deg, #2a2a1a, #1a2a2a); font-size: 40px;">
+        🎨
+      </div>
+      <div class="file-body">
+        <div class="file-name">tokens.css · 设计令牌</div>
+        <div class="file-desc">完整 CSS 变量系统 · 亮色(Bootstrap) + 暗色(Ant Dark) 双主题</div>
+        <div class="file-tags">
+          <span class="file-tag">Design Tokens</span>
+          <span class="file-tag">CSS Variables</span>
+          <span class="file-tag">Dual Theme</span>
+        </div>
+      </div>
+      <div class="file-arrow" style="color:var(--gw-text-tertiary);">CSS 变量文件</div>
+    </a>
+
+  </div>
+
+  <!-- Color Palette -->
+  <div class="section-title">色彩系统</div>
+  <div class="color-section">
+    <div style="font-size:12px;font-weight:500;color:var(--gw-text-secondary);margin-bottom:10px;">品牌色 · Brand Identity</div>
+    <div class="palette-row">
+      <div class="color-chip"><div class="color-swatch" style="background:#071225;border:1px solid var(--gw-border-default);"></div><div class="color-hex">#071225</div><div class="color-name">深海军蓝</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#8BFFE2;"></div><div class="color-hex">#8BFFE2</div><div class="color-name">地理青</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#3AD9FF;"></div><div class="color-hex">#3AD9FF</div><div class="color-name">信号蓝</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#F4D77E;"></div><div class="color-hex">#F4D77E</div><div class="color-name">沙金</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:500;color:var(--gw-text-secondary);margin-bottom:10px;margin-top:16px;">主色调 · Bootstrap Blue (亮色) / Ant Blue (暗色)</div>
+    <div class="palette-row">
+      <div class="color-chip"><div class="color-swatch" style="background:#e7f1ff;border:1px solid var(--gw-border-default);"></div><div class="color-hex">#e7f1ff</div><div class="color-name">Primary 1</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#9ec3fe;"></div><div class="color-hex">#9ec3fe</div><div class="color-name">Primary 3</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#0d6efd;"></div><div class="color-hex">#0d6efd</div><div class="color-name">Primary 6 ★</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#0950b2;"></div><div class="color-hex">#0950b2</div><div class="color-name">Primary 8</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:500;color:var(--gw-text-secondary);margin-bottom:10px;margin-top:16px;">语义色 · Semantic Colors</div>
+    <div class="palette-row">
+      <div class="color-chip"><div class="color-swatch" style="background:#198754;"></div><div class="color-hex">#198754</div><div class="color-name">成功</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#ffc107;"></div><div class="color-hex">#ffc107</div><div class="color-name">警告</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#dc3545;"></div><div class="color-hex">#dc3545</div><div class="color-name">错误</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#0dcaf0;"></div><div class="color-hex">#0dcaf0</div><div class="color-name">信息</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:500;color:var(--gw-text-secondary);margin-bottom:10px;margin-top:16px;">GIS 专题色 · GIS Domain Colors</div>
+    <div class="palette-row">
+      <div class="color-chip"><div class="color-swatch" style="background:#4285F4;"></div><div class="color-hex">#4285F4</div><div class="color-name">GEE</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#589632;"></div><div class="color-hex">#589632</div><div class="color-name">QGIS</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#2ecc71;"></div><div class="color-hex">#2ecc71</div><div class="color-name">NDVI</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#3498db;"></div><div class="color-hex">#3498db</div><div class="color-name">水体</div></div>
+      <div class="color-chip"><div class="color-swatch" style="background:#e67e22;"></div><div class="color-hex">#e67e22</div><div class="color-name">DEM</div></div>
+    </div>
+  </div>
+
+  <!-- Components -->
+  <div class="section-title">核心组件</div>
+  <div class="component-section">
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-preview">
+          <button class="btn-prim">主要</button>
+          <button class="btn-deft">默认</button>
+        </div>
+        <div class="component-name">Button 按钮</div>
+      </div>
+      <div class="component-card">
+        <div class="component-preview">
+          <button class="btn-dang">危险</button>
+          <button class="btn-link">链接</button>
+        </div>
+        <div class="component-name">Button 变体</div>
+      </div>
+      <div class="component-card">
+        <div class="component-preview" style="flex-direction:column;gap:4px;">
+          <span class="tag-blue">NDVI</span>
+          <div style="display:flex;gap:4px;">
+            <span class="tag-green">成功</span>
+            <span class="tag-orange">警告</span>
+            <span class="tag-red">错误</span>
+          </div>
+        </div>
+        <div class="component-name">Tag 标签</div>
+      </div>
+      <div class="component-card">
+        <div class="component-preview" style="flex-direction:column;gap:5px;">
+          <span class="status-ok">● 已完成</span>
+          <span class="status-run">● 执行中</span>
+        </div>
+        <div class="component-name">Status 状态</div>
+      </div>
+      <div class="component-card">
+        <div class="component-preview">
+          <input class="input-sample" type="text" placeholder="搜索..." />
+        </div>
+        <div class="component-name">Input 输入框</div>
+      </div>
+      <div class="component-card">
+        <div class="component-preview" style="gap:10px;">
+          <button style="width:40px;height:22px;border-radius:11px;background:var(--gw-color-primary-6);border:none;cursor:pointer;position:relative;">
+            <span style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:white;"></span>
+          </button>
+          <button style="width:40px;height:22px;border-radius:11px;background:var(--gw-border-strong);border:none;cursor:pointer;position:relative;">
+            <span style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;"></span>
+          </button>
+        </div>
+        <div class="component-name">Switch 开关</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="section-title">字体规范</div>
+  <div class="type-section">
+    <div class="type-row">
+      <div class="type-meta">--5xl / 36px / 700</div>
+      <div style="font-size:36px;font-weight:700;line-height:1.25;color:var(--gw-text-primary);">地理遥感 AI Agent</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">--3xl / 24px / 600</div>
+      <div style="font-size:24px;font-weight:600;color:var(--gw-text-primary);">NDVI 时序分析报告</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">--xl / 18px / 600</div>
+      <div style="font-size:18px;font-weight:600;color:var(--gw-text-primary);">工作台 · 项目文件 · 地图与图层</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">--base / 14px / 400</div>
+      <div style="font-size:14px;color:var(--gw-text-primary);">GeoWork 是面向地理信息科学、遥感科研、GIS 工程实践的本地优先 AI Agent 桌面工作台</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">--sm / 12px / 400</div>
+      <div style="font-size:12px;color:var(--gw-text-secondary);">最近更新 · 2026-06-29 · v0.4.x-dev</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta">Mono / 12px / 400</div>
+      <div style="font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--gw-text-secondary);">var ndvi = s2.normalizedDifference(["B8", "B4"]).rename("NDVI");</div>
+    </div>
+  </div>
+
+  <!-- Spacing -->
+  <div class="section-title">间距规范</div>
+  <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:40px;flex-wrap:wrap;">
+    <div style="text-align:center;">
+      <div style="width:4px;background:var(--gw-color-primary-6);height:4px;margin:0 auto 6px;border-radius:1px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">4px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:8px;background:var(--gw-color-primary-6);height:8px;margin:0 auto 6px;border-radius:1px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">8px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:12px;background:var(--gw-color-primary-6);height:12px;margin:0 auto 6px;border-radius:2px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">12px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:16px;background:var(--gw-color-primary-6);height:16px;margin:0 auto 6px;border-radius:2px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">16px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:24px;background:var(--gw-color-primary-6);height:24px;margin:0 auto 6px;border-radius:3px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">24px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:32px;background:var(--gw-color-primary-6);height:32px;margin:0 auto 6px;border-radius:4px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">32px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:48px;background:var(--gw-color-primary-6);height:48px;margin:0 auto 6px;border-radius:5px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">48px</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="width:64px;background:var(--gw-color-primary-6);height:64px;margin:0 auto 6px;border-radius:6px;"></div>
+      <div style="font-size:10px;color:var(--gw-text-tertiary);">64px</div>
+    </div>
+  </div>
+
+  <!-- Layout Dims -->
+  <div class="section-title">布局尺寸</div>
+  <div style="background:var(--gw-bg-container);border:1px solid var(--gw-border-default);border-radius:var(--gw-border-radius-xl);padding:20px;margin-bottom:40px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">40px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">TopBar 高度</div>
+      </div>
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">220px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">左侧栏宽度</div>
+      </div>
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">340px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">右侧栏宽度</div>
+      </div>
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">180px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">底部栏高度</div>
+      </div>
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">6px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">Border Radius (默认)</div>
+      </div>
+      <div style="padding:12px;background:var(--gw-bg-elevated);border-radius:var(--gw-border-radius-lg);">
+        <div style="font-size:20px;font-weight:700;color:var(--gw-color-primary-6);">12px</div>
+        <div style="font-size:11px;color:var(--gw-text-secondary);margin-top:2px;">Border Radius (大)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ant Design Integration Note -->
+  <div class="section-title">Ant Design v6 集成说明</div>
+  <div style="background:var(--gw-bg-container);border:1px solid var(--gw-border-default);border-radius:var(--gw-border-radius-xl);padding:24px;margin-bottom:40px;font-size:13px;line-height:1.7;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div>
+        <div style="font-weight:600;margin-bottom:8px;color:var(--gw-text-primary);">☀️ 亮色主题 — Bootstrap 预设</div>
+        <div style="color:var(--gw-text-secondary);">
+          使用 Ant Design v6 主题编辑器的 Bootstrap 预设。<br>
+          主色调：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">#0d6efd</code><br>
+          圆角：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">6px</code><br>
+          背景色：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">#f8f9fa</code>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:8px;color:var(--gw-text-primary);">🌙 暗色主题 — Ant Design Dark</div>
+        <div style="color:var(--gw-text-secondary);">
+          使用 Ant Design v6 内置 Dark 主题算法。<br>
+          主色调：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">#4096ff</code><br>
+          背景色：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">#141414</code><br>
+          容器色：<code style="background:var(--gw-bg-code);padding:1px 5px;border-radius:4px;font-family:monospace;">#1d1d1d</code>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gw-border-light);color:var(--gw-text-secondary);">
+      所有设计稿均提供实时主题切换功能（右上角按钮），可直接在浏览器中预览亮色/暗色效果。设计文件为纯 HTML + CSS，无需额外依赖，可直接在 design/ 文件夹中打开编辑。
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div>GeoWork UI Design System · Ant Design v6 · Bootstrap + Dark</div>
+  <div>v0.4.x-dev · 2026-06-29</div>
+</div>
+
+<script>
+let isDark = false;
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isDark ? '暗色主题' : '亮色主题';
+}
+</script>
+</body>
+</html>

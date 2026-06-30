@@ -50,7 +50,7 @@ function getRiskTag(level: 'low' | 'medium' | 'high') {
     high: { className: 'bg-red-500/20 text-red-400', icon: <AlertTriangle  />, text: 'High Risk' },
   }
   const c = config[level]
-  return <Badge className={c.className}>{c.icon} {c.text}</Badge>
+  return <span className={c.className}>{c.icon} {c.text}</span>
 }
 
 export interface McpPermissionPanelProps {
@@ -100,7 +100,7 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
     str.length > maxLen ? str.slice(0, maxLen) + '...' : str
 
   return (
-    <Card className={styles.container}>
+    <div className={styles.container}>
       <div className={styles.header}>
         <div >
           <span className={styles.serverBadge}>{request.serverName}</span>
@@ -118,15 +118,13 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
           </span>
         </div>
 
-        <Button
-          variant="link"
-          size="sm"
+        <button
           className={styles.expandBtn}
           onClick={() => setExpanded(!expanded)}
         >
           {expanded ? <ChevronUp  /> : <ChevronDown  />}
           {expanded ? 'Hide details' : 'Show details'}
-        </Button>
+        </button>
 
         {expanded && (
           <div className={styles.detailSection}>
@@ -138,9 +136,9 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
 
         <div className={styles.riskAlert}>
           {risk.level === 'high' ? (
-            <AlertTriangle className="shrink-0" />
+            <AlertTriangle  />
           ) : (
-            <Info className="shrink-0" />
+            <Info  />
           )}
           <div>
             <span >
@@ -163,35 +161,31 @@ export function McpPermissionPanel({ request, onApprove, onDeny }: McpPermission
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="rounded"
+            
           />
           Remember this decision
         </label>
 
         <div className={styles.actionButtons}>
-          <Button
-            variant="danger"
-            disabled={!denyReason.trim() || denying}
+          <button
             onClick={handleDeny}
           >
-            {denying ? <Spinner  /> : <XCircle  />}
+            {denying ? <div  /> : <XCircle  />}
             Deny
-          </Button>
-          <Input
-            value={denyReason}
+          </button>
+          <input
             onChange={(e) => setDenyReason(e.target.value)}
             placeholder="Reason for denial..."
             className={styles.denyInput}
           />
-          <Button
-            disabled={approving}
+          <button
             onClick={handleApprove}
           >
-            {approving ? <Spinner  /> : <CheckCircle  />}
+            {approving ? <div  /> : <CheckCircle  />}
             Approve
-          </Button>
+          </button>
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

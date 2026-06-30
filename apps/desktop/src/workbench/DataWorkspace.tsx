@@ -13,30 +13,30 @@ export default function DataWorkspace() {
         </div>
 
         <div className={styles.panels}>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>数据集列表</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className={styles.panel}>
+            <div>
+              <div>数据集列表</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>数据集列表将在此显示。前往数据中心管理数据集。</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>元数据详情</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>元数据详情</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>选择数据集查看元数据详情。</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>数据预览</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>数据预览</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>栅格/矢量数据预览区域。</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

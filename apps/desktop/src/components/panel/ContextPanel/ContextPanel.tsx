@@ -61,9 +61,9 @@ export function ContextPanel() {
         <div key={type} className={styles.group}>
           <div className={styles.groupHeader}>
             <span className={styles.groupLabel}>{typeLabels[type] || type}</span>
-            <Badge variant={typeColors[type] as any}>{items.length}</Badge>
+            <span>{items.length}</span>
           </div>
-          <div className="flex-col">
+          <div >
             {items.map((item) => (
               <div key={item.id} className={styles.contextItem}>
                 <span className={styles.contextIcon}>{typeIcons[item.type]}</span>

@@ -131,9 +131,9 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                 {plugin.name}
               </h3>
               {plugin.installed && (
-                <Badge className={plugin.enabled ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}>
+                <span className={plugin.enabled ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}>
                   {plugin.enabled ? '已启用' : '已禁用'}
-                </Badge>
+                </span>
               )}
             </div>
             <div >
@@ -158,9 +158,9 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
             </div>
           </div>
         </div>
-        <Button variant="ghost" onClick={onClose} className={styles.closeBtn}>
+        <button onClick={onClose} className={styles.closeBtn}>
           关闭
-        </Button>
+        </button>
       </div>
 
       {/* Body */}
@@ -212,13 +212,13 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
         {/* Permissions */}
         <section className={styles.section}>
           <h4 >
-            <Shield className="inline" />
+            <Shield  />
             权限要求
           </h4>
 
           {hasHighRisk && (
-            <div className="border">
-              <AlertTriangle className="shrink-0" />
+            <div >
+              <AlertTriangle  />
               <div>
                 <span >此插件需要访问高风险权限</span>
                 <span >安装前请仔细检查以下权限的必要性</span>
@@ -233,7 +233,7 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
                 <div key={perm} className={styles.permissionItem}>
                   <div className={styles.permissionRow}>
                     <span className={styles.permissionName}>{perm}</span>
-                    <Badge className={getBadgeClass(info.color)}>{info.level}</Badge>
+                    <span className={getBadgeClass(info.color)}>{info.level}</span>
                   </div>
                   <span >
                     {info.description}
@@ -249,52 +249,44 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
 
         {/* Actions */}
         <section className={styles.section}>
-          <Separator />
+          <hr />
           <div className={styles.actions}>
             {plugin.installed ? (
-              <div className="flex-col">
+              <div >
                 <div className={styles.actionRow}>
                   <span >启用/禁用</span>
-                  <Switch
-                    checked={plugin.enabled}
-                    onCheckedChange={handleToggle}
-                    disabled={isLoading}
+                  <button
                   />
                 </div>
-                <Button
-                  variant="danger"
+                <button
                   
                   onClick={handleUninstall}
-                  disabled={isLoading || (showConfirm !== 'uninstall' && showConfirm !== null)}
                 >
                   {showConfirm === 'uninstall'
                     ? '确认卸载...'
                     : '卸载插件'}
-                </Button>
+                </button>
               </div>
             ) : (
-              <Button
-                
-                size="lg"
+              <button
                 onClick={handleInstall}
-                disabled={isLoading || showConfirm !== null}
               >
-                {isLoading ? <Spinner  /> : <Download  />}
+                {isLoading ? <div  /> : <Download  />}
                 {showConfirm === 'install'
                   ? '安装中...'
                   : '安装插件'}
-              </Button>
+              </button>
             )}
           </div>
         </section>
 
         {/* Reviews placeholder */}
         <section className={styles.section}>
-          <Separator />
+          <hr />
           <h4 >
             用户评价
           </h4>
-          <Empty
+          <div
             description="暂无评价"
           />
           <span >

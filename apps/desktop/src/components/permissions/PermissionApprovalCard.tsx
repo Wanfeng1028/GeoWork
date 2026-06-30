@@ -66,8 +66,8 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
   }
 
   return (
-    <Card className={styles.card}>
-      <CardContent >
+    <div className={styles.card}>
+      <div >
         {/* Header */}
         <div className={styles.header}>
           <div >
@@ -75,16 +75,16 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             <span className={styles.title}>权限审批请求</span>
           </div>
           <div >
-            <Badge variant={riskVariantMap[request.riskLevel] || 'warning'}>
+            <span>
               {config.icon} {config.label}
-            </Badge>
-            <Badge variant="accent">{actionLabel}</Badge>
+            </span>
+            <span>{actionLabel}</span>
           </div>
         </div>
 
         {/* Alert */}
-        <div className="border">
-          <AlertTriangle className="shrink-0" />
+        <div >
+          <AlertTriangle  />
           <div>
             <div >{request.title}</div>
             <div >{request.description}</div>
@@ -118,7 +118,7 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             <span className={styles.detailLabel}>为什么需要:</span>
             <span className={styles.detailValue}>
               Agent 在执行任务时需要此权限以完成{' '}
-              <Badge variant="info">{actionLabel}</Badge>。
+              <span>{actionLabel}</span>。
               如果不批准，任务将继续但此操作将被跳过。
             </span>
           </div>
@@ -126,24 +126,21 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
 
         {/* Actions */}
         <div className={styles.actions}>
-          <Textarea
+          <textarea
             className={styles.reasonInput}
             placeholder="审批理由（可选）"
-            value={reason}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
-          <div className={`${styles.actionButtons} flex-wrap`}>
-            <Button
-              variant="primary"
+          <div className={`${styles.actionButtons}`}>
+            <button
               onClick={handleApprove}
               loading={loading}
             >
               <Check  />
               允许一次
-            </Button>
-            <Button
-              variant="secondary"
+            </button>
+            <button
               onClick={async () => {
                 setLoading(true)
                 try {
@@ -156,17 +153,15 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             >
               <Save  />
               始终允许此工作区
-            </Button>
-            <Button
-              variant="danger"
+            </button>
+            <button
               onClick={handleDeny}
               loading={loading}
             >
               <X  />
               拒绝
-            </Button>
-            <Button
-              variant="ghost"
+            </button>
+            <button
               onClick={() => {
                 // Show more details
               }}
@@ -174,11 +169,11 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
             >
               <Eye  />
               查看详情
-            </Button>
+            </button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

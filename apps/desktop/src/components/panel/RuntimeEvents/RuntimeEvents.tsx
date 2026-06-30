@@ -14,12 +14,12 @@ const typeVariant: Record<string, 'info' | 'success' | 'warning' | 'accent' | 'd
 export function RuntimeEvents() {
   return (
     <div className={styles.panel}>
-      <div className="flex-col">
+      <div >
         {mockEvents.map((event) => (
           <div key={event.id} className={styles.eventItem}>
-            <Badge variant={typeVariant[event.type] || 'default'}>
+            <span>
               {event.type}
-            </Badge>
+            </span>
             <span className={styles.eventMessage}>{event.message}</span>
             <span className={styles.eventTime}>
               {new Date(event.timestamp).toLocaleTimeString()}

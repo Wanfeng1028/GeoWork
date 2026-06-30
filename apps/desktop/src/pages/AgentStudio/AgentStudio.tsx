@@ -40,43 +40,43 @@ function WorkflowCard({ workflow, onSelect, onRun, onStop, onDelete }: WorkflowC
   const statusLabel = workflow.status === 'running' ? '运行中' : workflow.status === 'failed' ? '错误' : '就绪'
 
   return (
-    <Card
+    <div
       className={styles.workflowCard}
       onClick={() => onSelect(workflow)}
     >
-      <CardContent>
+      <div>
         <div >
           <h4 >{workflow.name}</h4>
-          <Badge variant={workflow.status === 'running' ? 'default' : workflow.status === 'failed' ? 'destructive' : 'secondary'}>
+          <span>
             {statusLabel}
-          </Badge>
+          </span>
         </div>
         <div >
           <Clock  /> {new Date(workflow.createdAt).toLocaleDateString('zh-CN')}
         </div>
         {workflow.description && <p >{workflow.description}</p>}
         <div >
-          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onRun(workflow.id) }}>
+          <button onClick={(e) => { e.stopPropagation(); onRun(workflow.id) }}>
             <Play  /> 运行
-          </Button>
-          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onStop(workflow.id) }}>
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onStop(workflow.id) }}>
             <Pause  /> 停止
-          </Button>
-          <Button size="sm" variant="outline"  onClick={(e) => { e.stopPropagation(); onDelete(workflow.id) }}>
+          </button>
+          <button  onClick={(e) => { e.stopPropagation(); onDelete(workflow.id) }}>
             <Trash2  /> 删除
-          </Button>
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
 function WorkflowList({ workflows: wfs, onSelect, onRun, onStop, onDelete }: { workflows: Workflow[]; onSelect: (w: any) => void; onRun: (id: string) => void; onStop: (id: string) => void; onDelete: (id: string) => void }) {
   if (wfs.length === 0) {
-    return <Empty description="暂无工作流" />
+    return <div description="暂无工作流" />
   }
   return (
-    <div className="grid-cols-1">
+    <div >
       {wfs.map((w: Workflow) => (
         <WorkflowCard key={w.id} workflow={w} onSelect={onSelect} onRun={onRun} onStop={onStop} onDelete={onDelete} />
       ))}
@@ -135,46 +135,46 @@ export default function AgentStudio() {
             <h3 >AI Agent 工作室</h3>
             <p >创建和管理 AI Agent 工作流，配置工具链和模型网关</p>
           </div>
-          <Button onClick={() => setModalOpen(true)}>
+          <button onClick={() => setModalOpen(true)}>
             <Plus  /> 新建工作流
-          </Button>
+          </button>
         </div>
 
         {/* Mode Tabs */}
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">全部</TabsTrigger>
+        <div>
+          <div>
+            <button>全部</button>
             {Object.entries(MODE_CONFIG).map(([mode, config]) => (
-              <TabsTrigger key={mode} value={mode}>
+              <button key={mode}>
                 <span >{config.icon} {config.label}</span>
-              </TabsTrigger>
+              </button>
             ))}
-          </TabsList>
-          <TabsContent value="all">
+          </div>
+          <div>
             <WorkflowList workflows={workflows} onSelect={handleSelectWorkflow} onRun={handleRun} onStop={handleStop} onDelete={handleDelete} />
-          </TabsContent>
+          </div>
           {Object.entries(MODE_CONFIG).map(([mode]) => (
-            <TabsContent key={mode} value={mode}>
+            <div key={mode}>
               <WorkflowList workflows={workflows.filter(w => w.mode === mode)} onSelect={handleSelectWorkflow} onRun={handleRun} onStop={handleStop} onDelete={handleDelete} />
-            </TabsContent>
+            </div>
           ))}
-        </Tabs>
+        </div>
 
         {/* Recent Runs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>最近运行记录</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div>
+          <div>
+            <div>最近运行记录</div>
+          </div>
+          <div>
             {runs.length > 0 ? (
-              <div className="flex-col">
+              <div >
                 {runs.slice(0, 10).map((run) => (
                   <div key={run.id} className={styles.runItem}>
                     <div >
                       <span>{run.workflowName || '未命名工作流'}</span>
-                      <Badge variant={run.status === 'completed' ? 'default' : run.status === 'running' ? 'secondary' : run.status === 'failed' ? 'destructive' : 'outline'}>
+                      <span>
                         {run.status === 'completed' ? '完成' : run.status === 'running' ? '运行中' : run.status === 'failed' ? '错误' : '等待中'}
-                      </Badge>
+                      </span>
                     </div>
                     <div >
                       <span ><Clock  /> {new Date(run.startedAt).toLocaleString('zh-CN')}</span>
@@ -184,46 +184,46 @@ export default function AgentStudio() {
                 ))}
               </div>
             ) : (
-              <Empty description="暂无运行记录" />
+              <div description="暂无运行记录" />
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Create Workflow Modal */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>新建工作流</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div>
+          <div>
+            <div>新建工作流</div>
+          </div>
           <div >
             <div>
               <label >名称</label>
-              <Input placeholder="例如: NDVI 分析工作流" value={formName} onChange={(e) => setFormName(e.target.value)} />
+              <input placeholder="例如: NDVI 分析工作流" onChange={(e) => setFormName(e.target.value)} />
             </div>
             <div>
               <label >描述</label>
               <textarea
-                className="border"
+                
                 placeholder="描述工作流的用途和步骤"
                 value={formDesc}
                 onChange={(e) => setFormDesc(e.target.value)}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>取消</Button>
-            <Button onClick={handleCreate}>创建</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setModalOpen(false)}>取消</button>
+            <button onClick={handleCreate}>创建</button>
+          </div>
+        </div>
+      </div>
 
       {/* Workflow Detail Dialog */}
-      <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DialogContent >
-          <DialogHeader>
-            <DialogTitle>{selectedWorkflow?.name}</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div >
+          <div>
+            <div>{selectedWorkflow?.name}</div>
+          </div>
           {selectedWorkflow && (
             <div className={styles.workflowDetail}>
               <div >
@@ -233,9 +233,9 @@ export default function AgentStudio() {
                 </div>
                 <div>
                   <h5 >状态</h5>
-                  <Badge variant={selectedWorkflow.status === 'running' ? 'default' : 'secondary'}>
+                  <span>
                     {selectedWorkflow.status === 'running' ? '运行中' : '就绪'}
-                  </Badge>
+                  </span>
                 </div>
                 <div>
                   <h5 >创建时间</h5>
@@ -244,8 +244,8 @@ export default function AgentStudio() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   )
 }

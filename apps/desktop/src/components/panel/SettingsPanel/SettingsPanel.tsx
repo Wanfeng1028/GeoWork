@@ -25,8 +25,6 @@ const PROVIDERS: ProviderOption[] = [
 const THEMES = [
   { value: 'dark', label: '暗黑' },
   { value: 'light', label: '亮色' },
-  { value: 'dark-glass', label: '暗黑玻璃' },
-  { value: 'light-glass', label: '亮色玻璃' },
 ]
 
 const PERMISSION_LEVELS: { value: PermissionLevel; label: string }[] = [
@@ -65,7 +63,7 @@ export function SettingsPanel() {
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            className={cn(styles.tab, activeTab === tab.key && styles.activeTab)}
+            className={[styles.tab, styles.activeTab, styles.tab, styles.activeTab].filter(Boolean).join(' ')}
             onClick={() => setActiveTab(tab.key)}
           >
             <span className={styles.tabIcon}>{tab.icon}</span>
@@ -82,64 +80,49 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>Provider</span>
               <div className={styles.control}>
-                <Select
-                  value={modelApi.defaultProvider}
-                  onValueChange={(val) => updateSetting('modelApi.defaultProvider', val)}
-                >
-                  <SelectTrigger className={styles.select}>
-                    <SelectValue placeholder="选择 Provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROVIDERS.map(p => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={modelApi.defaultProvider} onChange={(e) => updateSetting('modelApi.defaultProvider', e.target.value)}>
+                  <option value="prov-1">OpenAI Compatible</option>
+                  <option value="prov-2">Ollama Local</option>
+                </select>
               </div>
             </div>
 
-            <Separator  />
+            <hr />
 
             <div className={styles.settingRow}>
               <span className={styles.label}>Base URL</span>
               <div className={styles.control}>
-                <Input placeholder="https://api.example.com/v1" className={styles.input} />
+                <input placeholder="https://api.example.com/v1" className={styles.input} />
               </div>
             </div>
 
             <div className={styles.settingRow}>
               <span className={styles.label}>API Key</span>
               <div className={styles.control}>
-                <Input type="password" placeholder="sk-..." className={styles.input} />
+                <input type="password" placeholder="sk-..." className={styles.input} />
               </div>
             </div>
 
             <div className={styles.settingRow}>
               <span className={styles.label}>默认模型</span>
               <div className={styles.control}>
-                <Select>
-                  <SelectTrigger className={styles.select}>
-                    <SelectValue placeholder="选择模型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                    <SelectItem value="llama3">Llama 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select>
+                  <option>GPT-4</option>
+                  <option>GPT-4o</option>
+                  <option>GPT-3.5 Turbo</option>
+                  <option>Llama 3</option>
+                </select>
               </div>
             </div>
 
-            <Separator  />
+            <hr />
 
             <div className={styles.settingRow}>
               <span className={styles.label}>启用缓存</span>
               <div className={styles.control}>
-                <Switch
-                  checked={modelApi.cacheEnabled || false}
-                  onCheckedChange={(checked) => updateSetting('modelApi.cacheEnabled', checked)}
-                />
+                <button onClick={() => updateSetting('modelApi.cacheEnabled', !modelApi.cacheEnabled)}>
+                  {modelApi.cacheEnabled ? '已启用' : '已禁用'}
+                </button>
               </div>
             </div>
           </div>
@@ -152,19 +135,11 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>主题</span>
               <div className={styles.control}>
-                <Select
-                  value={appearance.theme}
-                  onValueChange={(val) => updateSetting('appearance.theme', val)}
-                >
-                  <SelectTrigger className={styles.select}>
-                    <SelectValue placeholder="选择主题" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {THEMES.map(t => (
-                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={appearance.theme} onChange={(e) => updateSetting('appearance.theme', e.target.value)}>
+                  {THEMES.map(t => (
+                    <option key={t.value}>{t.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -180,7 +155,6 @@ export function SettingsPanel() {
                   max={20}
                   value={appearance.fontSize}
                   onChange={(e) => updateSetting('appearance.fontSize', Number(e.target.value))}
-                  
                 />
               </div>
             </div>
@@ -188,20 +162,18 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>侧边栏收起</span>
               <div className={styles.control}>
-                <Switch
-                  checked={appearance.sidebarCollapsed}
-                  onCheckedChange={(val) => updateSetting('appearance.sidebarCollapsed', val)}
-                />
+                <button onClick={() => updateSetting('appearance.sidebarCollapsed', !appearance.sidebarCollapsed)}>
+                  {appearance.sidebarCollapsed ? '已收起' : '未收起'}
+                </button>
               </div>
             </div>
 
             <div className={styles.settingRow}>
               <span className={styles.label}>对话缩略图</span>
               <div className={styles.control}>
-                <Switch
-                  checked={appearance.conversationMinimapEnabled}
-                  onCheckedChange={(val) => updateSetting('appearance.conversationMinimapEnabled', val)}
-                />
+                <button onClick={() => updateSetting('appearance.conversationMinimapEnabled', !appearance.conversationMinimapEnabled)}>
+                  {appearance.conversationMinimapEnabled ? '已启用' : '已禁用'}
+                </button>
               </div>
             </div>
           </div>
@@ -214,8 +186,7 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>工作空间根路径</span>
               <div className={styles.control}>
-                <Input
-                  value={workspace.rootPath}
+                <input
                   placeholder="选择工作空间目录..."
                   className={styles.input}
                 />
@@ -240,10 +211,9 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>自动保存</span>
               <div className={styles.control}>
-                <Switch
-                  checked={workspace.autoSave}
-                  onCheckedChange={(val) => updateSetting('workspace.autoSave', val)}
-                />
+                <button onClick={() => updateSetting('workspace.autoSave', !workspace.autoSave)}>
+                  {workspace.autoSave ? '已启用' : '已禁用'}
+                </button>
               </div>
             </div>
 
@@ -260,7 +230,6 @@ export function SettingsPanel() {
                   step={5}
                   value={workspace.autoSaveInterval}
                   onChange={(e) => updateSetting('workspace.autoSaveInterval', Number(e.target.value))}
-                  
                 />
               </div>
             </div>
@@ -274,38 +243,22 @@ export function SettingsPanel() {
             <div className={styles.settingRow}>
               <span className={styles.label}>默认权限等级</span>
               <div className={styles.control}>
-                <Select
-                  value={agent.defaultPermission}
-                  onValueChange={(val) => updateSetting('agent.defaultPermission', val)}
-                >
-                  <SelectTrigger className={styles.select}>
-                    <SelectValue placeholder="选择权限" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERMISSION_LEVELS.map(p => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={agent.defaultPermission} onChange={(e) => updateSetting('agent.defaultPermission', e.target.value)}>
+                  {PERMISSION_LEVELS.map(p => (
+                    <option key={p.value}>{p.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div className={styles.settingRow}>
               <span className={styles.label}>默认模式</span>
               <div className={styles.control}>
-                <Select
-                  value={agent.defaultMode}
-                  onValueChange={(val) => updateSetting('agent.defaultMode', val)}
-                >
-                  <SelectTrigger className={styles.select}>
-                    <SelectValue placeholder="选择模式" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODES.map(m => (
-                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={agent.defaultMode} onChange={(e) => updateSetting('agent.defaultMode', e.target.value)}>
+                  {MODES.map(m => (
+                    <option key={m.value}>{m.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -321,7 +274,6 @@ export function SettingsPanel() {
                   max={200}
                   value={agent.maxSteps}
                   onChange={(e) => updateSetting('agent.maxSteps', Number(e.target.value))}
-                  
                 />
               </div>
             </div>
@@ -332,11 +284,10 @@ export function SettingsPanel() {
                 <span className={styles.valueLabel}>{agent.timeout}s</span>
               </div>
               <div className={styles.control}>
-                <Input
+                <input
                   type="number"
                   min={10}
                   max={3600}
-                  value={agent.timeout}
                   onChange={(e) => updateSetting('agent.timeout', Number(e.target.value) || 300)}
                   className={styles.input}
                 />

@@ -101,7 +101,7 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
   if (!selectedEntry) {
     return (
       <div className={styles.detailPanel}>
-        <Empty description="未选择知识条目" />
+        <div description="未选择知识条目" />
       </div>
     )
   }
@@ -113,19 +113,19 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
           {selectedEntry.title}
         </h4>
         <div >
-          <Button size="sm" variant="outline" onClick={handleEdit}><Edit  /> 编辑</Button>
-          <Button size="sm" variant="outline" onClick={handleExport}><Download  /> 导出</Button>
-          <Button size="sm" variant="outline" onClick={handleCiteInPaper}><FileText  /> 在论文中引用</Button>
-          <Button size="sm" variant="outline"  onClick={handleDelete}><Trash2  /> 删除</Button>
+          <button onClick={handleEdit}><Edit  /> 编辑</button>
+          <button onClick={handleExport}><Download  /> 导出</button>
+          <button onClick={handleCiteInPaper}><FileText  /> 在论文中引用</button>
+          <button  onClick={handleDelete}><Trash2  /> 删除</button>
         </div>
       </div>
 
       <div className={styles.detailMeta}>
-        <div className="grid-cols-2 border rounded">
+        <div >
           <div >
             <span >来源</span>
             <div>
-              <Badge variant="secondary" className={sourceTagColor}>{sourceLabel}</Badge>
+              <span className={sourceTagColor}>{sourceLabel}</span>
               <span >{selectedEntry.source}</span>
             </div>
           </div>
@@ -143,9 +143,9 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
           </div>
           <div >
             <span >标签</span>
-            <div className="flex-wrap">
+            <div >
               {selectedEntry.tags?.map((tag) => (
-                <Badge key={tag} variant="outline">{tag}</Badge>
+                <span key={tag}>{tag}</span>
               ))}
               {(!selectedEntry.tags || selectedEntry.tags.length === 0) && (
                 <span >暂无标签</span>
@@ -156,9 +156,8 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
       </div>
 
       <div className={styles.detailSearch}>
-        <Input
+        <input
           placeholder="在内容中搜索..."
-          value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
@@ -174,22 +173,22 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
       </div>
 
       {/* Edit dialog */}
-      <Dialog open={editing} onOpenChange={setEditing}>
-        <DialogContent >
-          <DialogHeader>
-            <DialogTitle>编辑知识条目</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div >
+          <div>
+            <div>编辑知识条目</div>
+          </div>
           <textarea
-            className="border"
+            
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
           />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(false)}>取消</Button>
-            <Button onClick={handleSaveEdit}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setEditing(false)}>取消</button>
+            <button onClick={handleSaveEdit}>保存</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

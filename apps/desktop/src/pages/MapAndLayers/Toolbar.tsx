@@ -29,19 +29,17 @@ export function Toolbar() {
       <span className={styles.label}>工具</span>
       <div className={styles.tools}>
         {AVAILABLE_TOOLS.map((tool) => (
-          <Tooltip key={tool.id}>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant={activeTool?.id === tool.id ? 'secondary' : 'outline'}
+          <div key={tool.id}>
+            <span asChild>
+              <button
                 onClick={() => handleToolClick(tool)}
               >
                 <span style={{ fontSize: 16 }}>{tool.icon}</span>
                 {tool.name}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{getToolDescription(tool.action)}</TooltipContent>
-          </Tooltip>
+              </button>
+            </span>
+            <div>{getToolDescription(tool.action)}</div>
+          </div>
         ))}
       </div>
       {selectedLayer && (

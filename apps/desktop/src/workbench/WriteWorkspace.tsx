@@ -13,30 +13,30 @@ export default function WriteWorkspace() {
         </div>
 
         <div className={styles.panels}>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>文档编辑器</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className={styles.panel}>
+            <div>
+              <div>文档编辑器</div>
+            </div>
+            <div>
               <pre style={{ color: '#8c97a1', fontSize: 13, margin: 0 }}># Markdown 编辑器</pre>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>工件预览</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>工件预览</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>生成的报告和工件预览。</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>导出选项</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>导出选项</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>DOCX、PPTX、PDF、COG 导出。</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

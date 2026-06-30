@@ -30,7 +30,7 @@ export const SpeedSelector: React.FC<SpeedSelectorProps> = ({
         {SPEED_OPTIONS.map(opt => (
           <button
             key={opt.value}
-            className={cn(styles.option, value === opt.value && styles.active)}
+            className={[styles.option, styles.active, styles.option, styles.active].filter(Boolean).join(' ')}
             onClick={() => onChange?.(opt.value)}
           >
             <Loader2 size={12} style={{ color: opt.color }} />

@@ -29,8 +29,8 @@ export function SpeedProfileSelector() {
           const isTurbo = profile.tokenBudgetMultiplier >= 2
 
           return (
-            <Tooltip key={profile.id}>
-              <TooltipTrigger asChild>
+            <div key={profile.id}>
+              <span asChild>
                 <div
                   className={`${styles.option} ${isSelected ? styles.selected : ''} ${isTurbo ? styles.turbo : ''}`}
                   onClick={() => setSelectedSpeedProfile(profile.id)}
@@ -52,11 +52,11 @@ export function SpeedProfileSelector() {
                     </span>
                   </div>
                 </div>
-              </TooltipTrigger>
-              <TooltipContent >
+              </span>
+              <div >
                 {PROFILE_DESCRIPTIONS[profile.id] || profile.name}
-              </TooltipContent>
-            </Tooltip>
+              </div>
+            </div>
           )
         })}
       </div>

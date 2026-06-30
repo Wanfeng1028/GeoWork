@@ -17,21 +17,17 @@ export function PanelFrame({
   noPadding,
 }: PanelFrameProps) {
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden', className)}>
+    <div className={className}>
       {(title || toolbar) && (
-        <div className="shrink-0">
+        <div className="flex items-center justify-between h-8 px-3 border-b border-border/40">
           {title && (
-            <span >{title}</span>
+            <span className="text-xs font-medium">{title}</span>
           )}
-          {toolbar && <div >{toolbar}</div>}
+          {toolbar && <div>{toolbar}</div>}
         </div>
       )}
       <div
-        className={cn(
-          'flex-1 overflow-auto',
-          !noPadding && 'p-3',
-          contentClassName,
-        )}
+        className={contentClassName || (noPadding ? '' : 'p-3')}
       >
         {children}
       </div>

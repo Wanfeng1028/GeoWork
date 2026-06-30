@@ -94,7 +94,7 @@ export function ArtifactPanel() {
   if (artifacts.length === 0) {
     return (
       <div className={styles.panel}>
-        <Empty title="暂无产物" />
+        <div />
       </div>
     )
   }
@@ -137,7 +137,7 @@ export function ArtifactPanel() {
         </div>
       )}
 
-      <div className="flex-col">
+      <div >
         {sortedTypes.map((type) => {
           const typeKey = type as ArtifactType
           const items = groupedByType[typeKey] || []
@@ -146,9 +146,9 @@ export function ArtifactPanel() {
               <div className={styles.typeHeader}>
                 <span className={styles.typeIcon}>{typeIcons[typeKey]}</span>
                 <span className={styles.typeLabel}>{typeLabels[typeKey]}</span>
-                <Badge variant={typeVariant[typeKey]}>{items.length}</Badge>
+                <span>{items.length}</span>
               </div>
-              <div className="flex-col">
+              <div >
                 {items.map((artifact) => {
                   const isSelected = selectedId === artifact.id
                   const ext = getFileExtension(artifact.path)
@@ -160,33 +160,33 @@ export function ArtifactPanel() {
                       onClick={() => handleSelectArtifact(artifact)}
                     >
                       <div className={styles.artifactHeader}>
-                        <Badge variant={typeVariant[artifact.type]}>
+                        <span>
                           {typeIcons[artifact.type]} {typeLabels[artifact.type]}
-                        </Badge>
+                        </span>
                         <span className={styles.artifactName}>{artifact.name}</span>
                       </div>
 
                       <div className={styles.artifactMeta}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <div>
+                          <span asChild>
                             <span className={styles.artifactPath}>{artifact.path}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>{artifact.path}</TooltipContent>
-                        </Tooltip>
+                          </span>
+                          <div>{artifact.path}</div>
+                        </div>
                         <span className={styles.artifactDate}>
                           {new Date(artifact.createdAt).toLocaleString()}
                         </span>
                       </div>
 
                       {isSelected && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <div>
+                          <span asChild>
                             <button className={styles.acceptBtn} onClick={(e) => e.stopPropagation()}>
                               <Eye size={14} />
                             </button>
-                          </TooltipTrigger>
-                          <TooltipContent>预览</TooltipContent>
-                        </Tooltip>
+                          </span>
+                          <div>预览</div>
+                        </div>
                       )}
                     </div>
                   )

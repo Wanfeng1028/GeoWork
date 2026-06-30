@@ -102,30 +102,30 @@ export function PaperSearch() {
         <div className={styles.searchLine}>
           <div className={styles.searchBox}>
             <Search size={15} />
-            <Input placeholder="搜索论文关键词（如：NDVI remote sensing）" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }} />
+            <input placeholder="搜索论文关键词（如：NDVI remote sensing）" onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSearch() }} />
           </div>
           <button className={styles.primaryButton} onClick={handleSearch} disabled={isLoading}><Search size={14} />搜索</button>
           <button className={`${styles.ghostButton} ${isAdvancedOpen ? styles.advancedActive : ''}`} onClick={toggleAdvanced}><Filter size={14} />高级</button>
         </div>
         {isAdvancedOpen && (
           <div className={styles.advancedPanel}>
-            <Field label="作者"><Input placeholder="作者姓名" value={formState.author} onChange={(e) => setFormState({ ...formState, author: e.target.value })} /></Field>
-            <Field label="起始年"><Input placeholder="起始年" value={formState.yearFrom} onChange={(e) => setFormState({ ...formState, yearFrom: e.target.value })} /></Field>
-            <Field label="结束年"><Input placeholder="结束年" value={formState.yearTo} onChange={(e) => setFormState({ ...formState, yearTo: e.target.value })} /></Field>
+            <Field label="作者"><input placeholder="作者姓名" onChange={(e) => setFormState({ ...formState, author: e.target.value })} /></Field>
+            <Field label="起始年"><input placeholder="起始年" onChange={(e) => setFormState({ ...formState, yearFrom: e.target.value })} /></Field>
+            <Field label="结束年"><input placeholder="结束年" onChange={(e) => setFormState({ ...formState, yearTo: e.target.value })} /></Field>
             <Field label="主题分类">
-              <Select value={formState.topic} onValueChange={(v) => setFormState({ ...formState, topic: v })}>
-                <SelectTrigger><SelectValue placeholder="选择主题分类" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="remote sensing">遥感技术</SelectItem>
-                  <SelectItem value="vegetation index">植被指数</SelectItem>
-                  <SelectItem value="climate change">气候变化</SelectItem>
-                  <SelectItem value="land use">土地利用</SelectItem>
-                  <SelectItem value="hydrology">水文学</SelectItem>
-                  <SelectItem value="soil science">土壤科学</SelectItem>
-                  <SelectItem value="oceanography">海洋学</SelectItem>
-                  <SelectItem value="atmospheric science">大气科学</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={formState.topic}
+                onChange={(e) => setFormState({ ...formState, topic: e.target.value })}
+              >
+                <option>遥感技术</option>
+                <option>植被指数</option>
+                <option>气候变化</option>
+                <option>土地利用</option>
+                <option>水文学</option>
+                <option>土壤科学</option>
+                <option>海洋学</option>
+                <option>大气科学</option>
+              </select>
             </Field>
             <div className={styles.advancedActions}>
               <button onClick={handleSearch} disabled={isLoading}><Search size={14} />搜索</button>
@@ -137,7 +137,7 @@ export function PaperSearch() {
 
       <section className={styles.resultsArea}>
         {isLoading && results.length === 0 ? (
-          <div className={styles.loadingContainer}><Spinner  /><span>正在搜索论文...</span></div>
+          <div className={styles.loadingContainer}><div  /><span>正在搜索论文...</span></div>
         ) : results.length === 0 && !isLoading ? (
           <div className={styles.emptyContainer}><span>{query ? '未找到相关论文，请尝试其他关键词' : '输入关键词开始搜索 OpenAlex 学术数据库'}</span></div>
         ) : (
@@ -173,12 +173,12 @@ export function PaperSearch() {
         )}
       </section>
 
-      <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent className={styles.paperDetailDialog}>
-          <DialogHeader><DialogTitle>论文详情</DialogTitle></DialogHeader>
+      <div>
+        <div className={styles.paperDetailDialog}>
+          <div><div>论文详情</div></div>
           {detailContent}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   )
 }

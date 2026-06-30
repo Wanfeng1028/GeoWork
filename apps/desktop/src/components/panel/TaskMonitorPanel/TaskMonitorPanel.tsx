@@ -45,7 +45,7 @@ export function TaskMonitorPanel() {
     return (
       <div className={styles.panel}>
         <div className={styles.empty}>
-          <Spinner size="md" />
+          <div />
           <span >加载中...</span>
         </div>
       </div>
@@ -55,7 +55,7 @@ export function TaskMonitorPanel() {
   if (!currentTask) {
     return (
       <div className={styles.panel}>
-        <Empty title="暂无运行中的任务" description="在任务面板创建新任务" />
+        <div description="在任务面板创建新任务" />
       </div>
     )
   }
@@ -89,9 +89,9 @@ export function TaskMonitorPanel() {
           <h3 className={styles.taskTitle}>
             {currentTask.mode || 'Task'} - {currentTask.id}
           </h3>
-          <Badge variant={statusConfig.variant}>
+          <span>
             {statusConfig.icon} {statusConfig.label}
-          </Badge>
+          </span>
         </div>
 
         <div className={styles.taskMeta}>
@@ -116,13 +116,13 @@ export function TaskMonitorPanel() {
           任务步骤 ({completedCount}/{totalCount} 完成)
         </h4>
 
-        <div className="flex-col">
+        <div >
           {allSteps.map((step) => (
             <div key={step.id} className={styles.stepItem}>
-              <Badge variant={STEP_STATUS_VARIANT[step.status] || 'default'}>
+              <span>
                 {step.status === 'running' && <Loader2 size={10}  />}
                 {step.status}
-              </Badge>
+              </span>
               <span className={styles.stepTitle}>{step.title}</span>
               {step.toolName && (
                 <span className={styles.stepTool}>{step.toolName}</span>
@@ -139,25 +139,25 @@ export function TaskMonitorPanel() {
 
       <div className={styles.summary}>
         {pendingSteps.length > 0 && (
-          <Badge variant="default">待处理: {pendingSteps.length}</Badge>
+          <span>待处理: {pendingSteps.length}</span>
         )}
         {runningStep && (
-          <Badge variant="info">运行中: {runningStep.title}</Badge>
+          <span>运行中: {runningStep.title}</span>
         )}
         {failedSteps.length > 0 && (
-          <Badge variant="danger">失败: {failedSteps.length}</Badge>
+          <span>失败: {failedSteps.length}</span>
         )}
       </div>
 
       {events.length > 0 && (
         <div className={styles.eventsSection}>
           <h4 className={styles.sectionTitle}>最近事件</h4>
-          <div className="flex-col">
+          <div >
             {events.slice(-10).reverse().map(event => (
               <div key={event.id} >
-                <Badge variant={event.type.includes('error') ? 'danger' : 'info'}>
+                <span>
                   {event.type}
-                </Badge>
+                </span>
                 <span >{event.message}</span>
               </div>
             ))}
@@ -167,19 +167,19 @@ export function TaskMonitorPanel() {
 
       {currentTask.status === 'running' && (
         <div className={styles.actions}>
-          <Button variant="danger" size="sm" onClick={handleCancel}>
+          <button onClick={handleCancel}>
             <Square size={14} />
             取消任务
-          </Button>
+          </button>
         </div>
       )}
 
       {currentTask.status === 'failed' && (
         <div className={styles.actions}>
-          <Button variant="secondary" size="sm">
+          <button>
             <RotateCw size={14} />
             恢复任务
-          </Button>
+          </button>
         </div>
       )}
     </div>

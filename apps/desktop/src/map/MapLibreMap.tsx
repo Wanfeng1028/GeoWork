@@ -157,7 +157,7 @@ const MapLibreMap = memo(function MapLibreMap({
   )
 
   return (
-    <TooltipProvider>
+    <div>
     <div className={styles.mapContainer}>
       {/* Collapse toggle */}
       <button
@@ -214,30 +214,30 @@ const MapLibreMap = memo(function MapLibreMap({
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <div>
+          <span asChild>
             <button
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomIn()}
             >
               <ZoomIn  />
             </button>
-          </TooltipTrigger>
-          <TooltipContent>放大</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
+          </span>
+          <div>放大</div>
+        </div>
+        <div>
+          <span asChild>
             <button
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomOut()}
             >
               <ZoomOut  />
             </button>
-          </TooltipTrigger>
-          <TooltipContent>缩小</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
+          </span>
+          <div>缩小</div>
+        </div>
+        <div>
+          <span asChild>
             <button
               className={`${styles.toolbarButton} ${measuring ? styles.toolbarButtonActive : ''}`}
               onClick={() => {
@@ -250,9 +250,9 @@ const MapLibreMap = memo(function MapLibreMap({
             >
               <Ruler  />
             </button>
-          </TooltipTrigger>
-          <TooltipContent>{measuring ? '停止测距' : '测距工具'}</TooltipContent>
-        </Tooltip>
+          </span>
+          <div>{measuring ? '停止测距' : '测距工具'}</div>
+        </div>
       </div>
 
       {/* Measure tooltip */}
@@ -286,7 +286,7 @@ const MapLibreMap = memo(function MapLibreMap({
         </div>
       )}
     </div>
-    </TooltipProvider>
+    </div>
   )
 })
 

@@ -13,30 +13,30 @@ export default function AnalysisWorkspace() {
         </div>
 
         <div className={styles.panels}>
-          <Card className={styles.mapPanel}>
-            <CardHeader>
-              <CardTitle>地图视图</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className={styles.mapPanel}>
+            <div>
+              <div>地图视图</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>MapLibre + DeckGL 地图渲染区域</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>图表分析</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>图表分析</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>统计图表和趋势分析。</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>分析结果</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>分析结果</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>分析结果和指标展示。</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

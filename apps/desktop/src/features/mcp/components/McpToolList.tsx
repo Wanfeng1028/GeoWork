@@ -85,7 +85,7 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
           </span>
         </div>
 
-        <div className="flex-col">
+        <div >
           {tools.map((tool) => (
             <details
               key={tool.id}
@@ -97,9 +97,9 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
                 <span className={styles.toolName}>{tool.name}</span>
                 <div >
                   {tool.inputSchema && (
-                    <Badge >
+                    <span >
                       <Code  /> Schema
-                    </Badge>
+                    </span>
                   )}
                 </div>
               </summary>
@@ -109,21 +109,18 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
                 )}
 
                 <div className={styles.toolActions}>
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <button
                     onClick={() => handleCopySchema(tool)}
                   >
                     <Copy  />
                     Copy Schema
-                  </Button>
-                  <Button
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => handleTestClick(tool)}
                   >
                     <Play  />
                     Test Call
-                  </Button>
+                  </button>
                 </div>
 
                 {tool.inputSchema && Object.keys(tool.inputSchema).length > 0 && (
@@ -140,11 +137,11 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
         </div>
       </div>
 
-      <Dialog open={testModalOpen} onOpenChange={setTestModalOpen}>
-        <DialogContent >
-          <DialogHeader>
-            <DialogTitle>Test: {selectedTool?.name}</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div >
+          <div>
+            <div>Test: {selectedTool?.name}</div>
+          </div>
           <div >
             <span >
               Enter JSON arguments to pass to the tool:
@@ -153,7 +150,7 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
               value={testArgs}
               onChange={(e) => setTestArgs(e.target.value)}
               rows={8}
-              className={`border ${styles.testInput}`}
+              className={`${styles.testInput}`}
               placeholder='{"key": "value"}'
             />
             {testResult && (
@@ -163,12 +160,12 @@ export function McpToolList({ tools, serverId, serverName, onToolCall }: McpTool
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setTestModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleRunTest}>Run</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => setTestModalOpen(false)}>Cancel</button>
+            <button onClick={handleRunTest}>Run</button>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

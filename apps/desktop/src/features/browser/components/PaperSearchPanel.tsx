@@ -37,32 +37,29 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
     <div className={`${styles.container} ${className}`}>
       {/* Search input */}
       <div className={styles.searchBar}>
-        <Input
-          value={searchQuery}
+        <input
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           placeholder="Search academic papers..."
           className={styles.searchInput}
         />
-        <Button
-          size="sm"
-          disabled={isLoading}
+        <button
           onClick={handleSearch}
         >
-          {isLoading ? <Spinner size="sm"  /> : <Search  />}
+          {isLoading ? <div  /> : <Search  />}
           Search
-        </Button>
+        </button>
       </div>
 
       {/* Results list */}
       <div className={styles.resultsArea}>
         {isLoading ? (
           <div className={styles.loadingState}>
-            <Spinner size="lg" />
+            <div />
             <span >Searching papers...</span>
           </div>
         ) : paperResults.length > 0 ? (
-          <div className="flex-col">
+          <div >
             {paperResults.map((item: PaperSearchResult, index: number) => (
               <div key={index} className={styles.resultItem}>
                 <div className={styles.resultContent}>
@@ -91,28 +88,22 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
                 </div>
 
                 <div className={styles.resultActions}>
-                  <Button
-                    size="sm"
-                    variant="link"
+                  <button
                   >
                     <Globe  />
                     Open
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={isLoading}
-                    title="Add to context"
+                  </button>
+                  <button
                   >
                     <Zap  />
                     To Agent
-                  </Button>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <Empty
+          <div
             description={
               searchQuery
                 ? 'No results found'

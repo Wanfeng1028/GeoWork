@@ -58,14 +58,14 @@ export function McpServerList() {
     }
   }
 
-  const handleToggle = async (id: string, enabled: boolean) => {
-    await toggleServer(id, enabled)
+  const handleToggle = async (id: string, checked: boolean) => {
+    await toggleServer(id, checked)
   }
 
   const getRiskTag = (toolCount: number) => {
-    if (toolCount === 0) return <Badge variant="secondary">0 tools</Badge>
-    if (toolCount <= 3) return <Badge >{toolCount} tool{toolCount > 1 ? 's' : ''}</Badge>
-    return <Badge >{toolCount} tools</Badge>
+    if (toolCount === 0) return <span>0 tools</span>
+    if (toolCount <= 3) return <span >{toolCount} tool{toolCount > 1 ? 's' : ''}</span>
+    return <span >{toolCount} tools</span>
   }
 
   return (
@@ -74,15 +74,15 @@ export function McpServerList() {
         <h3 >
           MCP Servers
         </h3>
-        <Button
+        <button
           onClick={() => setAddModalOpen(true)}
         >
           <Plus  />
           Add Server
-        </Button>
+        </button>
       </div>
 
-      <div className="flex-col">
+      <div >
         {servers.length === 0 && !isLoading && (
           <div className={styles.empty}>
             <Settings className={styles.emptyIcon} />
@@ -105,28 +105,30 @@ export function McpServerList() {
                 <span className={styles.serverName}>{server.name}</span>
                 <span className={styles.serverCommand}>{server.command}</span>
               </div>
-              <div >
+              <div className={styles.serverActions}>
                 {getRiskTag(server.tools.length)}
-                <Switch
-                  checked={server.enabled}
-                  onCheckedChange={(checked) => handleToggle(server.id, checked)}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggle(server.id, !server.enabled)
+                  }}
+                  className={server.enabled ? styles.enabled : ''}
+                >
+                  {server.enabled ? 'ON' : 'OFF'}
+                </button>
+                <button
                   onClick={(e) => {
                     e.stopPropagation()
                     handleRemove(server.id)
                   }}
                 >
-                  <Trash  />
-                </Button>
+                  <Trash />
+                </button>
               </div>
             </summary>
             <div className={styles.toolsSection}>
               <h4 >
-                <Settings className="inline" /> Available Tools
+                <Settings  /> Available Tools
               </h4>
               {server.tools.length === 0 ? (
                 <span >No tools available</span>
@@ -165,43 +167,40 @@ export function McpServerList() {
         ))}
       </div>
 
-      <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add MCP Server</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div>
+          <div>
+            <div>Add MCP Server</div>
+          </div>
           <div >
             <div >
               <label >Name</label>
-              <Input
+              <input
                 placeholder="My MCP Server"
-                value={formValues.name}
                 onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
               />
             </div>
             <div >
               <label >Command</label>
-              <Input
+              <input
                 placeholder="node"
-                value={formValues.command}
                 onChange={(e) => setFormValues((v) => ({ ...v, command: e.target.value }))}
               />
             </div>
             <div >
               <label >Arguments</label>
-              <Input
+              <input
                 placeholder="comma-separated args (e.g. server1.js, --port=3000)"
-                value={formValues.args}
                 onChange={(e) => setFormValues((v) => ({ ...v, args: e.target.value }))}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => { setAddModalOpen(false); setFormValues({ name: '', command: '', args: '' }) }}>Cancel</Button>
-            <Button onClick={handleAdd}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => { setAddModalOpen(false); setFormValues({ name: '', command: '', args: '' }) }}>Cancel</button>
+            <button onClick={handleAdd}>Add</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

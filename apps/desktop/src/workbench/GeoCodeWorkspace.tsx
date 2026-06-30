@@ -13,30 +13,30 @@ export default function GeoCodeWorkspace() {
         </div>
 
         <div className={styles.panels}>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>脚本编辑器</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className={styles.panel}>
+            <div>
+              <div>脚本编辑器</div>
+            </div>
+            <div>
               <pre style={{ color: '#8c97a1', fontSize: 13, margin: 0 }}># Python 脚本编辑器</pre>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>GEE 集成</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>GEE 集成</div>
+            </div>
+            <div>
               <p style={{ color: '#8c97a1', fontSize: 13 }}>Google Earth Engine 配置和数据集选择。</p>
-            </CardContent>
-          </Card>
-          <Card className={styles.panel}>
-            <CardHeader>
-              <CardTitle>终端</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+          </div>
+          <div className={styles.panel}>
+            <div>
+              <div>终端</div>
+            </div>
+            <div>
               <pre style={{ color: '#8c97a1', fontSize: 13, margin: 0 }}>$ 终端输出区域</pre>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@
 
 import React from 'react'
 import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
-import { GwCard } from '../../../components/foundation/GwCard/GwCard'
 import useAgentStore from '../agentStore'
 import styles from './AgentStepTimeline.module.scss'
 
@@ -33,9 +32,9 @@ export const AgentStepTimeline: React.FC = () => {
 
   if (!isRunning && steps.length === 0) {
     return (
-      <GwCard variant="outlined" bordered title="Execution Timeline" className={styles.timelineCard}>
+      <div className={styles.timelineCard}>
         <div className={styles.empty}>No steps to display.</div>
-      </GwCard>
+      </div>
     )
   }
 
@@ -46,7 +45,7 @@ export const AgentStepTimeline: React.FC = () => {
   }] : steps
 
   return (
-    <GwCard variant="outlined" bordered title="Execution Timeline" className={styles.timelineCard}>
+    <div className={styles.timelineCard}>
       <div className={styles.timeline}>
         {displaySteps.map((step, index) => {
           const isLast = index === displaySteps.length - 1
@@ -89,7 +88,7 @@ export const AgentStepTimeline: React.FC = () => {
         })}
       </div>
       {error && <div className={styles.error}>{error}</div>}
-    </GwCard>
+    </div>
   )
 }
 

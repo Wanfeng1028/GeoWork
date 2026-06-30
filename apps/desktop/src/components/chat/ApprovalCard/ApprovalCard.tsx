@@ -56,24 +56,23 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
   }
 
   return (
-    <Card  >
-      <CardHeader >
+    <div  >
+      <div >
         <div >
-          <CardTitle >
+          <div >
             <AlertTriangle  />
             <span>权限审批请求</span>
-            <Badge
-              variant={request.riskLevel === 'critical' ? 'danger' : request.riskLevel === 'high' ? 'danger' : request.riskLevel === 'medium' ? 'warning' : 'success'}
+            <span
             >
               {request.riskLevel}
-            </Badge>
-          </CardTitle>
-          <Badge variant="default">{actionLabels[request.action] || request.action}</Badge>
+            </span>
+          </div>
+          <span>{actionLabels[request.action] || request.action}</span>
         </div>
-      </CardHeader>
-      <CardContent >
-        <div className="border">
-          <AlertTriangle className="shrink-0" />
+      </div>
+      <div >
+        <div >
+          <AlertTriangle  />
           <div>
             <div >{request.title}</div>
             <div >{request.description}</div>
@@ -91,7 +90,7 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
           </details>
         )}
 
-        <div className="flex-col">
+        <div >
           <textarea
             placeholder="审批理由（可选）"
             value={reason}
@@ -109,24 +108,21 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
             <label htmlFor="remember" >记住此决定</label>
           </div>
           <div >
-            <Button
-              variant="primary"
+            <button
               loading={loading}
               onClick={handleApprove}
             >
               <Check  />
               批准
-            </Button>
-            <Button
-              variant="danger"
+            </button>
+            <button
               loading={loading}
               onClick={handleDeny}
             >
               <X  />
               拒绝
-            </Button>
-            <Button
-              variant="secondary"
+            </button>
+            <button
               loading={loading}
               onClick={() => {
                 setRemember(true)
@@ -135,11 +131,11 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
             >
               <Save  />
               批准并记住
-            </Button>
+            </button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

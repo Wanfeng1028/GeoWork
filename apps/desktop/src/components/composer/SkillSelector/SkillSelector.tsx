@@ -45,17 +45,16 @@ export const SkillSelector: React.FC<SkillSelectorProps> = ({
         {enabledSkills.length > 0 ? (
           <>
             {enabledSkills.map(skill => (
-              <Badge
+              <span
                 key={skill.id}
-                variant={selectedSkillIds.includes(skill.id) ? 'accent' : 'default'}
                 className={styles.tag}
               >
                 {skill.icon} {skill.name}
-              </Badge>
+              </span>
             ))}
           </>
         ) : (
-          <Badge variant="default" className={styles.tag}>选择技能以增强能力</Badge>
+          <span className={styles.tag}>选择技能以增强能力</span>
         )}
       </div>
     )
@@ -75,7 +74,7 @@ export const SkillSelector: React.FC<SkillSelectorProps> = ({
           return (
             <button
               key={skill.id}
-              className={cn(styles.skill, isActive && styles.enabled)}
+              className={[styles.skill, styles.enabled, styles.skill, styles.enabled].filter(Boolean).join(' ')}
               onClick={() => onToggle?.(skill.id)}
               title={skill.category}
             >

@@ -185,74 +185,54 @@ export function BrowserPanel() {
       {/* Navigation bar */}
       <div className={styles.navBar}>
         <div >
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled
+          <button
             onClick={handleGoBack}
           >
             <ArrowLeft  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled
+          </button>
+          <button
             onClick={handleGoForward}
           >
             <ArrowRight  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </button>
+          <button
             loading={state.isNavigating}
             onClick={handleReload}
           >
             <RotateCw  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={!state.isNavigating}
+          </button>
+          <button
             onClick={handleStop}
           >
             <Square  />
-          </Button>
+          </button>
         </div>
         <div className={styles.urlBar}>
           <div >
-            <Input
-              value={urlInput}
+            <input
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleNavigate()}
               placeholder="输入 URL 并回车"
-              className="flex-1"
+              
             />
-            <Button
-              size="sm"
-              variant="primary"
+            <button
               onClick={handleNavigate}
             >
               <Play  />
               访问
-            </Button>
+            </button>
           </div>
         </div>
         <div >
-          <Button
-            size="sm"
-            variant="ghost"
-            title="视图"
+          <button
             onClick={handleTakeScreenshot}
           >
             <Monitor  />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            title="全屏"
+          </button>
+          <button
           >
             <Maximize  />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -260,7 +240,7 @@ export function BrowserPanel() {
       <div className={styles.browserContent}>
         {state.isNavigating ? (
           <div className={styles.loadingOverlay}>
-            <Spinner size="lg" />
+            <div />
             <span style={{ fontSize: 12, marginTop: 8 }}>
               正在加载...
             </span>
@@ -272,7 +252,7 @@ export function BrowserPanel() {
               <Monitor  />
               <p>页面内容预览</p>
               <span>{state.url}</span>
-              <Badge variant="accent">{state.title}</Badge>
+              <span>{state.title}</span>
               <span className={styles.viewportSize}>
                 {state.width} × {state.height}
               </span>
@@ -280,7 +260,7 @@ export function BrowserPanel() {
           </div>
         ) : (
           <div className={styles.emptyBrowser}>
-            <Empty description="输入 URL 开始浏览" />
+            <div description="输入 URL 开始浏览" />
           </div>
         )}
       </div>
@@ -290,13 +270,11 @@ export function BrowserPanel() {
         <div className={styles.consolePanel}>
           <div className={styles.consoleHeader}>
             <span className={styles.consoleTitle}>控制台</span>
-            <Button
-              size="sm"
-              variant="ghost"
+            <button
               onClick={() => setShowConsole(false)}
             >
               收起
-            </Button>
+            </button>
           </div>
           <div className={styles.consoleBody}>
             {state.logs.length === 0 ? (
@@ -312,12 +290,11 @@ export function BrowserPanel() {
                       className={styles.logEntry}
                     >
                       <span className={styles.logTime}>{log.timestamp}</span>
-                      <Badge
-                        variant={log.type === "error" ? "danger" : log.type === "navigation" ? "accent" : "default"}
+                      <span
                         
                       >
                         {log.type}
-                      </Badge>
+                      </span>
                       <span className={styles.logMessage}>{log.message}</span>
                     </div>
                   ))}

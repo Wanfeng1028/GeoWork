@@ -23,18 +23,18 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   return (
     <div className={styles.container}>
       <FileText size={14} className={styles.icon} />
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className={styles.templateSelect}>
-          <SelectValue placeholder="选择模板" />
-        </SelectTrigger>
-        <SelectContent>
+      <select>
+        <div className={styles.templateSelect}>
+          <span placeholder="选择模板" />
+        </div>
+        <div>
           {TEMPLATES.map(t => (
-            <SelectItem key={t.value} value={t.value}>
+            <option key={t.value}>
               {t.icon} {t.label}
-            </SelectItem>
+            </option>
           ))}
-        </SelectContent>
-      </Select>
+        </div>
+      </select>
     </div>
   )
 }

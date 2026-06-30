@@ -116,7 +116,7 @@ export function ChatTimeline() {
   if (isLoading && messages.length === 0) {
     return (
       <div className={styles.loadingState}>
-        <Spinner size="lg" />
+        <div />
         <span className={styles.loadingText}>加载对话中...</span>
       </div>
     );
@@ -125,7 +125,7 @@ export function ChatTimeline() {
   if (messages.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <Empty
+        <div
           description="暂无对话记录。在 Composer 中发送任务开始对话"
         />
       </div>
@@ -168,9 +168,9 @@ function DeliveryChecklist({ delivery }: { delivery: any }) {
       <div className={styles.deliveryHeader}>
         <CheckCircle style={{ fontSize: 14 }}  />
         <span className={styles.deliveryTitle}>交付物清单</span>
-        <Badge variant="success">任务完成</Badge>
+        <span>任务完成</span>
       </div>
-      <div className="flex-col">
+      <div >
         {categories
           .filter((cat) => cat.items && cat.items.length > 0)
           .map((cat) => (

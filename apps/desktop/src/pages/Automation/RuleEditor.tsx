@@ -99,51 +99,47 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
         <div >
           <div>
             <label >名称</label>
-            <Input placeholder="例如：每日 NDVI 监测" value={formState.name} onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
+            <input placeholder="例如：每日 NDVI 监测" onChange={(e) => setFormState({ ...formState, name: e.target.value })} />
           </div>
 
           <div>
             <label >描述</label>
             <textarea
-              className="border"
+              
               placeholder="规则描述（可选）"
               value={formState.description}
               onChange={(e) => setFormState({ ...formState, description: e.target.value })}
             />
           </div>
 
-          <div>
-            <label >触发条件</label>
-            <Select value={formState.trigger} onValueChange={(v) => setFormState({ ...formState, trigger: v as TriggerType })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TRIGGER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className={styles.field}>
+            <label className={styles.label}>触发条件</label>
+            <select
+              value={formState.trigger}
+              onChange={(e) => setFormState({ ...formState, trigger: e.target.value as TriggerType })}
+            >
+              {TRIGGER_OPTIONS.map((opt) => (
+                <option key={opt.value}>{opt.label}</option>
+              ))}
+            </select>
           </div>
 
-          <div>
-            <label >执行目标</label>
-            <Select value={formState.target} onValueChange={(v) => setFormState({ ...formState, target: v })}>
-              <SelectTrigger>
-                <SelectValue placeholder="选择执行目标" />
-              </SelectTrigger>
-              <SelectContent>
-                {TARGET_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className={styles.field}>
+            <label className={styles.label}>执行目标</label>
+            <select
+              value={formState.target}
+              onChange={(e) => setFormState({ ...formState, target: e.target.value })}
+            >
+              {TARGET_OPTIONS.map((opt) => (
+                <option key={opt.value}>{opt.label}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label >参数配置</label>
             <textarea
-              className="border"
+              
               placeholder='{"band": "NIR", "threshold": 0.3}'
               value={formState.params}
               onChange={(e) => setFormState({ ...formState, params: e.target.value })}
@@ -151,19 +147,25 @@ export function RuleEditor({ open, onClose, editingRule }: RuleEditorProps) {
             <span >JSON 格式，例如：{'{"band": "NIR"}'}</span>
           </div>
 
-          <div >
-            <Switch checked={formState.enabled} onCheckedChange={(v) => setFormState({ ...formState, enabled: v })} />
-            <label >启用</label>
+          <div className={styles.toggleRow}>
+            <button
+              type="button"
+              onClick={() => setFormState({ ...formState, enabled: !formState.enabled })}
+              className={formState.enabled ? styles.enabled : ''}
+            >
+              {formState.enabled ? 'ON' : 'OFF'}
+            </button>
+            <label className={styles.label}>启用</label>
           </div>
 
           <div className={styles.actions}>
-            <Button variant="outline" onClick={onClose}>取消</Button>
+            <button onClick={onClose}>取消</button>
             {editingRule && (
-              <Button variant="outline" onClick={handleTest} disabled={loading}>测试运行</Button>
+              <button onClick={handleTest}>测试运行</button>
             )}
-            <Button onClick={handleFinish} disabled={loading}>
+            <button onClick={handleFinish}>
               {editingRule ? '保存' : '创建'}
-            </Button>
+            </button>
           </div>
         </div>
       </div>

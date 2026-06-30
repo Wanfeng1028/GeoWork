@@ -65,27 +65,27 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
   if (!dataset) return null
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent >
-        <DialogHeader>
-          <DialogTitle>数据预览 — {dataset.name}</DialogTitle>
-        </DialogHeader>
+    <div>
+      <div >
+        <div>
+          <div>数据预览 — {dataset.name}</div>
+        </div>
 
-        <Tabs defaultValue="basic">
-          <TabsList>
-            <TabsTrigger value="basic">基本信息</TabsTrigger>
-            <TabsTrigger value="raster">栅格信息</TabsTrigger>
-            <TabsTrigger value="vector">矢量信息</TabsTrigger>
-            <TabsTrigger value="raw">原始元数据</TabsTrigger>
-          </TabsList>
+        <div>
+          <div>
+            <button>基本信息</button>
+            <button>栅格信息</button>
+            <button>矢量信息</button>
+            <button>原始元数据</button>
+          </div>
 
-          <TabsContent value="basic">
-            <div className="grid-cols-2 border rounded">
+          <div>
+            <div >
               <DescItem label="名称" span={2}>{dataset.name}</DescItem>
               <DescItem label="类型">
-                <Badge variant="secondary" className={typeColors[dataset.type] || ''}>
+                <span className={typeColors[dataset.type] || ''}>
                   {typeIcons[dataset.type]} {dataset.type}
-                </Badge>
+                </span>
               </DescItem>
               <DescItem label="CRS">{dataset.crs}</DescItem>
               <DescItem label="范围" span={2}>
@@ -93,20 +93,20 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
               </DescItem>
               <DescItem label="文件大小">{formatSize(dataset.size)}</DescItem>
               <DescItem label="路径" span={2}>
-                <span className="break-all">{dataset.path}</span>
+                <span >{dataset.path}</span>
               </DescItem>
               <DescItem label="状态">
-                <Badge variant="secondary" className={dataset.status === 'registered' ? 'bg-green-100 text-green-800' : dataset.status === 'processing' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}>
+                <span className={dataset.status === 'registered' ? 'bg-green-100 text-green-800' : dataset.status === 'processing' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}>
                   {dataset.status === 'registered' ? '已登记' : dataset.status === 'processing' ? '处理中' : '错误'}
-                </Badge>
+                </span>
               </DescItem>
             </div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="raster">
+          <div>
             {isRasterDataset(dataset) ? (
               <div className={styles.metadataSection}>
-                <div className="grid-cols-2 border rounded">
+                <div >
                   <DescItem label="波段数">{dataset.metadata.bands ?? 'N/A'}</DescItem>
                   <DescItem label="像元大小">
                     {dataset.metadata.pixelSize ? `${dataset.metadata.pixelSize[0]} x ${dataset.metadata.pixelSize[1]}` : 'N/A'}
@@ -119,7 +119,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 {dataset.metadata.statistics && (
                   <>
                     <h5 >统计信息</h5>
-                    <div className="grid-cols-2 border rounded">
+                    <div >
                       <DescItem label="均值">{dataset.metadata.statistics.mean ?? 'N/A'}</DescItem>
                       <DescItem label="标准差">{dataset.metadata.statistics.std ?? 'N/A'}</DescItem>
                       <DescItem label="最小值">{dataset.metadata.statistics.min ?? 'N/A'}</DescItem>
@@ -128,20 +128,20 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                   </>
                 )}
                 <h5 >缩略图</h5>
-                <div className="flex-col border rounded">
+                <div >
                   <FileImage  />
                   <span >缩略图预览区域</span>
                 </div>
               </div>
             ) : (
-              <Empty description="当前数据不是栅格格式" />
+              <div description="当前数据不是栅格格式" />
             )}
-          </TabsContent>
+          </div>
 
-          <TabsContent value="vector">
+          <div>
             {isVectorDataset(dataset) ? (
               <div className={styles.metadataSection}>
-                <div className="grid-cols-2 border rounded">
+                <div >
                   <DescItem label="要素数">{dataset.metadata.features ?? 'N/A'}</DescItem>
                   <DescItem label="几何类型">{dataset.metadata.geometryType ?? 'N/A'}</DescItem>
                   <DescItem label="字段数" span={2}>
@@ -151,10 +151,10 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 {dataset.metadata.fields && dataset.metadata.fields.length > 0 && (
                   <>
                     <h5 >字段列表</h5>
-                    <div className="grid-cols-2 border rounded">
+                    <div >
                       {dataset.metadata.fields.map((field: any, idx: number) => (
                         <DescItem key={idx} label={field.name}>
-                          <Badge variant="outline">{field.type}</Badge>
+                          <span>{field.type}</span>
                         </DescItem>
                       ))}
                     </div>
@@ -170,17 +170,17 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 )}
               </div>
             ) : (
-              <Empty description="当前数据不是矢量格式" />
+              <div description="当前数据不是矢量格式" />
             )}
-          </TabsContent>
+          </div>
 
-          <TabsContent value="raw">
+          <div>
             <pre className={styles.jsonPreview}>
               {JSON.stringify(dataset.metadata, null, 2)}
             </pre>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

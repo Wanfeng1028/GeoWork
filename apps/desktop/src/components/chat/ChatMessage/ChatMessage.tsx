@@ -54,11 +54,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const getTypeTag = (type: string): React.ReactNode => {
     switch (type) {
       case 'tool_call':
-        return <Badge variant="info"><Wrench  /> Tool Call</Badge>;
+        return <span><Wrench  /> Tool Call</span>;
       case 'approval':
-        return <Badge variant="warning">Approval</Badge>;
+        return <span>Approval</span>;
       default:
-        return <Badge variant="accent">Text</Badge>;
+        return <span>Text</span>;
     }
   };
 
@@ -93,9 +93,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           <span >
             {getRoleLabel(message.role)}
           </span>
-          <Badge variant="default" >
+          <span >
             {message.type}
-          </Badge>
+          </span>
         </div>
 
         <div className={styles.bodyRow}>

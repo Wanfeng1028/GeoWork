@@ -51,7 +51,7 @@ export function DiffPanel() {
   if (diffs.length === 0) {
     return (
       <div className={styles.panel}>
-        <Empty icon={<GitCompare size={40} strokeWidth={1} />} title="暂无差异文件" description="完成任务后自动显示差异" />
+        <div className={styles.emptyState}>暂无差异文件</div>
       </div>
     )
   }
@@ -61,18 +61,18 @@ export function DiffPanel() {
       {diffs.length > 1 && (
         <div className={styles.diffSelector}>
           <span className={styles.diffLabel}>差异批次：</span>
-          <Select value={activeDiffId ?? undefined} onValueChange={setActiveDiffId}>
-            <SelectTrigger className={styles.diffSelect}>
-              <SelectValue placeholder="选择批次" />
-            </SelectTrigger>
-            <SelectContent>
+          <select>
+            <div className={styles.diffSelect}>
+              <span placeholder="选择批次" />
+            </div>
+            <div>
               {diffs.map(d => (
-                <SelectItem key={d.id} value={d.id}>
+                <option key={d.id}>
                   {d.id} ({d.files.length} 文件)
-                </SelectItem>
+                </option>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </select>
         </div>
       )}
 
@@ -85,37 +85,37 @@ export function DiffPanel() {
         </span>
         <div >
           {currentDiff?.patch && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleDownload}>
+            <div>
+              <span asChild>
+                <button onClick={handleDownload}>
                   <Download size={14} /> 导出
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>下载 .patch 文件</TooltipContent>
-            </Tooltip>
+                </button>
+              </span>
+              <div>下载 .patch 文件</div>
+            </div>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="primary" size="sm" onClick={() => acceptAll(activeDiffId || undefined)}>
+          <div>
+            <span asChild>
+              <button onClick={() => acceptAll(activeDiffId || undefined)}>
                 <Check size={14} /> 全部接受
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>接受所有变更</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="danger" size="sm" onClick={() => rejectAll(activeDiffId || undefined)}>
+              </button>
+            </span>
+            <div>接受所有变更</div>
+          </div>
+          <div>
+            <span asChild>
+              <button onClick={() => rejectAll(activeDiffId || undefined)}>
                 <X size={14} /> 全部拒绝
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>拒绝所有变更</TooltipContent>
-          </Tooltip>
+              </button>
+            </span>
+            <div>拒绝所有变更</div>
+          </div>
         </div>
       </div>
 
       {currentDiff ? (
         <div className={styles.tableWrapper}>
-          <div className="flex-col">
+          <div >
             {currentDiff.files.map((file) => {
               const isAccepted = acceptedFiles.has(file.path)
               const isRejected = rejectedFiles.has(file.path)
@@ -123,50 +123,50 @@ export function DiffPanel() {
 
               return (
                 <div key={file.path} className={styles.stepItem}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                  <div>
+                    <span asChild>
                       <span className={styles.filePath}>{file.path.split('/').pop()}</span>
-                    </TooltipTrigger>
-                    <TooltipContent>{file.path}</TooltipContent>
-                  </Tooltip>
-                  <Badge variant={STATUS_VARIANT[file.status] || 'default'}>
+                    </span>
+                    <div>{file.path}</div>
+                  </div>
+                  <span>
                     {STATUS_LABELS[file.status] || file.status}
-                  </Badge>
+                  </span>
                   {isPending && (
                     <div >
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="primary" size="icon-sm" onClick={() => acceptFile(file.path)}>
+                      <div>
+                        <span asChild>
+                          <button onClick={() => acceptFile(file.path)}>
                             <Check size={12} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>接受变更</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="danger" size="icon-sm" onClick={() => rejectFile(file.path)}>
+                          </button>
+                        </span>
+                        <div>接受变更</div>
+                      </div>
+                      <div>
+                        <span asChild>
+                          <button onClick={() => rejectFile(file.path)}>
                             <X size={12} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>拒绝变更</TooltipContent>
-                      </Tooltip>
+                          </button>
+                        </span>
+                        <div>拒绝变更</div>
+                      </div>
                     </div>
                   )}
-                  {isAccepted && <Badge variant="success" >已接受</Badge>}
-                  {isRejected && <Badge variant="danger" >已拒绝</Badge>}
+                  {isAccepted && <span >已接受</span>}
+                  {isRejected && <span >已拒绝</span>}
                 </div>
               )
             })}
           </div>
         </div>
       ) : (
-        <Empty title="请选择一个差异批次" />
+        <div />
       )}
 
       {currentDiff && currentDiff.files.length > 0 && (
         <div className={styles.detailSection}>
           <h4 className={styles.sectionTitle}>详细对比</h4>
-          <div className="flex-col">
+          <div >
             {currentDiff.files.map((file) => {
               const fileAccepted = acceptedFiles.has(file.path)
               const fileRejected = rejectedFiles.has(file.path)
@@ -174,11 +174,11 @@ export function DiffPanel() {
                 <details key={file.path} className={styles.collapseLabel}>
                   <summary >
                     <span className={styles.collapseFileName}>{file.path.split('/').pop()}</span>
-                    <Badge variant={STATUS_VARIANT[file.status] || 'default'}>
+                    <span>
                       {STATUS_LABELS[file.status]}
-                    </Badge>
-                    {fileAccepted && <Badge variant="success">已接受</Badge>}
-                    {fileRejected && <Badge variant="danger">已拒绝</Badge>}
+                    </span>
+                    {fileAccepted && <span>已接受</span>}
+                    {fileRejected && <span>已拒绝</span>}
                   </summary>
                   <div className={styles.diffContent}>
                     {file.oldContent && (

@@ -1,4 +1,5 @@
-import * as TabsPrimitive from '@radix-ui/react-tabs'
+
+import { useState } from 'react'
 
 type RightInspectorTabsProps = {
   tabs: { key: string; label: string; content: React.ReactNode }[]
@@ -7,37 +8,32 @@ type RightInspectorTabsProps = {
 }
 
 export function RightInspectorTabs({ tabs, defaultValue, className }: RightInspectorTabsProps) {
+  const [activeTab, setActiveTab] = useState(defaultValue ?? tabs[0]?.key)
+
   return (
-    <TabsPrimitive.Root
-      defaultValue={defaultValue ?? tabs[0]?.key}
-      className={cn('flex h-full flex-col', className)}
-    >
-      <TabsPrimitive.List className="shrink-0">
+    <div className={className}>
+      <div className="flex gap-1 border-b border-border/40 mb-3">
         {tabs.map((tab) => (
-          <TabsPrimitive.Trigger
+          <button
             key={tab.key}
+            className={`px-3 py-1.5 text-xs rounded-t ${activeTab === tab.key ? 'bg-accent text-foreground border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
             value={tab.key}
-            className={cn(
-              'px-3 py-2 text-[11px] font-medium text-[""]',
-              'border-b-2 border-transparent -mb-px',
-              'transition-colors',
-              'data-[state=active]:border-[""] data-[state=active]:text-[""]',
-              'hover:text-[""]',
-            )}
+            onClick={() => setActiveTab(tab.key)}
           >
             {tab.label}
-          </TabsPrimitive.Trigger>
+          </button>
         ))}
-      </TabsPrimitive.List>
+      </div>
       {tabs.map((tab) => (
-        <TabsPrimitive.Content
+        <div
           key={tab.key}
           value={tab.key}
-          className="flex-1 focus-visible:outline-none"
+          className="focus-visible:outline-none"
+          hidden={activeTab !== tab.key}
         >
           {tab.content}
-        </TabsPrimitive.Content>
+        </div>
       ))}
-    </TabsPrimitive.Root>
+    </div>
   )
 }

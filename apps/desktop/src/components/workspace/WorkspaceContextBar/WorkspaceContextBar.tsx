@@ -28,9 +28,9 @@ const WorkspaceContextBar: React.FC = () => {
       <div >
         <Folder  />
         <span >未选择工作区</span>
-        <Button variant="primary" size="sm" onClick={handleChooseFolder}>
+        <button onClick={handleChooseFolder}>
           选择文件夹
-        </Button>
+        </button>
       </div>
     )
   }
@@ -39,43 +39,43 @@ const WorkspaceContextBar: React.FC = () => {
 
   return (
     <div >
-      <Badge variant="success">
+      <span>
         <Folder  />
         {fileCount > 999 ? '999+' : fileCount}
-      </Badge>
-      <Tooltip>
-        <TooltipTrigger asChild>
+      </span>
+      <div>
+        <span asChild>
           <span >
             {currentWorkspace.name}
           </span>
-        </TooltipTrigger>
-        <TooltipContent>{currentWorkspace.rootPath}</TooltipContent>
-      </Tooltip>
-      <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title="刷新文件树">
+        </span>
+        <div>{currentWorkspace.rootPath}</div>
+      </div>
+      <button onClick={handleRefresh}>
         <RefreshCw  />
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
+      </button>
+      <div>
+        <button asChild>
+          <button>
             更多操作
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={loadWorkspaces}>
+          </button>
+        </button>
+        <div align="start">
+          <button onClick={loadWorkspaces}>
             <FolderOpen  />
             打开工作区
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleChooseFolder}>
+          </button>
+          <button onClick={handleChooseFolder}>
             <Folder  />
             导入文件
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
+          </button>
+          <hr />
+          <button disabled>
             <Cloud  />
             同步到云端
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

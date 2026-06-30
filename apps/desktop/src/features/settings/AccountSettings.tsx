@@ -2,7 +2,6 @@
 // Settings page for account, subscription, team, sync, and telemetry preferences
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsList, TabsTrigger, TabsContent, Card, CardHeader, CardTitle, CardContent, Input, Button, Badge, Switch, Separator } from '../../components/ui'
 import { User, CreditCard, Users, Cloud, Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAccountStore } from '../../stores/accountStore'
@@ -55,14 +54,14 @@ export function AccountSettings() {
   if (loginState !== 'authenticated') {
     return (
       <div className={styles.container}>
-        <Card className={styles.card}>
-          <CardHeader>
-            <CardTitle>登录</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className={styles.card}>
+          <div>
+            <div>登录</div>
+          </div>
+          <div>
             <LoginPanel onLogin={login} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }
@@ -75,27 +74,26 @@ export function AccountSettings() {
 
   return (
     <div className={styles.container}>
-      <Tabs defaultValue="profile">
-        <TabsList>
-          <TabsTrigger value="profile"><User  /> 账号</TabsTrigger>
-          <TabsTrigger value="subscription"><CreditCard  /> 订阅</TabsTrigger>
-          <TabsTrigger value="team"><Users  /> 团队</TabsTrigger>
-          <TabsTrigger value="sync"><Cloud  /> 同步</TabsTrigger>
-          <TabsTrigger value="privacy"><Shield  /> 隐私与遥测</TabsTrigger>
-        </TabsList>
+      <div>
+        <div>
+          <button><User  /> 账号</button>
+          <button><CreditCard  /> 订阅</button>
+          <button><Users  /> 团队</button>
+          <button><Cloud  /> 同步</button>
+          <button><Shield  /> 隐私与遥测</button>
+        </div>
 
-        <TabsContent value="profile">
-          <Card className={styles.card}>
-            <CardHeader>
-              <CardTitle>个人资料</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <div>
+          <div className={styles.card}>
+            <div>
+              <div>个人资料</div>
+            </div>
+            <div>
               <form onSubmit={handleProfileUpdate} >
                 <div >
                   <label >头像 URL</label>
-                  <Input
+                  <input
                     placeholder="https://example.com/avatar.jpg"
-                    value={formValues.avatar_url}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormValues((v) => ({ ...v, avatar_url: e.target.value }))}
                   />
                 </div>
@@ -110,37 +108,34 @@ export function AccountSettings() {
                 </div>
                 <div >
                   <label >昵称</label>
-                  <Input
-                    value={formValues.name}
+                  <input
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormValues((v) => ({ ...v, name: e.target.value }))}
                   />
                 </div>
                 <div >
                   <label >邮箱</label>
-                  <Input
-                    disabled
-                    value={formValues.email}
+                  <input
                   />
                 </div>
-                <Button type="submit" disabled={loading}>
+                <button type="submit">
                   保存
-                </Button>
+                </button>
               </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="subscription">
-          <Card className={styles.card}>
-            <CardHeader>
-              <CardTitle>当前套餐</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex-col">
+        <div>
+          <div className={styles.card}>
+            <div>
+              <div>当前套餐</div>
+            </div>
+            <div>
+              <div >
                 <div className={styles.planInfo}>
                   <h3 >
                     {planLabels[user.plan]}
-                    <Badge className={planColors[user.plan]}>{user.plan}</Badge>
+                    <span className={planColors[user.plan]}>{user.plan}</span>
                   </h3>
                   {plan && (
                     <>
@@ -153,92 +148,92 @@ export function AccountSettings() {
                       </p>
                     </>
                   )}
-                  <Button>升级套餐</Button>
+                  <button>升级套餐</button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="team">
-          <Card className={styles.card}>
-            <CardHeader>
-              <CardTitle>团队</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <div>
+          <div className={styles.card}>
+            <div>
+              <div>团队</div>
+            </div>
+            <div>
               {teams.length === 0 ? (
-                <div className="border">
-                  <Users className="shrink-0" />
+                <div >
+                  <Users  />
                   <div>
                     <span >暂无团队</span>
                     <span >您可以创建一个团队进行协作</span>
-                    <Button size="sm" >创建团队</Button>
+                    <button >创建团队</button>
                   </div>
                 </div>
               ) : (
                 teams.map((team) => (
-                  <Card key={team.id} className={styles.teamCard}>
-                    <CardHeader>
-                      <CardTitle>{team.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  <div key={team.id} className={styles.teamCard}>
+                    <div>
+                      <div>{team.name}</div>
+                    </div>
+                    <div>
                       <span >所有者: {team.owner_id}</span>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ))
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="sync">
-          <Card className={styles.card}>
-            <CardHeader>
-              <CardTitle>多端同步</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border">
-                <Cloud className="shrink-0" />
+        <div>
+          <div className={styles.card}>
+            <div>
+              <div>多端同步</div>
+            </div>
+            <div>
+              <div >
+                <Cloud  />
                 <div>
                   <span >同步功能</span>
                   <span >同步您的设置、工作区元数据和任务元数据到云端</span>
                 </div>
               </div>
               <div >
-                <Switch defaultChecked />
+                <button defaultChecked />
                 <span >启用云同步</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        </div>
 
-        <TabsContent value="privacy">
-          <Card className={styles.card}>
-            <CardHeader>
-              <CardTitle>隐私设置</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border">
-                <Shield className="shrink-0" />
+        <div>
+          <div className={styles.card}>
+            <div>
+              <div>隐私设置</div>
+            </div>
+            <div>
+              <div >
+                <Shield  />
                 <div>
                   <span >遥测数据收集</span>
                   <span >我们收集性能数据以改进产品体验，不会收集您的文件内容或个人数据</span>
                 </div>
               </div>
-              <div className="flex-col">
+              <div >
                 <div >
-                  <Switch defaultChecked />
+                  <button defaultChecked />
                   <span >允许性能遥测 (FPS、延迟等)</span>
                 </div>
                 <div >
-                  <Switch />
+                  <button />
                   <span >允许崩溃报告上传</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -266,24 +261,22 @@ function LoginPanel({ onLogin }: LoginPanelProps) {
     <form onSubmit={handleLogin} >
       <div >
         <label >邮箱</label>
-        <Input
+        <input
           placeholder="your@email.com"
-          value={loginValues.email}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginValues((v) => ({ ...v, email: e.target.value }))}
         />
       </div>
       <div >
         <label >密码</label>
-        <Input
+        <input
           type="password"
           placeholder="密码"
-          value={loginValues.password}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginValues((v) => ({ ...v, password: e.target.value }))}
         />
       </div>
-      <Button type="submit" disabled={loading}>
+      <button type="submit">
         登录
-      </Button>
+      </button>
     </form>
   )
 }

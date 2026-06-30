@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GeoWork — 设置中心 &amp; 用量统计设计稿</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--gw-bg-body);
+    color: var(--gw-text-primary);
+    font-size: var(--gw-font-size-base);
+    line-height: var(--gw-line-height-normal);
+    min-height: 100vh; padding: 0;
+  }
+  .theme-toggle {
+    position: fixed; top: 12px; right: 16px; z-index: 9999;
+    background: var(--gw-bg-elevated); border: 1px solid var(--gw-border-default);
+    border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer;
+    color: var(--gw-text-secondary); gap: 6px; display: flex; align-items: center;
+  }
+
+  /* ── Settings Layout ── */
+  .settings-layout { display: flex; height: 100vh; overflow: hidden; }
+
+  .settings-nav {
+    width: 220px; background: var(--gw-bg-sidebar); border-right: 1px solid var(--gw-border-default);
+    padding: 16px 8px; overflow-y: auto; flex-shrink: 0;
+  }
+  .settings-nav-title {
+    font-size: 16px; font-weight: 600; padding: 4px 8px 14px;
+    color: var(--gw-text-primary);
+  }
+  .nav-group-label {
+    font-size: 10px; font-weight: 600; color: var(--gw-text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    padding: 10px 8px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    height: 34px; padding: 0 10px; border-radius: var(--gw-border-radius);
+    font-size: 13px; color: var(--gw-text-secondary); cursor: pointer;
+    transition: all var(--gw-transition-fast);
+    border: none; background: transparent; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--gw-bg-hover); color: var(--gw-text-primary); }
+  .nav-item.active { background: var(--gw-bg-active); color: var(--gw-color-primary-6); font-weight: 500; }
+  .nav-item .nav-icon { font-size: 15px; flex-shrink: 0; }
+  .nav-item .nav-badge { margin-left: auto; font-size: 10px; background: var(--gw-color-error); color: white; padding: 0 5px; border-radius: 8px; }
+
+  .settings-main {
+    flex: 1; overflow-y: auto; padding: 28px 36px;
+  }
+  .settings-main::-webkit-scrollbar { width: 6px; }
+  .settings-main::-webkit-scrollbar-thumb { background: var(--gw-border-default); border-radius: 3px; }
+
+  /* ── Settings Content ── */
+  .setting-page-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .setting-page-subtitle { font-size: 13px; color: var(--gw-text-secondary); margin-bottom: 28px; }
+
+  .setting-card {
+    background: var(--gw-bg-container);
+    border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-xl);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-subtitle { font-size: 12px; color: var(--gw-text-secondary); margin-bottom: 16px; }
+
+  /* Form elements */
+  .form-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gw-border-light); }
+  .form-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .form-row:first-child { padding-top: 0; }
+  .form-row-stack { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid var(--gw-border-light); gap: 8px; }
+  .form-row-stack:last-child { border-bottom: none; }
+
+  .form-label { font-size: 13px; color: var(--gw-text-primary); font-weight: 500; }
+  .form-desc { font-size: 11px; color: var(--gw-text-secondary); margin-top: 2px; }
+  .form-control { display: flex; align-items: center; gap: 8px; }
+
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: var(--gw-border-strong); cursor: pointer; position: relative;
+    transition: background var(--gw-transition-fast); border: none; flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--gw-color-primary-6); }
+  .toggle-switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: white;
+    transition: left var(--gw-transition-fast); box-shadow: var(--gw-shadow-xs);
+  }
+  .toggle-switch.on::after { left: 21px; }
+
+  .form-select {
+    height: 30px; padding: 0 10px; border-radius: var(--gw-border-radius);
+    border: 1px solid var(--gw-border-default); background: var(--gw-bg-container);
+    font-size: 12px; color: var(--gw-text-primary); cursor: pointer; outline: none;
+    font-family: inherit;
+  }
+  .form-input-sm {
+    height: 30px; padding: 0 10px; border-radius: var(--gw-border-radius);
+    border: 1px solid var(--gw-border-default); background: var(--gw-bg-container);
+    font-size: 12px; color: var(--gw-text-primary); outline: none; font-family: inherit;
+    transition: border-color var(--gw-transition-fast);
+  }
+  .form-input-sm:focus { border-color: var(--gw-color-primary-6); }
+
+  /* Theme Picker */
+  .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .theme-option {
+    border: 2px solid var(--gw-border-default); border-radius: var(--gw-border-radius-lg);
+    padding: 12px; cursor: pointer; text-align: center; transition: all var(--gw-transition-fast);
+  }
+  .theme-option:hover { border-color: var(--gw-color-primary-6); }
+  .theme-option.selected { border-color: var(--gw-color-primary-6); background: var(--gw-bg-active); }
+  .theme-preview {
+    width: 100%; height: 54px; border-radius: var(--gw-border-radius); margin-bottom: 8px; overflow: hidden;
+    display: flex; flex-direction: column; border: 1px solid var(--gw-border-light);
+  }
+  .preview-topbar { height: 14px; flex-shrink: 0; }
+  .preview-body { flex: 1; display: flex; }
+  .preview-sidebar { width: 30%; }
+  .preview-main { flex: 1; }
+  .theme-name { font-size: 12px; font-weight: 500; color: var(--gw-text-primary); }
+
+  /* Environment Check */
+  .env-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--gw-border-light); font-size: 13px;
+  }
+  .env-row:last-child { border-bottom: none; }
+  .env-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+  .env-info { flex: 1; }
+  .env-name { font-weight: 500; color: var(--gw-text-primary); }
+  .env-path { font-size: 11px; color: var(--gw-text-secondary); font-family: monospace; margin-top: 2px; }
+  .env-status {
+    font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 500;
+  }
+  .env-status.ok { background: var(--gw-color-success-bg); color: var(--gw-color-success); }
+  .env-status.warn { background: var(--gw-color-warning-bg); color: #856404; }
+  .env-status.off { background: var(--gw-bg-mask); color: var(--gw-text-tertiary); }
+  .env-detect-btn {
+    height: 26px; padding: 0 10px; border-radius: var(--gw-border-radius);
+    border: 1px solid var(--gw-border-default); background: transparent;
+    color: var(--gw-text-secondary); font-size: 11px; cursor: pointer;
+  }
+  .env-detect-btn:hover { border-color: var(--gw-color-primary-6); color: var(--gw-color-primary-6); }
+
+  /* ── Usage Stats ── */
+  .usage-section { padding: 28px 36px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--gw-bg-container); border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-xl); padding: 18px 20px;
+    box-shadow: var(--gw-shadow-xs);
+  }
+  .stat-label { font-size: 11px; color: var(--gw-text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--gw-text-primary); margin-bottom: 4px; }
+  .stat-trend { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .stat-trend.up { color: var(--gw-color-success); }
+  .stat-trend.down { color: var(--gw-color-error); }
+  .stat-trend.neutral { color: var(--gw-text-secondary); }
+
+  /* Usage Bar Chart placeholder */
+  .chart-card {
+    background: var(--gw-bg-container); border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-xl); padding: 20px 24px; margin-bottom: 20px;
+    box-shadow: var(--gw-shadow-xs);
+  }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .chart-title { font-size: 14px; font-weight: 600; }
+  .chart-filters { display: flex; gap: 6px; }
+  .chart-filter {
+    height: 26px; padding: 0 12px; border-radius: var(--gw-border-radius-sm);
+    border: 1px solid var(--gw-border-default); background: transparent;
+    font-size: 11px; color: var(--gw-text-secondary); cursor: pointer;
+  }
+  .chart-filter.active { background: var(--gw-bg-active); border-color: var(--gw-color-primary-6); color: var(--gw-color-primary-6); }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding: 0 4px; }
+  .bar-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .bar {
+    width: 100%; border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, var(--gw-color-primary-5), var(--gw-color-primary-7));
+    transition: opacity var(--gw-transition-fast);
+    min-height: 4px;
+  }
+  .bar:hover { opacity: 0.8; }
+  .bar.qgis { background: linear-gradient(180deg, #6abf43, #589632); }
+  .bar.gee { background: linear-gradient(180deg, #4a90e2, #4285F4); }
+  .bar.paper { background: linear-gradient(180deg, #a66de0, #6f42c1); }
+  .bar-label { font-size: 9px; color: var(--gw-text-tertiary); white-space: nowrap; }
+  .bar-val { font-size: 9px; color: var(--gw-text-secondary); }
+
+  /* Model usage table */
+  .usage-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .usage-table th { text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 600; color: var(--gw-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--gw-border-default); background: var(--gw-bg-elevated); }
+  .usage-table td { padding: 10px; border-bottom: 1px solid var(--gw-border-light); }
+  .usage-table tr:last-child td { border-bottom: none; }
+  .usage-table tr:hover td { background: var(--gw-bg-hover); }
+  .progress-bar { height: 6px; background: var(--gw-border-default); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* Automation / Schedule */
+  .automation-list { display: flex; flex-direction: column; gap: 10px; }
+  .automation-item {
+    background: var(--gw-bg-container); border: 1px solid var(--gw-border-default);
+    border-radius: var(--gw-border-radius-lg); padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all var(--gw-transition-fast);
+  }
+  .automation-item:hover { box-shadow: var(--gw-shadow-sm); }
+  .auto-icon { font-size: 18px; flex-shrink: 0; }
+  .auto-info { flex: 1; }
+  .auto-name { font-size: 13px; font-weight: 500; color: var(--gw-text-primary); }
+  .auto-cron { font-size: 11px; color: var(--gw-text-secondary); font-family: monospace; margin-top: 2px; }
+  .auto-next { font-size: 11px; color: var(--gw-text-tertiary); }
+  .auto-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+  }
+  .auto-badge.on { background: var(--gw-color-success-bg); color: var(--gw-color-success); }
+  .auto-badge.off { background: var(--gw-bg-mask); color: var(--gw-text-tertiary); }
+
+  .annotation {
+    position: fixed; bottom: 16px; right: 16px;
+    background: var(--gw-color-neutral-11); color: var(--gw-text-inverse);
+    font-size: 11px; padding: 6px 12px; border-radius: var(--gw-border-radius);
+    box-shadow: var(--gw-shadow-md); z-index: 9998;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">
+  <span id="theme-icon">☀️</span> <span id="theme-label">亮色</span>
+</button>
+
+<!-- ═══════════════════ SETTINGS ═══════════════════ -->
+<div class="settings-layout">
+
+  <!-- Nav -->
+  <div class="settings-nav">
+    <div class="settings-nav-title">设置</div>
+
+    <div class="nav-group-label">账户</div>
+    <button class="nav-item"><span class="nav-icon">👤</span> 个人信息</button>
+    <button class="nav-item"><span class="nav-icon">🔒</span> 账户与安全</button>
+
+    <div class="nav-group-label">外观</div>
+    <button class="nav-item active"><span class="nav-icon">🎨</span> 外观主题</button>
+    <button class="nav-item"><span class="nav-icon">🔤</span> 字体与布局</button>
+
+    <div class="nav-group-label">模型</div>
+    <button class="nav-item"><span class="nav-icon">🤖</span> 模型与 API</button>
+    <button class="nav-item"><span class="nav-icon">⚙</span> Agent 行为</button>
+
+    <div class="nav-group-label">环境</div>
+    <button class="nav-item"><span class="nav-icon">🐍</span> 本地环境</button>
+    <button class="nav-item"><span class="nav-icon">📁</span> 工作空间</button>
+    <button class="nav-item"><span class="nav-icon">📚</span> 知识库</button>
+
+    <div class="nav-group-label">扩展</div>
+    <button class="nav-item"><span class="nav-icon">🧩</span> 插件与扩展</button>
+    <button class="nav-item"><span class="nav-icon">⏱</span> 自动化</button>
+    <button class="nav-item"><span class="nav-icon">🔔</span> 通知</button>
+
+    <div class="nav-group-label">安全</div>
+    <button class="nav-item"><span class="nav-icon">🛡️</span> 安全与权限</button>
+    <button class="nav-item"><span class="nav-icon">📊</span> 数据与隐私</button>
+
+    <div class="nav-group-label">其他</div>
+    <button class="nav-item"><span class="nav-icon">ℹ️</span> 关于 GeoWork</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="settings-main">
+    <div class="setting-page-title">外观主题</div>
+    <div class="setting-page-subtitle">自定义 GeoWork 的视觉风格，支持亮色、暗色与跟随系统</div>
+
+    <!-- Theme Selection -->
+    <div class="setting-card">
+      <div class="card-title">🎨 主题</div>
+      <div class="theme-grid">
+        <!-- Bootstrap Light -->
+        <div class="theme-option selected" title="Bootstrap 亮色主题">
+          <div class="theme-preview">
+            <div class="preview-topbar" style="background:#ffffff;border-bottom:1px solid #dee2e6;"></div>
+            <div class="preview-body">
+              <div class="preview-sidebar" style="background:#f1f3f5;"></div>
+              <div class="preview-main" style="background:#f8f9fa;"></div>
+            </div>
+          </div>
+          <div class="theme-name">Bootstrap 亮色</div>
+          <div style="font-size:10px;color:var(--gw-color-primary-6);margin-top:2px;">● 当前选中</div>
+        </div>
+        <!-- Ant Design Dark -->
+        <div class="theme-option" title="Ant Design 暗色主题">
+          <div class="theme-preview">
+            <div class="preview-topbar" style="background:#1d1d1d;border-bottom:1px solid rgba(255,255,255,0.12);"></div>
+            <div class="preview-body">
+              <div class="preview-sidebar" style="background:#161616;"></div>
+              <div class="preview-main" style="background:#141414;"></div>
+            </div>
+          </div>
+          <div class="theme-name">Ant Design 暗色</div>
+          <div style="font-size:10px;color:var(--gw-text-tertiary);margin-top:2px;">跟随系统</div>
+        </div>
+        <!-- Auto -->
+        <div class="theme-option" title="跟随系统">
+          <div class="theme-preview" style="overflow:hidden;">
+            <div style="display:flex;height:100%;">
+              <div style="flex:1;background:#f8f9fa;"></div>
+              <div style="flex:1;background:#141414;"></div>
+            </div>
+          </div>
+          <div class="theme-name">自动 / 跟随系统</div>
+          <div style="font-size:10px;color:var(--gw-text-tertiary);margin-top:2px;">智能切换</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Font & Layout -->
+    <div class="setting-card">
+      <div class="card-title">🔤 字体与布局</div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">UI 字号</div>
+          <div class="form-desc">正文字号，影响大部分 UI 元素</div>
+        </div>
+        <div class="form-control">
+          <select class="form-select">
+            <option>12px · 紧凑</option>
+            <option selected>14px · 标准</option>
+            <option>15px · 舒适</option>
+            <option>16px · 宽松</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">代码字体</div>
+          <div class="form-desc">终端、代码块使用的等宽字体</div>
+        </div>
+        <div class="form-control">
+          <select class="form-select">
+            <option selected>JetBrains Mono</option>
+            <option>Fira Code</option>
+            <option>Consolas</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">侧栏默认状态</div>
+          <div class="form-desc">启动时侧栏是否展开</div>
+        </div>
+        <div class="form-control">
+          <button class="toggle-switch on" title="展开"></button>
+          <span style="font-size:12px;color:var(--gw-text-secondary);">展开</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <div class="form-label">对话缩略图（Minimap）</div>
+          <div class="form-desc">在长对话右侧显示缩略导航</div>
+        </div>
+        <div class="form-control">
+          <button class="toggle-switch" title="关闭"></button>
+          <span style="font-size:12px;color:var(--gw-text-secondary);">关闭</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Local Env -->
+    <div class="setting-card">
+      <div class="card-title">🐍 本地环境检测</div>
+      <div class="card-subtitle">GeoWork 需要以下本地环境支持，点击「检测」重新扫描</div>
+      <div class="env-row">
+        <div class="env-icon">🗺️</div>
+        <div class="env-info">
+          <div class="env-name">QGIS</div>
+          <div class="env-path">C:\Program Files\QGIS 3.36\bin\qgis.exe</div>
+        </div>
+        <span class="env-status ok">✓ 3.36.0</span>
+        <button class="env-detect-btn">重新检测</button>
+      </div>
+      <div class="env-row">
+        <div class="env-icon">🐍</div>
+        <div class="env-info">
+          <div class="env-name">Python (GeoWork Env)</div>
+          <div class="env-path">C:\Users\user\.conda\envs\geowork\python.exe</div>
+        </div>
+        <span class="env-status ok">✓ 3.11.8</span>
+        <button class="env-detect-btn">重新检测</button>
+      </div>
+      <div class="env-row">
+        <div class="env-icon">🛰️</div>
+        <div class="env-info">
+          <div class="env-name">Google Earth Engine</div>
+          <div class="env-path">earthengine auth — 已认证账户</div>
+        </div>
+        <span class="env-status ok">✓ 已认证</span>
+        <button class="env-detect-btn">重新认证</button>
+      </div>
+      <div class="env-row">
+        <div class="env-icon">🌍</div>
+        <div class="env-info">
+          <div class="env-name">GDAL / OGR</div>
+          <div class="env-path">QGIS 内置 GDAL</div>
+        </div>
+        <span class="env-status ok">✓ 3.8.4</span>
+        <button class="env-detect-btn">重新检测</button>
+      </div>
+      <div class="env-row">
+        <div class="env-icon">📝</div>
+        <div class="env-info">
+          <div class="env-name">LibreOffice (报告导出)</div>
+          <div class="env-path">未检测到安装路径</div>
+        </div>
+        <span class="env-status warn">⚠ 未安装</span>
+        <button class="env-detect-btn">下载安装</button>
+      </div>
+    </div>
+
+    <!-- Automation -->
+    <div class="setting-card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        ⏱ 定时任务
+        <button style="height:28px;padding:0 12px;border-radius:var(--gw-border-radius);border:none;background:var(--gw-color-primary-6);color:white;font-size:12px;cursor:pointer;">＋ 新增</button>
+      </div>
+      <div class="automation-list">
+        <div class="automation-item">
+          <div class="auto-icon">🌿</div>
+          <div class="auto-info">
+            <div class="auto-name">每日 NDVI 监测 — 成都市</div>
+            <div class="auto-cron">0 9 * * * (每天 09:00)</div>
+            <div class="auto-next">下次运行：明天 09:00</div>
+          </div>
+          <span class="auto-badge on">启用</span>
+          <button style="font-size:13px;background:transparent;border:none;cursor:pointer;color:var(--gw-text-tertiary);">⋮</button>
+        </div>
+        <div class="automation-item">
+          <div class="auto-icon">📚</div>
+          <div class="auto-info">
+            <div class="auto-name">遥感论文推送 — Sentinel-2 城市</div>
+            <div class="auto-cron">0 10 * * 1 (每周一 10:00)</div>
+            <div class="auto-next">下次运行：下周一</div>
+          </div>
+          <span class="auto-badge on">启用</span>
+          <button style="font-size:13px;background:transparent;border:none;cursor:pointer;color:var(--gw-text-tertiary);">⋮</button>
+        </div>
+        <div class="automation-item" style="opacity:0.6;">
+          <div class="auto-icon">📊</div>
+          <div class="auto-info">
+            <div class="auto-name">月度遥感分析汇报</div>
+            <div class="auto-cron">0 9 1 * * (每月1日 09:00)</div>
+            <div class="auto-next">已暂停</div>
+          </div>
+          <span class="auto-badge off">暂停</span>
+          <button style="font-size:13px;background:transparent;border:none;cursor:pointer;color:var(--gw-text-tertiary);">⋮</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ USAGE STATS ════════════ -->
+    <div class="setting-page-title" style="margin-top:36px;">用量统计</div>
+    <div class="setting-page-subtitle">当前计费周期内的 Token 消耗、成本分析与模型使用详情</div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">本月消耗 Tokens</div>
+        <div class="stat-value" style="color:var(--gw-color-primary-6);">2.4M</div>
+        <div class="stat-trend up">↑ +18% vs 上月</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本月费用 (估算)</div>
+        <div class="stat-value">¥ 38.2</div>
+        <div class="stat-trend neutral">≈ 日均 ¥1.27</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本月任务数</div>
+        <div class="stat-value">142</div>
+        <div class="stat-trend up">↑ +23 vs 上月</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">平均任务耗时</div>
+        <div class="stat-value">12.4s</div>
+        <div class="stat-trend down">↓ 优化 -2.1s</div>
+      </div>
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">日均 Token 消耗（近 14 天）</div>
+        <div class="chart-filters">
+          <button class="chart-filter active">14天</button>
+          <button class="chart-filter">30天</button>
+          <button class="chart-filter">90天</button>
+        </div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-item"><div class="bar" style="height:55px;"></div><div class="bar-label">6/16</div></div>
+        <div class="bar-item"><div class="bar gee" style="height:70px;"></div><div class="bar-label">6/17</div></div>
+        <div class="bar-item"><div class="bar" style="height:45px;"></div><div class="bar-label">6/18</div></div>
+        <div class="bar-item"><div class="bar qgis" style="height:88px;"></div><div class="bar-label">6/19</div></div>
+        <div class="bar-item"><div class="bar paper" style="height:40px;"></div><div class="bar-label">6/20</div></div>
+        <div class="bar-item"><div class="bar" style="height:30px;"></div><div class="bar-label">6/21</div></div>
+        <div class="bar-item"><div class="bar" style="height:22px;"></div><div class="bar-label">6/22</div></div>
+        <div class="bar-item"><div class="bar gee" style="height:96px;"></div><div class="bar-label">6/23</div></div>
+        <div class="bar-item"><div class="bar" style="height:60px;"></div><div class="bar-label">6/24</div></div>
+        <div class="bar-item"><div class="bar qgis" style="height:78px;"></div><div class="bar-label">6/25</div></div>
+        <div class="bar-item"><div class="bar" style="height:55px;"></div><div class="bar-label">6/26</div></div>
+        <div class="bar-item"><div class="bar paper" style="height:50px;"></div><div class="bar-label">6/27</div></div>
+        <div class="bar-item"><div class="bar" style="height:72px;"></div><div class="bar-label">6/28</div></div>
+        <div class="bar-item"><div class="bar" style="height:85px;opacity:0.6;"></div><div class="bar-label">今天</div></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gw-text-secondary);"><span style="width:10px;height:10px;border-radius:3px;background:linear-gradient(180deg,#4d8ef9,#0950b2);display:inline-block;"></span>一般任务</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gw-text-secondary);"><span style="width:10px;height:10px;border-radius:3px;background:linear-gradient(180deg,#4a90e2,#4285F4);display:inline-block;"></span>GEE 任务</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gw-text-secondary);"><span style="width:10px;height:10px;border-radius:3px;background:linear-gradient(180deg,#6abf43,#589632);display:inline-block;"></span>QGIS 分析</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gw-text-secondary);"><span style="width:10px;height:10px;border-radius:3px;background:linear-gradient(180deg,#a66de0,#6f42c1);display:inline-block;"></span>论文写作</div>
+      </div>
+    </div>
+
+    <!-- Model Usage Table -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">模型消耗明细</div>
+        <div style="font-size:12px;color:var(--gw-text-secondary);">本月计费周期</div>
+      </div>
+      <table class="usage-table">
+        <thead>
+          <tr>
+            <th>模型</th>
+            <th>供应商</th>
+            <th>输入 Tokens</th>
+            <th>输出 Tokens</th>
+            <th>占比</th>
+            <th>费用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>qwen3.7-max</strong></td>
+            <td style="color:var(--gw-text-secondary);font-size:12px;">Qwen</td>
+            <td>840K</td>
+            <td>420K</td>
+            <td>
+              <div style="font-size:12px;color:var(--gw-text-secondary);margin-bottom:3px;">52%</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:52%;background:var(--gw-color-primary-6);"></div></div>
+            </td>
+            <td style="font-weight:600;color:var(--gw-color-primary-6);">¥19.9</td>
+          </tr>
+          <tr>
+            <td><strong>deepseek-v3</strong></td>
+            <td style="color:var(--gw-text-secondary);font-size:12px;">DeepSeek</td>
+            <td>520K</td>
+            <td>260K</td>
+            <td>
+              <div style="font-size:12px;color:var(--gw-text-secondary);margin-bottom:3px;">32%</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:32%;background:#6f42c1;"></div></div>
+            </td>
+            <td style="font-weight:600;color:var(--gw-color-primary-6);">¥10.5</td>
+          </tr>
+          <tr>
+            <td><strong>qwen3-coder-plus</strong></td>
+            <td style="color:var(--gw-text-secondary);font-size:12px;">Qwen</td>
+            <td>260K</td>
+            <td>108K</td>
+            <td>
+              <div style="font-size:12px;color:var(--gw-text-secondary);margin-bottom:3px;">16%</div>
+              <div class="progress-bar"><div class="progress-fill" style="width:16%;background:#589632;"></div></div>
+            </td>
+            <td style="font-weight:600;color:var(--gw-color-primary-6);">¥7.8</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="annotation">设计稿 · 设置中心 &amp; 用量统计 · Ant Design v6</div>
+
+<script>
+let isDark = false;
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isDark ? '暗色' : '亮色';
+}
+document.querySelectorAll('.toggle-switch').forEach(btn => {
+  btn.addEventListener('click', () => btn.classList.toggle('on'));
+});
+document.querySelectorAll('.theme-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+</script>
+</body>
+</html>

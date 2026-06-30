@@ -124,23 +124,22 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
           </span>
         </div>
         <div className={styles.headerFilters}>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className={styles.categorySelect}>
-              <SelectValue placeholder="分类" />
-            </SelectTrigger>
-            <SelectContent>
+          <select>
+            <div className={styles.categorySelect}>
+              <span placeholder="分类" />
+            </div>
+            <div>
               {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
+                <option key={cat.value}>
                   {cat.label}
-                </SelectItem>
+                </option>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </select>
           <div >
             <Search  />
-            <Input
+            <input
               placeholder="搜索插件..."
-              value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className={`${styles.searchInput}`}
             />
@@ -150,12 +149,12 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
 
       <div className={styles.grid}>
         {isLoading ? (
-          <Empty description="加载中..." className={styles.empty} />
+          <div description="加载中..." className={styles.empty} />
         ) : filteredPlugins.length === 0 ? (
-          <Empty description="没有找到匹配的插件" className={styles.empty} />
+          <div description="没有找到匹配的插件" className={styles.empty} />
         ) : (
           filteredPlugins.map((plugin: Plugin) => (
-            <Card
+            <div
               key={plugin.id}
               className={`${styles.pluginCard} ${plugin.installed ? styles.pluginCardInstalled : ''}`}
               onClick={() => handleCardClick(plugin)}
@@ -171,7 +170,7 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
                 <div className={styles.pluginTitleWrap}>
                   <span className={styles.pluginName}>{plugin.name}</span>
                   {plugin.installed && (
-                    <Badge >已安装</Badge>
+                    <span >已安装</span>
                   )}
                 </div>
               </div>
@@ -190,15 +189,15 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
                 <div className={styles.metaRight}>
                   {getRatingStars(plugin.rating)}
                   {plugin.installCount !== undefined && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                    <div>
+                      <span asChild>
                         <div >
                           <Download  />
                           <span>{getInstallCountText(plugin.installCount)}</span>
                         </div>
-                      </TooltipTrigger>
-                      <TooltipContent>安装次数</TooltipContent>
-                    </Tooltip>
+                      </span>
+                      <div>安装次数</div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -206,21 +205,21 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
               {plugin.permissions.length > 0 && (
                 <div className={styles.pluginPermissions}>
                   {plugin.permissions.slice(0, 3).map((perm: string) => (
-                    <Badge
+                    <span
                       key={perm}
                       className={getBadgeClass(getPermissionTagColor(perm))}
                     >
                       {perm}
-                    </Badge>
+                    </span>
                   ))}
                   {plugin.permissions.length > 3 && (
-                    <Badge variant="secondary">
+                    <span>
                       +{plugin.permissions.length - 3}
-                    </Badge>
+                    </span>
                   )}
                 </div>
               )}
-            </Card>
+            </div>
           ))
         )}
       </div>

@@ -11,7 +11,7 @@ export function ChatTimeline() {
   if (messages.length === 0) {
     return (
       <div className={styles.timeline}>
-        <Empty
+        <div
           description="暂无对话记录 — 在 Composer 中创建任务开始"
           className={styles.emptyState}
         />
@@ -21,16 +21,14 @@ export function ChatTimeline() {
 
   return (
     <div className={styles.timeline}>
-      <div className="flex-col">
+      <div >
         {messages.map((msg) => (
           <div key={msg.id} className={`${styles.messageItem} ${styles.messageCard} ${styles[`${msg.role}Msg`]} ${styles[`${msg.type}Msg`]}`}>
-            <div className="border">
+            <div >
               <div className={styles.messageHeader}>
-                <Badge variant={
-                  msg.role === 'user' ? 'info' : msg.role === 'system' ? 'danger' : 'success'
-                }>
+                <span>
                   {msg.role === 'user' ? '用户' : msg.role === 'system' ? '系统' : 'Agent'}
-                </Badge>
+                </span>
                 <span className={styles.timestamp}>
                   {new Date(msg.timestamp).toLocaleTimeString()}
                 </span>
@@ -54,11 +52,11 @@ export function ChatTimeline() {
                         </span>
                       ) : msg.toolCall.status === 'failed' ? (
                         <span className={styles.failedIndicator}>
-                          <AlertCircle className="inline" /> 失败: {msg.toolCall.toolName}
+                          <AlertCircle  /> 失败: {msg.toolCall.toolName}
                         </span>
                       ) : (
                         <span>
-                          <Terminal className="inline" /> 工具调用: {msg.toolCall.toolName}
+                          <Terminal  /> 工具调用: {msg.toolCall.toolName}
                         </span>
                       )}
                     </span>
@@ -82,21 +80,17 @@ export function ChatTimeline() {
               {msg.approval && (
                 <div className={styles.approvalCard}>
                   <div className={styles.approvalHeader}>
-                    <Badge variant={
-                      msg.approval.riskLevel === 'critical' ? 'danger' :
-                      msg.approval.riskLevel === 'high' ? 'warning' :
-                      msg.approval.riskLevel === 'medium' ? 'warning' : 'info'
-                    }>
+                    <span>
                       {msg.approval.riskLevel}
-                    </Badge>
+                    </span>
                     <span className={styles.approvalTitle}>{msg.approval.title}</span>
                   </div>
                   <p className={styles.approvalDesc}>{msg.approval.description}</p>
                   <div className={styles.approvalActions}>
-                    <Badge variant="success">允许一次</Badge>
-                    <Badge variant="info">允许本次任务</Badge>
-                    <Badge variant="danger">拒绝</Badge>
-                    <Badge variant="default">记住选择</Badge>
+                    <span>允许一次</span>
+                    <span>允许本次任务</span>
+                    <span>拒绝</span>
+                    <span>记住选择</span>
                   </div>
                 </div>
               )}

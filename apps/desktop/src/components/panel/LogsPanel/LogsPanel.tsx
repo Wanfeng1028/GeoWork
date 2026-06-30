@@ -103,58 +103,43 @@ export function LogsPanel() {
     <div className={styles.panel}>
       <div className={styles.filterSection}>
         <div className={styles.filterRow}>
-          <div className="flex-1">
-            <Filter size={14}  />
-            <Input
+          <div className={styles.searchBox}>
+            <Filter size={14} />
+            <input
               placeholder="搜索日志内容..."
-              value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              
             />
           </div>
-          <Select value={levelFilter} onValueChange={setLevelFilter as (v: string) => void}>
-            <SelectTrigger className={styles.levelSelect}>
-              <SelectValue placeholder="全部级别" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部级别</SelectItem>
-              <SelectItem value="info">信息</SelectItem>
-              <SelectItem value="debug">调试</SelectItem>
-              <SelectItem value="warn">警告</SelectItem>
-              <SelectItem value="error">错误</SelectItem>
-              <SelectItem value="fatal">致命</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={moduleFilter} onValueChange={setModuleFilter}>
-            <SelectTrigger className={styles.moduleSelect}>
-              <SelectValue placeholder="全部模块" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部模块</SelectItem>
-              {modules.map((m) => (
-                <SelectItem key={m} value={m!}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="sm"
+          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value as LogLevel | 'all')}>
+            <option value="all">全部级别</option>
+            <option value="info">信息</option>
+            <option value="debug">调试</option>
+            <option value="warn">警告</option>
+            <option value="error">错误</option>
+            <option value="fatal">致命</option>
+          </select>
+          <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)}>
+            <option value="all">全部模块</option>
+            {modules.map((m) => (
+              <option key={m}>{m}</option>
+            ))}
+          </select>
+          <button
             onClick={() => setSortByTime(sortByTime === 'asc' ? 'desc' : 'asc')}
           >
             {sortByTime === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
             {sortByTime === 'asc' ? '升序' : '降序'}
-          </Button>
+          </button>
         </div>
         <div className={styles.levelBadges}>
           {(Object.keys(LEVEL_LABELS) as LogLevel[]).map((level) => (
-            <Badge
+            <span
               key={level}
-              variant={LEVEL_VARIANT[level]}
-              className={cn('cursor-pointer', levelFilter !== level && 'opacity-50')}
+              className={`${styles.levelBadge} ${levelFilter === level ? '' : 'opacity-50'}`}
               onClick={() => setLevelFilter(level)}
             >
               {LEVEL_LABELS[level]} ({levelCounts[level] || 0})
-            </Badge>
+            </span>
           ))}
         </div>
       </div>
@@ -162,15 +147,15 @@ export function LogsPanel() {
       <div className={styles.logArea}>
         {filteredLogs.length === 0 ? (
           <div className={styles.emptyLogs}>
-            <span >无匹配日志</span>
+            <span>无匹配日志</span>
           </div>
         ) : (
           <div className={styles.logEntries}>
             {filteredLogs.map((log) => (
               <div key={log.id} className={styles.logEntry}>
-                <Badge variant={LEVEL_VARIANT[log.level]}>
+                <span className={styles.logLevel}>
                   {LEVEL_LABELS[log.level]}
-                </Badge>
+                </span>
                 <span className={styles.logTimestamp}>{log.timestamp}</span>
                 <span className={styles.logModule}>[{log.module || '??'}]</span>
                 <span className={styles.logMessage}>{log.message}</span>
@@ -184,13 +169,13 @@ export function LogsPanel() {
         <span className={styles.entryCount}>
           显示 {filteredLogs.length}/{logs.length} 条
         </span>
-        <div >
-          <Button variant="ghost" size="sm" onClick={() => console.log('Log cleared')}>
+        <div className={styles.footerActions}>
+          <button onClick={() => console.log('Log cleared')}>
             <Trash2 size={14} /> 清除
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleExport}>
+          </button>
+          <button onClick={handleExport}>
             <Download size={14} /> 导出
-          </Button>
+          </button>
         </div>
       </div>
     </div>

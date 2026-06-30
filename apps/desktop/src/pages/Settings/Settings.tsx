@@ -11,16 +11,11 @@ const TABS = [
   { key: 'agent', label: 'Agent 行为', icon: Bot },
 ]
 
-const THEMES: { value: GeoWorkTheme; label: string }[] = [
-  { value: 'dark', label: '深色 · 默认' },
+// TODO: Replace theme grid with Ant Design components in the next phase.
+const THEMES = [
+  { value: 'dark', label: '深色' },
   { value: 'light', label: '浅色' },
   { value: 'auto', label: '跟随系统' },
-  { value: 'dark-glass', label: '深色 · 清透' },
-  { value: 'light-glass', label: '浅色 · 清透' },
-  { value: 'classic-dark', label: '深色 · 经典' },
-  { value: 'classic-light', label: '浅色 · 经典' },
-  { value: 'dark-parchment', label: '深色 · 羊皮纸' },
-  { value: 'light-parchment', label: '浅色 · 羊皮纸' },
 ]
 
 export function SettingsPage() {
@@ -66,21 +61,21 @@ export function SettingsPage() {
             <div className={styles.settingsStack}>
               <Section title="默认配置" icon={<SettingsIcon size={15} />}>
                 <SettingRow label="默认提供商" description="用于新建任务的默认模型服务。">
-                  <Select>
-                    <SelectTrigger><SelectValue placeholder="选择提供商" /></SelectTrigger>
-                    <SelectContent>
-                      {settings.modelApi.providers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <select>
+                    <div><span placeholder="选择提供商" /></div>
+                    <div>
+                      {settings.modelApi.providers.map((p: any) => <option key={p.id}>{p.name}</option>)}
+                    </div>
+                  </select>
                 </SettingRow>
-                <SettingRow label="启用缓存" description="缓存模型配置和短期响应上下文。"><Switch /></SettingRow>
+                <SettingRow label="启用缓存" description="缓存模型配置和短期响应上下文。"><button /></SettingRow>
               </Section>
 
               {settings.modelApi.providers.map((provider: any) => (
                 <Section key={provider.id} title={provider.name} icon={<KeyRound size={15} />}>
-                  <SettingRow label="Base URL"><Input defaultValue={provider.baseUrl} placeholder="https://api.example.com/v1" /></SettingRow>
-                  <SettingRow label="默认模型"><Input defaultValue={provider.defaultModel} placeholder="gpt-4o" /></SettingRow>
-                  <SettingRow label="启用"><Switch defaultChecked={provider.enabled} /></SettingRow>
+                  <SettingRow label="Base URL"><input placeholder="https://api.example.com/v1" /></SettingRow>
+                  <SettingRow label="默认模型"><input placeholder="gpt-4o" /></SettingRow>
+                  <SettingRow label="启用"><button defaultChecked={provider.enabled} /></SettingRow>
                 </Section>
               ))}
             </div>
@@ -104,35 +99,35 @@ export function SettingsPage() {
               </Section>
               <Section title="显示" icon={<SlidersHorizontal size={15} />} compact>
                 <SettingRow label="字体大小" description="默认字体大小。"><span className={styles.settingValue}>14px</span></SettingRow>
-                <SettingRow label="对话缩略图"><Switch /></SettingRow>
-                <SettingRow label="紧凑侧栏"><Switch /></SettingRow>
+                <SettingRow label="对话缩略图"><button /></SettingRow>
+                <SettingRow label="紧凑侧栏"><button /></SettingRow>
               </Section>
             </div>
           )}
 
           {activeTab === 'workspace' && (
             <Section title="工作区" icon={<FolderOpen size={15} />}>
-              <SettingRow label="工作区路径"><Input placeholder="选择工作区根目录" /></SettingRow>
-              <SettingRow label="自动保存"><Switch /></SettingRow>
-              <SettingRow label="自动保存间隔"><Input type="number" min={10} placeholder="300" /></SettingRow>
+              <SettingRow label="工作区路径"><input placeholder="选择工作区根目录" /></SettingRow>
+              <SettingRow label="自动保存"><button /></SettingRow>
+              <SettingRow label="自动保存间隔"><input type="number" min={10} placeholder="300" /></SettingRow>
             </Section>
           )}
 
           {activeTab === 'agent' && (
             <Section title="Agent 行为" icon={<Bot size={15} />}>
               <SettingRow label="默认权限级别">
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="选择权限" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full">完全</SelectItem>
-                    <SelectItem value="limited">受限</SelectItem>
-                    <SelectItem value="sandbox">沙箱</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select>
+                  <div><span placeholder="选择权限" /></div>
+                  <div>
+                    <option>完全</option>
+                    <option>受限</option>
+                    <option>沙箱</option>
+                  </div>
+                </select>
               </SettingRow>
               <SettingRow label="默认模式"><span className={styles.settingValue}>General</span></SettingRow>
-              <SettingRow label="最大步骤数"><Input type="number" min={10} placeholder="200" /></SettingRow>
-              <SettingRow label="超时时间"><Input type="number" min={60} placeholder="300" /></SettingRow>
+              <SettingRow label="最大步骤数"><input type="number" min={10} placeholder="200" /></SettingRow>
+              <SettingRow label="超时时间"><input type="number" min={60} placeholder="300" /></SettingRow>
             </Section>
           )}
         </main>

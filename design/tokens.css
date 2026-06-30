@@ -1,0 +1,295 @@
+/**
+ * GeoWork Design Tokens
+ * UI Framework: Ant Design v6
+ * Light Theme: Bootstrap (Ant Design Theme Editor)
+ * Dark Theme: Dark / Ant Design Dark Theme
+ *
+ * Brand Colors (from README):
+ *   Deep Navy  #071225
+ *   Geo Cyan   #8BFFE2
+ *   Signal Blue #3AD9FF
+ *   Sand Gold  #F4D77E
+ */
+
+/* ============================================================
+   LIGHT THEME — Bootstrap (Ant Design v6 Bootstrap Preset)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+
+  /* ---------- Brand Identity ---------- */
+  --gw-brand-navy:     #071225;
+  --gw-brand-cyan:     #8BFFE2;
+  --gw-brand-blue:     #3AD9FF;
+  --gw-brand-gold:     #F4D77E;
+
+  /* ---------- Primary (Bootstrap Blue → #0D6EFD) ---------- */
+  --gw-color-primary-1:   #e7f1ff;
+  --gw-color-primary-2:   #c4dcff;
+  --gw-color-primary-3:   #9ec3fe;
+  --gw-color-primary-4:   #70a6fc;
+  --gw-color-primary-5:   #4d8ef9;
+  --gw-color-primary-6:   #0d6efd;   /* Main */
+  --gw-color-primary-7:   #0b5fd7;
+  --gw-color-primary-8:   #0950b2;
+  --gw-color-primary-9:   #07408e;
+  --gw-color-primary-10:  #06316a;
+
+  /* ---------- Neutral / Gray ---------- */
+  --gw-color-neutral-1:  #ffffff;
+  --gw-color-neutral-2:  #f8f9fa;
+  --gw-color-neutral-3:  #f1f3f5;
+  --gw-color-neutral-4:  #e9ecef;
+  --gw-color-neutral-5:  #dee2e6;
+  --gw-color-neutral-6:  #ced4da;
+  --gw-color-neutral-7:  #adb5bd;
+  --gw-color-neutral-8:  #6c757d;
+  --gw-color-neutral-9:  #495057;
+  --gw-color-neutral-10: #343a40;
+  --gw-color-neutral-11: #212529;
+  --gw-color-neutral-12: #000000;
+
+  /* ---------- Semantic Colors ---------- */
+  --gw-color-success:        #198754;
+  --gw-color-success-bg:     #d1e7dd;
+  --gw-color-success-border: #a3cfbb;
+  --gw-color-warning:        #ffc107;
+  --gw-color-warning-bg:     #fff3cd;
+  --gw-color-warning-border: #ffecb5;
+  --gw-color-error:          #dc3545;
+  --gw-color-error-bg:       #f8d7da;
+  --gw-color-error-border:   #f1aeb5;
+  --gw-color-info:           #0dcaf0;
+  --gw-color-info-bg:        #cff4fc;
+  --gw-color-info-border:    #9eeaf9;
+
+  /* ---------- GIS / GEE Accent Colors ---------- */
+  --gw-color-gee:    #4285F4;   /* Google Earth Engine */
+  --gw-color-qgis:  #589632;   /* QGIS green */
+  --gw-color-ndvi:  #2ecc71;   /* NDVI green */
+  --gw-color-water: #3498db;   /* Water / NDWI blue */
+  --gw-color-dem:   #e67e22;   /* DEM / terrain orange */
+
+  /* ---------- Background / Surface ---------- */
+  --gw-bg-body:          #f8f9fa;
+  --gw-bg-container:     #ffffff;
+  --gw-bg-elevated:      #ffffff;
+  --gw-bg-overlay:       rgba(0, 0, 0, 0.45);
+  --gw-bg-mask:          rgba(0, 0, 0, 0.06);
+  --gw-bg-sidebar:       #f1f3f5;
+  --gw-bg-topbar:        rgba(255, 255, 255, 0.92);
+  --gw-bg-bottombar:     #f8f9fa;
+  --gw-bg-composer:      #ffffff;
+  --gw-bg-hover:         rgba(13, 110, 253, 0.06);
+  --gw-bg-active:        rgba(13, 110, 253, 0.12);
+  --gw-bg-tag:           #e7f1ff;
+  --gw-bg-code:          #f1f3f5;
+  --gw-bg-map:           #e8edf2;
+
+  /* ---------- Text ---------- */
+  --gw-text-primary:    #212529;
+  --gw-text-secondary:  #6c757d;
+  --gw-text-tertiary:   #adb5bd;
+  --gw-text-disabled:   #ced4da;
+  --gw-text-inverse:    #ffffff;
+  --gw-text-link:       #0d6efd;
+  --gw-text-heading:    #212529;
+  --gw-text-label:      #495057;
+
+  /* ---------- Border ---------- */
+  --gw-border-default:  #dee2e6;
+  --gw-border-strong:   #ced4da;
+  --gw-border-light:    #f1f3f5;
+  --gw-border-focus:    #0d6efd;
+  --gw-border-radius-sm: 4px;
+  --gw-border-radius:    6px;
+  --gw-border-radius-lg: 8px;
+  --gw-border-radius-xl: 12px;
+  --gw-border-radius-full: 9999px;
+
+  /* ---------- Shadow ---------- */
+  --gw-shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --gw-shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
+  --gw-shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --gw-shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --gw-shadow-xl: 0 16px 40px rgba(0,0,0,0.14);
+  --gw-shadow-focus: 0 0 0 3px rgba(13,110,253,0.25);
+
+  /* ---------- Spacing Scale (4px base) ---------- */
+  --gw-space-1:  4px;
+  --gw-space-2:  8px;
+  --gw-space-3:  12px;
+  --gw-space-4:  16px;
+  --gw-space-5:  20px;
+  --gw-space-6:  24px;
+  --gw-space-8:  32px;
+  --gw-space-10: 40px;
+  --gw-space-12: 48px;
+  --gw-space-16: 64px;
+  --gw-space-20: 80px;
+
+  /* ---------- Typography ---------- */
+  --gw-font-family:       -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --gw-font-family-mono:  'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+  --gw-font-family-zh:    'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+
+  --gw-font-size-xs:   11px;
+  --gw-font-size-sm:   12px;
+  --gw-font-size-base: 14px;
+  --gw-font-size-md:   15px;
+  --gw-font-size-lg:   16px;
+  --gw-font-size-xl:   18px;
+  --gw-font-size-2xl:  20px;
+  --gw-font-size-3xl:  24px;
+  --gw-font-size-4xl:  30px;
+  --gw-font-size-5xl:  36px;
+
+  --gw-font-weight-normal:   400;
+  --gw-font-weight-medium:   500;
+  --gw-font-weight-semibold: 600;
+  --gw-font-weight-bold:     700;
+
+  --gw-line-height-tight:   1.25;
+  --gw-line-height-snug:    1.375;
+  --gw-line-height-normal:  1.5;
+  --gw-line-height-relaxed: 1.625;
+  --gw-line-height-loose:   2;
+
+  /* ---------- Layout Dimensions ---------- */
+  --gw-topbar-height:     40px;
+  --gw-sidebar-width:     220px;
+  --gw-sidebar-collapsed: 0px;
+  --gw-rightdock-width:   340px;
+  --gw-bottombar-height:  200px;
+  --gw-composer-height:   120px;
+
+  /* ---------- Z-Index ---------- */
+  --gw-z-below:    -1;
+  --gw-z-base:      0;
+  --gw-z-raised:   10;
+  --gw-z-dropdown: 100;
+  --gw-z-sticky:   200;
+  --gw-z-fixed:    300;
+  --gw-z-modal:    1000;
+  --gw-z-toast:    2000;
+
+  /* ---------- Transition ---------- */
+  --gw-transition-fast:   100ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gw-transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gw-transition-slow:   350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- Ant Design v6 Token Overrides (Bootstrap) ---------- */
+  --ant-color-primary:          #0d6efd;
+  --ant-color-primary-hover:    #0b5fd7;
+  --ant-color-primary-active:   #0950b2;
+  --ant-color-bg-container:     #ffffff;
+  --ant-color-bg-layout:        #f8f9fa;
+  --ant-color-text:             #212529;
+  --ant-color-text-secondary:   #6c757d;
+  --ant-color-border:           #dee2e6;
+  --ant-border-radius:          6px;
+  --ant-font-size:              14px;
+}
+
+/* ============================================================
+   DARK THEME — Ant Design Dark
+   ============================================================ */
+[data-theme="dark"] {
+
+  /* ---------- Primary (Bootstrap Blue adapted for dark) ---------- */
+  --gw-color-primary-1:   #111a2d;
+  --gw-color-primary-2:   #1a2a4a;
+  --gw-color-primary-3:   #1e3d6a;
+  --gw-color-primary-4:   #2255a0;
+  --gw-color-primary-5:   #2d6cd4;
+  --gw-color-primary-6:   #4096ff;   /* Main (AntD dark primary) */
+  --gw-color-primary-7:   #60abff;
+  --gw-color-primary-8:   #85c1ff;
+  --gw-color-primary-9:   #aad4ff;
+  --gw-color-primary-10:  #cfe5ff;
+
+  /* ---------- Neutral / Gray (dark inverted) ---------- */
+  --gw-color-neutral-1:  #141414;
+  --gw-color-neutral-2:  #1d1d1d;
+  --gw-color-neutral-3:  #262626;
+  --gw-color-neutral-4:  #303030;
+  --gw-color-neutral-5:  #3a3a3a;
+  --gw-color-neutral-6:  #434343;
+  --gw-color-neutral-7:  #5a5a5a;
+  --gw-color-neutral-8:  #7a7a7a;
+  --gw-color-neutral-9:  #9a9a9a;
+  --gw-color-neutral-10: #b8b8b8;
+  --gw-color-neutral-11: #d4d4d4;
+  --gw-color-neutral-12: #f0f0f0;
+
+  /* ---------- Semantic Colors (dark) ---------- */
+  --gw-color-success:        #49aa19;
+  --gw-color-success-bg:     #162312;
+  --gw-color-success-border: #274916;
+  --gw-color-warning:        #d89614;
+  --gw-color-warning-bg:     #2b2111;
+  --gw-color-warning-border: #443111;
+  --gw-color-error:          #a61d24;
+  --gw-color-error-bg:       #2a1215;
+  --gw-color-error-border:   #431418;
+  --gw-color-info:           #177ddc;
+  --gw-color-info-bg:        #111d2c;
+  --gw-color-info-border:    #153450;
+
+  /* ---------- GIS / GEE Accent Colors (same hue, slightly desaturated) ---------- */
+  --gw-color-gee:    #4a90e2;
+  --gw-color-qgis:  #6abf43;
+  --gw-color-ndvi:  #3dd68c;
+  --gw-color-water: #4db8e8;
+  --gw-color-dem:   #e89a42;
+
+  /* ---------- Background / Surface (dark) ---------- */
+  --gw-bg-body:          #141414;
+  --gw-bg-container:     #1d1d1d;
+  --gw-bg-elevated:      #262626;
+  --gw-bg-overlay:       rgba(0, 0, 0, 0.65);
+  --gw-bg-mask:          rgba(255, 255, 255, 0.06);
+  --gw-bg-sidebar:       #161616;
+  --gw-bg-topbar:        rgba(20, 20, 20, 0.92);
+  --gw-bg-bottombar:     #161616;
+  --gw-bg-composer:      #1d1d1d;
+  --gw-bg-hover:         rgba(64, 150, 255, 0.08);
+  --gw-bg-active:        rgba(64, 150, 255, 0.15);
+  --gw-bg-tag:           #1a2a4a;
+  --gw-bg-code:          #0d0d0d;
+  --gw-bg-map:           #1a1e26;
+
+  /* ---------- Text (dark) ---------- */
+  --gw-text-primary:    rgba(255,255,255,0.85);
+  --gw-text-secondary:  rgba(255,255,255,0.55);
+  --gw-text-tertiary:   rgba(255,255,255,0.35);
+  --gw-text-disabled:   rgba(255,255,255,0.25);
+  --gw-text-inverse:    #141414;
+  --gw-text-link:       #4096ff;
+  --gw-text-heading:    rgba(255,255,255,0.88);
+  --gw-text-label:      rgba(255,255,255,0.65);
+
+  /* ---------- Border (dark) ---------- */
+  --gw-border-default:  rgba(255,255,255,0.12);
+  --gw-border-strong:   rgba(255,255,255,0.22);
+  --gw-border-light:    rgba(255,255,255,0.06);
+  --gw-border-focus:    #4096ff;
+
+  /* ---------- Shadow (dark) ---------- */
+  --gw-shadow-xs: 0 1px 2px rgba(0,0,0,0.30);
+  --gw-shadow-sm: 0 1px 4px rgba(0,0,0,0.45);
+  --gw-shadow-md: 0 4px 12px rgba(0,0,0,0.50);
+  --gw-shadow-lg: 0 8px 24px rgba(0,0,0,0.55);
+  --gw-shadow-xl: 0 16px 40px rgba(0,0,0,0.60);
+  --gw-shadow-focus: 0 0 0 3px rgba(64,150,255,0.25);
+
+  /* ---------- Ant Design v6 Token Overrides (Dark) ---------- */
+  --ant-color-primary:          #4096ff;
+  --ant-color-primary-hover:    #60abff;
+  --ant-color-primary-active:   #2d6cd4;
+  --ant-color-bg-container:     #1d1d1d;
+  --ant-color-bg-layout:        #141414;
+  --ant-color-text:             rgba(255,255,255,0.85);
+  --ant-color-text-secondary:   rgba(255,255,255,0.55);
+  --ant-color-border:           rgba(255,255,255,0.12);
+}

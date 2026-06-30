@@ -59,12 +59,12 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
   const isNetwork = action === 'network_request' || action === 'launch_process'
 
   return (
-    <Card className={`${styles.card} ${isCritical ? styles.critical : ''}`}>
-      <CardContent >
+    <div className={`${styles.card} ${isCritical ? styles.critical : ''}`}>
+      <div >
         {/* Critical warning banner */}
         {isCritical && (
-          <div className="border">
-            <AlertTriangle className="shrink-0" />
+          <div >
+            <AlertTriangle  />
             <div>
               <div >⚠️ 危险操作确认</div>
               <div >此操作可能影响系统安全或数据完整性，请仔细确认后再操作。</div>
@@ -78,13 +78,13 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
             <AlertCircle className={styles.warningIcon} />
             <span className={styles.title}>{title || dangerousActionLabels[action]}</span>
           </div>
-          <Badge variant="danger">需要授权</Badge>
+          <span>需要授权</span>
         </div>
 
         {/* Alert */}
         {description && (
-          <div className="border">
-            <AlertCircle className="shrink-0" />
+          <div >
+            <AlertCircle  />
             <div>
               <div >操作说明</div>
               <div >{description}</div>
@@ -96,12 +96,12 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
         <div className={styles.details}>
           <div className={styles.detailRow}>
             <span className={styles.detailLabel}>操作类型:</span>
-            <Badge variant="info">{actionLabel}</Badge>
+            <span>{actionLabel}</span>
           </div>
           {isCritical && (
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>风险等级:</span>
-              <Badge variant="danger">高 — 需谨慎</Badge>
+              <span>高 — 需谨慎</span>
             </div>
           )}
           {targetPath && (
@@ -127,7 +127,7 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
           {taskId && (
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>关联任务:</span>
-              <Badge>{taskId.slice(0, 8)}</Badge>
+              <span>{taskId.slice(0, 8)}</span>
             </div>
           )}
         </div>
@@ -145,16 +145,14 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
 
         {/* Actions */}
         <div className={styles.actions}>
-          <Textarea
+          <textarea
             className={styles.reasonInput}
             placeholder="备注（可选）"
-            value={reason}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
             rows={2}
           />
-          <div className={`${styles.actionButtons} flex-wrap`}>
-            <Button
-              variant="primary"
+          <div className={`${styles.actionButtons}`}>
+            <button
               onClick={async () => {
                 setLoading(true)
                 try {
@@ -168,9 +166,8 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
             >
               <Lock  />
               允许一次
-            </Button>
-            <Button
-              variant="secondary"
+            </button>
+            <button
               onClick={async () => {
                 setLoading(true)
                 try {
@@ -183,11 +180,11 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
             >
               <X  />
               拒绝
-            </Button>
+            </button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

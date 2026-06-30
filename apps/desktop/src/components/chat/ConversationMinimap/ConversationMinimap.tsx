@@ -219,7 +219,7 @@ export function ConversationMinimap() {
   }
 
   return (
-    <TooltipProvider>
+    <div>
       <div
         ref={containerRef}
         className={styles.minimap}
@@ -253,8 +253,8 @@ export function ConversationMinimap() {
                   }}
                   data-minimap-id={item.id}
                 >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                  <div>
+                    <span asChild>
                       <span
                         className={`${styles.navIcon} ${
                           styles[`type-${item.type}`]
@@ -263,8 +263,8 @@ export function ConversationMinimap() {
                       >
                         {ICON_MAP[item.type]}
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
+                    </span>
+                    <div side="left">
                       <div>
                         <div>{TOOLTIP_MAP[item.type]}</div>
                         {item.summary && (
@@ -274,8 +274,8 @@ export function ConversationMinimap() {
                           </div>
                         )}
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -286,7 +286,7 @@ export function ConversationMinimap() {
           <span className={styles.itemCount}>{builtItems.length} 个节点</span>
         </div>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }
 

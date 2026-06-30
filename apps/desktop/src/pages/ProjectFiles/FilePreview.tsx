@@ -86,7 +86,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (!file) {
     return (
       <div className={styles.previewEmpty}>
-        <Empty description="选择文件以预览" />
+        <div description="选择文件以预览" />
       </div>
     )
   }
@@ -94,7 +94,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (loading) {
     return (
       <div className={styles.previewLoading}>
-        <Spinner  />
+        <div  />
       </div>
     )
   }
@@ -102,7 +102,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (error) {
     return (
       <div className={styles.previewError}>
-        <Empty description={`加载失败: ${error}`} />
+        <div description={`加载失败: ${error}`} />
       </div>
     )
   }
@@ -113,15 +113,15 @@ export function FilePreview({ file }: FilePreviewProps) {
         <div className={styles.previewFileInfo}>
           {getFileIcon(file)}
           <span className={styles.previewFileName}>{file.name}</span>
-          {file.mimeType && <Badge variant="outline">{file.mimeType}</Badge>}
+          {file.mimeType && <span>{file.mimeType}</span>}
           {file.type === 'file' && file.size !== undefined && (
-            <Badge variant="secondary">{formatFileSize(file.size)}</Badge>
+            <span>{formatFileSize(file.size)}</span>
           )}
         </div>
         {file.type === 'file' && (
-          <Button size="sm" variant="outline" onClick={handleDownload}>
+          <button onClick={handleDownload}>
             <Download  /> 下载
-          </Button>
+          </button>
         )}
       </div>
 
@@ -134,8 +134,8 @@ export function FilePreview({ file }: FilePreviewProps) {
         )}
         {!imageSrc && textContent === null && (
           <div className={styles.previewBinary}>
-            <Empty description="该文件类型暂不支持预览" />
-            <div className="grid-cols-1 border rounded">
+            <div description="该文件类型暂不支持预览" />
+            <div >
               <div ><span >文件名</span><span>{file.name}</span></div>
               <div ><span >类型</span><span>{file.type}</span></div>
               {file.mimeType && <div ><span >MIME</span><span>{file.mimeType}</span></div>}

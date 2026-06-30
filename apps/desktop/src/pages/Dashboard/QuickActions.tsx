@@ -128,18 +128,18 @@ export default function QuickActions({
         ))}
       </div>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedAction?.label}</DialogTitle>
-          </DialogHeader>
+      <div>
+        <div>
+          <div>
+            <div>{selectedAction?.label}</div>
+          </div>
           {selectedAction && (
             <div className={styles.modalContent}>
               <p >{selectedAction.description}</p>
               <div>
                 <label >任务描述</label>
                 <textarea
-                  className="border"
+                  
                   placeholder="请输入任务描述..."
                   value={promptValue}
                   onChange={(e) => setPromptValue(e.target.value)}
@@ -147,12 +147,12 @@ export default function QuickActions({
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setModalOpen(false); setPromptValue('') }}>取消</Button>
-            <Button onClick={handleModalConfirm}>确认执行</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <button onClick={() => { setModalOpen(false); setPromptValue('') }}>取消</button>
+            <button onClick={handleModalConfirm}>确认执行</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
