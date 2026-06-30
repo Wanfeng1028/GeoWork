@@ -5,7 +5,7 @@ import type { Artifact, ArtifactState } from '../types/artifact'
 
 const useArtifactStore = create<ArtifactState>((set, get) => ({
   artifacts: [],
-  currentPreview: '',
+  currentPreview: null,
   isLoading: false,
 
   setArtifacts: (artifacts: Artifact[]) => {

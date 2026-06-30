@@ -30,8 +30,7 @@ export function SpeedProfileSelector() {
 
           return (
             <div key={profile.id}>
-              <span asChild>
-                <div
+              <div
                   className={`${styles.option} ${isSelected ? styles.selected : ''} ${isTurbo ? styles.turbo : ''}`}
                   onClick={() => setSelectedSpeedProfile(profile.id)}
                 >
@@ -52,7 +51,6 @@ export function SpeedProfileSelector() {
                     </span>
                   </div>
                 </div>
-              </span>
               <div >
                 {PROFILE_DESCRIPTIONS[profile.id] || profile.name}
               </div>

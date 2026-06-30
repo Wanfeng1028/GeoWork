@@ -14,9 +14,11 @@
 }
 
 .layerRail {
+  background: transparent;
 }
 
 .detailRail {
+  background: transparent;
 }
 
 .panelTitle {
@@ -34,7 +36,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background:
+  background: transparent;
 }
 
 .stageTopbar {
@@ -75,6 +77,7 @@
 }
 
 .stageActions button:hover {
+  background-color: #e0e0e0;
 }
 
 .mapCanvasWrap {

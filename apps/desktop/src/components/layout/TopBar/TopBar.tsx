@@ -95,15 +95,10 @@ export function TopBar() {
       {/* Column 1: Left cluster */}
       <div className={styles.left}>
         <div>
-          <button asChild>
-            <button className={styles.iconBtn} title="菜单">
+          <button className={styles.iconBtn} title="菜单">
               <Menu size={15} />
             </button>
-          </button>
           <div
-            side="bottom"
-            align="start"
-            sideOffset={4}
             className={styles.appMenuContent}
           >
             <button onClick={() => toast.info("已是最新版本")}>
@@ -158,8 +153,7 @@ export function TopBar() {
       {/* Column 3: Right actions */}
       <div className={styles.rightActions}>{/* GitHub */}
         <div>
-          <button asChild>
-            <button
+          <button
               className={styles.earnPill}
               type="button"
               title="Github"
@@ -169,11 +163,7 @@ export function TopBar() {
               </svg>
               <span className={styles.earnPillText}>Github</span>
             </button>
-          </button>
           <div
-            side="bottom"
-            align="end"
-            sideOffset={8}
             className={styles.githubPopover}
           >
             <div className={styles.githubCard}>
@@ -227,26 +217,21 @@ export function TopBar() {
 
         {/* Usage */}
         <div>
-          <button asChild>
-            <button className={styles.iconBtn} type="button" title="用量">
-              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
-                <path
-                  d="M8 2.8a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 0 0 0-10.4z"
-                  stroke="currentColor"
-                />
-                <path
-                  d="M8 5.2v3l2.1 1.2"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+          <button className={styles.iconBtn} type="button" title="用量">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
+              <path
+                d="M8 2.8a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 0 0 0-10.4z"
+                stroke="currentColor"
+              />
+              <path
+                d="M8 5.2v3l2.1 1.2"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
           <div
-            side="bottom"
-            align="end"
-            sideOffset={6}
             className={styles.usagePopover}
           >
             <div className={styles.usagePanel}>
@@ -352,10 +337,9 @@ export function TopBar() {
       </div>
 
       {/* Feedback dialog */}
-      <div>
-        <DialogPortal>
-          <DialogPrimitive.Overlay className={styles.feedbackOverlay} />
-          <DialogPrimitive.Content className={styles.feedbackCard}>
+      {feedbackOpen && (
+        <div className={styles.feedbackOverlay}>
+          <div className={styles.feedbackCard}>
             <QoderMiniMascot />
             <h3>问题反馈</h3>
             <p>如果您在使用过程中遇到任何问题，请随时反馈给我们。您的反馈将帮助我们不断改进和优化产品。</p>
@@ -382,10 +366,10 @@ export function TopBar() {
               <button onClick={() => setFeedbackOpen(false)}>取消</button>
               <button onClick={() => { toast.info("反馈功能开发中"); setFeedbackOpen(false); }}>提交</button>
             </div>
-            <DialogPrimitive.Close className={styles.feedbackClose}><X size={14} /></DialogPrimitive.Close>
-          </DialogPrimitive.Content>
-        </DialogPortal>
-      </div>
+            <button className={styles.feedbackClose} onClick={() => setFeedbackOpen(false)}><X size={14} /></button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

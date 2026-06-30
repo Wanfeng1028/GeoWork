@@ -102,7 +102,7 @@ export const usePaperSearchStore = create<PaperSearchState>((set, get) => ({
   total: 0,
   page: 1,
   pageSize: 20,
-  selectedPaper: '',
+  selectedPaper: null,
   isAdvancedOpen: false,
   author: undefined,
   yearFrom: undefined,

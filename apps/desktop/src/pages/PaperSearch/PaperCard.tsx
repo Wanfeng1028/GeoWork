@@ -80,5 +80,5 @@ export function PaperCard({ paper, isSelected, onSelect, onExportBibtex, onIndex
 }
 
 function IconTip({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><span asChild>{children}</span><div>{label}</div></div>
+  return <div>{children}<div>{label}</div></div>
 }

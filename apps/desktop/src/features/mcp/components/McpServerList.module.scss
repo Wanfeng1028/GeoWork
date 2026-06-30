@@ -20,28 +20,6 @@
   font-weight: 700;
 }
 
-.collapse {
-  background: transparent;
-
-  :global(.ant-collapse-header) {
-    padding: 0 !important;
-  }
-
-  :global(.ant-collapse-content-box) {
-    padding: 12px !important;
-  }
-
-  :global(.ant-collapse-content),
-  :global(.ant-collapse-item) {
-    border: 0 !important;
-    background: transparent !important;
-  }
-
-  :global(.ant-collapse-expand-icon) {
-    padding-right: 10px !important;
-  }
-}
-
 .empty {
   min-height: 224px;
   display: flex;
@@ -114,17 +92,6 @@
 
 .serverPanel {
   margin-bottom: 8px;
-
-  :global(.ant-collapse-header) {
-    min-height: 50px;
-    padding: 10px 12px !important;
-    border-radius: 8px !important;
-  }
-
-  :global(.ant-collapse-content) {
-    border-top: 0 !important;
-    border-radius: 0 0 8px 8px !important;
-  }
 }
 
 .toolsSection,

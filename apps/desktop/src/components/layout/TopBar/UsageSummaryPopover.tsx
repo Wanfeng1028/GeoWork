@@ -23,12 +23,10 @@ export function UsageSummaryPopover() {
   if (loginState !== 'authenticated' || !user) {
     return (
       <div>
-        <button asChild>
-          <button className={styles.avatarBtn} title="账号">
+        <button className={styles.avatarBtn} title="账号">
             <User size={16} />
           </button>
-        </button>
-        <div align="end" sideOffset={6} className={styles.popoverContent}>
+        <div className={styles.popoverContent}>
           <div className={styles.loginPrompt}>登录以查看账号信息</div>
         </div>
       </div>
@@ -49,12 +47,10 @@ export function UsageSummaryPopover() {
 
   return (
     <div>
-      <button asChild>
-        <button className={styles.avatarBtn} title="用量">
+      <button className={styles.avatarBtn} title="用量">
           <User size={16} />
         </button>
-      </button>
-      <div align="end" sideOffset={6} className={styles.popoverContent}>
+      <div className={styles.popoverContent}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.avatarCircle}>

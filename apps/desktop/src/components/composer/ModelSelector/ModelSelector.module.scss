@@ -19,13 +19,4 @@
 .providerSelect,
 .modelSelect {
   width: 140px;
-
-  :global(.ant-select-selector) {
-
-    &:hover {
-    }
-  }
-
-  :global(.ant-select-selection-item) {
-  }
 }

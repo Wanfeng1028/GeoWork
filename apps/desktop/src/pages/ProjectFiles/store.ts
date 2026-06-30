@@ -23,7 +23,7 @@ interface ProjectFilesState {
 
 export const useProjectFilesStore = create<ProjectFilesState>()((set, get) => ({
   treeData: [],
-  selectedFile: '',
+  selectedFile: null,
   breadcrumbs: [],
   isLoading: false,
   error: '',

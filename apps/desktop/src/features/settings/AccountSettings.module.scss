@@ -4,9 +4,6 @@
 }
 
 .card {
-  :global(.ant-card-body) {
-    padding: 20px;
-  }
 }
 
 .avatarPreview {
@@ -16,15 +13,8 @@
 }
 
 .planInfo {
-  :global(.ant-tag) {
-    margin-left: 8px;
-  }
 }
 
 .teamCard {
   margin-bottom: 12px;
-
-  :global(.ant-card-body) {
-    padding: 12px 16px;
-  }
 }

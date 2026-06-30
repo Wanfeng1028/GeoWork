@@ -1,52 +1,4 @@
 .form {
-
-  :global(.ant-form-item) {
-    margin-bottom: 12px;
-  }
-
-  :global(.ant-form-item-label) {
-    padding-bottom: 5px;
-
-    label {
-      font-size: 12px;
-      line-height: 17px;
-      font-weight: 650;
-    }
-  }
-
-  :global(.ant-input),
-  :global(.ant-input-password),
-  :global(.ant-input-number),
-  :global(.ant-input-affix-wrapper) {
-    height: 32px;
-    border-radius: 8px !important;
-    box-shadow: none !important;
-    font-size: 12px;
-
-    &:hover,
-    &:focus,
-    &:focus-within {
-    }
-  }
-
-  :global(textarea.ant-input) {
-    height: auto;
-    min-height: 74px;
-    padding: 8px 10px;
-    line-height: 18px;
-  }
-
-  :global(.ant-select) {
-    .ant-select-selector {
-      height: 32px !important;
-      border-radius: 8px !important;
-      box-shadow: none !important;
-      font-size: 12px;
-
-      &:hover {
-      }
-    }
-  }
 }
 
 .testRow {
@@ -63,10 +15,6 @@
     border-radius: 999px;
     font-size: 11px;
     line-height: 24px;
-
-    :global(.anticon) {
-      margin-right: 4px;
-    }
   }
 }
 

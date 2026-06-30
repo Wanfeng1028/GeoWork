@@ -63,7 +63,7 @@ export function DiffPanel() {
           <span className={styles.diffLabel}>差异批次：</span>
           <select>
             <div className={styles.diffSelect}>
-              <span placeholder="选择批次" />
+              选择批次
             </div>
             <div>
               {diffs.map(d => (
@@ -86,28 +86,22 @@ export function DiffPanel() {
         <div >
           {currentDiff?.patch && (
             <div>
-              <span asChild>
-                <button onClick={handleDownload}>
+              <button onClick={handleDownload}>
                   <Download size={14} /> 导出
                 </button>
-              </span>
               <div>下载 .patch 文件</div>
             </div>
           )}
           <div>
-            <span asChild>
-              <button onClick={() => acceptAll(activeDiffId || undefined)}>
+            <button onClick={() => acceptAll(activeDiffId || undefined)}>
                 <Check size={14} /> 全部接受
               </button>
-            </span>
             <div>接受所有变更</div>
           </div>
           <div>
-            <span asChild>
-              <button onClick={() => rejectAll(activeDiffId || undefined)}>
+            <button onClick={() => rejectAll(activeDiffId || undefined)}>
                 <X size={14} /> 全部拒绝
               </button>
-            </span>
             <div>拒绝所有变更</div>
           </div>
         </div>
@@ -124,9 +118,7 @@ export function DiffPanel() {
               return (
                 <div key={file.path} className={styles.stepItem}>
                   <div>
-                    <span asChild>
-                      <span className={styles.filePath}>{file.path.split('/').pop()}</span>
-                    </span>
+                    <span className={styles.filePath}>{file.path.split('/').pop()}</span>
                     <div>{file.path}</div>
                   </div>
                   <span>
@@ -135,19 +127,15 @@ export function DiffPanel() {
                   {isPending && (
                     <div >
                       <div>
-                        <span asChild>
-                          <button onClick={() => acceptFile(file.path)}>
+                        <button onClick={() => acceptFile(file.path)}>
                             <Check size={12} />
                           </button>
-                        </span>
                         <div>接受变更</div>
                       </div>
                       <div>
-                        <span asChild>
-                          <button onClick={() => rejectFile(file.path)}>
+                        <button onClick={() => rejectFile(file.path)}>
                             <X size={12} />
                           </button>
-                        </span>
                         <div>拒绝变更</div>
                       </div>
                     </div>

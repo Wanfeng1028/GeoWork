@@ -23,7 +23,7 @@ export const ModelSelector: React.FC = () => {
       <div className={styles.selectors}>
         <select>
           <div className={styles.providerSelect}>
-            <span placeholder="选择供应商" />
+            <span>选择供应商</span>
           </div>
           <div>
             {providers.map(p => (
@@ -33,7 +33,7 @@ export const ModelSelector: React.FC = () => {
         </select>
         <select>
           <div className={styles.modelSelect}>
-            <span placeholder="选择模型" />
+            <span>选择模型</span>
           </div>
           <div>
             {models.map(m => (

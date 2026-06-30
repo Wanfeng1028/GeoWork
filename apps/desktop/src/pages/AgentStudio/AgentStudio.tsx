@@ -73,7 +73,7 @@ function WorkflowCard({ workflow, onSelect, onRun, onStop, onDelete }: WorkflowC
 
 function WorkflowList({ workflows: wfs, onSelect, onRun, onStop, onDelete }: { workflows: Workflow[]; onSelect: (w: any) => void; onRun: (id: string) => void; onStop: (id: string) => void; onDelete: (id: string) => void }) {
   if (wfs.length === 0) {
-    return <div description="暂无工作流" />
+    return <div>暂无工作流</div>
   }
   return (
     <div >
@@ -184,7 +184,7 @@ export default function AgentStudio() {
                 ))}
               </div>
             ) : (
-              <div description="暂无运行记录" />
+              <div>暂无运行记录</div>
             )}
           </div>
         </div>

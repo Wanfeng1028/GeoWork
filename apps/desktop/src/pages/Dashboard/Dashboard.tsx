@@ -304,7 +304,7 @@ export default function Dashboard({
                 ))}
               </div>
             ) : (
-              <div description="暂无项目" />
+              <div>暂无项目</div>
             )}
           </div>
         </div>
@@ -352,7 +352,7 @@ export default function Dashboard({
                 ))}
               </div>
             ) : (
-              <div description="暂无任务" />
+              <div>暂无任务</div>
             )}
           </div>
         </div>

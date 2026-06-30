@@ -95,7 +95,7 @@ export function KnowledgeBase() {
   }, [entries, searchQuery])
 
   if (error) {
-    return <div className={styles.emptyState}><div description={`加载失败: ${error}`} /></div>
+    return <div className={styles.emptyState}><div>加载失败: {error}</div></div>
   }
 
   return (

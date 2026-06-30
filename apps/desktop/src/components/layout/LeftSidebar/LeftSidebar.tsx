@@ -155,7 +155,7 @@ export function LeftSidebar({ collapsed = false }: LeftSidebarProps) {
         <div className={styles.preferenceMenu} onMouseEnter={() => setPrefOpen(true)}>
           <MenuRow icon={Languages} label="语言" arrow />
           <MenuRow
-            icon={themeModeOf(currentTheme) === 'dark' ? Moon : Sun}
+            icon={currentTheme.includes('dark') ? Moon : Sun}
             label="主题"
             arrow
             active={themeOpen}

@@ -30,14 +30,12 @@ export function Toolbar() {
       <div className={styles.tools}>
         {AVAILABLE_TOOLS.map((tool) => (
           <div key={tool.id}>
-            <span asChild>
-              <button
+            <button
                 onClick={() => handleToolClick(tool)}
               >
                 <span style={{ fontSize: 16 }}>{tool.icon}</span>
                 {tool.name}
               </button>
-            </span>
             <div>{getToolDescription(tool.action)}</div>
           </div>
         ))}

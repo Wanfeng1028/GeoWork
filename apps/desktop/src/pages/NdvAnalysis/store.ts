@@ -29,7 +29,7 @@ export interface NdvState {
   results: NdvResult[]
   isAnalyzing: boolean
   error: string | null
-  setProjectId: (id: string) => void
+  setProjectId: (id: string | null) => void
   setDataSource: (source: 'sentinel2' | 'landsat') => void
   setBands: (bands: { red: string; nir: string }) => void
   setThresholds: (thresholds: { min: number; max: number }) => void
@@ -42,8 +42,8 @@ const DEFAULT_BANDS = { red: 'B4', nir: 'B8' }
 const DEFAULT_THRESHOLDS = { min: -1.0, max: 1.0 }
 
 export const useNdvStore = create<NdvState>()((set, get) => ({
-  projectId: '',
-  dataSource: '',
+  projectId: null,
+  dataSource: null,
   bands: { ...DEFAULT_BANDS },
   thresholds: { ...DEFAULT_THRESHOLDS },
   results: [],

@@ -59,49 +59,41 @@ export function BrowserControlBar({ className = '' }: BrowserControlBarProps) {
 
       <div >
         <div>
-          <span asChild>
-            <button
+          <button
               onClick={handleTakeScreenshot}
             >
               <Camera  />
             </button>
-          </span>
           <div>Screenshot</div>
         </div>
 
         <div>
-          <span asChild>
-            <button
+          <button
               onClick={handleExtractText}
             >
               <FileText  />
             </button>
-          </span>
           <div>Extract Text</div>
         </div>
 
         <div>
-          <span asChild>
-            <button
+          <button
               onClick={handleAddToContext}
             >
               <Zap  />
               <span className={styles.toolbarLabel}>Agent</span>
             </button>
-          </span>
           <div>Send to Agent</div>
         </div>
 
         <div className={styles.toolbarDivider} />
 
         <div>
-          <span asChild>
-            <button
+          <button
               onClick={handleCloseSession}
             >
               <X  />
             </button>
-          </span>
           <div>Close Session</div>
         </div>
       </div>

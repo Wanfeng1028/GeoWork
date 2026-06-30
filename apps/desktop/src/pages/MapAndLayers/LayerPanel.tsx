@@ -53,19 +53,17 @@ function LayerItem({ layer, depth, expandedIds, toggleExpand }: LayerItemProps) 
         <button onClick={() => toggleLayer(layer.id)}
         />
         <div>
-          <span asChild>
-            <div >
-              <input
-                type="range"
-                
-                value={layer.opacity}
-                onChange={(e) => setLayerOpacity(layer.id, Number(e.target.value))}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-          </span>
+          <div >
+            <input
+              type="range"
+
+              value={layer.opacity}
+              onChange={(e) => setLayerOpacity(layer.id, Number(e.target.value))}
+              min={0}
+              max={100}
+              step={1}
+            />
+          </div>
           <div>透明度: {layer.opacity}%</div>
         </div>
         <div >

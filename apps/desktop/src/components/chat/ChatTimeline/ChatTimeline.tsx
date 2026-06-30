@@ -12,9 +12,10 @@ export function ChatTimeline() {
     return (
       <div className={styles.timeline}>
         <div
-          description="暂无对话记录 — 在 Composer 中创建任务开始"
           className={styles.emptyState}
-        />
+        >
+          暂无对话记录 — 在 Composer 中创建任务开始
+        </div>
       </div>
     )
   }

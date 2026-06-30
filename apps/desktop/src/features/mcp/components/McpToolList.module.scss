@@ -14,24 +14,6 @@
   font-weight: 700;
 }
 
-.collapse {
-  background: transparent;
-
-  :global(.ant-collapse-header) {
-    padding: 10px 12px !important;
-  }
-
-  :global(.ant-collapse-content-box) {
-    padding: 12px !important;
-  }
-
-  :global(.ant-collapse-content),
-  :global(.ant-collapse-item) {
-    border: 0 !important;
-    background: transparent !important;
-  }
-}
-
 .empty {
   min-height: 176px;
   display: flex;
@@ -72,15 +54,6 @@
 
 .toolPanel {
   margin: 8px 10px;
-
-  :global(.ant-collapse-header) {
-    border-radius: 7px !important;
-  }
-
-  :global(.ant-collapse-content) {
-    border-top: 0 !important;
-    border-radius: 0 0 7px 7px !important;
-  }
 }
 
 .toolDetail {
@@ -130,11 +103,6 @@
   border-radius: 7px !important;
   font-family: monospace;
   font-size: 12px;
-
-  :global(.ant-input) {
-    border: 0 !important;
-    background: transparent !important;
-  }
 }
 
 .testResult {

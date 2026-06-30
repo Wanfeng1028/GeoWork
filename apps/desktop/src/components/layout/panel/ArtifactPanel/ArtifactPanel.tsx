@@ -84,7 +84,7 @@ export function ArtifactPanel() {
           </span>
         </div>
         <div className={styles.emptyState}>
-          <div description="暂无产物" />
+          <div>暂无产物</div>
           <span style={{ fontSize: 12 }}>
             任务完成后产物将在此显示
           </span>
@@ -114,11 +114,11 @@ export function ArtifactPanel() {
       </div>
 
       <div className={styles.treeContainer}>
-        <div >
+        <div>
           {Object.entries(groupedArtifacts).map(([type, items]) => (
             <div key={type}>
               <div
-                
+                className={styles.groupHeader}
                 onClick={() => toggleGroup(type)}
               >
                 {expandedGroups.has(type) ? (
@@ -131,7 +131,7 @@ export function ArtifactPanel() {
                 <span >{items.length}</span>
               </div>
               {expandedGroups.has(type) && (
-                <div >
+                <div>
                   {items.map((artifact) => (
                     <div
                       key={artifact.id}
@@ -140,9 +140,7 @@ export function ArtifactPanel() {
                     >
                       {TYPE_ICONS[artifact.type] || <FileText  />}
                       <div>
-                        <span asChild>
-                          <span className={styles.artifactName}>{artifact.name}</span>
-                        </span>
+                        <span className={styles.artifactName}>{artifact.name}</span>
                         <div>{artifact.name}</div>
                       </div>
                       {currentPreview?.id === artifact.id && (
@@ -184,35 +182,29 @@ export function ArtifactPanel() {
               </div>
               <div className={styles.detailActions}>
                 <div>
-                  <span asChild>
-                    <button
-                      onClick={() => handleOpenArtifact(artifact)}
-                    >
-                      <Cpu  />
-                      打开
-                    </button>
-                  </span>
+                  <button
+                    onClick={() => handleOpenArtifact(artifact)}
+                  >
+                    <Cpu  />
+                    打开
+                  </button>
                   <div>在编辑器中打开</div>
                 </div>
                 <div>
-                  <span asChild>
-                    <button
-                      onClick={() => handleSaveToWorkspace(artifact)}
-                    >
-                      <Download  />
-                      保存
-                    </button>
-                  </span>
+                  <button
+                    onClick={() => handleSaveToWorkspace(artifact)}
+                  >
+                    <Download  />
+                    保存
+                  </button>
                   <div>保存到工作空间</div>
                 </div>
                 <div>
-                  <span asChild>
-                    <button
-                    >
-                      <Folder  />
-                      知识库
-                    </button>
-                  </span>
+                  <button
+                  >
+                    <Folder  />
+                    知识库
+                  </button>
                   <div>添加到知识库</div>
                 </div>
               </div>

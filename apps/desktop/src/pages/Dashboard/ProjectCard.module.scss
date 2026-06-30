@@ -9,15 +9,6 @@
     box-shadow: 0 4px 12px rgba(22, 119, 255, 0.12);
     transform: translateY(-2px);
   }
-
-  :global(.ant-card-cover) {
-    height: 120px;
-    overflow: hidden;
-  }
-
-  :global(.ant-card-body) {
-    padding: 12px 16px;
-  }
 }
 
 .thumbnail {

@@ -30,6 +30,7 @@
 }
 
 .toolbar :global(button:not([disabled]):hover) {
+  background-color: #e0e0e0;
 }
 
 .toolbar :global(button:first-child) {
@@ -53,6 +54,7 @@
 }
 
 .breadcrumb :global(.text-muted-foreground) {
+  color: #666;
 }
 
 .mainContent {
@@ -62,7 +64,7 @@
   grid-template-columns: 318px minmax(0, 1fr);
   overflow: hidden;
   position: relative;
-  background:
+  background: transparent;
 }
 
 .leftPanel,
@@ -73,6 +75,7 @@
 }
 
 .leftPanel {
+  background: transparent;
 }
 
 .rightPanel {
@@ -123,6 +126,7 @@
 }
 
 .treeNode:hover {
+  background-color: #f0f0f0;
 }
 
 .treeNode span:last-child {
@@ -177,6 +181,7 @@
 }
 
 .contextMenuItem:hover {
+  background-color: #f0f0f0;
 }
 
 .contextMenuDelete:hover {

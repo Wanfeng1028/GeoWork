@@ -33,18 +33,6 @@
 
     .artifactTree {
       font-size: 12px;
-
-      :global(.ant-tree) {
-        background: transparent !important;
-      }
-
-      :global(.ant-tree-node-content-wrapper) {
-        padding: 2px 5px;
-        border-radius: 6px;
-      }
-
-      :global(.ant-tree-node-content-wrapper:hover) {
-      }
     }
   }
 

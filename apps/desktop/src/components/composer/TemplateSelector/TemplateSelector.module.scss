@@ -12,22 +12,4 @@
 }
 
 .templateSelect {
-  :global(.ant-select-selector) {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-
-    &:hover {
-      border: none;
-      box-shadow: none;
-    }
-  }
-
-  :global(.ant-select-selection-item) {
-    padding-left: 0;
-  }
-
-  :global(.ant-select-arrow) {
-  }
 }

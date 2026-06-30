@@ -286,9 +286,9 @@ export function PluginDetail({ plugin, onClose }: PluginDetailProps) {
           <h4 >
             用户评价
           </h4>
-          <div
-            description="暂无评价"
-          />
+          <div>
+            暂无评价
+          </div>
           <span >
             评价功能即将上线
           </span>

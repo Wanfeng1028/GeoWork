@@ -21,11 +21,11 @@ interface BrowserState {
 }
 
 const useBrowserStore = create<BrowserState>((set, get) => ({
-  session: '',
+  session: null,
   isRunning: false,
   paperResults: [],
   isLoading: false,
-  sessionId: '',
+  sessionId: null,
   error: '',
   createSession: async () => {
     set({ isLoading: true, error: null })
@@ -146,9 +146,9 @@ const useBrowserStore = create<BrowserState>((set, get) => ({
     const { sessionId } = get()
     if (!sessionId) {
       set({
-        session: '',
+        session: null,
         isRunning: false,
-        sessionId: '',
+        sessionId: null,
         paperResults: [],
         error: '',
       })
@@ -158,9 +158,9 @@ const useBrowserStore = create<BrowserState>((set, get) => ({
     try {
       await browserBridgeClient.closeSession(sessionId)
       set({
-        session: '',
+        session: null,
         isRunning: false,
-        sessionId: '',
+        sessionId: null,
         paperResults: [],
         isLoading: false,
       })

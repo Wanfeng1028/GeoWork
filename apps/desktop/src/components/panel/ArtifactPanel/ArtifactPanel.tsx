@@ -168,9 +168,7 @@ export function ArtifactPanel() {
 
                       <div className={styles.artifactMeta}>
                         <div>
-                          <span asChild>
-                            <span className={styles.artifactPath}>{artifact.path}</span>
-                          </span>
+                          <span className={styles.artifactPath}>{artifact.path}</span>
                           <div>{artifact.path}</div>
                         </div>
                         <span className={styles.artifactDate}>
@@ -180,11 +178,9 @@ export function ArtifactPanel() {
 
                       {isSelected && (
                         <div>
-                          <span asChild>
-                            <button className={styles.acceptBtn} onClick={(e) => e.stopPropagation()}>
+                          <button className={styles.acceptBtn} onClick={(e) => e.stopPropagation()}>
                               <Eye size={14} />
                             </button>
-                          </span>
                           <div>预览</div>
                         </div>
                       )}

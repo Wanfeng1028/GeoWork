@@ -25,7 +25,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       <FileText size={14} className={styles.icon} />
       <select>
         <div className={styles.templateSelect}>
-          <span placeholder="选择模板" />
+          <span>选择模板</span>
         </div>
         <div>
           {TEMPLATES.map(t => (

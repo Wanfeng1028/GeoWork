@@ -103,14 +103,13 @@ export function PaperSearchPanel({ className = '' }: PaperSearchPanelProps) {
             ))}
           </div>
         ) : (
-          <div
-            description={
+          <div className={styles.emptyState}>
+            {
               searchQuery
                 ? 'No results found'
                 : 'Enter a search query to find academic papers'
             }
-            className={styles.emptyState}
-          />
+          </div>
         )}
       </div>
     </div>

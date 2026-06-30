@@ -144,25 +144,21 @@ export function DiffPanel() {
                 全部拒绝
               </button>
               <div>
-                <span asChild>
-                  <button
-                    onClick={handleSavePatch}
-                  >
-                    <Save  />
-                    保存
-                  </button>
-                </span>
+                <button
+                  onClick={handleSavePatch}
+                >
+                  <Save  />
+                  保存
+                </button>
                 <div>保存为 patch 文件</div>
               </div>
               <div>
-                <span asChild>
-                  <button
-                    onClick={handleBranchSnapshot}
-                  >
-                    <GitBranch  />
-                    快照
-                  </button>
-                </span>
+                <button
+                  onClick={handleBranchSnapshot}
+                >
+                  <GitBranch  />
+                  快照
+                </button>
                 <div>创建分支快照</div>
               </div>
             </div>

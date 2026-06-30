@@ -55,7 +55,7 @@ export function TaskMonitorPanel() {
   if (!currentTask) {
     return (
       <div className={styles.panel}>
-        <div description="在任务面板创建新任务" />
+        <div>在任务面板创建新任务</div>
       </div>
     )
   }

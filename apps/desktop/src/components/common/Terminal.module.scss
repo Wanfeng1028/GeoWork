@@ -53,12 +53,13 @@
   border-radius: 6px;
   font-size: 11px;
   cursor: pointer;
-  transition: background-color 0.15s ease,;
+  transition: background-color 0.15s ease,
     border-color 0.15s ease,
     color 0.15s ease;
 }
 
 .headerBtn:hover {
+  background-color: var(--color-hover);
 }
 
 .terminalBody {
@@ -98,4 +99,5 @@
 }
 
 .input::placeholder {
+  color: var(--color-text-muted);
 }

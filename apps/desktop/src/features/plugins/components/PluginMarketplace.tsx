@@ -126,7 +126,7 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
         <div className={styles.headerFilters}>
           <select>
             <div className={styles.categorySelect}>
-              <span placeholder="分类" />
+              分类
             </div>
             <div>
               {CATEGORIES.map((cat) => (
@@ -149,9 +149,9 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
 
       <div className={styles.grid}>
         {isLoading ? (
-          <div description="加载中..." className={styles.empty} />
+          <div className={styles.empty}>加载中...</div>
         ) : filteredPlugins.length === 0 ? (
-          <div description="没有找到匹配的插件" className={styles.empty} />
+          <div className={styles.empty}>没有找到匹配的插件</div>
         ) : (
           filteredPlugins.map((plugin: Plugin) => (
             <div
@@ -190,12 +190,10 @@ export function PluginMarketplace({ onSelectPlugin }: PluginMarketplaceProps) {
                   {getRatingStars(plugin.rating)}
                   {plugin.installCount !== undefined && (
                     <div>
-                      <span asChild>
-                        <div >
-                          <Download  />
-                          <span>{getInstallCountText(plugin.installCount)}</span>
-                        </div>
-                      </span>
+                      <div >
+                        <Download  />
+                        <span>{getInstallCountText(plugin.installCount)}</span>
+                      </div>
                       <div>安装次数</div>
                     </div>
                   )}

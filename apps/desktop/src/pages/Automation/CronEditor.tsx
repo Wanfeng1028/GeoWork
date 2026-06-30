@@ -160,8 +160,9 @@ export function CronEditor({ open, onClose, editingJob }: { open: boolean; onClo
             <button
               type="button"
               onClick={() => {
-                setFormState({ ...formState, enabled: !formState.enabled })
-                if (editingJob) toggleJob(editingJob.id, !formState.enabled)
+                const newState = !formState.enabled
+                setFormState({ ...formState, enabled: newState })
+                if (editingJob) toggleJob(editingJob.id)
               }}
               className={formState.enabled ? styles.enabled : ''}
             >

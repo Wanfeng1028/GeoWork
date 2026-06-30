@@ -6,8 +6,8 @@ import runtimeClient from '../services/runtimeClient'
 
 const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   workspaces: [],
-  currentWorkspace: '',
-  fileTree: '',
+  currentWorkspace: null,
+  fileTree: null,
   branch: 'main',
   recentFiles: [],
   isLoading: false,

@@ -29,6 +29,7 @@
   cursor: pointer;
 
   &:hover {
+    background-color: #e0e0e0;
   }
 }
 
@@ -53,6 +54,7 @@
   font-size: 12px;
 
   &::placeholder {
+    color: #999;
   }
 }
 
@@ -150,6 +152,7 @@
 
     &:hover,
     &.active {
+      color: #000;
     }
 
     em {
@@ -176,9 +179,11 @@
     cursor: pointer;
 
     &:hover {
+      background-color: #e0e0e0;
     }
 
     &.active {
+      background-color: #e0e0e0;
     }
   }
 }
@@ -212,10 +217,11 @@
   padding: 10px 12px;
   border-radius: 7px;
   cursor: pointer;
-  transition: border-color 0.15s ease,;
+  transition: border-color 0.15s ease,
     background-color 0.15s ease;
 
   &:hover {
+    background-color: #e0e0e0;
   }
 }
 
@@ -259,10 +265,11 @@
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  transition: background-color 0.15s ease,;
+  transition: background-color 0.15s ease,
     color 0.15s ease;
 
   &:hover {
+    background-color: #e0e0e0;
   }
 }
 

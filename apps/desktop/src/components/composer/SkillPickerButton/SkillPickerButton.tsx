@@ -33,8 +33,7 @@ export const SkillPickerButton: React.FC<SkillPickerButtonProps> = ({
   return (
     <div className={styles.container}>
       <div>
-        <button asChild>
-          <button
+        <button
             type="button"
             className={`${styles.trigger} ${isCustom ? styles.custom : ''}`}
             title="技能"
@@ -42,8 +41,7 @@ export const SkillPickerButton: React.FC<SkillPickerButtonProps> = ({
             <Zap size={16} />
             {isCustom && <span className={styles.badge}>{selectedSkillIds.length}</span>}
           </button>
-        </button>
-        <div side="top" align="start" sideOffset={8} className={styles.popover}>
+        <div className={styles.popover}>
           <div className={styles.popoverHead}>
             <span>技能</span>
             <button onClick={() => setOpen(false)}>完成</button>

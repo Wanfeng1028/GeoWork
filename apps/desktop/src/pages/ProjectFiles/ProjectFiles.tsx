@@ -34,7 +34,7 @@ export function ProjectFiles() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode | null } | null>(null)
   const [renameModal, setRenameModal] = useState<{ open: boolean; node: FileNode | null; newName: string }>({
     open: false,
-    node: '',
+    node: null,
     newName: ''
   })
   const [createFolderModal, setCreateFolderModal] = useState<{ open: boolean; parentId: string }>({

@@ -196,7 +196,6 @@ export function BrowserPanel() {
             <ArrowRight  />
           </button>
           <button
-            loading={state.isNavigating}
             onClick={handleReload}
           >
             <RotateCw  />
@@ -260,7 +259,7 @@ export function BrowserPanel() {
           </div>
         ) : (
           <div className={styles.emptyBrowser}>
-            <div description="输入 URL 开始浏览" />
+            <div>输入 URL 开始浏览</div>
           </div>
         )}
       </div>

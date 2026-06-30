@@ -22,16 +22,6 @@
 
 .urlInput {
   flex: 1;
-
-  :global(.ant-input-prefix) {
-  }
-
-  :global(.ant-input) {
-  }
-
-  :global(.ant-input:disabled) {
-    opacity: 0.6;
-  }
 }
 
 /* ── Preview area ────────────────────────────────────── */

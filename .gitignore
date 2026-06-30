@@ -25,6 +25,8 @@ docx/
 # AI/IDE config
 .qwen/
 .codebuddy/
+.atomcode/
+.workbuddy/
 
 # Logs
 logs/

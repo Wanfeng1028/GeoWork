@@ -18,7 +18,7 @@ export interface ToolCallInfo {
 
 const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
-  currentTask: '',
+  currentTask: null,
   events: [],
   toolCalls: [],
   pendingSteps: [],

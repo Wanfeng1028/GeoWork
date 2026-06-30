@@ -78,14 +78,6 @@
     .stepsCollapse {
       margin-bottom: 8px;
 
-      :global(.ant-collapse-header) {
-        padding: 5px 0 !important;
-      }
-
-      :global(.ant-collapse-content) {
-        background: transparent !important;
-      }
-
       .stepItem {
         display: flex;
         align-items: center;

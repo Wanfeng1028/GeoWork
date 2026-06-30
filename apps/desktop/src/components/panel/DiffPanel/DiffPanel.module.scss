@@ -53,16 +53,6 @@
 
 .diffSelect {
   width: 220px;
-
-  :global(.ant-select-selector) {
-    height: 28px !important;
-    border-radius: 999px !important;
-    box-shadow: none !important;
-  }
-
-  :global(.ant-select-selection-item) {
-    font-size: 12px;
-  }
 }
 
 .actionsBar {
@@ -85,21 +75,6 @@
   border-radius: 8px;
 }
 
-.diffTable {
-  :global(.ant-table) {
-    font-size: 12px !important;
-  }
-
-  :global(.ant-table-thead > tr > th) {
-    padding: 7px 8px !important;
-    font-size: 11px !important;
-  }
-
-  :global(.ant-table-tbody > tr > td) {
-    padding: 6px 8px !important;
-  }
-}
-
 .filePath,
 .collapseFileName {
   max-width: 150px;
@@ -110,12 +85,6 @@
   line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.acceptBtn :global(.ant-btn-icon) {
-}
-
-.rejectBtn :global(.ant-btn-icon) {
 }
 
 .detailSection {
@@ -135,16 +104,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.diffCollapse {
-  :global(.ant-collapse-header) {
-    padding: 5px 0 !important;
-  }
-
-  :global(.ant-collapse-content-box) {
-    padding: 0 !important;
-  }
 }
 
 .diffContent {
@@ -173,10 +132,4 @@
   line-height: 17px;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-.oldContent pre {
-}
-
-.newContent pre {
 }

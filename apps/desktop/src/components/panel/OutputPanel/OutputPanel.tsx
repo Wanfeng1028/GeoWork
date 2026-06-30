@@ -157,13 +157,13 @@ export function OutputPanel() {
   const getColor = (type: OutputLine["type"]) => {
     switch (type) {
       case "error":
-        return null;
+        return "#ef4444";
       case "warn":
-        return null;
+        return "#f59e0b";
       case "success":
-        return null;
+        return "#22c55e";
       default:
-        return null;
+        return "#94a3b8";
     }
   };
 

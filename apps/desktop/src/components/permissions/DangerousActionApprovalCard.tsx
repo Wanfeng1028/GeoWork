@@ -161,7 +161,6 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
                   setLoading(false)
                 }
               }}
-              loading={loading}
               className={isCritical ? 'bg-[""] hover:bg-[""]/80 text-white' : ''}
             >
               <Lock  />
@@ -176,7 +175,6 @@ export const DangerousActionApprovalCard: React.FC<DangerousActionApprovalCardPr
                   setLoading(false)
                 }
               }}
-              loading={loading}
             >
               <X  />
               拒绝

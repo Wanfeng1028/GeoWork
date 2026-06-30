@@ -143,7 +143,7 @@ export default function NdvAnalysis() {
 
               <div>
                 <label >遥感数据源 <span >*</span></label>
-                <select value={dataSource} onChange={(e) => handleDataSourceChange(e.target.value as 'sentinel2' | 'landsat')}>
+                <select value={dataSource ?? ''} onChange={(e) => handleDataSourceChange(e.target.value as 'sentinel2' | 'landsat')}>
                   <option value="">选择数据源</option>
                   {DATA_SOURCES.map((s) => (
                     <option key={s.value}>{s.label}</option>

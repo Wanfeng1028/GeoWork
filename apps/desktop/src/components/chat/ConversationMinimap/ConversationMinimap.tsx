@@ -63,7 +63,7 @@ const TOOLTIP_MAP: Record<NavItemType, string> = {
 };
 
 const COLOR_MAP: Record<NavItemType, string> = {
-  "user-question": null,
+  "user-question": "",
   "agent-plan": "#722ed1",
   "tool-call": "#fa8c16",
   artifact: '',
@@ -71,8 +71,8 @@ const COLOR_MAP: Record<NavItemType, string> = {
   error: '',
   checkpoint: '',
   permission: '',
-  "task-started": null,
-  "task-completed": null,
+  "task-started": "",
+  "task-completed": "",
   "step-start": "#722ed1",
 };
 
@@ -254,8 +254,7 @@ export function ConversationMinimap() {
                   data-minimap-id={item.id}
                 >
                   <div>
-                    <span asChild>
-                      <span
+                    <span
                         className={`${styles.navIcon} ${
                           styles[`type-${item.type}`]
                         }`}
@@ -263,8 +262,7 @@ export function ConversationMinimap() {
                       >
                         {ICON_MAP[item.type]}
                       </span>
-                    </span>
-                    <div side="left">
+                    <div>
                       <div>
                         <div>{TOOLTIP_MAP[item.type]}</div>
                         {item.summary && (

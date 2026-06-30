@@ -101,7 +101,7 @@ export function KnowledgeDetail({ visible, onClose }: KnowledgeDetailProps) {
   if (!selectedEntry) {
     return (
       <div className={styles.detailPanel}>
-        <div description="未选择知识条目" />
+        <div>未选择知识条目</div>
       </div>
     )
   }

@@ -50,10 +50,10 @@ export const AgentStepTimeline: React.FC = () => {
         {displaySteps.map((step, index) => {
           const isLast = index === displaySteps.length - 1
           const statusColor =
-            step.status === 'completed' ? null
-              : step.status === 'running' ? null
-              : step.status === 'failed' ? null
-              : null
+            step.status === 'completed' ? '#22c55e'
+              : step.status === 'running' ? '#3b82f6'
+              : step.status === 'failed' ? '#ef4444'
+              : '#94a3b8'
 
           return (
             <React.Fragment key={step.id}>

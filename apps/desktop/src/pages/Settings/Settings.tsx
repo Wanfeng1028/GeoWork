@@ -62,7 +62,7 @@ export function SettingsPage() {
               <Section title="默认配置" icon={<SettingsIcon size={15} />}>
                 <SettingRow label="默认提供商" description="用于新建任务的默认模型服务。">
                   <select>
-                    <div><span placeholder="选择提供商" /></div>
+                    <div><span>选择提供商</span></div>
                     <div>
                       {settings.modelApi.providers.map((p: any) => <option key={p.id}>{p.name}</option>)}
                     </div>
@@ -117,7 +117,7 @@ export function SettingsPage() {
             <Section title="Agent 行为" icon={<Bot size={15} />}>
               <SettingRow label="默认权限级别">
                 <select>
-                  <div><span placeholder="选择权限" /></div>
+                  <div><span>选择权限</span></div>
                   <div>
                     <option>完全</option>
                     <option>受限</option>

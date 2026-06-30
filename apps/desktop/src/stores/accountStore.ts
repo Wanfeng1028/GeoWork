@@ -46,12 +46,12 @@ export interface AccountState {
 }
 
 const defaultState = {
-  user: '',
+  user: null,
   teams: [],
   teamMembers: [],
-  plan: '',
+  plan: null,
   credits: 0,
-  usage: '',
+  usage: null,
   modelUsage: [],
   marketplacePlugins: [],
   marketplaceSkills: [],

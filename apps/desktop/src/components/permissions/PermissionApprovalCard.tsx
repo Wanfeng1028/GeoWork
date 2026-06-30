@@ -135,7 +135,6 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
           <div className={`${styles.actionButtons}`}>
             <button
               onClick={handleApprove}
-              loading={loading}
             >
               <Check  />
               允许一次
@@ -149,14 +148,12 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
                   setLoading(false)
                 }
               }}
-              loading={loading}
             >
               <Save  />
               始终允许此工作区
             </button>
             <button
               onClick={handleDeny}
-              loading={loading}
             >
               <X  />
               拒绝
@@ -165,7 +162,6 @@ export const PermissionApprovalCard: React.FC<PermissionApprovalCardProps> = ({ 
               onClick={() => {
                 // Show more details
               }}
-              loading={loading}
             >
               <Eye  />
               查看详情

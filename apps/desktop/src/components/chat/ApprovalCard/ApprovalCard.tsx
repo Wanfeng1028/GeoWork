@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { AlertTriangle, Check, X, Save } from 'lucide-react'
 import usePermissionStore from '../../../stores/permissionStore'
 import type { PermissionRequest } from '../../../types/permission'
+import styles from './ApprovalCard.module.scss'
 
 interface ApprovalCardProps {
   request: PermissionRequest
@@ -109,21 +110,18 @@ const ApprovalCard: React.FC<ApprovalCardProps> = ({ request }) => {
           </div>
           <div >
             <button
-              loading={loading}
               onClick={handleApprove}
             >
               <Check  />
               批准
             </button>
             <button
-              loading={loading}
               onClick={handleDeny}
             >
               <X  />
               拒绝
             </button>
             <button
-              loading={loading}
               onClick={() => {
                 setRemember(true)
                 handleApprove()

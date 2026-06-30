@@ -44,23 +44,19 @@ const WorkspaceContextBar: React.FC = () => {
         {fileCount > 999 ? '999+' : fileCount}
       </span>
       <div>
-        <span asChild>
-          <span >
+        <span >
             {currentWorkspace.name}
           </span>
-        </span>
         <div>{currentWorkspace.rootPath}</div>
       </div>
       <button onClick={handleRefresh}>
         <RefreshCw  />
       </button>
       <div>
-        <button asChild>
-          <button>
+        <button>
             更多操作
           </button>
-        </button>
-        <div align="start">
+        <div>
           <button onClick={loadWorkspaces}>
             <FolderOpen  />
             打开工作区

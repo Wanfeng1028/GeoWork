@@ -215,30 +215,25 @@ const MapLibreMap = memo(function MapLibreMap({
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div>
-          <span asChild>
-            <button
+          <button
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomIn()}
             >
-              <ZoomIn  />
+              <ZoomIn />
             </button>
-          </span>
           <div>放大</div>
         </div>
         <div>
-          <span asChild>
-            <button
+          <button
               className={styles.toolbarButton}
               onClick={() => mapInstanceRef.current?.zoomOut()}
             >
-              <ZoomOut  />
+              <ZoomOut />
             </button>
-          </span>
           <div>缩小</div>
         </div>
         <div>
-          <span asChild>
-            <button
+          <button
               className={`${styles.toolbarButton} ${measuring ? styles.toolbarButtonActive : ''}`}
               onClick={() => {
                 setMeasuring(!measuring)
@@ -248,9 +243,8 @@ const MapLibreMap = memo(function MapLibreMap({
                 }
               }}
             >
-              <Ruler  />
+              <Ruler />
             </button>
-          </span>
           <div>{measuring ? '停止测距' : '测距工具'}</div>
         </div>
       </div>

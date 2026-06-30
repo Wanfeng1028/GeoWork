@@ -86,7 +86,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (!file) {
     return (
       <div className={styles.previewEmpty}>
-        <div description="选择文件以预览" />
+        <div>选择文件以预览</div>
       </div>
     )
   }
@@ -102,7 +102,7 @@ export function FilePreview({ file }: FilePreviewProps) {
   if (error) {
     return (
       <div className={styles.previewError}>
-        <div description={`加载失败: ${error}`} />
+        <div>加载失败: {error}</div>
       </div>
     )
   }
@@ -134,7 +134,7 @@ export function FilePreview({ file }: FilePreviewProps) {
         )}
         {!imageSrc && textContent === null && (
           <div className={styles.previewBinary}>
-            <div description="该文件类型暂不支持预览" />
+            <div>该文件类型暂不支持预览</div>
             <div >
               <div ><span >文件名</span><span>{file.name}</span></div>
               <div ><span >类型</span><span>{file.type}</span></div>

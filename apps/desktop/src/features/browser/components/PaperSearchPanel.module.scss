@@ -14,11 +14,6 @@
 }
 
 .searchInput {
-  :global(.ant-input) {
-  }
-
-  :global(.ant-input-prefix) {
-  }
 }
 
 /* ── Results area ────────────────────────────────────── */
@@ -48,10 +43,6 @@
   transition: background 0.15s ease;
 
   &:hover {
-  }
-
-  :global(.ant-list-item-action) {
-    border: none;
   }
 }
 

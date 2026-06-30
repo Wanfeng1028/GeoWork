@@ -23,7 +23,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image:
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23999'/%3E%3C/svg%3E");
   background-size: 24px 24px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent);
   opacity: 0.5;
@@ -89,6 +89,7 @@
     transition: all 0.15s ease;
 
     &:hover {
+      background-color: #e0e0e0;
     }
   }
 }
@@ -138,7 +139,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image:
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23999'/%3E%3C/svg%3E");
   background-size: 16px 16px;
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent);
 }
@@ -205,11 +206,12 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: color 0.15s ease,;
+  transition: color 0.15s ease,
     border-color 0.15s ease,
     background-color 0.15s ease;
 
   &:hover {
+    background-color: #e0e0e0;
   }
 }
 
@@ -302,6 +304,7 @@
 }
 
 .folderSelect:hover {
+  background-color: #e0e0e0;
 }
 
 .promo {

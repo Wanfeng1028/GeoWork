@@ -134,7 +134,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 </div>
               </div>
             ) : (
-              <div description="当前数据不是栅格格式" />
+              <div>当前数据不是栅格格式</div>
             )}
           </div>
 
@@ -170,7 +170,7 @@ export function DataPreview({ dataset, open, onClose }: DataPreviewProps) {
                 )}
               </div>
             ) : (
-              <div description="当前数据不是矢量格式" />
+              <div>当前数据不是矢量格式</div>
             )}
           </div>
 

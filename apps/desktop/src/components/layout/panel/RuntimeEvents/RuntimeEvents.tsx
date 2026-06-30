@@ -199,10 +199,10 @@ export function RuntimeEvents() {
         {filteredEvents.length === 0 ? (
           <div className={styles.emptyState}>
             <div
-              description={
-                events.length === 0 ? "暂无运行时事件" : "无匹配的事件"
-              }
-            />
+              className={styles.emptyContent}
+            >
+              {events.length === 0 ? "暂无运行时事件" : "无匹配的事件"}
+            </div>
           </div>
         ) : (
           <div className={styles.eventScrollArea}>

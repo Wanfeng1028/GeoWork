@@ -18,7 +18,7 @@ interface DataCenterState {
 
 export const useDataCenterStore = create<DataCenterState>()((set, get) => ({
   datasets: [],
-  selectedDataset: '',
+  selectedDataset: null,
   isLoading: false,
   error: '',
   setSelectedDataset: (dataset) => set({ selectedDataset: dataset }),

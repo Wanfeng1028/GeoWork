@@ -125,9 +125,9 @@ export function ChatTimeline() {
   if (messages.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <div
-          description="暂无对话记录。在 Composer 中发送任务开始对话"
-        />
+        <div>
+          暂无对话记录。在 Composer 中发送任务开始对话
+        </div>
       </div>
     );
   }

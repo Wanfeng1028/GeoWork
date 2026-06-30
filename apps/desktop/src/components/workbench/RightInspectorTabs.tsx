@@ -27,7 +27,7 @@ export function RightInspectorTabs({ tabs, defaultValue, className }: RightInspe
       {tabs.map((tab) => (
         <div
           key={tab.key}
-          value={tab.key}
+          data-value={tab.key}
           className="focus-visible:outline-none"
           hidden={activeTab !== tab.key}
         >
