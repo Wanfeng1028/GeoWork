@@ -45,6 +45,9 @@ logs/
 # design files
 *.sketch
 *.fig
-*.xd    
-assets/
+*.xd
+/assets/
  design/
+
+# 前端迁移源目录（不入库）
+GeoFrontend2.0/

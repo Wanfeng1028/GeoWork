@@ -1,7 +1,0 @@
-export { WorkbenchShell } from './WorkbenchShell'
-export { LeftNav, type NavItem, type NavSection } from './LeftNav'
-export { MainWorkspaceFrame } from './MainWorkspaceFrame'
-export { RightInspector, type InspectorTab } from './RightInspector'
-export { RightInspectorTabs } from './RightInspectorTabs'
-export { StatusBar } from './StatusBar'
-export { PanelFrame } from './PanelFrame'

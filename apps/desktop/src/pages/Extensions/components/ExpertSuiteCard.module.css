@@ -1,0 +1,55 @@
+.card {
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  margin-top: 2px;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.headerRight {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.description {
+  margin-bottom: 12px !important;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid transparent;
+}

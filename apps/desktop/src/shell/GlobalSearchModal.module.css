@@ -1,0 +1,44 @@
+/* 搜索结果滚动区 */
+.resultList {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* 推荐搜索区 */
+.recommendSection {
+  padding: 8px 0 0;
+}
+
+.recommendTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* 单条结果 */
+.resultItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.resultItemMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.resultItemTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resultItemPath {
+  margin-top: 2px;
+}

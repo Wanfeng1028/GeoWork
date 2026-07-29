@@ -1,0 +1,57 @@
+.root {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.root::-webkit-scrollbar {
+  display: none;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 0 8px;
+}
+
+.heroSvg {
+  width: 120px;
+  height: 80px;
+  margin-bottom: 4px;
+}
+
+.heroTitle {
+  margin: 0 !important;
+}
+
+.heroSubtitle {
+  max-width: 560px;
+  margin: 0 !important;
+  line-height: 1.7;
+}
+
+.heroNote {
+  font-size: 12px;
+  margin: 0 !important;
+}
+
+.divider {
+  margin: 0 !important;
+}
+
+.channelList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

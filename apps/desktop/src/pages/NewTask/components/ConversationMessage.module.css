@@ -1,0 +1,79 @@
+.messageRow {
+  display: flex;
+  width: 100%;
+  padding: 8px 0;
+}
+
+.messageRowUser {
+  justify-content: flex-end;
+}
+
+.messageRowAssistant {
+  justify-content: flex-start;
+}
+
+.contentColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.messageRowUser .contentColumn {
+  max-width: 70%;
+  align-items: flex-end;
+}
+
+.messageRowAssistant .contentColumn {
+  flex: 1;
+  max-width: 100%;
+}
+
+.bubble {
+  min-width: 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  word-break: break-word;
+  line-height: 1.7;
+  position: relative;
+}
+
+.bubbleUser {
+  border-bottom-right-radius: 4px;
+}
+
+.bubbleAssistant {
+  border-bottom-left-radius: 4px;
+}
+
+.copyBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bubbleAssistant:hover .copyBtn {
+  opacity: 1;
+}
+
+.streamingCursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 0.7s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.contextLabels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}

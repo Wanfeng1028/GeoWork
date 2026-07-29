@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoWork 动态 SVG 预览</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #f0fdf4, #f8fafc 44%, #ecfeff);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #14532d;
+    }
+    main { width: min(1100px, 92vw); text-align: center; }
+    .card {
+      padding: 32px;
+      border: 1px solid rgba(34, 197, 94, .18);
+      border-radius: 28px;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 24px 80px rgba(21, 128, 61, .14);
+      backdrop-filter: blur(12px);
+    }
+    img { width: 100%; height: auto; display: block; }
+    h1 { margin: 0 0 12px; font-size: clamp(24px, 4vw, 40px); }
+    p { margin: 0 0 20px; color: #42634b; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GeoWork 动态 SVG 预览</h1>
+    <p>打开本文件即可预览：字母依次生长，草坪从中间铺开，草叶轻微摆动。</p>
+    <section class="card">
+      <img src="./geowork-logo-animated.svg" alt="GeoWork animated grass logo" />
+    </section>
+  </main>
+</body>
+</html>

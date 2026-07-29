@@ -23,6 +23,23 @@ export default defineConfig({
   renderer: {
     root: __dirname,
     plugins: [react()],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src')
+      }
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true
+        },
+        '/worker': {
+          target: 'http://localhost:8000',
+          changeOrigin: true
+        }
+      }
+    },
     build: {
       rollupOptions: {
         input: resolve(__dirname, 'index.html')

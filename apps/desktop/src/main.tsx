@@ -1,11 +1,13 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import './styles/app.css'
-import './styles/global.scss'
-import { App } from './app/App'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import 'antd/dist/reset.css'
+import { AppProviders } from './app/AppProviders'
+import App from './App.tsx'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <AppProviders>
+      <App />
+    </AppProviders>
+  </StrictMode>,
 )

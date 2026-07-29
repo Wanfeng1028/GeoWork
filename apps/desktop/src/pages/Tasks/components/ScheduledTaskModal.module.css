@@ -1,0 +1,20 @@
+.form {
+  padding-top: 8px;
+}
+
+.scheduleRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.frequencySelect {
+  min-width: 100px;
+}
+
+.bottomToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+}

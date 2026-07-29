@@ -1,0 +1,246 @@
+/* ── RightWorkspacePanel 布局样式 ── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.panelCollapsed {
+  flex: 0 0 40px;
+  width: 40px;
+}
+
+/* ── 收起态窄条 ── */
+.collapsedBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ── 面板头部 ── */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px 0;
+  flex-shrink: 0;
+}
+
+.panelHeaderTitle {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Tabs 容器 ── */
+.tabsWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* AntD Tabs 样式覆盖（scoped） */
+.tabsWrap :global(.ant-tabs-nav) {
+  margin-bottom: 0;
+  padding-inline: 8px;
+}
+
+.tabsWrap :global(.ant-tabs-nav::before) {
+  border-bottom: none;
+}
+
+.tabsWrap :global(.ant-tabs-tab) {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.tabsWrap :global(.ant-tabs-tab-remove) {
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+.tabsWrap :global(.ant-tabs-content) {
+  flex: 1;
+  min-height: 0;
+}
+
+.tabsWrap :global(.ant-tabs-tabpane) {
+  height: 100%;
+}
+
+/* ── Tab 内容滚动区 ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  box-sizing: border-box;
+  min-height: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.content::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 任务面板卡片 ── */
+.cardSection {
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── 待办 Checklist ── */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.checklistIcon {
+  flex-shrink: 0;
+  font-size: 14px;
+  display: inline-flex;
+}
+
+.checklistDone {
+  text-decoration: line-through;
+}
+
+/* ── 产物 Artifacts ── */
+.artifactList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.artifactItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.artifactName {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+.artifactMeta {
+  font-size: 11px;
+}
+
+/* ── 文件列表 ── */
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── 日志 ── */
+.logList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.logTime {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── 终端 Mock ── */
+.terminalArea {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.terminalHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.terminalBody {
+  flex: 1;
+  padding: 8px 12px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.terminalBody::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 预览 ── */
+.previewBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* ── 上下文 ── */
+.contextSection {
+  margin-bottom: 16px;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
