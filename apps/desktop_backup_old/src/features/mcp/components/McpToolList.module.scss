@@ -1,0 +1,110 @@
+.container {
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.header {
+  padding: 12px 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.empty {
+  min-height: 176px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px;
+  font-size: 12px;
+}
+
+.emptyIcon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  font-size: 18px;
+}
+
+.toolRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.toolName {
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolPanel {
+  margin: 8px 10px;
+}
+
+.toolDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toolDescription {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.toolActions {
+  display: flex;
+  gap: 8px;
+}
+
+.schemaSection {
+  padding: 10px;
+  border-radius: 7px;
+}
+
+.schemaTitle,
+.testLabel,
+.testResultLabel {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.schemaCode,
+.testResultCode {
+  margin: 0;
+  max-height: 200px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 17px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.testInput {
+  border-radius: 7px !important;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.testResult {
+  margin-top: 12px;
+}

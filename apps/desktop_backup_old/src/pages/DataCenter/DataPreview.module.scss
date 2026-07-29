@@ -1,0 +1,75 @@
+.metadataSection {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.metadataSection :global(.grid),
+.metadataSection :global(.border) {
+  border-radius: 7px !important;
+}
+
+.metadataSection :global(.p-3) {
+  padding: 10px !important;
+}
+
+.metadataSection :global(.text-sm) {
+  font-size: 12px !important;
+  line-height: 18px;
+}
+
+.metadataSection :global(.text-muted-foreground) {
+}
+
+.metadataSection :global(.font-semibold) {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.metadataSection :global(.bg-muted\/50) {
+}
+
+.metadataSection :global(.rounded) {
+  border-radius: 7px !important;
+}
+
+.metadataSection :global(.gap-1) {
+  gap: 6px !important;
+}
+
+.metadataSection :global(.w-12) {
+}
+
+.sectionTitle {
+  margin: 8px 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.thumbnailPlaceholder {
+  height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  background:
+  font-size: 12px;
+}
+
+.jsonPreview {
+  max-height: 400px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 17px;
+  white-space: pre-wrap;
+}
+
+:global([role='dialog']) :global([data-state]) + .metadataSection,
+:global([role='dialog']) .metadataSection {
+  font-family: sans-serif;
+}

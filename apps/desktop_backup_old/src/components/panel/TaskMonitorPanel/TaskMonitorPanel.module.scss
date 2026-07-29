@@ -1,0 +1,156 @@
+.panel {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.taskInfo,
+.stepsSection,
+.eventsSection,
+.errorAlert {
+  border-radius: 8px;
+}
+
+.taskInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.taskHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.taskTitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.taskId,
+.taskTime,
+.stepTool,
+.stepTime {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.progress {
+  margin: 2px 0 0;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 10px;
+  color: #df5147;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.stepsSection,
+.eventsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stepItem {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  transition: background-color 0.15s ease;
+}
+
+.stepItem:last-child {
+  border-bottom: 0;
+}
+
+.stepItem:hover {
+}
+
+.stepTitle {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepTool,
+.stepTime {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.eventsSection :global(.flex) {
+  padding: 7px 10px;
+}
+
+.eventsSection :global(.flex:last-child) {
+  border-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions :global(button) {
+  height: 30px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+}

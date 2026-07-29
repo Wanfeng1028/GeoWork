@@ -1,0 +1,144 @@
+.container {
+  min-height: 100%;
+  padding: 14px;
+  background:
+}
+
+.header {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  :global(h1),
+  :global(h2),
+  :global(h3) {
+    margin: 0;
+    font-size: 18px !important;
+    line-height: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+.headerFilters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categorySelect {
+  width: 126px;
+}
+
+.searchInput {
+  width: 244px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(244px, 1fr));
+  gap: 10px;
+}
+
+.pluginCard {
+  min-height: 138px;
+  cursor: pointer;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease,;
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.pluginCard:hover {
+  transform: translateY(-1px);
+}
+
+.pluginCardInstalled {
+}
+
+.pluginHeader {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 10px;
+}
+
+.pluginIcon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  font-size: 17px;
+}
+
+.pluginTitleWrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pluginName {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pluginDescription {
+  min-height: 36px;
+  margin: 0 0 10px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.pluginMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: 11px;
+}
+
+.metaLeft,
+.metaRight,
+.ratingStars,
+.pluginPermissions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.pluginPermissions {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 36px 0;
+}

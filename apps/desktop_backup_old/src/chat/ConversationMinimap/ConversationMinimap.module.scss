@@ -1,0 +1,37 @@
+// GeoWork ConversationMinimap Styles
+
+.minimap {
+  grid-column: 3;
+  grid-row: 2;
+  width: var(--minimap-width);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.2s ease;
+  
+  &:hover {
+    width: var(--minimap-expanded-width);
+  }
+}
+
+.minimapItem {
+  flex: 1;
+  min-height: 4px;
+  margin: 1px 1px;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.user {
+}
+
+.assistant {
+}
+
+.error {
+  background: #ff4d4f;
+}
+
+.minimap:hover .minimapItem {
+  opacity: 0.8;
+}

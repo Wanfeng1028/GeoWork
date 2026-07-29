@@ -1,0 +1,57 @@
+.toolbar {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px 10px;
+}
+
+.item {
+  min-width: 48px;
+  min-height: 28px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+
+  &:focus-visible {
+    outline-offset: 2px;
+  }
+}
+
+.active {
+}
+
+.disabled {
+  opacity: .42;
+  cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.label {
+  color: inherit;
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
+  user-select: none;
+}

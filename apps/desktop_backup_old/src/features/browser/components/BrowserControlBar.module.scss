@@ -1,0 +1,28 @@
+/* GeoWork Browser Control Bar - CSS Modules */
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+}
+
+.toolbar {
+  flex: 1;
+}
+
+.toolbarLabel {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 20px;
+}

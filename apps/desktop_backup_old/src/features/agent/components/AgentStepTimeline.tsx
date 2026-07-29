@@ -1,0 +1,95 @@
+// GeoWork Desktop - Agent Step Timeline
+// Visual timeline of agent execution steps
+
+import React from 'react'
+import { CheckCircle, XCircle, Loader2, Clock } from 'lucide-react'
+import useAgentStore from '../agentStore'
+import styles from './AgentStepTimeline.module.scss'
+
+const STATUS_ICONS: Record<string, React.ReactNode> = {
+  completed: <CheckCircle className={`${styles.icon} ${styles.completed}`} />,
+  running: <Loader2 className={`${styles.icon} ${styles.running}`} />,
+  failed: <XCircle className={`${styles.icon} ${styles.failed}`} />,
+  pending: <Clock className={`${styles.icon} ${styles.pending}`} />,
+}
+
+function formatDuration(startedAt?: string, completedAt?: string): string {
+  if (!startedAt) return '-'
+  const start = new Date(startedAt).getTime()
+  const end = completedAt ? new Date(completedAt).getTime() : Date.now()
+  const ms = end - start
+  if (ms < 1000) return '<1s'
+  if (ms < 60000) return `${Math.round(ms / 1000)}s`
+  const mins = Math.floor(ms / 60000)
+  const secs = Math.round((ms % 60000) / 1000)
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
+}
+
+export const AgentStepTimeline: React.FC = () => {
+  const steps = useAgentStore((s) => s.currentSteps)
+  const isRunning = useAgentStore((s) => s.isRunning)
+  const error = useAgentStore((s) => s.error)
+
+  if (!isRunning && steps.length === 0) {
+    return (
+      <div className={styles.timelineCard}>
+        <div className={styles.empty}>No steps to display.</div>
+      </div>
+    )
+  }
+
+  const displaySteps = isRunning && steps.length === 0 ? [{
+    id: 'waiting',
+    title: 'Waiting for agent to start...',
+    status: 'pending' as const,
+  }] : steps
+
+  return (
+    <div className={styles.timelineCard}>
+      <div className={styles.timeline}>
+        {displaySteps.map((step, index) => {
+          const isLast = index === displaySteps.length - 1
+          const statusColor =
+            step.status === 'completed' ? '#22c55e'
+              : step.status === 'running' ? '#3b82f6'
+              : step.status === 'failed' ? '#ef4444'
+              : '#94a3b8'
+
+          return (
+            <React.Fragment key={step.id}>
+              <div
+                className={`${styles.step} ${step.status === 'running' ? styles.stepRunning : ''} ${step.status === 'failed' ? styles.stepFailed : ''}`}
+                style={{ '--step-color': statusColor } as React.CSSProperties}
+              >
+                <div className={styles.stepNode}>
+                  <div className={styles.stepNumber}>{index + 1}</div>
+                  <div className={styles.stepDot}>
+                    {STATUS_ICONS[step.status] || STATUS_ICONS.pending}
+                  </div>
+                </div>
+                <div className={styles.stepContent}>
+                  <div className={styles.stepTitle}>
+                    {step.title}
+                    {step.toolName && <span className={styles.toolName}>{step.toolName}</span>}
+                  </div>
+                  <div className={styles.stepMeta}>
+                    <span className={styles.duration}>{formatDuration(step.startedAt, step.completedAt)}</span>
+                    <span className={styles.statusText} style={{ color: statusColor }}>
+                      {step.status.charAt(0).toUpperCase() + step.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {!isLast && (
+                <div className={styles.connector} style={{ borderColor: statusColor }} />
+              )}
+            </React.Fragment>
+          )
+        })}
+      </div>
+      {error && <div className={styles.error}>{error}</div>}
+    </div>
+  )
+}
+
+export default AgentStepTimeline

@@ -1,0 +1,149 @@
+.paperCard {
+  min-height: 172px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.paperCard:hover,
+.paperCard.selected {
+}
+
+.paperHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.paperHeader h4 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.iconActions {
+  display: flex;
+  gap: 4px;
+}
+
+.iconActions button {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iconActions button:hover {
+}
+
+.iconActions button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.filledStar {
+  fill: #f2b84b;
+  color: #f2b84b;
+}
+
+.paperMeta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, .6fr) 48px auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.paperMeta span,
+.paperMeta em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paperMeta em {
+  font-style: normal;
+}
+
+.paperMeta b {
+  font-size: 12px;
+}
+
+.paperMeta strong,
+.keywordList span {
+  width: fit-content;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.paperCollapse {
+  padding-top: 8px;
+}
+
+.paperCollapse summary {
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.paperCollapse p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.keywordList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.linkRow button {
+  min-width: 0;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.linkRow button:hover {
+}

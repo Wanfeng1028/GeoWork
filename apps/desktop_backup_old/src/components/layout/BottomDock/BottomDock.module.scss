@@ -1,0 +1,79 @@
+.dock {
+  position: relative;
+  max-height: 45vh;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.18);
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: ns-resize;
+  z-index: 2;
+}
+
+.resizeHandle:hover {
+}
+
+.closeBtn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+  }
+}
+
+.tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabsList {
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 42px 4px 8px;
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+.tabsList :global(button) {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.tabsList :global(button:hover),
+.tabsList :global(button[data-state='active']) {
+  box-shadow: none;
+}
+
+.tabs :global([data-radix-tabs-content]) {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+}

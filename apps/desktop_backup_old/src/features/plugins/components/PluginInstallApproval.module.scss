@@ -1,0 +1,77 @@
+.card {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.alert {
+  margin-bottom: 10px;
+}
+
+.permissionsList {
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+
+.permissionsTitle {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 700;
+}
+
+.permissionRow {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.permissionName {
+  padding: 0;
+  background: transparent;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.riskTag {
+  height: 18px;
+  margin: 0;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 18px;
+}
+
+.reasonSection {
+  margin-bottom: 10px;
+}
+
+.rememberRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.actions {
+  width: 100%;
+  margin-top: 9px;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 17px;
+}

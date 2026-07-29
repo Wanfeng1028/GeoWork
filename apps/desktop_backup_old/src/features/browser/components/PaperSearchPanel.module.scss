@@ -1,0 +1,84 @@
+/* GeoWork Paper Search Panel - CSS Modules */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ── Search bar ──────────────────────────────────────── */
+
+.searchBar {
+  padding: 12px;
+}
+
+.searchInput {
+}
+
+/* ── Results area ────────────────────────────────────── */
+
+.resultsArea {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+}
+
+.emptyState {
+  padding: 32px 0;
+}
+
+/* ── Result item ─────────────────────────────────────── */
+
+.resultItem {
+  padding: 12px 12px;
+  transition: background 0.15s ease;
+
+  &:hover {
+  }
+}
+
+.resultContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resultTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+
+  .resultUrlIcon {
+    font-size: 14px;
+  }
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+}
+
+.metaSeparator {
+  margin: 0 2px;
+}
+
+.resultSnippet {
+  display: block;
+  margin-top: 4px;
+}
+
+.resultActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

@@ -1,0 +1,226 @@
+.analysisLayout {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 280px;
+  grid-template-rows: minmax(0, 1fr) 280px;
+  gap: 12px;
+  padding: 12px;
+  overflow: hidden;
+  background:
+}
+
+.leftPanel,
+.centerPanel,
+.rightPanel,
+.bottomPanel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.leftPanel {
+  grid-row: 1 / 3;
+}
+
+.centerPanel {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.rightPanel {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.bottomPanel {
+  grid-column: 2 / 4;
+  grid-row: 2;
+}
+
+.analysisLayout :global([data-slot='card']),
+.analysisLayout :global(.rounded-lg) {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.analysisLayout :global([data-slot='card-header']) {
+  min-height: 42px;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px !important;
+}
+
+.analysisLayout :global([data-slot='card-title']) {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.analysisLayout :global([data-slot='card-content']) {
+  padding: 12px !important;
+}
+
+.analysisLayout :global(label) {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.analysisLayout :global(.text-xs),
+.analysisLayout :global(.text-sm),
+.analysisLayout :global(.text-muted-foreground) {
+}
+
+.analysisLayout :global(input),
+.analysisLayout :global(button[role='combobox']) {
+  height: 32px;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  box-shadow: none !important;
+}
+
+.analysisLayout :global(button) {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.analysisLayout :global(button:not([disabled]):hover) {
+  filter: brightness(.98);
+}
+
+.analysisLayout :global(.space-y-4 > :not([hidden]) ~ :not([hidden])) {
+  margin-top: 13px !important;
+}
+
+.analysisLayout :global(.grid) {
+  gap: 8px !important;
+}
+
+.mapContainer {
+  min-height: 330px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+}
+
+.mapPlaceholder {
+  height: 100%;
+  min-height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 13px;
+
+  svg {
+    opacity: .5;
+  }
+}
+
+.statItem {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 8px;
+
+  .statLabel {
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .statValue {
+    font-size: 18px;
+    line-height: 23px;
+    font-weight: 760;
+  }
+
+  .statUnit {
+    font-size: 10px;
+    line-height: 14px;
+  }
+}
+
+.bottomPanel :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bottomPanel :global(th) {
+  height: 34px;
+  padding: 0 9px !important;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.bottomPanel :global(td) {
+  height: 38px;
+  padding: 0 9px !important;
+  font-size: 12px;
+}
+
+.bottomPanel :global(tr:hover td) {
+}
+
+.bottomPanel :global(.text-center) {
+}
+
+.rightPanel :global(.rounded) {
+  border-radius: 8px !important;
+}
+
+.chartContainer {
+  margin-top: 8px;
+}
+
+.bandSelector,
+.thresholdRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.analysisActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.resultsTable {
+  margin-top: 8px;
+}
+
+@media (max-width: 1180px) {
+  .analysisLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    overflow: auto;
+  }
+
+  .leftPanel,
+  .centerPanel,
+  .rightPanel,
+  .bottomPanel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .bandSelector,
+  .thresholdRow {
+    grid-template-columns: 1fr;
+  }
+}

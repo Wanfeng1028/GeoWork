@@ -1,0 +1,83 @@
+// GeoWork Desktop - Agent Plan Card
+// Displays the agent's execution plan with collapsible step details
+
+import React, { useMemo } from 'react'
+import { CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
+import useAgentStore from '../agentStore'
+import styles from './AgentPlanCard.module.scss'
+
+const MODE_CONFIG: Record<string, { color: string; label: string }> = {
+  work: { color: '', label: 'Work' },
+  code: { color: '', label: 'Code' },
+  paper: { color: '', label: 'Paper' },
+  ppt: { color: '', label: 'PPT' },
+}
+
+const STEP_STATUS_MAP: Record<string, { icon: React.ReactNode; color: string; text: string }> = {
+  completed: { icon: <CheckCircle className={styles.iconCompleted} />, color: '', text: 'Completed' },
+  running: { icon: <Loader2 className={`${styles.iconRunning}`} />, color: '', text: 'Running' },
+  failed: { icon: <XCircle className={styles.iconFailed} />, color: '', text: 'Failed' },
+  pending: { icon: <Clock className={styles.iconPending} />, color: '', text: 'Pending' },
+}
+
+export const AgentPlanCard: React.FC = () => {
+  const currentPlan = useAgentStore((s) => s.currentPlan)
+  const isRunning = useAgentStore((s) => s.isRunning)
+  const error = useAgentStore((s) => s.error)
+
+  const modeInfo = useMemo(() => {
+    if (!currentPlan) return null
+    const key = currentPlan.mode.toLowerCase()
+    return MODE_CONFIG[key] ?? { color: '', label: currentPlan.mode }
+  }, [currentPlan])
+
+  if (!currentPlan) {
+    return (
+      <div className={styles.planCard}>
+        {error && <div className={styles.error}>{error}</div>}
+        {!error && isRunning && <div className={styles.empty}>No plan available yet.</div>}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.planCard}>
+      {modeInfo && (
+        <div className={styles.modeBanner} style={{ borderColor: modeInfo.color, background: `color-mix(in srgb, ${modeInfo.color} 14%, transparent)` }}>
+          <span className={styles.modeTag} style={{ backgroundColor: `color-mix(in srgb, ${modeInfo.color} 24%, transparent)`, color: modeInfo.color }}>
+            {modeInfo.label}
+          </span>
+        </div>
+      )}
+      <div >
+        {currentPlan.steps.map((step) => {
+          const statusInfo = STEP_STATUS_MAP[step.status] ?? STEP_STATUS_MAP.pending
+          const toolTag = step.tool ? (
+            <span className={styles.toolTag}>{step.tool}</span>
+          ) : null
+
+          return (
+            <details key={step.id} className={styles.stepPanel}>
+              <summary className={styles.stepLabel}>
+                <span className={styles.stepIcon}>{statusInfo.icon}</span>
+                <span
+                  className={styles.stepTitle}
+                  
+                >
+                  {step.title}
+                </span>
+                <span className={styles.stepStatus} style={{ color: statusInfo.color }}>
+                  {statusInfo.text}
+                </span>
+              </summary>
+              {toolTag && <div className={styles.stepDetail}>{toolTag}</div>}
+            </details>
+          )
+        })}
+      </div>
+      {error && <div className={styles.error}>{error}</div>}
+    </div>
+  )
+}
+
+export default AgentPlanCard

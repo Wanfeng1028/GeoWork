@@ -1,0 +1,57 @@
+.toolbar {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+}
+
+.label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.tools {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+
+  :global(button) {
+    height: 28px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 620;
+    box-shadow: none;
+  }
+
+  :global(button:hover) {
+  }
+}
+
+.activeLayer {
+  flex: 0 1 auto;
+  max-width: 320px;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  strong {
+    font-weight: 650;
+  }
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .activeLayer {
+    max-width: 100%;
+  }
+}
