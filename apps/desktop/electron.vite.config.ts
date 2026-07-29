@@ -31,12 +31,13 @@ export default defineConfig({
     server: {
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: 'http://localhost:8767',
           changeOrigin: true
         },
         '/worker': {
-          target: 'http://localhost:8000',
-          changeOrigin: true
+          target: 'http://localhost:8766',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/worker/, '')
         }
       }
     },
