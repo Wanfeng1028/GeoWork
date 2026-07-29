@@ -1,0 +1,57 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progressInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.progressDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── 左下角浮窗 ── */
+.floatWidget {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 240px;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.floatHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.floatIcon {
+  font-size: 20px;
+}
+
+.floatTitle {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.floatViewBtn {
+  margin-top: 4px;
+  align-self: flex-start;
+}

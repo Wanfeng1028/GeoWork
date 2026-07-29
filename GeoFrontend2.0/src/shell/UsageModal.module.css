@@ -1,0 +1,67 @@
+.switcher {
+  margin-bottom: 16px;
+}
+
+.switcher :global(.ant-segmented-item-selected) {
+  color: #fff;
+}
+
+.switcher :global(.ant-segmented-thumb),
+.switcher :global(.ant-segmented-item-selected .ant-segmented-item-label) {
+  background: var(--seg-primary);
+  color: #fff;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border, #303030);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.refresh {
+  font-size: 12px;
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.cardStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.tokenBreakdown {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}

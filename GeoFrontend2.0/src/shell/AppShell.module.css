@@ -1,0 +1,303 @@
+.root {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.sidebarCollapsed {
+  width: 64px;
+  min-width: 64px;
+}
+
+/* Toolbar */
+.sidebarToolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 6px 2px;
+}
+
+.sidebarToolbar :global(.ant-btn-sm) {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding-inline: 0;
+  font-size: 11px;
+}
+
+.sidebarToolbarCollapsed {
+  flex-direction: column;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 8px 0 4px;
+}
+
+/* Body */
+.sidebarBody {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-block: 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebarBody::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebarBodyCollapsed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebarBodyCollapsed::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebarSegmented {
+  padding: 4px 12px 8px;
+}
+
+.sidebarEmpty {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebarEmpty::-webkit-scrollbar {
+  display: none;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Workspace Group ── */
+.workspaceGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.workspaceHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.workspaceHeader:hover {
+  background: var(--hover-bg);
+}
+
+.workspaceHeaderName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspaceHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 44px;
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+.workspaceHeader:hover .workspaceHeaderActions {
+  visibility: visible;
+}
+
+.workspaceTaskList {
+  display: flex;
+  flex-direction: column;
+  padding-left: 8px;
+}
+
+.taskItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.taskItem:hover {
+  background: var(--hover-bg);
+}
+
+.taskItemTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.taskItemTitleText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskItemActions {
+  visibility: hidden;
+  flex-shrink: 0;
+}
+
+.taskItem:hover .taskItemActions {
+  visibility: visible;
+}
+
+.taskItem:hover .taskItemMeta {
+  visibility: hidden;
+}
+
+/* Footer */
+.sidebarFooter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.sidebarFooterCollapsed {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  gap: 4px;
+}
+
+/* Extension block */
+.extensionBlock {
+  padding: 0;
+}
+
+.extensionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  height: 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.extensionChildren {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 4px;
+}
+
+.extensionChildRow {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding-left: 44px;
+  padding-right: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  transition: background 0.15s ease;
+}
+
+.extensionChildRow:hover {
+  background: var(--hover-bg);
+}
+
+/* ── MainWorkspace ── */
+.workspace {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ── 右侧拖拽分隔条 ── */
+.rightResizeHandle {
+  flex: 0 0 4px;
+  cursor: col-resize;
+  position: relative;
+  user-select: none;
+  z-index: 1;
+}
+
+.rightResizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  width: 1px;
+  background: var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.rightResizeHandle:hover::before {
+  background: var(--accent-color);
+  width: 2px;
+  left: 1px;
+}
+
+.rightResizeHandle:active::before {
+  background: var(--accent-color);
+  width: 2px;
+  left: 1px;
+}

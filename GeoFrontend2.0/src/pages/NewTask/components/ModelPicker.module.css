@@ -1,0 +1,53 @@
+/* ── Model Picker ── */
+.pickerContent {
+  width: 340px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pickerAlert {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.modelList {
+  padding: 4px 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.modelItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.modelItemIcon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.modelItemName {
+  flex: 1;
+  font-size: 13px;
+}
+
+.modelItemMeta {
+  font-size: 12px;
+}
+
+.pickerFooter {
+  padding: 8px 12px;
+}
+
+/* ── Trigger Button ── */
+.modelButton {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

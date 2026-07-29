@@ -1,0 +1,124 @@
+.pageContainer {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pageContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 顶部工具栏 ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+
+/* ── 页面标题 ── */
+.header {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  margin-bottom: 8px !important;
+}
+
+.pageSubtitle {
+  margin-bottom: 0 !important;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Hero 推荐卡片 ── */
+.heroCard {
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.heroContent {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.heroRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.heroPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* ── Tabs 行 ── */
+.tabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* ── 卡片网格 ── */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+/* ── 空状态 ── */
+.emptyArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.emptyContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 640px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroContent {
+    flex-direction: column;
+  }
+
+  .heroRight {
+    align-items: flex-start;
+  }
+
+  .heroPills {
+    justify-content: flex-start;
+  }
+}
