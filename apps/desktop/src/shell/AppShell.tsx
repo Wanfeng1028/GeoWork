@@ -24,18 +24,11 @@ import {
   ClockCircleOutlined,
   UnorderedListOutlined,
   MobileOutlined,
-  SearchOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LayoutOutlined,
   SunOutlined,
   MoonOutlined,
   DesktopOutlined,
   SettingOutlined,
   CheckOutlined,
-  BarChartOutlined,
-  MacCommandOutlined,
-  MessageOutlined,
   DownOutlined,
   RightOutlined,
   UserSwitchOutlined,
@@ -71,6 +64,7 @@ import { UsageModal } from './UsageModal'
 import { UserMenu } from './UserMenu'
 import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
+import { TitleBar } from './TitleBar'
 import styles from './AppShell.module.css'
 
 type SidebarSegment = 'tasks' | 'channels'
@@ -562,6 +556,12 @@ export function AppShell() {
 
   return (
     <div className={styles.root} ref={rootRef}>
+      <TitleBar
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+        onOpenSearch={() => setGlobalSearchOpen(true)}
+        onOpenModal={(m) => setModalOpen(m)}
+      />
       {/* ── Sidebar ── */}
       <aside
         className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}
@@ -570,74 +570,6 @@ export function AppShell() {
           borderRight: `1px solid ${token.colorBorderSecondary}`,
         }}
       >
-        {/* 顶部工具栏 */}
-        <Beam
-          className={`${styles.sidebarToolbar} ${sidebarCollapsed ? styles.sidebarToolbarCollapsed : ''}`}
-        >
-          <Tooltip
-            title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
-            placement={sidebarCollapsed ? 'right' : undefined}
-          >
-            <Button
-              type="text"
-              icon={
-                sidebarCollapsed ? (
-                  <MenuUnfoldOutlined />
-                ) : (
-                  <MenuFoldOutlined />
-                )
-              }
-              size={sidebarCollapsed ? 'middle' : 'small'}
-              onClick={() => setSidebarCollapsed((v) => !v)}
-            />
-          </Tooltip>
-          {!sidebarCollapsed && (
-            <>
-              <Tooltip title="面板">
-                <Button
-                  type="text"
-                  icon={<LayoutOutlined />}
-                  size="small"
-                  onClick={() => message.info('面板切换功能后续接入')}
-                />
-              </Tooltip>
-              <Tooltip title="搜索">
-                <Button
-                  type="text"
-                  icon={<SearchOutlined />}
-                  size="small"
-                  onClick={() => setGlobalSearchOpen(true)}
-                />
-              </Tooltip>
-              <div style={{ flex: 1 }} />
-              <Tooltip title="用量反馈">
-                <Button
-                  type="text"
-                  icon={<BarChartOutlined />}
-                  size="small"
-                  onClick={() => setModalOpen('usage')}
-                />
-              </Tooltip>
-              <Tooltip title="快捷键指引">
-                <Button
-                  type="text"
-                  icon={<MacCommandOutlined />}
-                  size="small"
-                  onClick={() => setModalOpen('shortcuts')}
-                />
-              </Tooltip>
-              <Tooltip title="问题反馈">
-                <Button
-                  type="text"
-                  icon={<MessageOutlined />}
-                  size="small"
-                  onClick={() => setModalOpen('feedback')}
-                />
-              </Tooltip>
-            </>
-          )}
-        </Beam>
-
         {/* Divider 1: 工具区下 */}
         <Divider style={dividerStyle} />
 
