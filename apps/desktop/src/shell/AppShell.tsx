@@ -44,6 +44,7 @@ import {
   LinkOutlined,
   FormatPainterOutlined,
   BgColorsOutlined,
+  SkinOutlined,
   FolderOutlined,
   EllipsisOutlined,
   PushpinOutlined,
@@ -471,13 +472,13 @@ export function AppShell() {
   }
 
   /* 主题 Dropdown */
-  const themeMenuItems = [
+  const themeStyleChildren = [
     {
       key: 'light',
       icon: <SunOutlined />,
       label: (
         <Space>
-          默认亮色
+          晴空
           {appearance === 'light' && <CheckOutlined />}
         </Space>
       ),
@@ -489,16 +490,6 @@ export function AppShell() {
         <Space>
           暗色
           {appearance === 'dark' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-    {
-      key: 'system',
-      icon: <DesktopOutlined />,
-      label: (
-        <Space>
-          跟随系统
-          {appearance === 'system' && <CheckOutlined />}
         </Space>
       ),
     },
@@ -521,6 +512,45 @@ export function AppShell() {
           {appearance === 'glass' && <CheckOutlined />}
         </Space>
       ),
+    },
+  ]
+
+  const themeMenuItems = [
+    {
+      key: 'mode-light',
+      icon: <SunOutlined />,
+      label: (
+        <Space>
+          亮色
+          {appearance === 'light' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'mode-dark',
+      icon: <MoonOutlined />,
+      label: (
+        <Space>
+          暗色
+          {appearance === 'dark' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'mode-system',
+      icon: <DesktopOutlined />,
+      label: (
+        <Space>
+          跟随系统
+          {appearance === 'system' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'theme-style',
+      icon: <SkinOutlined />,
+      label: '主题风格',
+      children: themeStyleChildren,
     },
   ]
 
@@ -914,8 +944,10 @@ export function AppShell() {
           <Dropdown
             menu={{
               items: themeMenuItems,
-              onClick: ({ key }) =>
-                setAppearance(key as Appearance),
+              onClick: ({ key }) => {
+                const value = key.startsWith('mode-') ? key.slice(5) : key
+                setAppearance(value as Appearance)
+              },
             }}
             trigger={['click']}
             placement="topRight"

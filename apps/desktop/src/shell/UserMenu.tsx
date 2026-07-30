@@ -135,7 +135,7 @@ export function UserMenu({ collapsed, onOpenShortcuts: _onOpenShortcuts }: UserM
   const themeChildren: MenuItem[] = [
     {
       key: 'theme-light',
-      label: subCheckLabel('默认亮色', appearance === 'light'),
+      label: subCheckLabel('晴空', appearance === 'light'),
       onClick: () => setAppearance('light' as Appearance),
     },
     {

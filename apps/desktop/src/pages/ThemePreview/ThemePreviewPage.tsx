@@ -53,7 +53,7 @@ export function ThemePreviewPage() {
             value={appearance}
             onChange={(v) => setAppearance(v as Appearance)}
             options={[
-              { label: '默认亮色', value: 'light' },
+              { label: '晴空', value: 'light' },
               { label: '暗色', value: 'dark' },
               { label: '跟随系统', value: 'system' },
               { label: '插画风格', value: 'illustration' },

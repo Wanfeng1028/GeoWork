@@ -50,7 +50,7 @@ const { Text } = Typography
 /* ── 常量 ── */
 
 const APPEARANCE_OPTIONS = [
-  { value: 'light', label: '默认亮色' },
+  { value: 'light', label: '晴空' },
   { value: 'dark', label: '暗色' },
   { value: 'system', label: '跟随系统' },
   { value: 'illustration', label: '插画风格' },
