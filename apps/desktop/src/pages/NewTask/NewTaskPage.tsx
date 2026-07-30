@@ -541,28 +541,21 @@ export function NewTaskPage() {
       {/* Composer */}
       <div ref={composerRef} className={styles.homeComposerWrap}>
         <div className={styles.homeComposerInner}>
-          {(() => {
-            const composer = (
-              <ChatComposer
-                prompt={prompt}
-                onPromptChange={setPrompt}
-                onSend={handleSend}
-                onStop={handleStop}
-                isStreaming={isStreaming}
-                model={model}
-                onModelChange={setModel}
-                placeholder={WORK_MODE_COPY[workMode].placeholder}
-                onOpenContextPicker={handleOpenContextPicker}
-                onPickDirectory={handlePickDirectory}
-                selectedContexts={selectedContexts}
-                onRemoveContext={handleRemoveContext}
-                onClearContexts={handleClearContexts}
-              />
-            )
-            return isLight ? (
-              <BorderBeam color={token.colorPrimary} outset={0}>{composer}</BorderBeam>
-            ) : composer
-          })()}
+          <ChatComposer
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onSend={handleSend}
+            onStop={handleStop}
+            isStreaming={isStreaming}
+            model={model}
+            onModelChange={setModel}
+            placeholder={WORK_MODE_COPY[workMode].placeholder}
+            onOpenContextPicker={handleOpenContextPicker}
+            onPickDirectory={handlePickDirectory}
+            selectedContexts={selectedContexts}
+            onRemoveContext={handleRemoveContext}
+            onClearContexts={handleClearContexts}
+          />
         </div>
       </div>
 
