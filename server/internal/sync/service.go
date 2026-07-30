@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -29,9 +30,8 @@ type PushRequest struct {
 
 // Push handles POST /api/sync/push
 func (s *Service) Push(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -73,9 +73,8 @@ func (s *Service) Push(c *gin.Context) {
 
 // Pull handles GET /api/sync/pull
 func (s *Service) Pull(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -114,9 +113,8 @@ func (s *Service) Pull(c *gin.Context) {
 
 // GetState handles GET /api/sync/state
 func (s *Service) GetState(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -135,9 +133,8 @@ func (s *Service) GetState(c *gin.Context) {
 
 // ResolveConflict handles POST /api/sync/resolve-conflict
 func (s *Service) ResolveConflict(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -206,18 +203,6 @@ func isValidPayload(typ string, data string) bool {
 		return false
 	}
 	return true
-}
-
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
 }
 
 func generateID() string {

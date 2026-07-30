@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"geowork/core/internal/idgen"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/toolregistry"
 
@@ -132,7 +133,7 @@ func NewOrchestrator(
 // StartRun begins a new agent execution.
 func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run, error) {
 	run := &Run{
-		ID:        generateID(),
+		ID:        idgen.NewPrefixed("run_"),
 		Mode:      mode,
 		Prompt:    prompt,
 		Status:    StatusPending,
@@ -418,8 +419,4 @@ func (o *Orchestrator) GetCurrentState() State {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	return o.currentState
-}
-
-func generateID() string {
-	return fmt.Sprintf("run_%d", time.Now().UnixNano())
 }

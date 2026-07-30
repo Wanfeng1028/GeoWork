@@ -2,15 +2,23 @@
 package auth
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
+	"fmt"
 	"net/http"
+	"os"
+	"regexp"
+	"strconv"
 	"time"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
@@ -34,6 +42,37 @@ type LoginResponse struct {
 	RefreshToken string        `json:"refresh_token"`
 }
 
+// validatePassword checks that the password meets minimum strength requirements:
+// at least 8 characters, contains both letters and digits.
+func validatePassword(password string) error {
+	if len(password) < 8 {
+		return fmt.Errorf("password must be at least 8 characters")
+	}
+	hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
+	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
+	if !hasLetter {
+		return fmt.Errorf("password must contain at least one letter")
+	}
+	if !hasDigit {
+		return fmt.Errorf("password must contain at least one digit")
+	}
+	return nil
+}
+
+// isAutoRegisterEnabled checks the GEOWORK_AUTO_REGISTER_ENABLED environment variable.
+// Default is false (disabled).
+func isAutoRegisterEnabled() bool {
+	val := os.Getenv("GEOWORK_AUTO_REGISTER_ENABLED")
+	if val == "" {
+		return false
+	}
+	enabled, err := strconv.ParseBool(val)
+	if err != nil {
+		return false
+	}
+	return enabled
+}
+
 // Login handles POST /api/auth/login
 func (s *Service) Login(c *gin.Context) {
 	var req LoginRequest
@@ -42,8 +81,6 @@ func (s *Service) Login(c *gin.Context) {
 		return
 	}
 
-	hashedPassword := hashPassword(req.Password)
-
 	user, err := s.store.GetUserByEmail(req.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
@@ -51,7 +88,24 @@ func (s *Service) Login(c *gin.Context) {
 	}
 
 	if user == nil {
-		// Auto-register new users
+		// Auto-register new users (gated by environment variable)
+		if !isAutoRegisterEnabled() {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
+
+		// Validate password strength for new registrations
+		if err := validatePassword(req.Password); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		hashedPassword, err := hashPassword(req.Password)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+			return
+		}
+
 		user = &storage.User{
 			ID:           generateID(),
 			Email:        req.Email,
@@ -64,9 +118,19 @@ func (s *Service) Login(c *gin.Context) {
 			return
 		}
 	} else {
-		if user.PasswordHash != hashedPassword {
+		// Dual-mode password verification: bcrypt first, then legacy SHA-256
+		if !verifyPassword(user.PasswordHash, req.Password) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 			return
+		}
+
+		// Transparent migration: if still using legacy SHA-256, upgrade to bcrypt
+		if isLegacySHA256(user.PasswordHash) {
+			newHash, err := hashPassword(req.Password)
+			if err == nil {
+				user.PasswordHash = newHash
+				_ = s.store.UpdateUser(user) // best-effort migration
+			}
 		}
 	}
 
@@ -209,38 +273,54 @@ func (s *Service) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
 			return
 		}
 
 		tok, err := s.store.GetToken(token)
 		if err != nil || tok == nil || time.Now().After(tok.ExpiresAt) {
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
 
 		user, err := s.store.GetUserByID(tok.UserID)
 		if err != nil || user == nil {
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 			return
 		}
 
-		c.Set("user_id", tok.UserID)
-		c.Set("user", user)
+		servercontext.SetUser(c, user)
 		c.Next()
 	}
 }
 
 func generateID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand failed: %v", err))
+	}
 	return hex.EncodeToString(b)
 }
 
 func generateToken(userID, typ string) string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand failed: %v", err))
+	}
 	return typ + "_" + userID + "_" + hex.EncodeToString(b)
+}
+
+// constantTimeCompare performs a constant-time comparison of two strings
+// to prevent timing attacks. It uses hmac.Equal for byte-level comparison.
+func constantTimeCompare(a, b string) bool {
+	if len(a) != len(b) {
+		// Use subtle.ConstantTimeCompare which handles length differences
+		// by returning 0, but we still need to avoid leaking length info
+		// when possible. For tokens of same expected length, this is fine.
+		result := subtle.ConstantTimeCompare([]byte(a), []byte(b))
+		return result == 1
+	}
+	return hmac.Equal([]byte(a), []byte(b))
 }
 
 func extractToken(c *gin.Context) string {
@@ -263,7 +343,38 @@ func splitEmail(email string) string {
 	return email
 }
 
-func hashPassword(password string) string {
-	h := sha256.Sum256([]byte(password))
-	return hex.EncodeToString(h[:])
+// hashPassword hashes a password using bcrypt.
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// verifyPassword verifies a password against a hash.
+// It supports both bcrypt and legacy SHA-256 hashes for transparent migration.
+func verifyPassword(hash, password string) bool {
+	// Try bcrypt first
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err == nil {
+		return true
+	}
+
+	// Fallback: check if it's a legacy SHA-256 hash (64-char hex string)
+	if isLegacySHA256(hash) {
+		h := sha256.Sum256([]byte(password))
+		legacyHash := hex.EncodeToString(h[:])
+		return constantTimeCompare(hash, legacyHash)
+	}
+
+	return false
+}
+
+// isLegacySHA256 checks if the hash is a legacy SHA-256 hex string (64 hex characters).
+func isLegacySHA256(hash string) bool {
+	if len(hash) != 64 {
+		return false
+	}
+	matched, _ := regexp.MatchString(`^[a-f0-9]{64}$`, hash)
+	return matched
 }

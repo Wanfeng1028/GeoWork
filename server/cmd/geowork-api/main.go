@@ -89,8 +89,6 @@ func (s *Server) Setup() {
 	if s.Store.DBErr() != nil {
 		log.Fatalf("Failed to open database: %v", s.Store.DBErr())
 	}
-	defer s.Store.Close() // close immediately after setup; re-open for lifetime
-
 	// 2. Seed defaults (billing plans, marketplace items)
 	if err := s.Store.EnsureDefaults(); err != nil {
 		log.Fatalf("Failed to seed defaults: %v", err)

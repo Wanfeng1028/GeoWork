@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -20,9 +22,8 @@ func NewService(store *storage.Store) *Service {
 
 // ReportEvent handles POST /api/telemetry/events
 func (s *Service) ReportEvent(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -42,7 +43,7 @@ func (s *Service) ReportEvent(c *gin.Context) {
 	}
 
 	event := &storage.TelemetryEvent{
-		ID:       generateID(),
+		ID:       idgen.New("tel_"),
 		UserID:   user.ID,
 		Type:     req.Type,
 		Value:    req.Value,
@@ -59,9 +60,8 @@ func (s *Service) ReportEvent(c *gin.Context) {
 
 // ReportBatch handles POST /api/telemetry/batch
 func (s *Service) ReportBatch(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -84,7 +84,7 @@ func (s *Service) ReportBatch(c *gin.Context) {
 	_ = now
 	for _, item := range req {
 		event := &storage.TelemetryEvent{
-			ID:       generateID(),
+			ID:       idgen.New("tel_"),
 			UserID:   user.ID,
 			Type:     item.Type,
 			Value:    item.Value,
@@ -101,22 +101,6 @@ func (s *Service) ReportBatch(c *gin.Context) {
 	})
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
 func isTelemetryEnabled(c *gin.Context) bool {
 	return c.GetHeader("X-Telemetry-Opt-In") == "true"
-}
-
-func generateID() string {
-	return "tel_" + time.Now().Format("20060102150405")
 }

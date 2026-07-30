@@ -5,6 +5,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -128,9 +129,46 @@ func NewRouter(deps RouterDeps) *Router {
 	return router
 }
 
+// allowedOrigins returns the whitelist of allowed origins from the
+// GEOWORK_ALLOWED_ORIGINS environment variable. If the variable is empty the
+// default development origins are used.
+func allowedOrigins() []string {
+	env := os.Getenv("GEOWORK_ALLOWED_ORIGINS")
+	if env == "" {
+		env = "http://localhost:5173,http://127.0.0.1:5173"
+	}
+	parts := strings.Split(env, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			origins = append(origins, p)
+		}
+	}
+	return origins
+}
+
+// isOriginAllowed checks whether origin is in the whitelist or is a file://
+// origin (used by Electron).
+func isOriginAllowed(origin string, whitelist []string) bool {
+	if strings.HasPrefix(origin, "file://") {
+		return true
+	}
+	for _, allowed := range whitelist {
+		if origin == allowed {
+			return true
+		}
+	}
+	return false
+}
+
 func cors(next http.Handler) http.Handler {
+	whitelist := allowedOrigins()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if isOriginAllowed(origin, whitelist) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		if r.Method == http.MethodOptions {

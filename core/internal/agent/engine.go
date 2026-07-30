@@ -2,12 +2,11 @@ package agent
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"sync/atomic"
 
+	"geowork/core/internal/idgen"
 	"geowork/core/internal/worker"
 
 	"go.uber.org/zap"
@@ -41,17 +40,10 @@ func (e *Engine) Close() error {
 	return nil
 }
 
-// generateID creates a simple random hex ID.
-func generateID() string {
-	b := make([]byte, 8)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
 // CreateWorkflow creates a new workflow with the given name and description.
 func (e *Engine) CreateWorkflow(name, description string) (*Workflow, error) {
 	wf := &Workflow{
-		ID:          generateID(),
+		ID:          idgen.NewShort(),
 		Name:        name,
 		Description: description,
 		Nodes:       []WorkflowNode{},
@@ -100,7 +92,7 @@ func (e *Engine) StartRun(ctx context.Context, workflowID string) (*Run, error) 
 	}
 
 	run := &Run{
-		ID:           generateID(),
+		ID:           idgen.NewShort(),
 		WorkflowID:   workflowID,
 		WorkflowName: wf.Name,
 		Status:       "running",

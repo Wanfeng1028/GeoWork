@@ -5,19 +5,24 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"sync"
 	"time"
 
+	"server/internal/crypto"
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Service struct {
-	store     *storage.Store
-	providers map[string]*ProviderConfig
-	mu        sync.RWMutex
+	store         *storage.Store
+	providers     map[string]*ProviderConfig
+	mu            sync.RWMutex
+	encryptionKey []byte // AES-256 key for API key encryption; nil means plaintext fallback
 }
 
 type ProviderConfig struct {
@@ -30,17 +35,24 @@ type ProviderConfig struct {
 }
 
 func NewService(store *storage.Store) *Service {
-	return &Service{
+	svc := &Service{
 		store:     store,
 		providers: make(map[string]*ProviderConfig),
 	}
+	key, err := crypto.GetEncryptionKey()
+	if err != nil {
+		log.Printf("[modelproxy] WARNING: %v — API keys will be stored in plaintext (dev mode)", err)
+	} else {
+		svc.encryptionKey = key
+		log.Println("[modelproxy] API key encryption enabled (AES-256-GCM)")
+	}
+	return svc
 }
 
 // AddProvider handles adding a provider config.
 func (s *Service) AddProvider(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -53,11 +65,26 @@ func (s *Service) AddProvider(c *gin.Context) {
 	req.ID = user.ID + "_" + req.ID
 	req.Enabled = true
 
+	// Encrypt API key before storing
+	if s.encryptionKey != nil && req.APIKey != "" {
+		encrypted, err := crypto.Encrypt(req.APIKey, s.encryptionKey)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to encrypt API key"})
+			return
+		}
+		req.APIKey = encrypted
+	} else if s.encryptionKey == nil && req.APIKey != "" {
+		log.Printf("[modelproxy] WARNING: storing API key in plaintext for provider %s", req.ID)
+	}
+
 	s.mu.Lock()
 	s.providers[req.ID] = &req
 	s.mu.Unlock()
 
-	c.JSON(http.StatusCreated, req)
+	// Return response with masked key
+	respCopy := req
+	respCopy.APIKey = "***"
+	c.JSON(http.StatusCreated, respCopy)
 }
 
 // ListProviders handles GET /api/model/providers
@@ -131,11 +158,21 @@ func (s *Service) Chat(c *gin.Context) {
 		return
 	}
 
+	apiKey := s.resolveAPIKey(provider)
+	if apiKey == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "API key not available"})
+		return
+	}
+
 	body, _ := json.Marshal(req)
 	upstreamURL := provider.BaseURL + "/v1/chat/completions"
 
+	httpReq, _ := http.NewRequest("POST", upstreamURL, bytes.NewReader(body))
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+
 	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Post(upstreamURL, "application/json", bytes.NewReader(body))
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
 		return
@@ -143,13 +180,11 @@ func (s *Service) Chat(c *gin.Context) {
 	defer resp.Body.Close()
 
 	// Record usage asynchronously
-	userID := ""
-	if u, ok := c.Get("user"); ok {
-		if user, ok := u.(*storage.User); ok {
-			userID = user.ID
-		}
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
+		return
 	}
-	go recordUsage(s.store, userID, "model_requests", 1, req["model"].(string))
+	go recordUsage(s.store, user.ID, "model_requests", 1, req["model"].(string))
 
 	respBody, _ := io.ReadAll(resp.Body)
 	var proxyResp gin.H
@@ -181,11 +216,21 @@ func (s *Service) Stream(c *gin.Context) {
 		return
 	}
 
+	apiKey := s.resolveAPIKey(provider)
+	if apiKey == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "API key not available"})
+		return
+	}
+
 	body, _ := json.Marshal(req)
 	upstreamURL := provider.BaseURL + "/v1/chat/completions"
 
+	httpReq, _ := http.NewRequest("POST", upstreamURL, bytes.NewReader(body))
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+
 	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Post(upstreamURL, "application/json", bytes.NewReader(body))
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
 		return
@@ -200,24 +245,12 @@ func (s *Service) Stream(c *gin.Context) {
 	io.Copy(c.Writer, resp.Body)
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
 func recordUsage(store *storage.Store, userID string, eventType string, amount int64, model string) {
 	if userID == "" {
 		return
 	}
 	event := &storage.UsageEvent{
-		ID:        generateID(),
+		ID:        idgen.New("mp_"),
 		UserID:    userID,
 		Type:      eventType,
 		Amount:    amount,
@@ -226,6 +259,19 @@ func recordUsage(store *storage.Store, userID string, eventType string, amount i
 	store.AppendUsageEvent(event)
 }
 
-func generateID() string {
-	return "mp_" + time.Now().Format("20060102150405")
+// resolveAPIKey decrypts the provider's API key. Returns plaintext key or empty string on error.
+func (s *Service) resolveAPIKey(provider *ProviderConfig) string {
+	if provider.APIKey == "" {
+		return ""
+	}
+	if s.encryptionKey == nil {
+		// Plaintext mode — key is stored as-is
+		return provider.APIKey
+	}
+	decrypted, err := crypto.Decrypt(provider.APIKey, s.encryptionKey)
+	if err != nil {
+		log.Printf("[modelproxy] WARNING: failed to decrypt API key for provider %s: %v", provider.ID, err)
+		return ""
+	}
+	return decrypted
 }

@@ -3,8 +3,9 @@ package usage
 
 import (
 	"net/http"
-	"time"
 
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -27,9 +28,8 @@ type ReportEventRequest struct {
 
 // ReportEvents handles POST /api/usage/events
 func (s *Service) ReportEvents(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -40,7 +40,7 @@ func (s *Service) ReportEvents(c *gin.Context) {
 	}
 
 	event := &storage.UsageEvent{
-		ID:              generateID(),
+		ID:              idgen.New("usage_"),
 		UserID:          user.ID,
 		Type:            req.Type,
 		Amount:          req.Amount,
@@ -58,9 +58,8 @@ func (s *Service) ReportEvents(c *gin.Context) {
 
 // GetSummary handles GET /api/usage/summary
 func (s *Service) GetSummary(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -82,9 +81,8 @@ func (s *Service) GetSummary(c *gin.Context) {
 
 // GetModels handles GET /api/usage/models
 func (s *Service) GetModels(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -112,20 +110,4 @@ func getSpeedMultiplier(plan string) float64 {
 	default:
 		return 1.0
 	}
-}
-
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
-func generateID() string {
-	return "evt_" + time.Now().Format("20060102150405")
 }

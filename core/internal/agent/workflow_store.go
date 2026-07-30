@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	_ "modernc.org/sqlite"
 )
 
 // Workflow represents a user-defined agent workflow.
@@ -55,16 +53,10 @@ type Store struct {
 	db *sql.DB
 }
 
-// NewStore creates a new workflow store backed by SQLite.
-func NewStore(dbPath string) (*Store, error) {
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		return nil, fmt.Errorf("open workflow store: %w", err)
-	}
-
+// NewStore creates a new workflow store backed by the given database connection.
+func NewStore(db *sql.DB) (*Store, error) {
 	store := &Store{db: db}
 	if err := store.initSchema(); err != nil {
-		db.Close()
 		return nil, fmt.Errorf("init schema: %w", err)
 	}
 	return store, nil

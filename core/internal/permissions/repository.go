@@ -6,14 +6,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // Repository handles persistent storage for permission requests, policies, and decisions.
 type Repository struct {
 	db  *sql.DB
-	log *slog.Logger
+	log *zap.Logger
 }
 
 // PermissionPolicyEntry is a lightweight struct for returning policy summaries.
@@ -92,7 +93,7 @@ type scanner interface {
 func NewRepository(db *sql.DB) (*Repository, error) {
 	repo := &Repository{
 		db:  db,
-		log: slog.Default(),
+		log: zap.NewNop(),
 	}
 
 	if err := repo.init(); err != nil {
@@ -134,7 +135,7 @@ func (r *Repository) Create(req *PermissionRequest) error {
 	if err != nil {
 		return fmt.Errorf("create permission request: %w", err)
 	}
-	r.log.Info("permission request created", "id", req.ID, "task_id", req.TaskID)
+	r.log.Info("permission request created", zap.String("id", req.ID), zap.String("task_id", req.TaskID))
 	return nil
 }
 
@@ -179,7 +180,7 @@ func (r *Repository) UpdateDecision(id, decision, reason string) error {
 	if err != nil {
 		return fmt.Errorf("update request decision: %w", err)
 	}
-	r.log.Info("permission request decision updated", "id", id, "decision", decision)
+	r.log.Info("permission request decision updated", zap.String("id", id), zap.String("decision", decision))
 	return nil
 }
 
@@ -267,7 +268,7 @@ func (r *Repository) Upsert(taskID string, policy *PermissionPolicy) error {
 	if err != nil {
 		return fmt.Errorf("upsert policy: %w", err)
 	}
-	r.log.Info("permission policy upserted", "task_id", taskID)
+	r.log.Info("permission policy upserted", zap.String("task_id", taskID))
 	return nil
 }
 
@@ -325,7 +326,7 @@ func (r *Repository) DeleteByTask(taskID string) error {
 	if rowsAffected == 0 {
 		return fmt.Errorf("policy not found for task %s", taskID)
 	}
-	r.log.Info("permission policy deleted", "task_id", taskID)
+	r.log.Info("permission policy deleted", zap.String("task_id", taskID))
 	return nil
 }
 
@@ -430,7 +431,7 @@ func (r *Repository) CleanupExpired() (int64, error) {
 	}
 
 	count, _ := result.RowsAffected()
-	r.log.Info("cleaned up expired decisions", "count", count)
+	r.log.Info("cleaned up expired decisions", zap.Int64("count", count))
 	return count, nil
 }
 

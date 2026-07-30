@@ -2,9 +2,10 @@ package sandbox
 
 import (
 	"fmt"
-	"log/slog"
 	"regexp"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 // CommandPolicy defines rules for command allow/deny lists.
@@ -19,7 +20,7 @@ type CommandPolicy struct {
 // CommandValidator validates command strings against a policy.
 type CommandValidator struct {
 	policy *CommandPolicy
-	log    *slog.Logger
+	log    *zap.Logger
 }
 
 // ErrCommandBlocked is returned when a command is blocked by policy.
@@ -33,7 +34,7 @@ func (e *ErrCommandBlocked) Error() string {
 }
 
 // NewCommandValidator creates a new validator from the policy.
-func NewCommandValidator(policy *CommandPolicy, log *slog.Logger) *CommandValidator {
+func NewCommandValidator(policy *CommandPolicy, log *zap.Logger) *CommandValidator {
 	return &CommandValidator{
 		policy: policy,
 		log:    log,

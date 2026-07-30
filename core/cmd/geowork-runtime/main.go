@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	"geowork/core/internal/api"
 	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
 	"geowork/core/internal/sandbox"
+	"geowork/core/internal/storage"
 	"geowork/core/internal/worker"
 	"geowork/core/internal/workspace"
 )
@@ -21,27 +22,35 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
 	workerProcess, err := worker.StartProcess(ctx, gruntime.FindRepoRoot())
 	if err != nil {
-		log.Printf("GeoWork Python Worker was not started automatically: %v", err)
+		logger.Warn("GeoWork Python Worker was not started automatically", zap.Error(err))
 	} else {
 		defer workerProcess.Stop()
 	}
 	app := gruntime.New("", "http://127.0.0.1:8766")
-	log.Printf("GeoWork workspace: %s", app.Workspace())
+	logger.Info("GeoWork workspace", zap.String("path", app.Workspace()))
 
 	// Initialize optional modules
 	stateDir := filepath.Join(app.Workspace(), "state")
 	os.MkdirAll(stateDir, 0755)
 
-	// Workspace: file-based SQLite
-	wsDB, err := sql.Open("sqlite", filepath.Join(stateDir, "workspaces.db"))
+	// Workspace: file-based SQLite via shared storage.OpenDB
+	db, err := storage.OpenDB()
 	if err != nil {
-		log.Fatalf("Failed to open workspace DB: %v", err)
+		logger.Fatal("Failed to open DB", zap.Error(err))
 	}
-	wsRepo := workspace.NewRepository(wsDB)
+	if err := storage.RunMigrations(db); err != nil {
+		logger.Fatal("Failed to run migrations", zap.Error(err))
+	}
+
+	wsRepo := workspace.NewRepository(db)
 	if err := wsRepo.Init(); err != nil {
-		log.Fatalf("Failed to init workspace DB: %v", err)
+		logger.Fatal("Failed to init workspace DB", zap.Error(err))
 	}
 	wsSvc := workspace.NewService(wsRepo)
 
@@ -57,13 +66,13 @@ func main() {
 		PermEngine:   permEngine,
 		SandboxSvc:   sbSvc,
 	})
-	log.Println("GeoWork runtime listening on http://127.0.0.1:8765")
+	logger.Info("GeoWork runtime listening on http://127.0.0.1:8765")
 	server := &http.Server{Addr: "127.0.0.1:8765", Handler: r}
 	go func() {
 		<-ctx.Done()
 		_ = server.Shutdown(context.Background())
 	}()
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
+		logger.Fatal("server error", zap.Error(err))
 	}
 }

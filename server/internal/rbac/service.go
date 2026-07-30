@@ -4,6 +4,7 @@ package rbac
 import (
 	"net/http"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -25,9 +26,8 @@ type CheckPermissionRequest struct {
 
 // CheckPermission handles POST /api/rbac/check
 func (s *Service) CheckPermission(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -47,9 +47,8 @@ func (s *Service) CheckPermission(c *gin.Context) {
 
 // GetRoles handles GET /api/rbac/roles
 func (s *Service) GetRoles(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -84,9 +83,8 @@ func (s *Service) GetRoles(c *gin.Context) {
 
 // GetPermissions handles GET /api/account/permissions
 func (s *Service) GetPermissions(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -136,14 +134,3 @@ func (s *Service) getAllPermissions(user *storage.User) []string {
 	return perms
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}

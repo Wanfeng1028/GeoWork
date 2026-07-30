@@ -8,8 +8,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // RecoveryManager handles task interruption recovery via checkpoints.
@@ -18,7 +19,7 @@ type RecoveryManager struct {
 	db       *sql.DB
 	service  *Service
 	eventBus *EventBridge
-	log      *slog.Logger
+	log      *zap.Logger
 }
 
 // Checkpoint holds the execution state for a task recovery point.
@@ -61,7 +62,7 @@ func DefaultRecoveryConfig() RecoveryConfig {
 }
 
 // NewRecoveryManager creates a new recovery manager and ensures required tables exist.
-func NewRecoveryManager(db *sql.DB, service *Service, eventBus *EventBridge, log *slog.Logger) *RecoveryManager {
+func NewRecoveryManager(db *sql.DB, service *Service, eventBus *EventBridge, log *zap.Logger) *RecoveryManager {
 	rm := &RecoveryManager{
 		db:       db,
 		service:  service,
@@ -70,7 +71,7 @@ func NewRecoveryManager(db *sql.DB, service *Service, eventBus *EventBridge, log
 	}
 
 	if err := rm.ensureTables(); err != nil {
-		log.Error("failed to create recovery tables", "error", err)
+		log.Error("failed to create recovery tables", zap.Error(err))
 	}
 
 	return rm
@@ -115,7 +116,7 @@ func (rm *RecoveryManager) SaveCheckpoint(taskID string, stepIndex int, eventTyp
 	if err != nil {
 		return err
 	}
-	rm.log.Debug("checkpoint saved", "task_id", taskID, "step_index", stepIndex)
+	rm.log.Debug("checkpoint saved", zap.String("task_id", taskID), zap.Int("step_index", stepIndex))
 	_ = id
 	return nil
 }
@@ -206,7 +207,7 @@ func (rm *RecoveryManager) CleanupOldCheckpoints(olderThan time.Time) (int64, er
 		return 0, fmt.Errorf("cleanup old checkpoints: %w", err)
 	}
 	rows, _ := result.RowsAffected()
-	rm.log.Debug("cleaned up old checkpoints", "older_than", cutoff, "removed", rows)
+	rm.log.Debug("cleaned up old checkpoints", zap.String("older_than", cutoff), zap.Int64("removed", rows))
 	return rows, nil
 }
 
@@ -251,7 +252,7 @@ func (rm *RecoveryManager) RecoverTask(taskID string) (*RecoveryState, error) {
 
 	// Mark checkpoint as recovered
 	if err := rm.MarkCheckpointRecovered(checkpoint.ID); err != nil {
-		rm.log.Warn("failed to mark checkpoint as recovered", "task_id", taskID, "error", err)
+		rm.log.Warn("failed to mark checkpoint as recovered", zap.String("task_id", taskID), zap.Error(err))
 	}
 
 	// Broadcast recovery event
@@ -320,7 +321,7 @@ func (rm *RecoveryManager) CreateReadOnlySnapshot(taskID string) error {
 	// Retrieve all existing events to preserve as immutable records
 	events, err := rm.service.ListEvents(ctx, taskID)
 	if err != nil {
-		rm.log.Warn("failed to list events for snapshot", "task_id", taskID, "error", err)
+		rm.log.Warn("failed to list events for snapshot", zap.String("task_id", taskID), zap.Error(err))
 	}
 
 	// Save a read-only marker checkpoint
@@ -334,7 +335,7 @@ func (rm *RecoveryManager) CreateReadOnlySnapshot(taskID string) error {
 		return fmt.Errorf("create snapshot: update status: %w", err)
 	}
 
-	rm.log.Info("read-only snapshot created", "task_id", taskID, "events", len(events))
+	rm.log.Info("read-only snapshot created", zap.String("task_id", taskID), zap.Int("events", len(events)))
 	return nil
 }
 
@@ -409,7 +410,7 @@ func (rm *RecoveryManager) ListenForRecoveryEvents() {
 				rm.SaveCheckpoint(event.TaskID, 0, string(event.Type), event.Payload)
 			case EventStatus:
 				// Log status transitions for audit trail
-				rm.log.Debug("task status event received", "task_id", event.TaskID, "payload", event.Payload)
+				rm.log.Debug("task status event received", zap.String("task_id", event.TaskID), zap.String("payload", event.Payload))
 			}
 		}
 	}()

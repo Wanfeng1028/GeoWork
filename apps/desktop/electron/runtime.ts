@@ -1,6 +1,7 @@
 import { ChildProcess, spawn } from 'node:child_process'
 import { join, resolve } from 'node:path'
-import { execSync } from 'node:child_process'
+import net from 'node:net'
+import http from 'node:http'
 import * as fs from 'node:fs'
 import { ipcMain } from 'electron'
 import { getLogFilePath, writeLog } from './local/logging'
@@ -21,60 +22,56 @@ const startupState = {
 }
 
 /**
- * Cross-platform port detection
- * Windows: netstat -aon | findstr :port | findstr LISTENING
- * macOS/Linux: lsof -ti :port
+ * Cross-platform port detection using TCP socket (non-blocking)
  */
-function isPortInUse(port: number): boolean {
-  const platform = process.platform
-  try {
-    if (platform === 'win32') {
-      const result = execSync(`netstat -aon | findstr :${port} | findstr LISTENING`, { encoding: 'utf-8' })
-      return result.trim().length > 0
-    } else if (platform === 'darwin' || platform === 'linux') {
-      const result = execSync(`lsof -ti :${port}`, { encoding: 'utf-8' })
-      return result.trim().length > 0
-    }
-    return false
-  } catch {
-    return false
-  }
+function isPortInUse(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket()
+    socket.setTimeout(1000)
+    socket.on('connect', () => {
+      socket.destroy()
+      resolve(true)
+    })
+    socket.on('timeout', () => {
+      socket.destroy()
+      resolve(false)
+    })
+    socket.on('error', () => {
+      resolve(false)
+    })
+    socket.connect(port, '127.0.0.1')
+  })
+}
+
+/**
+ * Generic HTTP health check (non-blocking)
+ */
+function httpHealthCheck(url: string, timeout: number = 3000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(url, { timeout }, (res) => {
+      resolve(res.statusCode === 200)
+      res.resume() // consume response body
+    })
+    req.on('error', () => resolve(false))
+    req.on('timeout', () => {
+      req.destroy()
+      resolve(false)
+    })
+  })
 }
 
 /**
  * Health check for Go Core Runtime on port 8765
  */
-async function checkGoCoreHealth(): Promise<boolean> {
-  const platform = process.platform
-  try {
-    if (platform === 'win32') {
-      const result = execSync('powershell -command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { $webclient = New-Object Net.WebClient; $webclient.DownloadString(\'http://127.0.0.1:8765/api/diagnostics/health\') } catch { $null }"', { encoding: 'utf-8' })
-      return result.includes('health')
-    } else {
-      const result = execSync(`curl -s --connect-timeout 5 http://127.0.0.1:8765/api/diagnostics/health 2>/dev/null || echo "FAILED"`, { encoding: 'utf-8' })
-      return !result.includes('FAILED') && result.includes('health')
-    }
-  } catch {
-    return false
-  }
+function checkGoCoreHealth(): Promise<boolean> {
+  return httpHealthCheck('http://127.0.0.1:8765/api/diagnostics/health')
 }
 
 /**
  * Health check for Cloud Server on port 8767
  */
-async function checkCloudServerHealth(): Promise<boolean> {
-  const platform = process.platform
-  try {
-    if (platform === 'win32') {
-      const result = execSync('powershell -command "try { $webclient = New-Object Net.WebClient; $webclient.DownloadString(\'http://127.0.0.1:8767/api/diagnostics/health\') } catch { $null }"', { encoding: 'utf-8' })
-      return result.includes('health')
-    } else {
-      const result = execSync(`curl -s --connect-timeout 5 http://127.0.0.1:8767/api/diagnostics/health 2>/dev/null || echo "FAILED"`, { encoding: 'utf-8' })
-      return !result.includes('FAILED') && result.includes('health')
-    }
-  } catch {
-    return false
-  }
+function checkCloudServerHealth(): Promise<boolean> {
+  return httpHealthCheck('http://127.0.0.1:8767/health')
 }
 
 /**
@@ -135,7 +132,7 @@ export async function startRuntime() {
   // --- Start Go Core Runtime ---
   
   // Check if port 8765 is already in use (started by external script)
-  if (isPortInUse(8765)) {
+  if (await isPortInUse(8765)) {
     startupState.goCore = 'running'
     console.log('[GeoWork] Go Core Runtime is already running on port 8765, skipping startup')
     writeLog('main', 'Go Core Runtime already running on port 8765')
@@ -192,7 +189,7 @@ export async function startRuntime() {
 
   // --- Start Cloud Server ---
 
-  if (isPortInUse(8767)) {
+  if (await isPortInUse(8767)) {
     startupState.cloudServer = 'running'
     console.log('[GeoWork] Cloud Server is already running on port 8767, skipping startup')
     writeLog('main', 'Cloud Server already running on port 8767')

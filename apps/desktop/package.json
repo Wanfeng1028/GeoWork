@@ -1,5 +1,8 @@
 {
   "name": "@geowork/desktop",
+  "version": "2.0.0",
+  "description": "GeoWork - 用自然语言搞定空间智能",
+  "author": "GeoWork Team",
   "private": true,
   "type": "module",
   "main": "out/main/main.js",
@@ -26,7 +29,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
-    "electron": "^34.5.8",
+    "electron": "34.5.8",
     "electron-builder": "^26.0.0",
     "electron-vite": "^3.1.0",
     "jsdom": "^25.0.1",

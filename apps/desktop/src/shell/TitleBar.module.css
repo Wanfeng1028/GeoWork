@@ -1,0 +1,41 @@
+.titleBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 138px; /* 避让原生窗口按钮 */
+  height: 36px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.dragRegion {
+  flex: 1;
+  height: 100%;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  margin-left: auto;
+  margin-right: 16px;
+  -webkit-app-region: no-drag;
+}
+
+.center :global(.ant-btn-sm) {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  font-size: 15px;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: rgba(0, 0, 0, 0.1);
+}

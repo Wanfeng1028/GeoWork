@@ -4,11 +4,12 @@ package sandbox
 
 import (
 	"fmt"
-	"log/slog"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // NetworkPolicy defines network access rules for sandboxed processes.
@@ -91,12 +92,12 @@ func PermissiveNetworkPolicy() *NetworkPolicy {
 // NetworkValidator enforces network access rules.
 type NetworkValidator struct {
 	policy *NetworkPolicy
-	log    *slog.Logger
+	log    *zap.Logger
 	mu     sync.RWMutex
 }
 
 // NewNetworkValidator creates a new validator with the given policy.
-func NewNetworkValidator(policy *NetworkPolicy, log *slog.Logger) *NetworkValidator {
+func NewNetworkValidator(policy *NetworkPolicy, log *zap.Logger) *NetworkValidator {
 	return &NetworkValidator{policy: policy, log: log}
 }
 

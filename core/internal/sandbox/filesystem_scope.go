@@ -4,10 +4,11 @@ package sandbox
 
 import (
 	"fmt"
-	"log/slog"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 // FilesystemScope defines allowed and blocked filesystem paths.
@@ -90,12 +91,12 @@ func PermissiveFilesystemScope(workspaceRoot string) *FilesystemScope {
 // Validator enforces filesystem scope rules.
 type Validator struct {
 	scope *FilesystemScope
-	log   *slog.Logger
+	log   *zap.Logger
 	mu    sync.RWMutex
 }
 
 // NewFilesystemValidator creates a new validator with the given scope.
-func NewFilesystemValidator(scope *FilesystemScope, log *slog.Logger) *Validator {
+func NewFilesystemValidator(scope *FilesystemScope, log *zap.Logger) *Validator {
 	return &Validator{scope: scope, log: log}
 }
 
@@ -128,7 +129,7 @@ func (v *Validator) ValidatePath(path string) error {
 			if dirInfo, dirErr := filepath.EvalSymlinks(filepath.Dir(info)); dirErr == nil {
 				if resolvedInfo, infoErr := filepath.EvalSymlinks(dirInfo); infoErr == nil {
 					if filepath.Clean(resolvedInfo) != filepath.Clean(cleanPath) {
-						v.log.Warn("symlink detected and denied", "path", cleanPath)
+						v.log.Warn("symlink detected and denied", zap.String("path", cleanPath))
 						return &ErrPathBlocked{Reason: "symlinks are disabled"}
 					}
 				}

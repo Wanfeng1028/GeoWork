@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -20,9 +21,8 @@ func NewService(store *storage.Store) *Service {
 
 // GetPlan handles GET /api/billing/plan
 func (s *Service) GetPlan(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -33,9 +33,8 @@ func (s *Service) GetPlan(c *gin.Context) {
 
 // GetUsage handles GET /api/billing/usage
 func (s *Service) GetUsage(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -62,9 +61,8 @@ func (s *Service) GetUsage(c *gin.Context) {
 
 // GetCredits handles GET /api/billing/credits
 func (s *Service) GetCredits(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -82,9 +80,8 @@ func (s *Service) GetCredits(c *gin.Context) {
 
 // GetInvoices handles GET /api/billing/invoices
 func (s *Service) GetInvoices(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -116,9 +113,8 @@ func (s *Service) GetInvoices(c *gin.Context) {
 
 // CheckoutSession handles POST /api/billing/checkout/mock
 func (s *Service) CheckoutSession(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -221,14 +217,3 @@ func getPlanInfo(plan string) gin.H {
 	return plans["free"]
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}

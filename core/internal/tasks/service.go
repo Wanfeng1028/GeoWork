@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
+	"geowork/core/internal/idgen"
 )
 
 type Service struct {
@@ -50,7 +50,7 @@ func (s *Service) Init() error {
 // Create registers a new task in pending state.
 func (s *Service) Create(ctx context.Context, t *Task) error {
 	if t.ID == "" {
-		t.ID = uuid.New().String()
+		t.ID = idgen.New()
 	}
 	t.Status = StatusPending
 	t.CreatedAt = time.Now().UTC()
@@ -150,7 +150,7 @@ func (s *Service) UpdateStatus(ctx context.Context, id string, newStatus Status)
 
 // EmitEvent records a real-time event for a task (used by SSE streaming).
 func (s *Service) EmitEvent(ctx context.Context, event *TaskEvent) error {
-	event.ID = uuid.New().String()
+	event.ID = idgen.New()
 	event.CreatedAt = time.Now().UTC()
 	_, err := s.db.Exec(
 		"INSERT INTO task_events (id, task_id, type, payload, created_at) VALUES (?, ?, ?, ?, ?)",

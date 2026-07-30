@@ -37,10 +37,13 @@ async function createWindow() {
     height: 800,
     minWidth: 960,
     minHeight: 640,
-    frame: false,
     titleBarStyle: "hidden",
-    titleBarOverlay: false,
-    backgroundColor: "#171716",
+    titleBarOverlay: {
+      color: "#EEF4F7",
+      symbolColor: "#333333",
+      height: 36,
+    },
+    backgroundColor: "#EEF4F7",
     icon: join(__dirname, "../../assets/app-icon.png"),
     webPreferences: {
       preload: preloadPath,

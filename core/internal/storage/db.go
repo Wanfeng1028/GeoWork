@@ -25,5 +25,19 @@ func OpenDB() (*sql.DB, error) {
 	}
 
 	db.SetMaxOpenConns(1)
+
+	// 启用 WAL 模式
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		return nil, fmt.Errorf("set WAL mode: %w", err)
+	}
+	// 优化同步策略
+	if _, err := db.Exec("PRAGMA synchronous=NORMAL"); err != nil {
+		return nil, fmt.Errorf("set synchronous mode: %w", err)
+	}
+	// 设置忙等待超时
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		return nil, fmt.Errorf("set busy timeout: %w", err)
+	}
+
 	return db, nil
 }

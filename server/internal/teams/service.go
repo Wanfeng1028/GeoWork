@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -31,9 +33,8 @@ type InviteMemberRequest struct {
 
 // CreateTeam handles POST /api/teams
 func (s *Service) CreateTeam(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -43,7 +44,7 @@ func (s *Service) CreateTeam(c *gin.Context) {
 		return
 	}
 
-	teamID := generateID()
+	teamID := idgen.New("team_")
 	team := &storage.Team{
 		ID:        teamID,
 		Name:      req.Name,
@@ -70,9 +71,8 @@ func (s *Service) CreateTeam(c *gin.Context) {
 
 // ListTeams handles GET /api/teams
 func (s *Service) ListTeams(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -89,9 +89,8 @@ func (s *Service) ListTeams(c *gin.Context) {
 
 // GetTeamWorkspaces handles GET /api/teams/{id}/workspaces
 func (s *Service) GetTeamWorkspaces(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -111,9 +110,8 @@ func (s *Service) GetTeamWorkspaces(c *gin.Context) {
 
 // InviteMember handles POST /api/teams/{id}/invite
 func (s *Service) InviteMember(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -145,7 +143,7 @@ func (s *Service) InviteMember(c *gin.Context) {
 
 	// Record team invite event
 	s.store.AppendTelemetryEvent(&storage.TelemetryEvent{
-		ID:   generateID(),
+		ID:   idgen.New("team_"),
 		UserID: user.ID,
 		Type: "team_invite",
 		Value: 1,
@@ -167,9 +165,8 @@ func (s *Service) InviteMember(c *gin.Context) {
 
 // UpdateMember handles PATCH /api/teams/{id}/members/{userid}
 func (s *Service) UpdateMember(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -200,18 +197,6 @@ func (s *Service) UpdateMember(c *gin.Context) {
 	})
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
 func isTeamMemberStore(store *storage.Store, teamID, userID string, roles ...string) bool {
 	member, err := store.GetTeamMember(teamID, userID)
 	if err != nil || member == nil {
@@ -223,8 +208,4 @@ func isTeamMemberStore(store *storage.Store, teamID, userID string, roles ...str
 		}
 	}
 	return false
-}
-
-func generateID() string {
-	return "team_" + time.Now().Format("20060102150405")
 }

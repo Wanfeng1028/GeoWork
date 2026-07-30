@@ -4,8 +4,9 @@ package channels
 import (
 	"fmt"
 	"net/http"
-	"time"
 
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +22,7 @@ func NewService(store *storage.Store) *Service {
 
 // ListChannels handles GET /api/channels
 func (s *Service) ListChannels(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	if _, ok := servercontext.RequireUser(c); !ok {
 		return
 	}
 
@@ -49,9 +48,7 @@ func (s *Service) ListChannels(c *gin.Context) {
 
 // CreateChannel handles POST /api/channels
 func (s *Service) CreateChannel(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	if _, ok := servercontext.RequireUser(c); !ok {
 		return
 	}
 
@@ -65,7 +62,7 @@ func (s *Service) CreateChannel(c *gin.Context) {
 		return
 	}
 
-	webhookID := generateID()
+	webhookID := idgen.New("ch_")
 	webhookURL := "/api/channels/webhook/" + webhookID
 
 	webhook := &storage.ChannelWebhook{
@@ -123,7 +120,7 @@ func (s *Service) WebhookReceiver(c *gin.Context) {
 		return
 	}
 
-	eventID := generateID()
+	eventID := idgen.New("ch_")
 	s.store.AppendCollabRecord(&storage.CollabRecord{
 		ID:          eventID,
 		WorkspaceID: webhook.TeamID,
@@ -140,18 +137,3 @@ func (s *Service) WebhookReceiver(c *gin.Context) {
 	})
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
-func generateID() string {
-	return "wh_" + time.Now().Format("20060102150405")
-}

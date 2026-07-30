@@ -32,6 +32,9 @@ docx/
 logs/
 *.log
 
+# Runtime
+.geowork-pids
+
 # IDE
 .DS_Store
 .idea/

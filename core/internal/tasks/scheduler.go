@@ -5,10 +5,11 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sort"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -33,7 +34,7 @@ type Scheduler struct {
 	stopped        bool
 	workerCtx      context.Context
 	workerCancel   context.CancelFunc
-	log            *slog.Logger
+	log            *zap.Logger
 	defaultTimeout time.Duration
 	done           chan struct{}
 	handlers       map[string]TaskHandler
@@ -56,7 +57,7 @@ type TaskQueueItem struct {
 // The handler map populated by RegisterHandler is used by processTask
 // to look up per-task execution logic, since the Task model is a data
 // struct and carries no runnable behaviour itself.
-func NewScheduler(service *Service, maxConcurrent int, log *slog.Logger) *Scheduler {
+func NewScheduler(service *Service, maxConcurrent int, log *zap.Logger) *Scheduler {
 	if maxConcurrent <= 0 {
 		maxConcurrent = defaultMaxConcurrent
 	}
@@ -113,7 +114,7 @@ func (s *Scheduler) Start() error {
 
 	go s.worker()
 
-	s.log.Info("scheduler started", "maxConcurrent", s.maxConcurrent)
+	s.log.Info("scheduler started", zap.Int("maxConcurrent", s.maxConcurrent))
 	return nil
 }
 
@@ -182,7 +183,7 @@ func (s *Scheduler) Enqueue(task *Task, priority int) error {
 		return s.queue[i].EnqueueAt.Before(s.queue[j].EnqueueAt)
 	})
 
-	s.log.Info("task enqueued", "taskId", task.ID, "priority", priority)
+	s.log.Info("task enqueued", zap.String("taskId", task.ID), zap.Int("priority", priority))
 
 	// Try to drain if there is capacity.
 	s.tryDrain()
@@ -205,7 +206,7 @@ func (s *Scheduler) Dequeue(taskID string) error {
 	for i, item := range s.queue {
 		if item.Task.ID == taskID {
 			s.queue = append(s.queue[:i], s.queue[i+1:]...)
-			s.log.Info("task dequeued", "taskId", taskID)
+			s.log.Info("task dequeued", zap.String("taskId", taskID))
 			return nil
 		}
 	}
@@ -299,7 +300,7 @@ func (s *Scheduler) execute(item *TaskQueueItem) {
 // Failed with an appropriate error message.
 func (s *Scheduler) processTask(task *Task) {
 	taskID := task.ID
-	s.log.Info("processing task", "taskId", taskID)
+	s.log.Info("processing task", zap.String("taskId", taskID))
 
 	// Use the scheduler's own context (not the worker context) for
 	// service-level operations so status/event writes always succeed.
@@ -307,7 +308,7 @@ func (s *Scheduler) processTask(task *Task) {
 
 	// Transition to Running.
 	if err := s.service.UpdateStatus(opCtx, taskID, StatusRunning); err != nil {
-		s.log.Error("failed to set task running", "taskId", taskID, "error", err)
+		s.log.Error("failed to set task running", zap.String("taskId", taskID), zap.Error(err))
 		s.markNotRunning(taskID)
 		return
 	}
@@ -338,7 +339,7 @@ func (s *Scheduler) processTask(task *Task) {
 	err := handler(ctx)
 
 	if err != nil {
-		s.log.Error("task failed", "taskId", taskID, "error", err)
+		s.log.Error("task failed", zap.String("taskId", taskID), zap.Error(err))
 
 		// Update status to Failed.
 		s.service.UpdateStatus(opCtx, taskID, StatusFailed)
@@ -350,7 +351,7 @@ func (s *Scheduler) processTask(task *Task) {
 			Payload: err.Error(),
 		})
 	} else {
-		s.log.Info("task completed", "taskId", taskID)
+		s.log.Info("task completed", zap.String("taskId", taskID))
 
 		// Update status to Completed.
 		s.service.UpdateStatus(opCtx, taskID, StatusCompleted)

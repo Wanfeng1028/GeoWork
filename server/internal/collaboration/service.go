@@ -3,8 +3,9 @@ package collaboration
 
 import (
 	"net/http"
-	"time"
 
+	"server/internal/idgen"
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -48,9 +49,8 @@ func (s *Service) GetActivity(c *gin.Context) {
 // Share handles POST /api/workspaces/:id/share
 func (s *Service) Share(c *gin.Context) {
 	workspaceID := c.Param("id")
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -64,7 +64,7 @@ func (s *Service) Share(c *gin.Context) {
 	}
 
 	record := &storage.CollabRecord{
-		ID:          generateID(),
+		ID:          idgen.New("collab_"),
 		WorkspaceID: workspaceID,
 		Type:        "share",
 		UserID:      user.ID,
@@ -86,9 +86,8 @@ func (s *Service) Share(c *gin.Context) {
 // AddComment handles POST /api/tasks/:id/comments
 func (s *Service) AddComment(c *gin.Context) {
 	taskID := c.Param("id")
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -101,7 +100,7 @@ func (s *Service) AddComment(c *gin.Context) {
 	}
 
 	record := &storage.CollabRecord{
-		ID:        generateID(),
+		ID:        idgen.New("collab_"),
 		Type:      "comment",
 		UserID:    user.ID,
 		Data:      `{"task_id": "` + taskID + `", "content": "` + req.Content + `"}`,
@@ -118,9 +117,8 @@ func (s *Service) AddComment(c *gin.Context) {
 // AssignTask handles POST /api/tasks/:id/assign
 func (s *Service) AssignTask(c *gin.Context) {
 	taskID := c.Param("id")
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -133,7 +131,7 @@ func (s *Service) AssignTask(c *gin.Context) {
 	}
 
 	record := &storage.CollabRecord{
-		ID:        generateID(),
+		ID:        idgen.New("collab_"),
 		Type:      "assign",
 		UserID:    user.ID,
 		Data:      `{"task_id": "` + taskID + `", "assigned_to": "` + req.UserID + `"}`,
@@ -150,18 +148,3 @@ func (s *Service) AssignTask(c *gin.Context) {
 	})
 }
 
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
-}
-
-func generateID() string {
-	return "collab_" + time.Now().Format("20060102150405")
-}

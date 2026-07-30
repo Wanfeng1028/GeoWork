@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -20,6 +21,8 @@ import (
 	"geowork/core/internal/worker"
 
 	"go.uber.org/zap"
+
+	_ "modernc.org/sqlite"
 )
 
 type Event struct {
@@ -206,8 +209,11 @@ func New(workspace string, workerBaseURL string) *App {
 	// Initialize agent engine (workflow store)
 	agentLogger, _ := zap.NewProduction()
 	agentDBPath := filepath.Join(workspace, "state", "workflows.db")
-	if store, err := agent.NewStore(agentDBPath); err == nil {
-		app.agentEngine = agent.NewEngine(store, agentLogger, app.worker)
+	agentDB, err := sql.Open("sqlite", agentDBPath)
+	if err == nil {
+		if store, err := agent.NewStore(agentDB); err == nil {
+			app.agentEngine = agent.NewEngine(store, agentLogger, app.worker)
+		}
 	}
 
 	return app

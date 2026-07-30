@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -26,9 +27,8 @@ type UpdateProfileRequest struct {
 
 // GetProfile handles GET /api/account/profile
 func (s *Service) GetProfile(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 	c.JSON(http.StatusOK, user)
@@ -36,9 +36,8 @@ func (s *Service) GetProfile(c *gin.Context) {
 
 // UpdateProfile handles PATCH /api/account/profile
 func (s *Service) UpdateProfile(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -65,9 +64,8 @@ func (s *Service) UpdateProfile(c *gin.Context) {
 
 // GetSubscription handles GET /api/account/subscription
 func (s *Service) GetSubscription(c *gin.Context) {
-	user := getUserFromContext(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
 		return
 	}
 
@@ -89,18 +87,6 @@ func (s *Service) GetSubscription(c *gin.Context) {
 		"credits":  credits,
 		"features": getPlanFeatures(plan),
 	})
-}
-
-func getUserFromContext(c *gin.Context) *storage.User {
-	val, ok := c.Get("user")
-	if !ok {
-		return nil
-	}
-	u, ok := val.(*storage.User)
-	if !ok {
-		return nil
-	}
-	return u
 }
 
 func getPlanFeatures(plan string) map[string]bool {
