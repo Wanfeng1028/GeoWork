@@ -335,8 +335,8 @@ export function ChatComposer({
       className={`${styles.composer} ${conversationMode ? styles.composerConversation : ''}`}
       style={{
         background: token.colorBgContainer,
-        border: `1px solid ${focused ? token.colorPrimary : token.colorBorderSecondary}`,
-        boxShadow: focused ? `0 0 0 2px ${token.colorPrimaryBg}` : token.boxShadow,
+        border: 'none',
+        boxShadow: focused ? token.boxShadowSecondary : token.boxShadow,
       }}
     >
       {/* 附件标签 */}
