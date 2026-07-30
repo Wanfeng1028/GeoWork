@@ -336,7 +336,7 @@ export function ChatComposer({
       style={{
         background: token.colorBgContainer,
         border: 'none',
-        boxShadow: focused ? token.boxShadowSecondary : token.boxShadow,
+        boxShadow: focused ? token.boxShadowSecondary : 'none',
       }}
     >
       {/* 附件标签 */}
