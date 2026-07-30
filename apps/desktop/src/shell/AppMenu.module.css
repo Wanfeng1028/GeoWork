@@ -1,0 +1,46 @@
+.appMenu {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 2px;
+  padding-left: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.logo {
+  height: 15px;
+  width: auto;
+  margin-right: 8px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.menuTrigger {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--menu-text);
+  transition: background 0.12s ease;
+}
+
+.menuTrigger:hover {
+  background: var(--menu-hover);
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 168px;
+}
+
+.shortcut {
+  font-size: 12px;
+  opacity: 0.55;
+}
