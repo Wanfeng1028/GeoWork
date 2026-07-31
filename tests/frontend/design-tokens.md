@@ -111,3 +111,70 @@
 | Connect link | serif italic, hover underline + #7D6E5E |
 | Divider | 1px #E0DCD7 两侧 + 居中 uppercase label |
 | Compass mark | SVG stroke #9B8976, 32×32, opacity 0.7 |
+
+---
+
+## Workspace UI (Dark)
+
+### Colors
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| --bg-app | #0c0a09 | 页面底色 |
+| --bg-sidebar | #1c1917 | 侧栏背景 |
+| --bg-panel | #1c1917 | 对话面板背景 |
+| --bg-hover | #292524 | 侧栏 hover |
+| --bg-active | #292524 | 侧栏选中 |
+| --bg-input | #292524 | 输入框/表头/dropdown 底色 |
+| --border | #292524 | 面板边框 |
+| --border-strong | #44403c | 输入框边框/表格行 |
+| --text-primary | #fafaf9 | 标题/强调 |
+| --text-body | #d6d3d1 | 正文 |
+| --text-secondary | #a8a29e | 侧栏文字/辅助 |
+| --text-tertiary | #78716c | 辅助说明 |
+| --text-muted | #57534e | 时间戳/placeholder/section label |
+| --accent-blue | #93c5fd | 操作链接 |
+| --accent-blue-bg | #172554 | 操作链接底色 |
+| --accent-green | #4ade80 | After 列/勾选 |
+| --accent-stone | #9B8976 | editorial 左边框 |
+| --send-btn | #fafaf9 | 发送按钮底（反转） |
+| --send-btn-icon | #1c1917 | 发送按钮图标 |
+
+### Preview Chrome (Dark)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| --chrome-bg | #0c0a09 | 预览区外壳 |
+| --chrome-toolbar | #1c1917 | tab 栏 |
+| --chrome-border | #292524 | 工具栏边框 |
+| --chrome-tab | #57534e | 非活跃 tab |
+| --chrome-tab-active | #fafaf9 | 活跃 tab |
+| --chrome-url | #78716c | URL 文字 |
+| --chrome-url-bg | #292524 | URL 栏底色 |
+
+---
+
+## Website Dark (Editorial-European)
+
+### Colors
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| --site-bg | #1c1917 | 页面底色（暖黑） |
+| --site-text | #fafaf9 | 标题 |
+| --site-body | #d6d3d1 | 正文 |
+| --site-muted | #a8a29e | tagline / tag / meta |
+| --site-accent | #b8a898 | 暖石灰点缀（提亮） |
+| --site-accent-hover | #b8a898 | 链接 hover |
+| --site-border | #44403c | 分隔线 / tag 边框 |
+| --site-label | #78716c | section label |
+
+### Components (Dark)
+
+| Component | Style |
+|-----------|-------|
+| Tag | 方形无圆角, 1px border #44403c, hover → #b8a898 |
+| Project card | 透明底, 1px transparent border, hover → #b8a898 |
+| Connect link | serif italic #d6d3d1, hover underline + #b8a898 |
+| Divider | 1px #44403c 两侧 + 居中 uppercase label #78716c |
+| Compass mark | SVG stroke #b8a898, 32×32, opacity 0.8 |
