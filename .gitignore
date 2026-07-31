@@ -27,6 +27,7 @@ docx/
 .codebuddy/
 .atomcode/
 .workbuddy/
+.qoder/
 
 # Logs
 logs/
