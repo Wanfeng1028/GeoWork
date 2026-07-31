@@ -21,7 +21,9 @@ contextBridge.exposeInMainWorld('geowork', {
     listWorkspaces: () => ipcRenderer.invoke('runtime:api', 'GET', '/api/workspaces'),
     createWorkspace: (data: any) => ipcRenderer.invoke('runtime:api', 'POST', '/api/workspaces', data),
     getWorkspaceTree: (workspaceId: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/workspaces/tree?workspaceId=${workspaceId}`),
+    getTreeByPath: (root: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/workspaces/tree?root=${encodeURIComponent(root)}`),
     readFile: (workspaceId: string, path: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/workspaces/files/read?workspaceId=${workspaceId}&path=${encodeURIComponent(path)}`),
+    readFileByPath: (root: string, path: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/workspaces/files/read?root=${encodeURIComponent(root)}&path=${encodeURIComponent(path)}`),
     writeFile: (data: any) => ipcRenderer.invoke('runtime:api', 'POST', '/api/workspaces/files/write', data),
     importFiles: (data: any) => ipcRenderer.invoke('runtime:api', 'POST', '/api/workspaces/files/import', data),
 
@@ -43,6 +45,15 @@ contextBridge.exposeInMainWorld('geowork', {
     denyPermission: (id: string, reason: string) => ipcRenderer.invoke('runtime:api', 'POST', `/api/permissions/requests/${id}/deny`, { reason }),
     getPermissions: (taskId: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/permissions/policies?taskId=${taskId}`),
     updatePermissions: (data: any) => ipcRenderer.invoke('runtime:api', 'PATCH', '/api/permissions/policies', data),
+
+    // Diff / Review (real endpoints under /api/security/diff)
+    listDiffs: (status?: string) =>
+      ipcRenderer.invoke('runtime:api', 'GET', `/api/security/diff${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    getDiff: (id: string) => ipcRenderer.invoke('runtime:api', 'GET', `/api/security/diff/${id}`),
+    approveDiff: (id: string) => ipcRenderer.invoke('runtime:api', 'POST', `/api/security/diff/${id}/approve`),
+    rejectDiff: (id: string) => ipcRenderer.invoke('runtime:api', 'POST', `/api/security/diff/${id}/reject`),
+    applyAllDiffs: () => ipcRenderer.invoke('runtime:api', 'POST', '/api/security/apply-all'),
+    rollbackPath: (path: string) => ipcRenderer.invoke('runtime:api', 'POST', '/api/security/rollback', { path }),
 
     // Sandbox
     runCommand: (data: any) => ipcRenderer.invoke('runtime:api', 'POST', '/api/sandbox/run-command', data),
@@ -124,6 +135,59 @@ contextBridge.exposeInMainWorld('geowork', {
       const listener = (_event: any, data: any) => callback(data)
       ipcRenderer.on('security:status-change', listener)
       return () => ipcRenderer.removeListener('security:status-change', listener)
+    },
+  },
+
+  // Built-in browser (WebContentsView) — 内嵌真实 Chromium,支持 Google Earth / GEE
+  browser: {
+    create: (id: string) => ipcRenderer.invoke('browser:create', id),
+    navigate: (id: string, url: string) => ipcRenderer.invoke('browser:navigate', id, url),
+    setBounds: (id: string, bounds: { x: number; y: number; width: number; height: number }) =>
+      ipcRenderer.invoke('browser:setBounds', id, bounds),
+    setVisible: (id: string, visible: boolean) => ipcRenderer.invoke('browser:setVisible', id, visible),
+    back: (id: string) => ipcRenderer.invoke('browser:back', id),
+    forward: (id: string) => ipcRenderer.invoke('browser:forward', id),
+    reload: (id: string) => ipcRenderer.invoke('browser:reload', id),
+    getUrl: (id: string) => ipcRenderer.invoke('browser:getUrl', id),
+    destroy: (id: string) => ipcRenderer.invoke('browser:destroy', id),
+    onDidNavigate: (id: string, callback: (url: string) => void) => {
+      const channel = `browser:did-navigate-${id}`
+      const listener = (_event: any, url: string) => callback(url)
+      ipcRenderer.on(channel, listener)
+      return () => ipcRenderer.removeListener(channel, listener)
+    },
+    onLoading: (id: string, callback: (loading: boolean) => void) => {
+      const channel = `browser:loading-${id}`
+      const listener = (_event: any, loading: boolean) => callback(loading)
+      ipcRenderer.on(channel, listener)
+      return () => ipcRenderer.removeListener(channel, listener)
+    },
+    onTitle: (id: string, callback: (title: string) => void) => {
+      const channel = `browser:title-${id}`
+      const listener = (_event: any, title: string) => callback(title)
+      ipcRenderer.on(channel, listener)
+      return () => ipcRenderer.removeListener(channel, listener)
+    },
+  },
+
+  // Real terminal (node-pty) — 真·交互式终端
+  terminal: {
+    create: (opts: { id: string; cwd?: string; shell?: string; cols?: number; rows?: number }) =>
+      ipcRenderer.invoke('term:create', opts),
+    write: (id: string, data: string) => ipcRenderer.invoke('term:write', id, data),
+    resize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('term:resize', id, cols, rows),
+    kill: (id: string) => ipcRenderer.invoke('term:kill', id),
+    onData: (id: string, callback: (data: string) => void) => {
+      const channel = `term:data-${id}`
+      const listener = (_event: any, data: string) => callback(data)
+      ipcRenderer.on(channel, listener)
+      return () => ipcRenderer.removeListener(channel, listener)
+    },
+    onExit: (id: string, callback: (exitCode: number) => void) => {
+      const channel = `term:exit-${id}`
+      const listener = (_event: any, code: number) => callback(code)
+      ipcRenderer.on(channel, listener)
+      return () => ipcRenderer.removeListener(channel, listener)
     },
   },
 })

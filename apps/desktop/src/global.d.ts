@@ -20,6 +20,8 @@ declare global {
       clipboard: Record<string, any>
       notifications: Record<string, any>
       security: Record<string, any>
+      browser: Record<string, any>
+      terminal: Record<string, any>
     }
   }
 }

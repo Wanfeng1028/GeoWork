@@ -11,6 +11,8 @@ import { registerRuntimeIPC } from "./ipc/runtimeIpc";
 import { registerSystemIPC } from "./ipc/systemIpc";
 import { registerClipboardIPC } from "./ipc/clipboardIpc";
 import { registerNotificationIPC } from "./ipc/notificationIpc";
+import { registerBrowserViewIPC } from "./ipc/browserView";
+import { registerTerminalIPC } from "./ipc/terminalIpc";
 import registerWindows from "./ipc/windows";
 import { registerPermissionForwarder } from "./security/permission-forwarder";
 import { initTray } from "./local/tray";
@@ -71,6 +73,8 @@ async function createWindow() {
   registerWindows(win);
   registerPermissionForwarder(win);
   registerLoggingIPC();
+  registerBrowserViewIPC(win);
+  registerTerminalIPC(win);
 
   // Initialize tray
   initTray(win);
