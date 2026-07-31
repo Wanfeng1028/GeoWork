@@ -2,10 +2,19 @@ import type { ConfigProviderProps } from 'antd'
 import { useBootstrapTheme } from './bootstrapTheme'
 import { useIllustrationTheme } from './illustrationTheme'
 import { useGlassTheme } from './glassTheme'
+import { useEditorialTheme } from './editorialTheme'
+import { useEditorialDarkTheme } from './editorialDarkTheme'
 import { darkTheme } from './darkTheme'
 import type { Appearance, ResolvedAppearance } from '../../shared/stores/appearanceStore'
 
-export { useBootstrapTheme, useIllustrationTheme, useGlassTheme, darkTheme }
+export {
+  useBootstrapTheme,
+  useIllustrationTheme,
+  useGlassTheme,
+  useEditorialTheme,
+  useEditorialDarkTheme,
+  darkTheme,
+}
 
 export function useAntdTheme(
   appearance: Appearance,
@@ -15,6 +24,11 @@ export function useAntdTheme(
   const bootstrapProps = useBootstrapTheme()
   const illustrationProps = useIllustrationTheme()
   const glassProps = useGlassTheme()
+  const editorialProps = useEditorialTheme()
+  const editorialDarkProps = useEditorialDarkTheme()
+
+  // editorial-dark 走暗色算法，优先判断
+  if (appearance === 'editorial-dark') return editorialDarkProps
 
   if (resolvedAppearance === 'dark') {
     return { theme: darkTheme }
@@ -25,6 +39,8 @@ export function useAntdTheme(
       return illustrationProps
     case 'glass':
       return glassProps
+    case 'editorial':
+      return editorialProps
     default:
       return bootstrapProps
   }

@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 
-export type Appearance = 'light' | 'dark' | 'system' | 'illustration' | 'glass'
+export type Appearance =
+  | 'light'
+  | 'dark'
+  | 'system'
+  | 'illustration'
+  | 'glass'
+  | 'editorial'
+  | 'editorial-dark'
 export type ResolvedAppearance = 'light' | 'dark'
 
 interface AppearanceState {
@@ -18,6 +25,8 @@ const VALID_APPEARANCES: ReadonlySet<Appearance> = new Set([
   'system',
   'illustration',
   'glass',
+  'editorial',
+  'editorial-dark',
 ])
 
 function getSystemAppearance(): ResolvedAppearance {
@@ -29,7 +38,7 @@ function getSystemAppearance(): ResolvedAppearance {
 
 function resolveAppearance(appearance: Appearance): ResolvedAppearance {
   if (appearance === 'system') return getSystemAppearance()
-  if (appearance === 'dark') return 'dark'
+  if (appearance === 'dark' || appearance === 'editorial-dark') return 'dark'
   return 'light'
 }
 

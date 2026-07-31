@@ -512,6 +512,26 @@ export function AppShell() {
         </Space>
       ),
     },
+    {
+      key: 'editorial',
+      icon: <SkinOutlined />,
+      label: (
+        <Space>
+          石灰·亮
+          {appearance === 'editorial' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'editorial-dark',
+      icon: <SkinOutlined />,
+      label: (
+        <Space>
+          石灰·暗
+          {appearance === 'editorial-dark' && <CheckOutlined />}
+        </Space>
+      ),
+    },
   ]
 
   const themeMenuItems = [
@@ -706,6 +726,8 @@ export function AppShell() {
                     Segmented: {
                       itemSelectedColor: token.colorPrimary,
                       itemSelectedBg: token.colorPrimaryBg,
+                      borderRadius: 999,
+                      borderRadiusSM: 999,
                     },
                   },
                 }}

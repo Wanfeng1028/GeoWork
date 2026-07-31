@@ -58,6 +58,8 @@ export function ThemePreviewPage() {
               { label: '跟随系统', value: 'system' },
               { label: '插画风格', value: 'illustration' },
               { label: '玻璃风格', value: 'glass' },
+              { label: '石灰·亮', value: 'editorial' },
+              { label: '石灰·暗', value: 'editorial-dark' },
             ]}
           />
           <Text>
