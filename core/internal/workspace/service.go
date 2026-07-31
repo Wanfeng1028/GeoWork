@@ -60,12 +60,24 @@ func (s *Service) GetTree(workspaceID string) ([]FileTreeNode, error) {
 	return s.repo.GetTree(ws.Path)
 }
 
+// GetTreeByPath scans a real filesystem root directly (bypassing the
+// workspaces table). Used by the IDE file-tree panel where the caller supplies
+// an absolute workspace path (e.g. obtained from the Electron folder picker).
+func (s *Service) GetTreeByPath(root string) ([]FileTreeNode, error) {
+	return s.repo.GetTree(filepath.Clean(root))
+}
+
 func (s *Service) ReadFile(workspaceID, filePath string) ([]byte, error) {
 	ws, err := s.repo.Get(workspaceID)
 	if err != nil {
 		return nil, err
 	}
 	return s.repo.ReadFile(ws.Path, filePath)
+}
+
+// ReadFileByPath reads a file relative to an absolute workspace root directly.
+func (s *Service) ReadFileByPath(root, filePath string) ([]byte, error) {
+	return s.repo.ReadFile(filepath.Clean(root), filePath)
 }
 
 func (s *Service) WriteFile(workspaceID, filePath string, content []byte) error {

@@ -45,18 +45,27 @@ func (h *workspaceHandler) handleList(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, ws)
 }
 
-// GET /api/workspaces/tree?workspaceId=xxx
+// GET /api/workspaces/tree?workspaceId=xxx  OR  ?root=<abs-path>
 func (h *workspaceHandler) handleTree(w http.ResponseWriter, r *http.Request) {
 	if h.workspaceSvc == nil {
 		http.Error(w, "workspace service not available", http.StatusServiceUnavailable)
 		return
 	}
 	wsID := r.URL.Query().Get("workspaceId")
-	if wsID == "" {
-		http.Error(w, "workspaceId required", http.StatusBadRequest)
+	root := r.URL.Query().Get("root")
+	if wsID == "" && root == "" {
+		http.Error(w, "workspaceId or root required", http.StatusBadRequest)
 		return
 	}
-	tree, err := h.workspaceSvc.GetTree(wsID)
+	var (
+		tree interface{}
+		err  error
+	)
+	if root != "" {
+		tree, err = h.workspaceSvc.GetTreeByPath(root)
+	} else {
+		tree, err = h.workspaceSvc.GetTree(wsID)
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -64,19 +73,28 @@ func (h *workspaceHandler) handleTree(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, tree)
 }
 
-// GET /api/workspaces/files/read?workspaceId=xxx&path=yyy
+// GET /api/workspaces/files/read?workspaceId=xxx&path=yyy  OR  ?root=<abs-path>&path=<rel>
 func (h *workspaceHandler) handleRead(w http.ResponseWriter, r *http.Request) {
 	if h.workspaceSvc == nil {
 		http.Error(w, "workspace service not available", http.StatusServiceUnavailable)
 		return
 	}
 	wsID := r.URL.Query().Get("workspaceId")
+	root := r.URL.Query().Get("root")
 	fPath := r.URL.Query().Get("path")
-	if wsID == "" || fPath == "" {
-		http.Error(w, "workspaceId and path required", http.StatusBadRequest)
+	if fPath == "" || (wsID == "" && root == "") {
+		http.Error(w, "workspaceId/root and path required", http.StatusBadRequest)
 		return
 	}
-	data, err := h.workspaceSvc.ReadFile(wsID, fPath)
+	var (
+		data []byte
+		err  error
+	)
+	if root != "" {
+		data, err = h.workspaceSvc.ReadFileByPath(root, fPath)
+	} else {
+		data, err = h.workspaceSvc.ReadFile(wsID, fPath)
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

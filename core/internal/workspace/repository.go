@@ -93,6 +93,15 @@ func buildFileTree(rootPath string) ([]FileTreeNode, error) {
 		if err != nil {
 			return err
 		}
+		// Skip heavy/hidden directories to keep the IDE tree responsive.
+		if info.IsDir() && path != rootPath {
+			name := info.Name()
+			if name == "node_modules" || name == ".git" || name == "dist" ||
+				name == "out" || name == "build" || name == ".next" || name == ".cache" ||
+				name == "__pycache__" || name == "vendor" || name == ".venv" || name == "venv" {
+				return filepath.SkipDir
+			}
+		}
 		if len(nodes) == 0 {
 			nodes = append(nodes, FileTreeNode{
 				Path:  path,

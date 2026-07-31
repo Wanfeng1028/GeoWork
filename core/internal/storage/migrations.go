@@ -178,6 +178,41 @@ var AllMigrations = []Migration{
 		Query:   `ALTER TABLE tasks ADD COLUMN progress REAL DEFAULT 0;`,
 		Desc:    "Add progress column to tasks",
 	},
+	{
+		Version: 12,
+		Query: `
+			CREATE TABLE IF NOT EXISTS conversations (
+				id TEXT PRIMARY KEY,
+				workspace_id TEXT NOT NULL,
+				title TEXT NOT NULL DEFAULT '',
+				mode TEXT DEFAULT 'Work',
+				status TEXT DEFAULT 'active',
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL
+			);
+			CREATE INDEX IF NOT EXISTS idx_conversations_workspace ON conversations(workspace_id);
+			CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at DESC);
+		`,
+		Desc: "Create conversations table",
+	},
+	{
+		Version: 13,
+		Query: `
+			CREATE TABLE IF NOT EXISTS messages (
+				id TEXT PRIMARY KEY,
+				conversation_id TEXT NOT NULL,
+				role TEXT NOT NULL,
+				content TEXT NOT NULL DEFAULT '',
+				tool_calls TEXT DEFAULT '',
+				metadata TEXT DEFAULT '',
+				token_count INTEGER DEFAULT 0,
+				created_at TEXT NOT NULL,
+				FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+			);
+			CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at);
+		`,
+		Desc: "Create messages table with composite index for cursor pagination",
+	},
 }
 
 // RunMigrations executes all pending migrations up to the latest version.

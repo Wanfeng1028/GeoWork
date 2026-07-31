@@ -40,6 +40,11 @@ type Run struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 	StepIndex  int       `json:"stepIndex,omitempty"`
 	Checkpoint []byte    `json:"checkpoint,omitempty"`
+
+	// done is closed when the run reaches a terminal state (completed or
+	// failed). It lets callers such as WaitForRun block until execution
+	// finishes. It is unexported and therefore never serialized.
+	done chan struct{}
 }
 
 // Step is a single step in the agent plan.
@@ -80,6 +85,14 @@ type Event struct {
 	Data      map[string]any         `json:"data,omitempty"`
 }
 
+// EventSink is the sink for agent events. It is implemented by the API
+// layer's EventBridge so orchestrator events can be consumed via SSE
+// subscribers without introducing an import cycle (aiagent must not
+// depend on the api package).
+type EventSink interface {
+	Publish(eventType string, runID string, data map[string]any)
+}
+
 // Orchestrator is the main agent loop controller with budget-aware context and bounded memory.
 type Orchestrator struct {
 	registry      *toolregistry.Registry
@@ -92,11 +105,13 @@ type Orchestrator struct {
 	recovery      *Recovery
 	stateMachine  *StateMachine
 	eventCh       chan Event
+	eventSink     EventSink
 	log           *zap.Logger
 	mu            sync.Mutex
 	runs          map[string]*Run
 	running       map[string]bool
 	currentState  State
+	currentRunID  string
 	budget        ContextBudget
 	maxTurns      int
 }
@@ -130,6 +145,15 @@ func NewOrchestrator(
 	return o
 }
 
+// SetEventSink wires an external event sink (e.g. the API layer's
+// EventBridge) so that orchestrator events are forwarded to SSE
+// subscribers in addition to the internal event channel.
+func (o *Orchestrator) SetEventSink(sink EventSink) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.eventSink = sink
+}
+
 // StartRun begins a new agent execution.
 func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run, error) {
 	run := &Run{
@@ -139,11 +163,13 @@ func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run,
 		Status:    StatusPending,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		done:      make(chan struct{}),
 	}
 
 	o.mu.Lock()
 	o.runs[run.ID] = run
 	o.running[run.ID] = true
+	o.currentRunID = run.ID
 	o.mu.Unlock()
 
 	// Transition: idle -> planning
@@ -157,7 +183,7 @@ func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run,
 	o.emitEvent(Event{
 		Type:      "plan",
 		Timestamp: time.Now(),
-		Data:      map[string]any{"prompt": prompt, "mode": mode, "state": string(o.currentState)},
+		Data:      map[string]any{"runId": run.ID, "prompt": prompt, "mode": mode, "state": string(o.currentState)},
 	})
 
 	plan, err := o.planner.Plan(mode, prompt)
@@ -169,11 +195,13 @@ func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run,
 		o.emitEvent(Event{
 			Type:      "error",
 			Timestamp: time.Now(),
-			Data:      map[string]any{"error": err.Error()},
+			Data:      map[string]any{"runId": run.ID, "error": err.Error()},
 		})
 		o.mu.Lock()
 		o.running[run.ID] = false
+		o.currentRunID = ""
 		o.mu.Unlock()
+		close(run.done)
 		return run, err
 	}
 
@@ -194,6 +222,7 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		run.UpdatedAt = time.Now()
 		o.mu.Lock()
 		o.running[run.ID] = false
+		o.currentRunID = ""
 		o.mu.Unlock()
 		o.emitEvent(Event{
 			Type:      "done",
@@ -202,6 +231,7 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		})
 		o.saveCheckpoint(run)
 		o.currentState = StateCompleted
+		close(run.done)
 	}()
 
 	// Build conversation history for LLM feedback loop
@@ -371,6 +401,28 @@ func (o *Orchestrator) GetRun(id string) (*Run, bool) {
 	return run, ok
 }
 
+// WaitForRun blocks until the run identified by id reaches a terminal state
+// (completed or failed) or the context is cancelled. It returns the run so
+// callers can inspect its final Status. This lets external schedulers treat
+// an agent run as a synchronous unit of work.
+func (o *Orchestrator) WaitForRun(ctx context.Context, id string) (*Run, error) {
+	o.mu.Lock()
+	run, ok := o.runs[id]
+	o.mu.Unlock()
+	if !ok {
+		return nil, fmt.Errorf("run %s not found", id)
+	}
+	if run.done == nil {
+		return run, nil
+	}
+	select {
+	case <-run.done:
+		return run, nil
+	case <-ctx.Done():
+		return run, ctx.Err()
+	}
+}
+
 // ListRuns returns all runs.
 func (o *Orchestrator) ListRuns() []Run {
 	o.mu.Lock()
@@ -395,6 +447,26 @@ func (o *Orchestrator) StopRun(id string) {
 }
 
 func (o *Orchestrator) emitEvent(e Event) {
+	// Forward to the external sink (e.g. EventBridge) so SSE subscribers
+	// receive events. The run ID is taken from the event data, falling
+	// back to the orchestrator's current run.
+	o.mu.Lock()
+	sink := o.eventSink
+	runID := o.currentRunID
+	o.mu.Unlock()
+
+	if sink != nil {
+		if e.Data == nil {
+			e.Data = map[string]any{}
+		}
+		if rid, ok := e.Data["runId"].(string); ok && rid != "" {
+			runID = rid
+		} else {
+			e.Data["runId"] = runID
+		}
+		sink.Publish(e.Type, runID, e.Data)
+	}
+
 	select {
 	case o.eventCh <- e:
 	default:

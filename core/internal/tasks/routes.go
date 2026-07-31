@@ -5,24 +5,36 @@ package tasks
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 )
 
 type Routes struct {
 	service *Service
+	prefix  string
 }
 
+// NewRoutes builds task routes mounted at the default "/api/tasks" prefix.
 func NewRoutes(service *Service) *Routes {
-	return &Routes{service: service}
+	return &Routes{service: service, prefix: "/api/tasks"}
+}
+
+// NewRoutesWithPrefix builds task routes mounted at a custom prefix (e.g.
+// "/api/db/tasks"). This lets the DB-backed task API coexist with the
+// in-memory task handler which owns "/api/tasks", avoiding a ServeMux
+// duplicate-pattern panic.
+func NewRoutesWithPrefix(service *Service, prefix string) *Routes {
+	if prefix == "" {
+		prefix = "/api/tasks"
+	}
+	return &Routes{service: service, prefix: prefix}
 }
 
 func (r *Routes) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/tasks", r.handleList)
-	mux.HandleFunc("GET /api/tasks/{id}", r.handleGet)
-	mux.HandleFunc("POST /api/tasks", r.handleCreate)
-	mux.HandleFunc("PATCH /api/tasks/{id}/status", r.handleUpdateStatus)
-	mux.HandleFunc("GET /api/tasks/{id}/events", r.handleEvents)
-	mux.HandleFunc("DELETE /api/tasks/{id}", r.handleDelete)
+	mux.HandleFunc("GET "+r.prefix, r.handleList)
+	mux.HandleFunc("GET "+r.prefix+"/{id}", r.handleGet)
+	mux.HandleFunc("POST "+r.prefix, r.handleCreate)
+	mux.HandleFunc("PATCH "+r.prefix+"/{id}/status", r.handleUpdateStatus)
+	mux.HandleFunc("GET "+r.prefix+"/{id}/events", r.handleEvents)
+	mux.HandleFunc("DELETE "+r.prefix+"/{id}", r.handleDelete)
 }
 
 func (r *Routes) handleList(w http.ResponseWriter, req *http.Request) {
@@ -52,7 +64,7 @@ func (r *Routes) handleList(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Routes) handleGet(w http.ResponseWriter, req *http.Request) {
-	id := strings.TrimPrefix(req.URL.Path, "/api/tasks/")
+	id := req.PathValue("id")
 	t, err := r.service.GetByID(req.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
@@ -78,7 +90,7 @@ func (r *Routes) handleCreate(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Routes) handleUpdateStatus(w http.ResponseWriter, req *http.Request) {
-	id := strings.TrimPrefix(req.URL.Path, "/api/tasks/")
+	id := req.PathValue("id")
 	var payload struct {
 		Status Status `json:"status"`
 	}
@@ -101,7 +113,7 @@ func (r *Routes) handleUpdateStatus(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Routes) handleEvents(w http.ResponseWriter, req *http.Request) {
-	id := strings.TrimPrefix(req.URL.Path, "/api/tasks/")
+	id := req.PathValue("id")
 	events, err := r.service.ListEvents(req.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -115,7 +127,7 @@ func (r *Routes) handleEvents(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Routes) handleDelete(w http.ResponseWriter, req *http.Request) {
-	id := strings.TrimPrefix(req.URL.Path, "/api/tasks/")
+	id := req.PathValue("id")
 	if err := r.service.Delete(req.Context(), id); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return

@@ -11,11 +11,14 @@ import (
 	"strings"
 	"time"
 
+	"geowork/core/internal/aiagent"
+	"geowork/core/internal/conversation"
 	"geowork/core/internal/file"
 	"geowork/core/internal/knowledge"
 	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
 	"geowork/core/internal/sandbox"
+	"geowork/core/internal/tasks"
 	"geowork/core/internal/workspace"
 
 	"go.uber.org/zap"
@@ -28,6 +31,10 @@ type RouterDeps struct {
 	WorkspaceSvc *workspace.Service
 	PermEngine   *permissions.Engine
 	SandboxSvc   *sandbox.Service
+	TaskSvc      *tasks.Service
+	Scheduler    *tasks.Scheduler
+	Orchestrator *aiagent.Orchestrator
+	ConvStore    *conversation.Store
 }
 
 // Router wraps http.Handler and holds resources that need explicit cleanup.
@@ -121,12 +128,59 @@ func NewRouter(deps RouterDeps) *Router {
 		hFile.RegisterRoutes(mux)
 	}
 
+	// --- Agent Orchestrator routes (/api/agent/runs + SSE stream) ---
+	// The orchestrator events are bridged into the EventBridge so they can
+	// be consumed via SSE subscribers (reuses the existing task_event.go
+	// SSE pattern). This avoids an aiagent -> api import cycle by using a
+	// small adapter that satisfies aiagent.EventSink.
+	if deps.Orchestrator != nil {
+		deps.Orchestrator.SetEventSink(agentEventSink{bridge: bridge})
+		aiagent.NewRoutes(deps.Orchestrator, logger).Register(mux)
+	}
+
+	// --- DB-backed task API + scheduler -> orchestrator bridge ---
+	// The DB task service is exposed under a distinct "/api/db/tasks" prefix so
+	// it coexists with the in-memory task handler on "/api/tasks" (still used by
+	// the current frontend) without a ServeMux duplicate-pattern panic. When the
+	// scheduler and orchestrator are present, POST /api/db/tasks/{id}/run enqueues
+	// a task and drives it through the orchestrator (task -> scheduler -> run).
+	if deps.TaskSvc != nil {
+		tasks.NewRoutesWithPrefix(deps.TaskSvc, "/api/db/tasks").Register(mux)
+		if deps.Scheduler != nil && deps.Orchestrator != nil {
+			newAgentTaskHandler(deps.TaskSvc, deps.Scheduler, deps.Orchestrator, logger).registerRoutes(mux)
+		}
+	}
+
+	// --- Conversation routes (/api/conversations + messages + SSE) ---
+	if deps.ConvStore != nil {
+		hConv := NewConversationHandler(deps.ConvStore, deps.Orchestrator, bridge, logger)
+		hConv.RegisterRoutes(mux)
+	}
+
 	// 404 fallback
 	mux.HandleFunc("api/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
 
 	return router
+}
+
+// agentEventSink adapts the API layer's EventBridge to the aiagent.EventSink
+// interface, forwarding orchestrator events to SSE subscribers keyed by run ID.
+type agentEventSink struct {
+	bridge *EventBridge
+}
+
+func (s agentEventSink) Publish(eventType, runID string, data map[string]any) {
+	if runID == "" {
+		runID = "agent"
+	}
+	s.bridge.Publish(TaskEventPayload{
+		Type:    TaskEventType(eventType),
+		TaskID:  runID,
+		Message: eventType,
+		Data:    data,
+	})
 }
 
 // allowedOrigins returns the whitelist of allowed origins from the
