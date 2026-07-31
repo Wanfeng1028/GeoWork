@@ -84,6 +84,18 @@ async function createWindow() {
     return getRuntimeStatus();
   });
 
+  // 动态切换原生标题栏配色（暗色/亮色），解决 titleBarOverlay 写死亮色的问题
+  ipcMain.handle("window:set-titlebar-theme", (_event, dark: boolean) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setTitleBarOverlay({
+        color: dark ? "#1c1917" : "#EEF4F7",
+        symbolColor: dark ? "#d6d3d1" : "#333333",
+        height: 36,
+      });
+    }
+    return { success: true };
+  });
+
   ipcMain.handle("runtime:health", async () => {
     return await checkHealth();
   });

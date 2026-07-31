@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   Button,
   Tooltip,
@@ -13,6 +14,7 @@ import {
 } from '@ant-design/icons'
 import styles from './TitleBar.module.css'
 import { AppMenu } from './AppMenu'
+import { useAppearanceStore } from '../shared/stores/appearanceStore'
 
 const isElectron = typeof window !== 'undefined' && !!window.geowork?.desktop
 
@@ -29,6 +31,14 @@ export function TitleBar({
   onOpenSearch,
   onOpenModal,
 }: TitleBarProps) {
+  const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
+
+  // 原生标题栏（titleBarOverlay）无法用 CSS 控制，需随主题通知主进程切换配色
+  useEffect(() => {
+    if (!isElectron) return
+    window.geowork?.desktop.setTitleBarTheme(resolvedAppearance === 'dark')
+  }, [resolvedAppearance])
+
   if (!isElectron) return null
 
   return (

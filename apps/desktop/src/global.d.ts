@@ -13,6 +13,7 @@ declare global {
         toggleMaximizeWindow: () => Promise<any>
         closeWindow: () => Promise<any>
         isWindowMaximized: () => Promise<any>
+        setTitleBarTheme: (dark: boolean) => Promise<any>
       }
       runtime: Record<string, any>
       cloud: { api: (method: string, path: string, body?: any) => Promise<any> }

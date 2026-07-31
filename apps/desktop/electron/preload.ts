@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('geowork', {
     toggleMaximizeWindow: () => ipcRenderer.invoke('windows:maximize'),
     closeWindow: () => ipcRenderer.invoke('windows:close'),
     isWindowMaximized: () => ipcRenderer.invoke('windows:isMaximized'),
+    setTitleBarTheme: (dark: boolean) => ipcRenderer.invoke('window:set-titlebar-theme', dark),
   },
 
   // Runtime (Go Core API via Electron IPC)
