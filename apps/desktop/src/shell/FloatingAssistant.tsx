@@ -57,6 +57,8 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
   const childConvIdRef = useRef<string | null>(null)
   /** 关联的 parent id 快照，parent 切换时重置子对话缓存。 */
   const lastParentRef = useRef<string | null | undefined>(parentConversationId)
+  /** stepId → 标题缓存：step_done 事件不含 title，需从 step_start 缓存中查找。 */
+  const stepTitleCacheRef = useRef<Map<string, string>>(new Map())
   const bodyRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -98,6 +100,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
 
     const controller = new AbortController()
     abortRef.current = controller
+    stepTitleCacheRef.current.clear()
 
     try {
       // 首次发送：创建带 parentId 的子对话（继承父记忆）
@@ -159,11 +162,23 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
           }
         }
 
-        // step_done：累积步骤摘要到 assistant 消息
+        // step_start：缓存 stepId → title（step_done 事件不含 title 字段）
+        es.addEventListener('step_start', (e) => {
+          const evt = parse(e as MessageEvent)
+          const d = evt.data ?? {}
+          const stepId = String(d.stepId ?? '')
+          const title = String(d.title ?? d.tool ?? '步骤')
+          if (stepId) {
+            stepTitleCacheRef.current.set(stepId, title)
+          }
+        })
+
+        // step_done：用缓存的标题累积步骤摘要到 assistant 消息
         es.addEventListener('step_done', (e) => {
           const evt = parse(e as MessageEvent)
           const d = evt.data ?? {}
-          const title = String(d.title ?? d.tool ?? '步骤')
+          const stepId = String(d.stepId ?? '')
+          const title = stepTitleCacheRef.current.get(stepId) ?? '步骤'
           assistantContent += `✅ ${title}\n`
           setMessages((prev) =>
             prev.some((m) => m.id === assistantId)
@@ -232,6 +247,9 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
     '--error-text': token.colorError,
   } as React.CSSProperties
 
+  /* 仅当 Core 端会话 id 可解析时才显示"继承上下文"标签，避免误导 */
+  const inheritable = !!resolveCoreConvId(parentConversationId)
+
   return (
     <>
       <FloatButton
@@ -248,7 +266,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
             <span className={styles.headerTitle}>
               <CustomerServiceOutlined />
               悬浮助手
-              {parentConversationId && (
+              {inheritable && (
                 <Tooltip title="继承当前主对话上下文">
                   <Tag icon={<LinkOutlined />} color="processing" className={styles.inheritTag}>
                     继承上下文
@@ -267,7 +285,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
           <div className={styles.body} ref={bodyRef}>
             {messages.length === 0 ? (
               <div className={styles.emptyHint}>
-                在此进行微调式追问，{parentConversationId ? '将继承当前主对话的上下文与记忆。' : '可独立进行辅助对话。'}
+                在此进行微调式追问，{inheritable ? '将继承当前主对话的上下文与记忆。' : '可独立进行辅助对话。'}
               </div>
             ) : (
               messages.map((m) => (
