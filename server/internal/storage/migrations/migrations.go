@@ -24,6 +24,9 @@ var channelEnhancements string
 //go:embed 004_rbac_billing.sql
 var rbacBillingV2 string
 
+//go:embed 005_conversations.sql
+var conversationsSchema string
+
 // Run executes all pending migrations on the given database.
 func Run(db *sql.DB) error {
 	if err := createSchemaTable(db); err != nil {
@@ -40,6 +43,7 @@ func Run(db *sql.DB) error {
 		{ID: "002", Name: "add_user_deleted_at", SQL: addDeletedAt},
 		{ID: "003", Name: "channel_enhancements", SQL: channelEnhancements},
 		{ID: "004", Name: "rbac_billing", SQL: rbacBillingV2},
+		{ID: "005", Name: "conversations", SQL: conversationsSchema},
 	}
 
 	for _, m := range migrations {

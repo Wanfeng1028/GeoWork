@@ -325,6 +325,7 @@ func isValidObjectType(typ string) bool {
 		"settings": true, "workspace": true, "task": true,
 		"artifact": true, "knowledge": true, "plugin": true,
 		"mcp_config": true, "chat_summary": true,
+		"conversation": true, "message": true,
 	}
 	return valid[typ]
 }

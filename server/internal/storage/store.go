@@ -206,12 +206,38 @@ type Invoice struct {
 
 // WorkspaceRole represents a workspace-level role assignment.
 type WorkspaceRole struct {
-	ID          string    `json:"id"`
-	WorkspaceID string    `json:"workspace_id"`
-	UserID      string    `json:"user_id"`
-	Role        string    `json:"role"` // owner | admin | member | viewer
-	AssignedBy  string    `json:"assigned_by"`
+	ID          string `json:"id"`
+	WorkspaceID string `json:"workspace_id"`
+	UserID      string `json:"user_id"`
+	Role        string `json:"role"` // owner | admin | member | viewer
+	AssignedBy  string `json:"assigned_by"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+// Conversation represents a cloud-synced chat session owned by a user.
+// Mirrors core/internal/conversation.Conversation with an added UserID for
+// multi-device ownership.
+type Conversation struct {
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	WorkspaceID string `json:"workspace_id"`
+	Title       string `json:"title"`
+	Mode        string `json:"mode"`
+	Status      string `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// Message represents a single message in a cloud-synced conversation.
+type Message struct {
+	ID             string `json:"id"`
+	ConversationID string `json:"conversation_id"`
+	Role           string `json:"role"` // user | assistant | system | tool
+	Content        string `json:"content"`
+	ToolCalls      string `json:"tool_calls,omitempty"` // JSON string
+	Metadata       string `json:"metadata,omitempty"`  // JSON string
+	TokenCount     int    `json:"token_count"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 // NewStore creates a new SQLite-backed store.

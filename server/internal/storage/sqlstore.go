@@ -1118,6 +1118,161 @@ func (s *Store) UpdateInvoiceStatus(id, status string) error {
 }
 
 // ===========================
+// Conversation repository (Phase 6: cloud sync)
+// ===========================
+
+// CreateConversation inserts a new conversation. Timestamps are set here.
+func (s *Store) CreateConversation(c *Conversation) error {
+	now := time.Now().Unix()
+	c.CreatedAt = time.Unix(now, 0)
+	c.UpdatedAt = c.CreatedAt
+	if c.Status == "" {
+		c.Status = "active"
+	}
+	if c.Mode == "" {
+		c.Mode = "Work"
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO conversations (id, user_id, workspace_id, title, mode, status, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		c.ID, c.UserID, c.WorkspaceID, c.Title, c.Mode, c.Status, now, now,
+	)
+	return err
+}
+
+// ListConversationsByUser returns conversations for a user ordered by updated_at desc.
+// If before is non-zero, only conversations updated before that time are returned
+// (cursor pagination). limit caps the count (<=0 → 50).
+func (s *Store) ListConversationsByUser(userID string, before int64, limit int) ([]*Conversation, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	query := `SELECT id, user_id, workspace_id, title, mode, status, created_at, updated_at FROM conversations WHERE user_id = ?`
+	args := []interface{}{userID}
+	if before > 0 {
+		query += ` AND updated_at < ?`
+		args = append(args, before)
+	}
+	query += ` ORDER BY updated_at DESC LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*Conversation
+	for rows.Next() {
+		c := &Conversation{}
+		var createdAt, updatedAt int64
+		if err := rows.Scan(&c.ID, &c.UserID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		c.CreatedAt = scanTime(createdAt)
+		c.UpdatedAt = scanTime(updatedAt)
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// GetConversation returns a single conversation by id. Returns nil, nil if not found.
+func (s *Store) GetConversation(id string) (*Conversation, error) {
+	c := &Conversation{}
+	var createdAt, updatedAt int64
+	err := s.db.QueryRow(`
+		SELECT id, user_id, workspace_id, title, mode, status, created_at, updated_at
+		FROM conversations WHERE id = ?`, id).Scan(
+		&c.ID, &c.UserID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &createdAt, &updatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	c.CreatedAt = scanTime(createdAt)
+	c.UpdatedAt = scanTime(updatedAt)
+	return c, nil
+}
+
+// DeleteConversation removes a conversation and its messages (CASCADE).
+func (s *Store) DeleteConversation(id string) error {
+	_, err := s.db.Exec(`DELETE FROM conversations WHERE id = ?`, id)
+	return err
+}
+
+// TouchConversationUpdatedAt bumps updated_at to now (e.g. after appending a message).
+func (s *Store) TouchConversationUpdatedAt(id string) error {
+	_, err := s.db.Exec(`UPDATE conversations SET updated_at = ? WHERE id = ?`, time.Now().Unix(), id)
+	return err
+}
+
+// ===========================
+// Message repository
+// ===========================
+
+// AppendMessage inserts a message and touches the parent conversation's updated_at.
+func (s *Store) AppendMessage(m *Message) error {
+	now := time.Now().Unix()
+	m.CreatedAt = time.Unix(now, 0)
+	_, err := s.db.Exec(`
+		INSERT INTO messages (id, conversation_id, role, content, tool_calls, metadata, token_count, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		m.ID, m.ConversationID, m.Role, m.Content, m.ToolCalls, m.Metadata, m.TokenCount, now,
+	)
+	if err != nil {
+		return err
+	}
+	return s.TouchConversationUpdatedAt(m.ConversationID)
+}
+
+// ListMessages returns messages for a conversation in ascending created_at order.
+// If before is non-zero, only messages created before that time are returned
+// (cursor pagination). limit caps the count (<=0 → 100).
+func (s *Store) ListMessages(conversationID string, before int64, limit int) ([]*Message, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 100
+	}
+	query := `SELECT id, conversation_id, role, content, tool_calls, metadata, token_count, created_at FROM messages WHERE conversation_id = ?`
+	args := []interface{}{conversationID}
+	if before > 0 {
+		query += ` AND created_at < ?`
+		args = append(args, before)
+	}
+	query += ` ORDER BY created_at ASC LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*Message
+	for rows.Next() {
+		m := &Message{}
+		var createdAt int64
+		if err := rows.Scan(&m.ID, &m.ConversationID, &m.Role, &m.Content, &m.ToolCalls, &m.Metadata, &m.TokenCount, &createdAt); err != nil {
+			return nil, err
+		}
+		m.CreatedAt = scanTime(createdAt)
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// GetConversationTokenUsage returns the total token count for a conversation.
+func (s *Store) GetConversationTokenUsage(conversationID string) (int, error) {
+	var total sql.NullInt64
+	err := s.db.QueryRow(`SELECT COALESCE(SUM(token_count), 0) FROM messages WHERE conversation_id = ?`, conversationID).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return int(total.Int64), nil
+}
+
+// ===========================
 // WorkspaceRole repository
 // ===========================
 

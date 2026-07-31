@@ -7,6 +7,7 @@ import (
 	"server/internal/billing"
 	"server/internal/channels"
 	"server/internal/collaboration"
+	"server/internal/conversations"
 	"server/internal/crash"
 	"server/internal/marketplace"
 	"server/internal/modelproxy"
@@ -36,6 +37,7 @@ func SetupRoutes(
 	crashSvc *crash.Service,
 	collabSvc *collaboration.Service,
 	channelSvc *channels.Service,
+	conversationSvc *conversations.Service,
 ) {
 	// Rate limiters: global (100 req/s per IP), auth (5 req/min), chat (10 req/min)
 	globalLimiter := ratelimit.NewLimiter(100, 100)
@@ -145,6 +147,11 @@ func SetupRoutes(
 			syncGroup.POST("/cleanup", syncSvc.Cleanup)
 			syncGroup.GET("/history", syncSvc.GetSyncHistory)
 		}
+
+		// Conversation routes (auth required) — Phase 6.2: cloud sync storage
+		conversationGroup := api.Group("/conversations")
+		conversationGroup.Use(authSvc.Middleware())
+		conversationSvc.RegisterRoutes(conversationGroup)
 
 		// Marketplace routes (no auth required for reading)
 		marketplaceGroup := api.Group("/marketplace")

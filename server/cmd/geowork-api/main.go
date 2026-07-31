@@ -31,6 +31,7 @@ import (
 	"server/internal/billing"
 	"server/internal/channels"
 	"server/internal/collaboration"
+	"server/internal/conversations"
 	"server/internal/crash"
 	"server/internal/marketplace"
 	"server/internal/modelproxy"
@@ -65,7 +66,7 @@ func NewServer() *Server {
 			if isOriginAllowed(origin, whitelist) {
 				c.Header("Access-Control-Allow-Origin", origin)
 			}
-			c.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Telemetry-Opt-In, X-Crash-Opt-In")
 			if c.Request.Method == "OPTIONS" {
 				c.AbortWithStatus(204)
@@ -118,11 +119,12 @@ func (s *Server) Setup() {
 	crashSvc := crash.NewService(s.Store)
 	collabSvc := collaboration.NewService(s.Store)
 	channelSvc := channels.NewService(s.Store)
+	conversationSvc := conversations.NewService(s.Store)
 
 	// 5. Register routes
 	api.SetupRoutes(s.Engine, authSvc, accountSvc, teamSvc, rbacSvc,
 		usageSvc, billingSvc, modelProxySvc, syncSvc, marketplaceSvc,
-		telemetrySvc, crashSvc, collabSvc, channelSvc)
+		telemetrySvc, crashSvc, collabSvc, channelSvc, conversationSvc)
 }
 
 func (s *Server) Start() error {
