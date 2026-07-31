@@ -2,8 +2,7 @@
 package servercontext
 
 import (
-	"net/http"
-
+	"server/internal/apierrors"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -21,12 +20,14 @@ func SetUser(c *gin.Context, user *storage.User) {
 func RequireUser(c *gin.Context) (*storage.User, bool) {
 	val, exists := c.Get(userKey)
 	if !exists {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apierrors.Respond(c, apierrors.ErrUnauthorized)
+		c.Abort()
 		return nil, false
 	}
 	user, ok := val.(*storage.User)
 	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		apierrors.Respond(c, apierrors.ErrUnauthorized)
+		c.Abort()
 		return nil, false
 	}
 	return user, true

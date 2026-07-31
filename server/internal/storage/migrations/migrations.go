@@ -15,6 +15,15 @@ import (
 //go:embed 001_initial_schema.sql
 var initialSchema string
 
+//go:embed 002_add_user_deleted_at.sql
+var addDeletedAt string
+
+//go:embed 003_channel_enhancements.sql
+var channelEnhancements string
+
+//go:embed 004_rbac_billing.sql
+var rbacBillingV2 string
+
 // Run executes all pending migrations on the given database.
 func Run(db *sql.DB) error {
 	if err := createSchemaTable(db); err != nil {
@@ -28,6 +37,9 @@ func Run(db *sql.DB) error {
 
 	migrations := []*Migration{
 		{ID: "001", Name: "initial_schema", SQL: initialSchema},
+		{ID: "002", Name: "add_user_deleted_at", SQL: addDeletedAt},
+		{ID: "003", Name: "channel_enhancements", SQL: channelEnhancements},
+		{ID: "004", Name: "rbac_billing", SQL: rbacBillingV2},
 	}
 
 	for _, m := range migrations {

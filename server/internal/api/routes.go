@@ -10,6 +10,7 @@ import (
 	"server/internal/crash"
 	"server/internal/marketplace"
 	"server/internal/modelproxy"
+	"server/internal/ratelimit"
 	"server/internal/rbac"
 	"server/internal/sync"
 	"server/internal/teams"
@@ -36,11 +37,18 @@ func SetupRoutes(
 	collabSvc *collaboration.Service,
 	channelSvc *channels.Service,
 ) {
+	// Rate limiters: global (100 req/s per IP), auth (5 req/min), chat (10 req/min)
+	globalLimiter := ratelimit.NewLimiter(100, 100)
+	authLimiter := ratelimit.NewLimiter(5.0/60.0, 5)
+	chatLimiter := ratelimit.NewLimiter(10.0/60.0, 10)
+
 	// API v1 root
 	api := r.Group("/api")
+	api.Use(ratelimit.Middleware(globalLimiter))
 	{
 		// Auth routes (no auth required for login/logout/refresh)
 		authGroup := api.Group("/auth")
+		authGroup.Use(ratelimit.Middleware(authLimiter))
 		{
 			authGroup.POST("/login", authSvc.Login)
 			authGroup.POST("/logout", authSvc.Logout)
@@ -56,6 +64,10 @@ func SetupRoutes(
 			account.PATCH("/profile", accountSvc.UpdateProfile)
 			account.GET("/subscription", accountSvc.GetSubscription)
 			account.GET("/permissions", rbacSvc.GetPermissions)
+			// B1: account enhancement routes
+			account.DELETE("/me", accountSvc.DeleteAccount)
+			account.PUT("/me/password", accountSvc.ChangePassword)
+			account.GET("/me/stats", accountSvc.GetAccountStats)
 		}
 
 		// Team routes (auth required)
@@ -67,6 +79,11 @@ func SetupRoutes(
 			teamGroup.POST("/:id/invite", teamSvc.InviteMember)
 			teamGroup.PATCH("/:id/members/:userid", teamSvc.UpdateMember)
 			teamGroup.GET("/:id/workspaces", teamSvc.GetTeamWorkspaces)
+			// B2: team enhancement routes
+			teamGroup.DELETE("/:id", teamSvc.DeleteTeam)
+			teamGroup.GET("/:id/members", teamSvc.GetTeamMembers)
+			teamGroup.DELETE("/:id/members/:userid", teamSvc.RemoveMember)
+			teamGroup.POST("/:id/transfer", teamSvc.TransferOwnership)
 		}
 
 		// RBAC routes (auth required)
@@ -75,6 +92,8 @@ func SetupRoutes(
 		{
 			rbacGroup.POST("/check", rbacSvc.CheckPermission)
 			rbacGroup.GET("/roles", rbacSvc.GetRoles)
+			rbacGroup.POST("/check-resource", rbacSvc.CheckResourcePermission)
+			rbacGroup.POST("/assign-role", rbacSvc.AssignRole)
 		}
 
 		// Usage routes (auth required)
@@ -94,15 +113,22 @@ func SetupRoutes(
 			billingGroup.GET("/usage", billingSvc.GetUsage)
 			billingGroup.GET("/credits", billingSvc.GetCredits)
 			billingGroup.GET("/invoices", billingSvc.GetInvoices)
+			billingGroup.GET("/invoices/:id", billingSvc.GetInvoice)
+			billingGroup.POST("/invoices/generate", billingSvc.GenerateInvoice)
+			billingGroup.POST("/credits/check", billingSvc.CheckCredits)
+			billingGroup.POST("/credits/deduct", billingSvc.DeductCredits)
 			billingGroup.POST("/checkout/mock", billingSvc.CheckoutSession)
 		}
 
 		// Model proxy routes (auth required)
 		modelGroup := api.Group("/model")
 		modelGroup.Use(authSvc.Middleware())
+		modelGroup.Use(ratelimit.Middleware(chatLimiter))
 		{
 			modelGroup.POST("/providers", modelProxySvc.AddProvider)
 			modelGroup.GET("/providers", modelProxySvc.ListProviders)
+			modelGroup.DELETE("/providers/:id", modelProxySvc.DeleteProvider)
+			modelGroup.POST("/providers/:id/test", modelProxySvc.TestProvider)
 			modelGroup.GET("/models", modelProxySvc.ListModels)
 			modelGroup.POST("/chat", modelProxySvc.Chat)
 			modelGroup.POST("/stream", modelProxySvc.Stream)
@@ -116,6 +142,8 @@ func SetupRoutes(
 			syncGroup.POST("/push", syncSvc.Push)
 			syncGroup.GET("/pull", syncSvc.Pull)
 			syncGroup.POST("/resolve-conflict", syncSvc.ResolveConflict)
+			syncGroup.POST("/cleanup", syncSvc.Cleanup)
+			syncGroup.GET("/history", syncSvc.GetSyncHistory)
 		}
 
 		// Marketplace routes (no auth required for reading)
@@ -125,6 +153,16 @@ func SetupRoutes(
 			marketplaceGroup.GET("/skills", marketplaceSvc.ListSkills)
 			marketplaceGroup.GET("/connectors", marketplaceSvc.ListConnectors)
 			marketplaceGroup.GET("/items/:id", marketplaceSvc.GetItem)
+			marketplaceGroup.GET("/items/:id/reviews", marketplaceSvc.GetItemReviews)
+		}
+
+		// Marketplace install/review routes (auth required)
+		marketplaceAuthGroup := api.Group("/marketplace")
+		marketplaceAuthGroup.Use(authSvc.Middleware())
+		{
+			marketplaceAuthGroup.POST("/items/:id/install", marketplaceSvc.InstallItem)
+			marketplaceAuthGroup.POST("/items/:id/uninstall", marketplaceSvc.UninstallItem)
+			marketplaceAuthGroup.POST("/items/:id/reviews", marketplaceSvc.SubmitReview)
 		}
 
 		// Telemetry routes (auth required, opt-in)
@@ -147,8 +185,11 @@ func SetupRoutes(
 		{
 			collabGroup.GET("/workspaces/:id/activity", collabSvc.GetActivity)
 			collabGroup.POST("/workspaces/:id/share", collabSvc.Share)
+			collabGroup.GET("/workspaces/:id/comments", collabSvc.ListComments)
 			collabGroup.POST("/tasks/:id/comments", collabSvc.AddComment)
 			collabGroup.POST("/tasks/:id/assign", collabSvc.AssignTask)
+			collabGroup.PUT("/comments/:id", collabSvc.EditComment)
+			collabGroup.DELETE("/comments/:id", collabSvc.DeleteComment)
 		}
 
 		// Channels routes (auth required)
@@ -157,6 +198,9 @@ func SetupRoutes(
 		{
 			channelsGroup.GET("", channelSvc.ListChannels)
 			channelsGroup.POST("", channelSvc.CreateChannel)
+			channelsGroup.DELETE("/:id", channelSvc.DeleteChannel)
+			channelsGroup.PATCH("/:id/toggle", channelSvc.ToggleChannel)
+			channelsGroup.GET("/:id/events", channelSvc.ListChannelEvents)
 		}
 
 		// Webhook receiver (no auth, signed requests in production)

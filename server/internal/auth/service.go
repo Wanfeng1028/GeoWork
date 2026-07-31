@@ -14,8 +14,10 @@ import (
 	"strconv"
 	"time"
 
+	"server/internal/apierrors"
 	"server/internal/servercontext"
 	"server/internal/storage"
+	"server/internal/validation"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -42,23 +44,6 @@ type LoginResponse struct {
 	RefreshToken string        `json:"refresh_token"`
 }
 
-// validatePassword checks that the password meets minimum strength requirements:
-// at least 8 characters, contains both letters and digits.
-func validatePassword(password string) error {
-	if len(password) < 8 {
-		return fmt.Errorf("password must be at least 8 characters")
-	}
-	hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
-	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
-	if !hasLetter {
-		return fmt.Errorf("password must contain at least one letter")
-	}
-	if !hasDigit {
-		return fmt.Errorf("password must contain at least one digit")
-	}
-	return nil
-}
-
 // isAutoRegisterEnabled checks the GEOWORK_AUTO_REGISTER_ENABLED environment variable.
 // Default is false (disabled).
 func isAutoRegisterEnabled() bool {
@@ -77,32 +62,38 @@ func isAutoRegisterEnabled() bool {
 func (s *Service) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.Respond(c, apierrors.ErrBadRequest)
+		return
+	}
+
+	// Validate email format using centralized validation
+	if err := validation.ValidateEmail(req.Email); err != nil {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, err.Error())
 		return
 	}
 
 	user, err := s.store.GetUserByEmail(req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.Respond(c, apierrors.ErrInternal)
 		return
 	}
 
 	if user == nil {
 		// Auto-register new users (gated by environment variable)
 		if !isAutoRegisterEnabled() {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid credentials")
 			return
 		}
 
 		// Validate password strength for new registrations
-		if err := validatePassword(req.Password); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if err := validation.ValidatePassword(req.Password); err != nil {
+			apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, err.Error())
 			return
 		}
 
 		hashedPassword, err := hashPassword(req.Password)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+			apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to hash password")
 			return
 		}
 
@@ -114,13 +105,13 @@ func (s *Service) Login(c *gin.Context) {
 			PasswordHash: hashedPassword,
 		}
 		if err := s.store.CreateUser(user); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
+			apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to create account")
 			return
 		}
 	} else {
 		// Dual-mode password verification: bcrypt first, then legacy SHA-256
 		if !verifyPassword(user.PasswordHash, req.Password) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid credentials")
 			return
 		}
 
@@ -154,11 +145,11 @@ func (s *Service) Login(c *gin.Context) {
 	}
 
 	if err := s.store.CreateToken(accessTokenObj); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to create session")
 		return
 	}
 	if err := s.store.CreateToken(refreshTokenObj); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to create session")
 		return
 	}
 
@@ -182,12 +173,12 @@ func (s *Service) Login(c *gin.Context) {
 func (s *Service) Logout(c *gin.Context) {
 	token := extractToken(c)
 	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		apierrors.Respond(c, apierrors.ErrUnauthorized)
 		return
 	}
 
 	if err := s.store.DeleteToken(token); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.Respond(c, apierrors.ErrInternal)
 		return
 	}
 
@@ -198,20 +189,20 @@ func (s *Service) Logout(c *gin.Context) {
 func (s *Service) Refresh(c *gin.Context) {
 	refreshToken := extractToken(c)
 	if refreshToken == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing refresh token"})
+		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "missing refresh token")
 		return
 	}
 
 	tok, err := s.store.GetToken(refreshToken)
 	if err != nil || tok == nil || tok.Type != "refresh" || time.Now().After(tok.ExpiresAt) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid refresh token")
 		return
 	}
 
 	// Verify user still exists
 	user, err := s.store.GetUserByID(tok.UserID)
 	if err != nil || user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "user not found")
 		return
 	}
 
@@ -228,7 +219,7 @@ func (s *Service) Refresh(c *gin.Context) {
 		CreatedAt: time.Now(),
 	}
 	if err := s.store.CreateToken(newToken); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.Respond(c, apierrors.ErrInternal)
 		return
 	}
 
@@ -241,19 +232,19 @@ func (s *Service) Refresh(c *gin.Context) {
 func (s *Service) Me(c *gin.Context) {
 	token := extractToken(c)
 	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		apierrors.Respond(c, apierrors.ErrUnauthorized)
 		return
 	}
 
 	tok, err := s.store.GetToken(token)
 	if err != nil || tok == nil || time.Now().After(tok.ExpiresAt) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
+		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "token expired")
 		return
 	}
 
 	user, err := s.store.GetUserByID(tok.UserID)
 	if err != nil || user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		apierrors.Respond(c, apierrors.ErrNotFound)
 		return
 	}
 
@@ -273,19 +264,22 @@ func (s *Service) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+			apierrors.Respond(c, apierrors.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
 		tok, err := s.store.GetToken(token)
 		if err != nil || tok == nil || time.Now().After(tok.ExpiresAt) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid or expired token")
+			c.Abort()
 			return
 		}
 
 		user, err := s.store.GetUserByID(tok.UserID)
 		if err != nil || user == nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "user not found")
+			c.Abort()
 			return
 		}
 

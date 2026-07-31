@@ -4,6 +4,7 @@ package usage
 import (
 	"net/http"
 
+	"server/internal/apierrors"
 	"server/internal/idgen"
 	"server/internal/servercontext"
 	"server/internal/storage"
@@ -35,7 +36,7 @@ func (s *Service) ReportEvents(c *gin.Context) {
 
 	var req ReportEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.Respond(c, apierrors.ErrBadRequest)
 		return
 	}
 
@@ -49,7 +50,7 @@ func (s *Service) ReportEvents(c *gin.Context) {
 	}
 
 	if err := s.store.AppendUsageEvent(event); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record usage"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to record usage")
 		return
 	}
 
@@ -65,7 +66,7 @@ func (s *Service) GetSummary(c *gin.Context) {
 
 	summary, err := s.store.GetUsageSummary(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.Respond(c, apierrors.ErrInternal)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (s *Service) GetModels(c *gin.Context) {
 
 	modelUsage, err := s.store.GetUsageByModel(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.Respond(c, apierrors.ErrInternal)
 		return
 	}
 

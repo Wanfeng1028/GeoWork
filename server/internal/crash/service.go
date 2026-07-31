@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"server/internal/apierrors"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +22,7 @@ func NewService(store *storage.Store) *Service {
 // Report handles POST /api/crash/report
 func (s *Service) Report(c *gin.Context) {
 	if !isOptIn(c) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "crash reporting disabled by user"})
+		apierrors.RespondWithMessage(c, apierrors.ErrForbidden, "crash reporting disabled by user")
 		return
 	}
 
@@ -34,7 +35,7 @@ func (s *Service) Report(c *gin.Context) {
 		HasLogs     bool   `json:"has_logs"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.Respond(c, apierrors.ErrBadRequest)
 		return
 	}
 
@@ -49,7 +50,7 @@ func (s *Service) Report(c *gin.Context) {
 	}
 
 	if err := s.store.AppendCrashReport(report); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save crash report"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to save crash report")
 		return
 	}
 

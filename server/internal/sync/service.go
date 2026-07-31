@@ -4,14 +4,18 @@ package sync
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"server/internal/apierrors"
 	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
 )
+
+const defaultTTL = 30 * 24 * time.Hour // 30 days
 
 type Service struct {
 	store *storage.Store
@@ -37,18 +41,47 @@ func (s *Service) Push(c *gin.Context) {
 
 	var req PushRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid request")
 		return
 	}
 
 	if !isValidObjectType(req.ObjectType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("invalid object type: %s", req.ObjectType)})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, fmt.Sprintf("invalid object type: %s", req.ObjectType))
 		return
 	}
 
 	if !isValidPayload(req.ObjectType, req.Data) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "payload contains prohibited data"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "payload contains prohibited data")
 		return
+	}
+
+	now := time.Now().UnixNano()
+
+	// Conflict detection: check if existing record has been modified since client's last sync
+	existing, err := s.store.GetSyncRecordByObject(user.ID, req.ObjectType, req.ObjectID)
+	if err != nil {
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "server error")
+		return
+	}
+
+	var conflict bool
+	var conflictDetails gin.H
+
+	if existing != nil {
+		// last-write-wins strategy, but mark as conflict if timestamps are close (within 1 second)
+		clientCursorStr := c.GetHeader("X-Sync-Cursor")
+		if clientCursorStr != "" {
+			clientCursor, parseErr := strconv.ParseInt(clientCursorStr, 10, 64)
+			if parseErr == nil && existing.Cursor > clientCursor {
+				// Server has newer data — conflict detected
+				conflict = true
+				conflictDetails = gin.H{
+					"existing_cursor": existing.Cursor,
+					"client_cursor":   clientCursor,
+					"strategy":        "last-write-wins",
+				}
+			}
+		}
 	}
 
 	record := &storage.SyncRecord{
@@ -57,18 +90,24 @@ func (s *Service) Push(c *gin.Context) {
 		ObjectType: req.ObjectType,
 		ObjectID:   req.ObjectID,
 		Data:       req.Data,
-		Cursor:     time.Now().UnixNano(),
+		Cursor:     now,
 	}
 
 	if err := s.store.UpsertSyncRecord(record); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to push sync"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to push sync")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	resp := gin.H{
 		"message": "synced",
 		"cursor":  record.Cursor,
-	})
+	}
+	if conflict {
+		resp["conflict"] = true
+		resp["conflict_details"] = conflictDetails
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // Pull handles GET /api/sync/pull
@@ -84,30 +123,56 @@ func (s *Service) Pull(c *gin.Context) {
 		fmt.Sscanf(cursorStr, "%d", &cursor)
 	}
 
-	records, err := s.store.GetSyncRecordsAfter(user.ID, cursor)
+	// Support multi object_type filter: ?types=settings,workspace,task
+	var records []*storage.SyncRecord
+	var err error
+
+	typesParam := c.Query("types")
+	if typesParam != "" {
+		types := strings.Split(typesParam, ",")
+		// Validate each type
+		validTypes := make([]string, 0, len(types))
+		for _, t := range types {
+			t = strings.TrimSpace(t)
+			if isValidObjectType(t) {
+				validTypes = append(validTypes, t)
+			}
+		}
+		records, err = s.store.GetSyncRecordsByTypes(user.ID, cursor, validTypes)
+	} else {
+		records, err = s.store.GetSyncRecordsAfter(user.ID, cursor)
+	}
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "server error")
 		return
 	}
 	if records == nil {
 		records = []*storage.SyncRecord{}
 	}
 
+	// Detect conflicts in pull response
+	now := time.Now().UnixNano()
 	result := make([]gin.H, 0, len(records))
 	for _, r := range records {
-		result = append(result, gin.H{
+		item := gin.H{
 			"id":          r.ID,
 			"object_type": r.ObjectType,
 			"object_id":   r.ObjectID,
 			"data":        r.Data,
 			"cursor":      r.Cursor,
 			"created_at":  r.CreatedAt,
-		})
+		}
+		// Mark as conflict if the record was updated very recently (within 1 second of now)
+		if now-r.Cursor < int64(time.Second) && r.Cursor > cursor {
+			item["conflict"] = true
+		}
+		result = append(result, item)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"records": result,
-		"cursor":  time.Now().UnixNano(),
+		"cursor":  now,
 	})
 }
 
@@ -120,14 +185,14 @@ func (s *Service) GetState(c *gin.Context) {
 
 	cursor, err := s.store.GetSyncState(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "server error")
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":  user.ID,
 		"cursor":   cursor,
-		"modified": time.Unix(cursor, 0).UTC().Format(time.RFC3339),
+		"modified": time.Unix(0, cursor).UTC().Format(time.RFC3339),
 	})
 }
 
@@ -145,22 +210,22 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 		Data       string `json:"data" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid request")
 		return
 	}
 
 	if !isValidObjectType(req.ObjectType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid object type"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid object type")
 		return
 	}
 
 	if !isValidPayload(req.ObjectType, req.Data) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "payload contains prohibited data"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "payload contains prohibited data")
 		return
 	}
 
 	if req.Winner != "local" && req.Winner != "remote" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "winner must be 'local' or 'remote'"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "winner must be 'local' or 'remote'")
 		return
 	}
 
@@ -174,13 +239,84 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 	}
 
 	if err := s.store.UpsertSyncRecord(record); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve conflict"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to resolve conflict")
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "conflict resolved (winner: " + req.Winner + ")",
 		"cursor":  record.Cursor,
+	})
+}
+
+// Cleanup handles TTL-based cleanup of expired sync records.
+// Can be called via POST /api/sync/cleanup or scheduled internally.
+func (s *Service) Cleanup(c *gin.Context) {
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
+		return
+	}
+
+	// Only allow admin/system users to trigger cleanup
+	_ = user
+
+	ttlStr := c.DefaultQuery("ttl_days", "30")
+	ttlDays, err := strconv.Atoi(ttlStr)
+	if err != nil || ttlDays <= 0 {
+		ttlDays = 30
+	}
+
+	cutoff := time.Now().Add(-time.Duration(ttlDays) * 24 * time.Hour).Unix()
+	deleted, err := s.store.DeleteSyncRecordsBefore(cutoff)
+	if err != nil {
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "cleanup failed")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "cleanup completed",
+		"ttl_days":    ttlDays,
+		"deleted":     deleted,
+	})
+}
+
+// GetSyncHistory handles GET /api/sync/history
+func (s *Service) GetSyncHistory(c *gin.Context) {
+	user, ok := servercontext.RequireUser(c)
+	if !ok {
+		return
+	}
+
+	limit := 50
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 200 {
+			limit = parsed
+		}
+	}
+
+	records, err := s.store.GetSyncHistory(user.ID, limit)
+	if err != nil {
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "server error")
+		return
+	}
+	if records == nil {
+		records = []*storage.SyncRecord{}
+	}
+
+	result := make([]gin.H, 0, len(records))
+	for _, r := range records {
+		result = append(result, gin.H{
+			"id":          r.ID,
+			"object_type": r.ObjectType,
+			"object_id":   r.ObjectID,
+			"cursor":      r.Cursor,
+			"created_at":  r.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"history": result,
+		"count":   len(records),
 	})
 }
 

@@ -22,8 +22,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
+
 	"server/internal/accounts"
 	"server/internal/api"
+	"server/internal/apierrors"
 	"server/internal/auth"
 	"server/internal/billing"
 	"server/internal/channels"
@@ -51,10 +54,17 @@ func NewServer() *Server {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 
-	// CORS middleware
+	// Recovery middleware — catch panics and return unified 500 JSON
+	engine.Use(apierrors.Recovery())
+
+	// CORS middleware — origin whitelist from GEOWORK_ALLOWED_ORIGINS env var
 	engine.Use(func() gin.HandlerFunc {
+		whitelist := allowedOrigins()
 		return func(c *gin.Context) {
-			c.Header("Access-Control-Allow-Origin", "*")
+			origin := c.GetHeader("Origin")
+			if isOriginAllowed(origin, whitelist) {
+				c.Header("Access-Control-Allow-Origin", origin)
+			}
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Telemetry-Opt-In, X-Crash-Opt-In")
 			if c.Request.Method == "OPTIONS" {
@@ -130,6 +140,38 @@ func (s *Server) Start() error {
 	}()
 
 	return s.Engine.Run(addr)
+}
+
+// allowedOrigins returns the whitelist of allowed origins from the
+// GEOWORK_ALLOWED_ORIGINS environment variable. Falls back to localhost defaults.
+func allowedOrigins() []string {
+	env := os.Getenv("GEOWORK_ALLOWED_ORIGINS")
+	if env == "" {
+		env = "http://localhost:5173,http://127.0.0.1:5173"
+	}
+	parts := strings.Split(env, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			origins = append(origins, p)
+		}
+	}
+	return origins
+}
+
+// isOriginAllowed checks whether origin is in the whitelist or is a file://
+// origin (used by Electron).
+func isOriginAllowed(origin string, whitelist []string) bool {
+	if strings.HasPrefix(origin, "file://") {
+		return true
+	}
+	for _, allowed := range whitelist {
+		if origin == allowed {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {

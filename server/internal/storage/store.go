@@ -39,14 +39,15 @@ type Store struct {
 
 // User represents a registered user.
 type User struct {
-	ID           string    `json:"id"`
-	Email        string    `json:"email"`
-	Name         string    `json:"name"`
-	AvatarURL    string    `json:"avatar_url"`
-	Plan         string    `json:"plan"` // free | pro | team
-	PasswordHash string    `json:"-"`    // hashed password, not exposed in JSON
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           string     `json:"id"`
+	Email        string     `json:"email"`
+	Name         string     `json:"name"`
+	AvatarURL    string     `json:"avatar_url"`
+	Plan         string     `json:"plan"` // free | pro | team
+	PasswordHash string     `json:"-"`    // hashed password, not exposed in JSON
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty"` // soft-delete timestamp
 }
 
 // Token represents an auth token.
@@ -157,7 +158,60 @@ type ChannelWebhook struct {
 	URL       string    `json:"url"`
 	TeamID    string    `json:"team_id"`
 	Active    bool      `json:"active"`
+	Secret    string    `json:"secret,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// ChannelEvent represents a webhook event for deduplication and history.
+type ChannelEvent struct {
+	ID          string    `json:"id"`
+	ChannelID   string    `json:"channel_id"`
+	PayloadHash string    `json:"payload_hash"`
+	Data        string    `json:"data"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// MarketplaceInstall represents a user's installation of a marketplace item.
+type MarketplaceInstall struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	ItemID    string    `json:"item_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// MarketplaceReview represents a user's review of a marketplace item.
+type MarketplaceReview struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	ItemID    string    `json:"item_id"`
+	Rating    int       `json:"rating"`
+	Review    string    `json:"review"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// Invoice represents a billing invoice.
+type Invoice struct {
+	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
+	PeriodStart time.Time `json:"period_start"`
+	PeriodEnd   time.Time `json:"period_end"`
+	Amount      float64   `json:"amount"`
+	Currency    string    `json:"currency"`
+	Status      string    `json:"status"` // draft | issued | paid | failed
+	LineItems   string    `json:"line_items"` // JSON
+	CreatedAt   time.Time `json:"created_at"`
+	DueDate     time.Time `json:"due_date"`
+}
+
+// WorkspaceRole represents a workspace-level role assignment.
+type WorkspaceRole struct {
+	ID          string    `json:"id"`
+	WorkspaceID string    `json:"workspace_id"`
+	UserID      string    `json:"user_id"`
+	Role        string    `json:"role"` // owner | admin | member | viewer
+	AssignedBy  string    `json:"assigned_by"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // NewStore creates a new SQLite-backed store.
@@ -204,6 +258,12 @@ func NewStore(path string) *Store {
 
 	// Run migrations automatically
 	if err := migrations.Run(db); err != nil {
+		s.dbErr = err
+		return s
+	}
+
+	// Ensure additional tables exist (installs, reviews)
+	if err := s.EnsureNewTables(); err != nil {
 		s.dbErr = err
 		return s
 	}

@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"server/internal/apierrors"
 	"server/internal/crypto"
 	"server/internal/idgen"
 	"server/internal/servercontext"
@@ -18,11 +19,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const maxRequestBodySize = 10 * 1024 * 1024 // 10MB
+
 type Service struct {
 	store         *storage.Store
 	providers     map[string]*ProviderConfig
 	mu            sync.RWMutex
 	encryptionKey []byte // AES-256 key for API key encryption; nil means plaintext fallback
+	httpClient    *http.Client
 }
 
 type ProviderConfig struct {
@@ -36,8 +40,9 @@ type ProviderConfig struct {
 
 func NewService(store *storage.Store) *Service {
 	svc := &Service{
-		store:     store,
-		providers: make(map[string]*ProviderConfig),
+		store:      store,
+		providers:  make(map[string]*ProviderConfig),
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
 	key, err := crypto.GetEncryptionKey()
 	if err != nil {
@@ -58,7 +63,7 @@ func (s *Service) AddProvider(c *gin.Context) {
 
 	var req ProviderConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid request body")
 		return
 	}
 
@@ -69,7 +74,7 @@ func (s *Service) AddProvider(c *gin.Context) {
 	if s.encryptionKey != nil && req.APIKey != "" {
 		encrypted, err := crypto.Encrypt(req.APIKey, s.encryptionKey)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to encrypt API key"})
+			apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to encrypt API key")
 			return
 		}
 		req.APIKey = encrypted
@@ -85,6 +90,85 @@ func (s *Service) AddProvider(c *gin.Context) {
 	respCopy := req
 	respCopy.APIKey = "***"
 	c.JSON(http.StatusCreated, respCopy)
+}
+
+// DeleteProvider handles DELETE /api/model/providers/:id
+func (s *Service) DeleteProvider(c *gin.Context) {
+	if _, ok := servercontext.RequireUser(c); !ok {
+		return
+	}
+
+	providerID := c.Param("id")
+	if providerID == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider id is required")
+		return
+	}
+
+	s.mu.Lock()
+	_, exists := s.providers[providerID]
+	if exists {
+		delete(s.providers, providerID)
+	}
+	s.mu.Unlock()
+
+	if !exists {
+		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "provider deleted"})
+}
+
+// TestProvider handles POST /api/model/providers/:id/test
+func (s *Service) TestProvider(c *gin.Context) {
+	if _, ok := servercontext.RequireUser(c); !ok {
+		return
+	}
+
+	providerID := c.Param("id")
+	if providerID == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider id is required")
+		return
+	}
+
+	s.mu.RLock()
+	provider, ok := s.providers[providerID]
+	s.mu.RUnlock()
+
+	if !ok {
+		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
+		return
+	}
+
+	apiKey := s.resolveAPIKey(provider)
+	if apiKey == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "API key not available")
+		return
+	}
+
+	// Send a simple request to test connectivity
+	testReq, _ := http.NewRequest("GET", provider.BaseURL+"/v1/models", nil)
+	testReq.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := s.httpClient.Do(testReq)
+	if err != nil {
+		apierrors.RespondWithMessage(c, apierrors.New(http.StatusBadGateway, "UPSTREAM_UNAVAILABLE", "upstream unreachable"), err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		apierrors.RespondWithDetails(c, apierrors.ErrInternal, gin.H{
+			"upstream_status": resp.StatusCode,
+			"message":         "authentication failed or upstream error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "provider connectivity test passed",
+	})
 }
 
 // ListProviders handles GET /api/model/providers
@@ -105,7 +189,7 @@ func (s *Service) ListProviders(c *gin.Context) {
 func (s *Service) ListModels(c *gin.Context) {
 	providerID := c.Query("provider")
 	if providerID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "provider required"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider required")
 		return
 	}
 
@@ -114,13 +198,19 @@ func (s *Service) ListModels(c *gin.Context) {
 	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
-		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
+		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
 		return
 	}
 
-	resp, err := http.Get(provider.BaseURL + "/v1/models")
+	apiKey := s.resolveAPIKey(provider)
+	httpReq, _ := http.NewRequest("GET", provider.BaseURL+"/v1/models", nil)
+	if apiKey != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+
+	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
+		apierrors.Respond(c, apierrors.New(http.StatusBadGateway, "UPSTREAM_UNAVAILABLE", "upstream unavailable"))
 		return
 	}
 	defer resp.Body.Close()
@@ -139,13 +229,23 @@ func (s *Service) ListModels(c *gin.Context) {
 func (s *Service) Chat(c *gin.Context) {
 	providerID := c.GetString("provider_id")
 	if providerID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "provider required"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider required")
 		return
 	}
 
+	// Limit request body size
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodySize)
+
 	var req gin.H
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid request")
+		return
+	}
+
+	// Type assertion safety for model field
+	model, ok := req["model"].(string)
+	if !ok || model == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "model field is required and must be a string")
 		return
 	}
 
@@ -154,13 +254,13 @@ func (s *Service) Chat(c *gin.Context) {
 	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
-		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
+		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
 		return
 	}
 
 	apiKey := s.resolveAPIKey(provider)
 	if apiKey == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "API key not available"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "API key not available")
 		return
 	}
 
@@ -171,10 +271,9 @@ func (s *Service) Chat(c *gin.Context) {
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Do(httpReq)
+	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
+		apierrors.Respond(c, apierrors.New(http.StatusBadGateway, "UPSTREAM_UNAVAILABLE", "upstream unavailable"))
 		return
 	}
 	defer resp.Body.Close()
@@ -184,9 +283,9 @@ func (s *Service) Chat(c *gin.Context) {
 	if !ok {
 		return
 	}
-	go recordUsage(s.store, user.ID, "model_requests", 1, req["model"].(string))
+	go recordUsage(s.store, user.ID, "model_requests", 1, model)
 
-	respBody, _ := io.ReadAll(resp.Body)
+	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxRequestBodySize))
 	var proxyResp gin.H
 	json.Unmarshal(respBody, &proxyResp)
 
@@ -197,13 +296,23 @@ func (s *Service) Chat(c *gin.Context) {
 func (s *Service) Stream(c *gin.Context) {
 	providerID := c.GetString("provider_id")
 	if providerID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "provider required"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider required")
 		return
 	}
 
+	// Limit request body size
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodySize)
+
 	var req gin.H
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "invalid request")
+		return
+	}
+
+	// Type assertion safety for model field
+	_, ok := req["model"].(string)
+	if !ok {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "model field is required and must be a string")
 		return
 	}
 
@@ -212,13 +321,13 @@ func (s *Service) Stream(c *gin.Context) {
 	s.mu.RUnlock()
 
 	if !ok || !provider.Enabled {
-		c.JSON(http.StatusNotFound, gin.H{"error": "provider not found"})
+		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
 		return
 	}
 
 	apiKey := s.resolveAPIKey(provider)
 	if apiKey == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "API key not available"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "API key not available")
 		return
 	}
 
@@ -229,10 +338,9 @@ func (s *Service) Stream(c *gin.Context) {
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+apiKey)
 
-	client := &http.Client{Timeout: 120 * time.Second}
-	resp, err := client.Do(httpReq)
+	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "upstream unavailable"})
+		apierrors.Respond(c, apierrors.New(http.StatusBadGateway, "UPSTREAM_UNAVAILABLE", "upstream unavailable"))
 		return
 	}
 	defer resp.Body.Close()
@@ -242,7 +350,7 @@ func (s *Service) Stream(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Status(http.StatusOK)
 
-	io.Copy(c.Writer, resp.Body)
+	io.Copy(c.Writer, io.LimitReader(resp.Body, maxRequestBodySize))
 }
 
 func recordUsage(store *storage.Store, userID string, eventType string, amount int64, model string) {
@@ -250,11 +358,11 @@ func recordUsage(store *storage.Store, userID string, eventType string, amount i
 		return
 	}
 	event := &storage.UsageEvent{
-		ID:        idgen.New("mp_"),
-		UserID:    userID,
-		Type:      eventType,
-		Amount:    amount,
-		Model:     model,
+		ID:     idgen.New("mp_"),
+		UserID: userID,
+		Type:   eventType,
+		Amount: amount,
+		Model:  model,
 	}
 	store.AppendUsageEvent(event)
 }

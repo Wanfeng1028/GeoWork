@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"server/internal/apierrors"
 	"server/internal/idgen"
 	"server/internal/servercontext"
 	"server/internal/storage"
@@ -28,7 +29,7 @@ func (s *Service) ReportEvent(c *gin.Context) {
 	}
 
 	if !isTelemetryEnabled(c) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "telemetry disabled by user"})
+		apierrors.RespondWithMessage(c, apierrors.ErrForbidden, "telemetry disabled by user")
 		return
 	}
 
@@ -38,7 +39,7 @@ func (s *Service) ReportEvent(c *gin.Context) {
 		Metadata map[string]interface{} `json:"metadata"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.Respond(c, apierrors.ErrBadRequest)
 		return
 	}
 
@@ -51,7 +52,7 @@ func (s *Service) ReportEvent(c *gin.Context) {
 	}
 
 	if err := s.store.AppendTelemetryEvent(event); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record telemetry"})
+		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "failed to record telemetry")
 		return
 	}
 
@@ -66,7 +67,7 @@ func (s *Service) ReportBatch(c *gin.Context) {
 	}
 
 	if !isTelemetryEnabled(c) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "telemetry disabled by user"})
+		apierrors.RespondWithMessage(c, apierrors.ErrForbidden, "telemetry disabled by user")
 		return
 	}
 
@@ -76,7 +77,7 @@ func (s *Service) ReportBatch(c *gin.Context) {
 		Metadata map[string]interface{} `json:"metadata"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		apierrors.Respond(c, apierrors.ErrBadRequest)
 		return
 	}
 
