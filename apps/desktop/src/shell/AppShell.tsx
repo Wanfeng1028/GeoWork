@@ -65,6 +65,7 @@ import { UsageModal } from './UsageModal'
 import { UserMenu } from './UserMenu'
 import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
+import { FloatingAssistant } from './FloatingAssistant'
 import { TitleBar } from './TitleBar'
 import styles from './AppShell.module.css'
 
@@ -946,6 +947,9 @@ export function AppShell() {
         open={globalSearchOpen}
         onClose={() => setGlobalSearchOpen(false)}
       />
+
+      {/* ── 悬浮辅助对话（继承当前主对话记忆） ── */}
+      <FloatingAssistant parentConversationId={activeConvId} />
 
       {/* 重命名弹窗 */}
       <Modal

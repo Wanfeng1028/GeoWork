@@ -25,6 +25,7 @@ type Conversation struct {
 	Title       string    `json:"title"`
 	Mode        string    `json:"mode"`
 	Status      string    `json:"status"`
+	ParentID    string    `json:"parentId,omitempty"` // 悬浮辅助对话继承的父对话 id
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
@@ -67,8 +68,8 @@ func (s *Store) CreateConversation(ctx context.Context, c *Conversation) error {
 	c.UpdatedAt = now
 
 	_, err := s.db.ExecContext(ctx,
-		"INSERT INTO conversations (id, workspace_id, title, mode, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		c.ID, c.WorkspaceID, c.Title, c.Mode, c.Status, c.CreatedAt.Format(timeLayoutFixed), c.UpdatedAt.Format(timeLayoutFixed),
+		"INSERT INTO conversations (id, workspace_id, title, mode, status, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		c.ID, c.WorkspaceID, c.Title, c.Mode, c.Status, c.ParentID, c.CreatedAt.Format(timeLayoutFixed), c.UpdatedAt.Format(timeLayoutFixed),
 	)
 	return err
 }
@@ -81,7 +82,7 @@ func (s *Store) ListConversations(ctx context.Context, workspaceID string, befor
 		limit = 50
 	}
 
-	query := "SELECT id, workspace_id, title, mode, status, created_at, updated_at FROM conversations"
+	query := "SELECT id, workspace_id, title, mode, status, parent_id, created_at, updated_at FROM conversations"
 	args := []interface{}{}
 	where := ""
 
@@ -112,7 +113,7 @@ func (s *Store) ListConversations(ctx context.Context, workspaceID string, befor
 	for rows.Next() {
 		var c Conversation
 		var createdAt, updatedAt string
-		if err := rows.Scan(&c.ID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &createdAt, &updatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &c.ParentID, &createdAt, &updatedAt); err != nil {
 			continue
 		}
 		c.CreatedAt, _ = time.Parse(timeLayoutFixed, createdAt)
@@ -127,8 +128,8 @@ func (s *Store) GetConversation(ctx context.Context, id string) (*Conversation, 
 	c := &Conversation{}
 	var createdAt, updatedAt string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT id, workspace_id, title, mode, status, created_at, updated_at FROM conversations WHERE id = ?", id).
-		Scan(&c.ID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &createdAt, &updatedAt)
+		"SELECT id, workspace_id, title, mode, status, parent_id, created_at, updated_at FROM conversations WHERE id = ?", id).
+		Scan(&c.ID, &c.WorkspaceID, &c.Title, &c.Mode, &c.Status, &c.ParentID, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}

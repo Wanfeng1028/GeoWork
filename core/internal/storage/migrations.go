@@ -213,6 +213,11 @@ var AllMigrations = []Migration{
 		`,
 		Desc: "Create messages table with composite index for cursor pagination",
 	},
+	{
+		Version: 14,
+		Query:   `ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT '';`,
+		Desc:    "Add parent_id column to conversations for floating assistant inheritance",
+	},
 }
 
 // RunMigrations executes all pending migrations up to the latest version.

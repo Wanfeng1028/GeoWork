@@ -68,6 +68,7 @@ func (h *ConversationHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		WorkspaceID string `json:"workspaceId"`
 		Title       string `json:"title"`
 		Mode        string `json:"mode"`
+		ParentID    string `json:"parentId"` // 悬浮辅助对话继承的父对话 id
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -78,6 +79,7 @@ func (h *ConversationHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		Title:       in.Title,
 		Mode:        in.Mode,
 		Status:      "active",
+		ParentID:    in.ParentID,
 	}
 	if err := h.store.CreateConversation(r.Context(), c); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -177,7 +179,15 @@ func (h *ConversationHandler) handlePostMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	run, err := h.orchestrator.StartRun(r.Context(), mode, in.Content)
+	// If this conversation inherits a parent (floating-assistant sub-conversation),
+	// build a memory string from the parent's recent messages and inject it into
+	// the orchestrator run so the agent continues the prior context.
+	parentMemory := ""
+	if c.ParentID != "" {
+		parentMemory = h.buildParentMemory(r.Context(), c.ParentID)
+	}
+
+	run, err := h.orchestrator.StartRunWithMemory(r.Context(), mode, in.Content, parentMemory)
 	if err != nil {
 		h.log.Warn("orchestrator start run failed", zap.String("conversationId", id), zap.Error(err))
 		writeJSON(w, map[string]any{
@@ -292,6 +302,36 @@ func (h *ConversationHandler) persistAssistantSummary(conversationID, runID stri
 			zap.Error(err),
 		)
 	}
+}
+
+// buildParentMemory assembles a compact memory string from the parent
+// conversation's recent messages. Used by floating-assistant sub-conversations
+// to inherit context. Caps each message's content to keep the injected context
+// bounded.
+func (h *ConversationHandler) buildParentMemory(ctx context.Context, parentID string) string {
+	msgs, err := h.store.ListMessages(ctx, parentID, time.Time{}, 10)
+	if err != nil || len(msgs) == 0 {
+		return ""
+	}
+
+	// Only keep the most recent 6 messages to stay compact.
+	start := len(msgs) - 6
+	if start < 0 {
+		start = 0
+	}
+	recent := msgs[start:]
+
+	var b strings.Builder
+	b.WriteString("Parent conversation history (most recent first):\n")
+	for i := len(recent) - 1; i >= 0; i-- {
+		m := recent[i]
+		content := m.Content
+		if len(content) > 500 {
+			content = content[:500] + "..."
+		}
+		fmt.Fprintf(&b, "[%s] %s\n", m.Role, content)
+	}
+	return b.String()
 }
 
 // writeError / atoiDefault are local helpers for the conversation handler.

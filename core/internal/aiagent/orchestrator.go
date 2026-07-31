@@ -41,6 +41,11 @@ type Run struct {
 	StepIndex  int       `json:"stepIndex,omitempty"`
 	Checkpoint []byte    `json:"checkpoint,omitempty"`
 
+	// parentMemory carries the inherited parent conversation context for
+	// floating-assistant sub-conversations. It is injected into the system
+	// prompt at execution time. Unexported, so never serialized.
+	parentMemory string
+
 	// done is closed when the run reaches a terminal state (completed or
 	// failed). It lets callers such as WaitForRun block until execution
 	// finishes. It is unexported and therefore never serialized.
@@ -156,14 +161,23 @@ func (o *Orchestrator) SetEventSink(sink EventSink) {
 
 // StartRun begins a new agent execution.
 func (o *Orchestrator) StartRun(ctx context.Context, mode, prompt string) (*Run, error) {
+	return o.StartRunWithMemory(ctx, mode, prompt, "")
+}
+
+// StartRunWithMemory begins a new agent execution with an optional parent
+// memory string. When non-empty (e.g. for floating-assistant sub-conversations
+// that inherit a parent conversation's context), the memory is injected into
+// the system prompt so the agent can continue the prior context.
+func (o *Orchestrator) StartRunWithMemory(ctx context.Context, mode, prompt, parentMemory string) (*Run, error) {
 	run := &Run{
-		ID:        idgen.NewPrefixed("run_"),
-		Mode:      mode,
-		Prompt:    prompt,
-		Status:    StatusPending,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		done:      make(chan struct{}),
+		ID:           idgen.NewPrefixed("run_"),
+		Mode:         mode,
+		Prompt:       prompt,
+		Status:       StatusPending,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		parentMemory: parentMemory,
+		done:         make(chan struct{}),
 	}
 
 	o.mu.Lock()
@@ -241,9 +255,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		if !ok {
 			config = modeConfigs["Work"]
 		}
+		systemContent := config.Prompt + "\nYou are executing a plan step by step. After each step you will receive the result. Decide if the step succeeded or if retry is needed."
+		// Inject inherited parent conversation memory for floating-assistant
+		// sub-conversations so the agent can continue the prior context.
+		if run.parentMemory != "" {
+			systemContent += "\n\nInherited parent conversation context:\n" + run.parentMemory
+		}
 		chatHistory = append(chatHistory, modelgateway.ChatMessage{
 			Role:    "system",
-			Content: config.Prompt + "\nYou are executing a plan step by step. After each step you will receive the result. Decide if the step succeeded or if retry is needed.",
+			Content: systemContent,
 		})
 		chatHistory = append(chatHistory, modelgateway.ChatMessage{
 			Role:    "user",
