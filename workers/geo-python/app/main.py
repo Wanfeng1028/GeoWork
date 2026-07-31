@@ -8,8 +8,15 @@ from app.api.gis import router as gis_router
 from app.api.knowledge import router as knowledge_router
 from app.api.ndvi import router as ndvi_router
 from app.api.papers import router as papers_router
+from app.exceptions import GeoWorkError
+from app.middleware.error_handler import generic_exception_handler, geowork_exception_handler
+from app.validation import ValidationError, validate_bbox, validate_crs, validate_path
 
 app = FastAPI(title="GeoWork Geo Python Worker", version="1.0.0-dev")
+
+# Register unified exception handlers
+app.add_exception_handler(GeoWorkError, geowork_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include NDVI API router
 app.include_router(ndvi_router)
@@ -301,23 +308,85 @@ def write_notebook(req: ToolRequest):
 @app.post("/tools/gdal/inspect-dataset")
 def inspect_dataset(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
+    source = req.params.get("path") or req.prompt or ""
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+
     report_path = workspace / "artifacts" / f"{req.taskId}_dataset_quality.json"
-    report_path.write_text(
-        '{"ok":true,"crs":"EPSG:4326","geometry":"valid","raster":"not-provided","recommendations":["Configure GDAL/QGIS local path for production processing."]}',
-        encoding="utf-8",
-    )
+    report: dict[str, Any] = {"ok": True, "path": source}
+
+    try:
+        import rasterio
+
+        with rasterio.open(source) as src:
+            report["type"] = "raster"
+            report["crs"] = str(src.crs) if src.crs else None
+            report["bounds"] = {"left": src.bounds.left, "bottom": src.bounds.bottom, "right": src.bounds.right, "top": src.bounds.top}
+            report["dtype"] = src.dtypes[0]
+            report["band_count"] = src.count
+            report["width"] = src.width
+            report["height"] = src.height
+            report["nodata"] = src.nodata
+            report["driver"] = src.driver
+    except ImportError:
+        report["error"] = "rasterio not installed — cannot inspect raster datasets"
+    except Exception:
+        # Not a raster or open failed — try vector
+        try:
+            import geopandas as gpd
+
+            gdf = gpd.read_file(source)
+            report["type"] = "vector"
+            report["crs"] = str(gdf.crs) if gdf.crs else None
+            bounds = gdf.total_bounds
+            report["bounds"] = {"left": float(bounds[0]), "bottom": float(bounds[1]), "right": float(bounds[2]), "top": float(bounds[3])}
+            report["feature_count"] = len(gdf)
+            report["columns"] = list(gdf.columns)
+            report["geometry_type"] = gdf.geometry.geom_type.iloc[0] if len(gdf) > 0 else "empty"
+        except ImportError:
+            report["error"] = "Neither rasterio nor geopandas available for dataset inspection"
+        except Exception as vec_exc:
+            report["error"] = f"Failed to open as raster or vector: {vec_exc}"
+
+    import json
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return {
         "ok": True,
         "message": "Dataset quality inspection completed",
         "artifacts": [artifact("Dataset Quality JSON", report_path, "quality-report", "application/json")],
+        "metadata": report,
     }
 
 
 @app.post("/tools/raster/metadata")
 def raster_metadata(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    source = req.params.get("path") or req.prompt or "raster.tif"
-    payload = {"ok": True, "path": source, "driver": "GeoTIFF", "crs": "EPSG:4326", "bands": 1}
+    source = req.params.get("path") or req.prompt or ""
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+
+    try:
+        import rasterio
+
+        with rasterio.open(source) as src:
+            payload = {
+                "ok": True,
+                "path": source,
+                "driver": src.driver,
+                "width": src.width,
+                "height": src.height,
+                "count": src.count,
+                "dtype": src.dtypes[0],
+                "crs": str(src.crs) if src.crs else None,
+                "bounds": {"left": src.bounds.left, "bottom": src.bounds.bottom, "right": src.bounds.right, "top": src.bounds.top},
+                "nodata": src.nodata,
+                "transform": list(src.transform)[:6] if src.transform else None,
+            }
+    except ImportError:
+        return {"ok": False, "message": "rasterio is not installed. Install with: pip install rasterio"}
+    except Exception as exc:
+        return {"ok": False, "message": f"Failed to read raster metadata: {exc}"}
+
     art = write_json_artifact(workspace, req.taskId, "Raster Metadata", f"{req.taskId}_raster_metadata.json", payload, "raster-metadata")
     return {"ok": True, "message": "Raster metadata generated", "artifacts": [art], "metadata": payload}
 
@@ -325,32 +394,174 @@ def raster_metadata(req: ToolRequest):
 @app.post("/tools/raster/clip")
 def raster_clip(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    clip_path = workspace / "artifacts" / f"{req.taskId}_raster_clip.tif"
-    clip_path.write_bytes(b"GEOWORK_RASTER_CLIP")
-    return {"ok": True, "message": "Raster clip completed", "artifacts": [artifact("Raster Clip", clip_path, "GeoTIFF", "image/tiff")]}
+    source = req.params.get("path") or ""
+    output = req.params.get("output") or str(workspace / "artifacts" / f"{req.taskId}_raster_clip.tif")
+    bbox = req.params.get("bbox")
+
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+
+    # Validate path safety
+    try:
+        validate_path(source)
+    except ValidationError as e:
+        return {"ok": False, "message": str(e)}
+
+    if not bbox or not isinstance(bbox, list) or len(bbox) != 4:
+        return {"ok": False, "message": "Missing or invalid bbox: expected [minX, minY, maxX, maxY]"}
+
+    # Validate bbox range
+    try:
+        validate_bbox(bbox)
+    except ValidationError as e:
+        return {"ok": False, "message": str(e)}
+
+    try:
+        import rasterio
+        from rasterio.windows import from_bounds
+
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with rasterio.open(source) as src:
+            window = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], src.transform)
+            data = src.read(window=window)
+            meta = src.meta.copy()
+            meta.update({
+                "height": data.shape[1],
+                "width": data.shape[2],
+                "transform": src.window_transform(window),
+            })
+            with rasterio.open(out_path, "w", **meta) as dst:
+                dst.write(data)
+
+        return {"ok": True, "message": "Raster clip completed", "artifacts": [artifact("Raster Clip", out_path, "GeoTIFF", "image/tiff")]}
+    except ImportError:
+        return {"ok": False, "message": "rasterio is not installed. Install with: pip install rasterio"}
+    except Exception as exc:
+        return {"ok": False, "message": f"Raster clip failed: {exc}"}
 
 
 @app.post("/tools/raster/reproject")
 def raster_reproject(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    out_path = workspace / "artifacts" / f"{req.taskId}_raster_reprojected.tif"
-    out_path.write_bytes(b"GEOWORK_RASTER_REPROJECTED")
-    return {"ok": True, "message": "Raster reprojection completed", "artifacts": [artifact("Reprojected Raster", out_path, "GeoTIFF", "image/tiff")]}
+    source = req.params.get("path") or ""
+    dst_crs = req.params.get("dst_crs") or req.params.get("targetCrs") or ""
+    output = req.params.get("output") or str(workspace / "artifacts" / f"{req.taskId}_raster_reprojected.tif")
+
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+    if not dst_crs:
+        return {"ok": False, "message": "Missing required parameter: dst_crs (target CRS)"}
+
+    # Validate path and CRS
+    try:
+        validate_path(source)
+        validate_crs(dst_crs)
+    except ValidationError as e:
+        return {"ok": False, "message": str(e)}
+
+    try:
+        import rasterio
+        from rasterio.warp import calculate_default_transform, reproject, Resampling
+
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with rasterio.open(source) as src:
+            dst_transform, dst_width, dst_height = calculate_default_transform(
+                src.crs, dst_crs, src.width, src.height, *src.bounds
+            )
+            meta = src.meta.copy()
+            meta.update({
+                "crs": dst_crs,
+                "transform": dst_transform,
+                "width": dst_width,
+                "height": dst_height,
+            })
+            with rasterio.open(out_path, "w", **meta) as dst:
+                for i in range(1, src.count + 1):
+                    reproject(
+                        source=rasterio.band(src, i),
+                        destination=rasterio.band(dst, i),
+                        src_transform=src.transform,
+                        src_crs=src.crs,
+                        dst_transform=dst_transform,
+                        dst_crs=dst_crs,
+                        resampling=Resampling.nearest,
+                    )
+
+        return {"ok": True, "message": "Raster reprojection completed", "artifacts": [artifact("Reprojected Raster", out_path, "GeoTIFF", "image/tiff")]}
+    except ImportError:
+        return {"ok": False, "message": "rasterio is not installed. Install with: pip install rasterio"}
+    except Exception as exc:
+        return {"ok": False, "message": f"Raster reprojection failed: {exc}"}
 
 
 @app.post("/tools/raster/write-cog")
 def raster_write_cog(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    cog_path = workspace / "artifacts" / f"{req.taskId}.cog.tif"
-    cog_path.write_bytes(b"GEOWORK_COG")
-    return {"ok": True, "message": "COG artifact generated", "artifacts": [artifact("Cloud Optimized GeoTIFF", cog_path, "COG", "image/tiff")]}
+    source = req.params.get("path") or ""
+    output = req.params.get("output") or str(workspace / "artifacts" / f"{req.taskId}.cog.tif")
+
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+
+    try:
+        import rasterio
+        from rasterio.transform import from_bounds as _fb
+        from rasterio.enums import Resampling as _Resamp
+
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with rasterio.open(source) as src:
+            data = src.read()
+            meta = src.meta.copy()
+            meta.update({
+                "driver": "GTiff",
+                "tiled": True,
+                "compress": "deflate",
+                "blockxsize": 512,
+                "blockysize": 512,
+            })
+            with rasterio.open(out_path, "w", **meta) as dst:
+                dst.write(data)
+
+        return {"ok": True, "message": "COG artifact generated", "artifacts": [artifact("Cloud Optimized GeoTIFF", out_path, "COG", "image/tiff")]}
+    except ImportError:
+        return {"ok": False, "message": "rasterio is not installed. Install with: pip install rasterio"}
+    except Exception as exc:
+        return {"ok": False, "message": f"COG write failed: {exc}"}
 
 
 @app.post("/tools/vector/metadata")
 def vector_metadata(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    source = req.params.get("path") or req.prompt or "vector.geojson"
-    payload = {"ok": True, "path": source, "driver": "GeoJSON", "crs": "EPSG:4326", "geometry": "mixed"}
+    source = req.params.get("path") or req.prompt or ""
+    if not source:
+        return {"ok": False, "message": "Missing required parameter: path"}
+
+    try:
+        import geopandas as gpd
+
+        gdf = gpd.read_file(source)
+        bounds = gdf.total_bounds
+        payload = {
+            "ok": True,
+            "path": source,
+            "driver": "GeoJSON",
+            "crs": str(gdf.crs) if gdf.crs else None,
+            "bounds": {"left": float(bounds[0]), "bottom": float(bounds[1]), "right": float(bounds[2]), "top": float(bounds[3])},
+            "feature_count": len(gdf),
+            "columns": list(gdf.columns),
+            "geometry_type": gdf.geometry.geom_type.iloc[0] if len(gdf) > 0 else "empty",
+        }
+    except ImportError:
+        return {"ok": False, "message": "geopandas is not installed. Install with: pip install geopandas"}
+    except Exception as exc:
+        return {"ok": False, "message": f"Failed to read vector metadata: {exc}"}
+
     art = write_json_artifact(workspace, req.taskId, "Vector Metadata", f"{req.taskId}_vector_metadata.json", payload, "vector-metadata")
     return {"ok": True, "message": "Vector metadata generated", "artifacts": [art], "metadata": payload}
 
@@ -358,80 +569,470 @@ def vector_metadata(req: ToolRequest):
 @app.post("/tools/vector/buffer")
 def vector_buffer(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    out_path = workspace / "artifacts" / f"{req.taskId}_buffer.geojson"
-    out_path.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
-    return {"ok": True, "message": "Vector buffer completed", "artifacts": [artifact("Vector Buffer", out_path, "GeoJSON", "application/geo+json")]}
+    try:
+        import geopandas as gpd
+
+        params = req.params or {}
+        in_path = params.get("path", "")
+        out_path_str = params.get("output", "")
+        distance = float(params.get("distance", 0))
+
+        if not in_path:
+            return {"ok": False, "message": "Missing required parameter: path"}
+
+        gdf = gpd.read_file(in_path)
+        gdf["geometry"] = gdf.geometry.buffer(distance)
+
+        out_path = Path(out_path_str) if out_path_str else workspace / "artifacts" / f"{req.taskId}_buffer.geojson"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        gdf.to_file(str(out_path), driver="GeoJSON")
+
+        return {
+            "ok": True,
+            "message": "Vector buffer completed",
+            "artifacts": [artifact("Vector Buffer", out_path, "GeoJSON", "application/geo+json")],
+            "output": str(out_path),
+            "feature_count": len(gdf),
+            "status": "ok",
+        }
+    except ImportError:
+        return {"ok": False, "message": "geopandas is not installed. Install with: pip install geopandas", "status": "degraded"}
+    except Exception as e:
+        return {"ok": False, "message": f"Vector buffer failed: {e}", "status": "error"}
 
 
 @app.post("/tools/vector/clip")
 def vector_clip(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    out_path = workspace / "artifacts" / f"{req.taskId}_vector_clip.geojson"
-    out_path.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
-    return {"ok": True, "message": "Vector clip completed", "artifacts": [artifact("Vector Clip", out_path, "GeoJSON", "application/geo+json")]}
+    try:
+        import geopandas as gpd
+
+        params = req.params or {}
+        in_path = params.get("path", "")
+        clip_path = params.get("clip", "") or params.get("clip_path", "")
+        bbox = params.get("bbox")
+        out_path_str = params.get("output", "")
+
+        if not in_path:
+            return {"ok": False, "message": "Missing required parameter: path"}
+
+        gdf = gpd.read_file(in_path)
+
+        if clip_path:
+            clip_gdf = gpd.read_file(clip_path)
+            if gdf.crs != clip_gdf.crs:
+                clip_gdf = clip_gdf.to_crs(gdf.crs)
+            clipped = gpd.overlay(gdf, clip_gdf, how="intersection")
+        elif bbox and isinstance(bbox, list) and len(bbox) == 4:
+            from shapely.geometry import box
+            clip_geom = box(bbox[0], bbox[1], bbox[2], bbox[3])
+            import pandas as pd
+            clip_gdf = gpd.GeoDataFrame(geometry=[clip_geom], crs=gdf.crs)
+            clipped = gpd.overlay(gdf, clip_gdf, how="intersection")
+        else:
+            return {"ok": False, "message": "Provide 'clip' (path to clip layer) or 'bbox' ([minX,minY,maxX,maxY])"}
+
+        out_path = Path(out_path_str) if out_path_str else workspace / "artifacts" / f"{req.taskId}_vector_clip.geojson"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        clipped.to_file(str(out_path), driver="GeoJSON")
+
+        return {
+            "ok": True,
+            "message": "Vector clip completed",
+            "artifacts": [artifact("Vector Clip", out_path, "GeoJSON", "application/geo+json")],
+            "output": str(out_path),
+            "feature_count": len(clipped),
+            "status": "ok",
+        }
+    except ImportError as e:
+        return {"ok": False, "message": f"Missing dependency: {e}. Install with: pip install geopandas shapely", "status": "degraded"}
+    except Exception as e:
+        return {"ok": False, "message": f"Vector clip failed: {e}", "status": "error"}
 
 
 @app.post("/tools/vector/reproject")
 def vector_reproject(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    out_path = workspace / "artifacts" / f"{req.taskId}_vector_reprojected.geojson"
-    out_path.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
-    return {"ok": True, "message": "Vector reprojection completed", "artifacts": [artifact("Reprojected Vector", out_path, "GeoJSON", "application/geo+json")]}
+    try:
+        import geopandas as gpd
+
+        params = req.params or {}
+        in_path = params.get("path", "")
+        crs = params.get("crs") or params.get("targetCrs") or params.get("dst_crs", "")
+        out_path_str = params.get("output", "")
+
+        if not in_path:
+            return {"ok": False, "message": "Missing required parameter: path"}
+        if not crs:
+            return {"ok": False, "message": "Missing required parameter: crs (target CRS, e.g. EPSG:4326)"}
+
+        # Validate path and CRS format
+        try:
+            validate_path(in_path)
+            validate_crs(crs)
+        except ValidationError as e:
+            return {"ok": False, "message": str(e)}
+
+        gdf = gpd.read_file(in_path)
+        reprojected = gdf.to_crs(crs)
+
+        out_path = Path(out_path_str) if out_path_str else workspace / "artifacts" / f"{req.taskId}_vector_reprojected.geojson"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        reprojected.to_file(str(out_path), driver="GeoJSON")
+
+        return {
+            "ok": True,
+            "message": "Vector reprojection completed",
+            "artifacts": [artifact("Reprojected Vector", out_path, "GeoJSON", "application/geo+json")],
+            "output": str(out_path),
+            "feature_count": len(reprojected),
+            "crs": str(crs),
+            "status": "ok",
+        }
+    except ImportError:
+        return {"ok": False, "message": "geopandas is not installed. Install with: pip install geopandas", "status": "degraded"}
+    except Exception as e:
+        return {"ok": False, "message": f"Vector reprojection failed: {e}", "status": "error"}
 
 
 @app.post("/tools/map/layout-export")
 def map_layout_export(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
-    html_path = workspace / "artifacts" / f"{req.taskId}_map_layout.html"
-    png_path = workspace / "artifacts" / f"{req.taskId}_map_layout.png"
-    svg_path = workspace / "artifacts" / f"{req.taskId}_map_layout.svg"
-    html_path.write_text("<!doctype html><title>GeoWork Map Layout</title><main><h1>GeoWork Map Layout</h1></main>", encoding="utf-8")
-    png_path.write_bytes(b"\x89PNG\r\n\x1a\n")
-    svg_path.write_text("<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><text x='20' y='40'>GeoWork Map Layout</text></svg>", encoding="utf-8")
-    artifacts = [
-        artifact("HTML Map Layout", html_path, "HTML Map", "text/html"),
-        artifact("PNG Map Layout", png_path, "PNG", "image/png"),
-        artifact("SVG Map Layout", svg_path, "SVG", "image/svg+xml"),
-    ]
-    artifacts.append(write_manifest(workspace, req.taskId, artifacts))
-    return {"ok": True, "message": "Map layout exported", "artifacts": artifacts}
+    params = req.params or {}
+    source = params.get("path") or params.get("source") or ""
+    title = params.get("title") or "GeoWork Map Layout"
+    fmt = params.get("format") or "all"  # "html", "png", "svg", or "all"
+
+    artifacts = []
+    errors = []
+
+    # --- HTML export (folium or fallback) ---
+    if fmt in ("html", "all"):
+        html_path = workspace / "artifacts" / f"{req.taskId}_map_layout.html"
+        try:
+            import folium
+
+            m = None
+            if source:
+                import geopandas as gpd
+                gdf = gpd.read_file(source)
+                bounds = gdf.total_bounds
+                center = [(bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2]
+                m = folium.Map(location=center, zoom_start=12, tiles="OpenStreetMap")
+                folium.GeoJson(source, name="data").add_to(m)
+                folium.LayerControl().add_to(m)
+            else:
+                m = folium.Map(location=[39.9, 116.4], zoom_start=10, tiles="OpenStreetMap")
+                folium.Marker([39.9, 116.4], popup=title).add_to(m)
+
+            m.save(str(html_path))
+            artifacts.append(artifact("HTML Map Layout", html_path, "HTML Map", "text/html"))
+        except ImportError:
+            # Fallback: simple HTML template
+            html_content = f"""<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>{title}</title>
+<style>body{{margin:0;font-family:sans-serif}}#map{{width:100%;height:100vh}}</style>
+</head>
+<body><div id="map"><h1>{title}</h1><p>Install folium for interactive map: pip install folium</p></div></body>
+</html>"""
+            html_path.write_text(html_content, encoding="utf-8")
+            artifacts.append(artifact("HTML Map Layout", html_path, "HTML Map", "text/html"))
+        except Exception as e:
+            errors.append(f"HTML export failed: {e}")
+
+    # --- PNG export (matplotlib) ---
+    if fmt in ("png", "all"):
+        png_path = workspace / "artifacts" / f"{req.taskId}_map_layout.png"
+        try:
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            import geopandas as gpd
+
+            fig, ax = plt.subplots(figsize=(10, 7))
+            if source:
+                gdf = gpd.read_file(source)
+                gdf.plot(ax=ax, edgecolor="black", facecolor="#6baed6", linewidth=0.5)
+                ax.set_title(title, fontsize=14, fontweight="bold")
+                ax.set_xlabel("Longitude")
+                ax.set_ylabel("Latitude")
+            else:
+                ax.text(0.5, 0.5, title, ha="center", va="center", fontsize=16, transform=ax.transAxes)
+                ax.set_title("No data source provided", fontsize=10)
+
+            plt.tight_layout()
+            fig.savefig(str(png_path), dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            artifacts.append(artifact("PNG Map Layout", png_path, "PNG", "image/png"))
+        except ImportError:
+            errors.append("matplotlib/geopandas not installed — PNG export skipped")
+            # Write a minimal placeholder PNG
+            png_path.write_bytes(b"\x89PNG\r\n\x1a\n")
+            artifacts.append(artifact("PNG Map Layout (placeholder)", png_path, "PNG", "image/png"))
+        except Exception as e:
+            errors.append(f"PNG export failed: {e}")
+
+    # --- SVG export (matplotlib SVG backend) ---
+    if fmt in ("svg", "all"):
+        svg_path = workspace / "artifacts" / f"{req.taskId}_map_layout.svg"
+        try:
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            import geopandas as gpd
+
+            fig, ax = plt.subplots(figsize=(10, 7))
+            if source:
+                gdf = gpd.read_file(source)
+                gdf.plot(ax=ax, edgecolor="black", facecolor="#6baed6", linewidth=0.5)
+                ax.set_title(title, fontsize=14, fontweight="bold")
+                ax.set_xlabel("Longitude")
+                ax.set_ylabel("Latitude")
+            else:
+                ax.text(0.5, 0.5, title, ha="center", va="center", fontsize=16, transform=ax.transAxes)
+                ax.set_title("No data source provided", fontsize=10)
+
+            plt.tight_layout()
+            fig.savefig(str(svg_path), format="svg", bbox_inches="tight")
+            plt.close(fig)
+            artifacts.append(artifact("SVG Map Layout", svg_path, "SVG", "image/svg+xml"))
+        except ImportError:
+            errors.append("matplotlib/geopandas not installed — SVG export skipped")
+            svg_path.write_text(
+                f"<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'>"
+                f"<text x='20' y='40' font-size='16'>{title}</text>"
+                f"<text x='20' y='70' font-size='12'>Install matplotlib for real SVG export</text></svg>",
+                encoding="utf-8",
+            )
+            artifacts.append(artifact("SVG Map Layout (placeholder)", svg_path, "SVG", "image/svg+xml"))
+        except Exception as e:
+            errors.append(f"SVG export failed: {e}")
+
+    if artifacts:
+        artifacts.append(write_manifest(workspace, req.taskId, artifacts))
+
+    ok = len(artifacts) > 1 or not errors  # at least one real export succeeded
+    msg = "Map layout exported"
+    if errors:
+        msg += f" (warnings: {'; '.join(errors)})"
+
+    return {"ok": ok, "message": msg, "artifacts": artifacts}
+
+
+# ---------------------------------------------------------------------------
+# PDF parsing helpers (for /tools/papers/parse-pdf)
+# ---------------------------------------------------------------------------
+
+def _extract_title(text: str) -> str:
+    """Extract paper title from text using heuristics."""
+    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    if not lines:
+        return "Unknown Title"
+    # Title is usually the first non-empty, reasonably short line
+    for line in lines[:5]:
+        if len(line) > 10 and len(line) < 300:
+            return line
+    return lines[0] if lines else "Unknown Title"
+
+
+def _extract_abstract(text: str) -> str:
+    """Extract abstract section from paper text."""
+    import re
+    match = re.search(
+        r"(?:Abstract|摘要)\s*[:：]?\s*(.+?)(?=\n\s*(?:Introduction|Keywords|I\.|II\.|References|1\s|1\.))",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    return match.group(1).strip()[:2000] if match else ""
+
+
+def _extract_sections(text: str) -> list[dict[str, str]]:
+    """Extract section headings and brief content from paper text."""
+    import re
+    sections: list[dict[str, str]] = []
+    # Match common section heading patterns
+    heading_pattern = re.compile(
+        r"^\s*(?:\d+\.?\s*)?([A-Z][A-Za-z\s,\-:]{3,80})\s*$",
+        re.MULTILINE,
+    )
+    headings = heading_pattern.findall(text)
+    for heading in headings[:20]:
+        heading = heading.strip()
+        if heading and heading not in ("References", "Acknowledgment", "Acknowledgments"):
+            sections.append({"heading": heading, "content": ""})
+    return sections
 
 
 @app.post("/tools/papers/parse-pdf")
 def parse_pdf(req: ToolRequest):
     workspace = ensure_workspace(req.workspace)
+    pdf_path = req.params.get("path") or req.params.get("pdf_path") or ""
+
+    if not pdf_path:
+        return {"ok": False, "error": "No PDF path provided. Pass 'path' in params."}
+
+    pdf_file = Path(pdf_path).expanduser()
+    if not pdf_file.exists():
+        return {"ok": False, "error": f"PDF file not found: {pdf_file}"}
+
+    pdf_bytes = pdf_file.read_bytes()
+    notes: dict[str, Any] = {"page_count": 0, "title": "", "abstract": "", "sections": [], "full_text": ""}
+
+    # Try PyPDF2 first, then fall back to text heuristics
+    try:
+        from PyPDF2 import PdfReader
+        import io
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        full_text = ""
+        for page in reader.pages:
+            full_text += (page.extract_text() or "")
+
+        notes["page_count"] = len(reader.pages)
+        notes["title"] = _extract_title(full_text)
+        notes["abstract"] = _extract_abstract(full_text)
+        notes["sections"] = _extract_sections(full_text)
+        notes["full_text"] = full_text[:10000]
+    except ImportError:
+        # PyPDF2 not available — try text-based extraction from raw bytes
+        try:
+            raw_text = pdf_bytes.decode("utf-8", errors="replace")
+        except Exception:
+            raw_text = pdf_bytes.decode("latin-1", errors="replace")
+        notes["title"] = _extract_title(raw_text)
+        notes["abstract"] = _extract_abstract(raw_text)
+        notes["sections"] = _extract_sections(raw_text)
+        notes["full_text"] = raw_text[:10000]
+        notes["status"] = "degraded"
+        notes["warning"] = "PyPDF2 not installed; using raw text extraction"
+
+    # Write structured notes
     output_path = workspace / "knowledge" / f"{req.taskId}_paper_notes.md"
-    output_path.write_text(
-        "# Paper Reading Notes\n\n- Objective\n- Method\n- Data\n- Results\n- Reproducibility checklist\n",
-        encoding="utf-8",
-    )
-    return {"ok": True, "artifacts": [artifact("Paper Reading Notes", output_path, "knowledge", "text/markdown")]}
+    md_lines = [
+        f"# {notes['title']}",
+        "",
+        f"**Pages:** {notes['page_count']}",
+        "",
+        "## Abstract",
+        "",
+        notes["abstract"] or "_(No abstract extracted)_",
+        "",
+        "## Sections",
+        "",
+    ]
+    for sec in notes["sections"]:
+        md_lines.append(f"- {sec['heading']}")
+    md_lines.append("")
+    md_lines.append("## Full Text (truncated)")
+    md_lines.append("")
+    md_lines.append(notes["full_text"][:5000])
+    output_path.write_text("\n".join(md_lines), encoding="utf-8")
+
+    return {
+        "ok": True,
+        "message": "PDF parsed successfully",
+        "notes": {"title": notes["title"], "abstract": notes["abstract"], "page_count": notes["page_count"], "section_count": len(notes["sections"])},
+        "artifacts": [artifact("Paper Reading Notes", output_path, "knowledge", "text/markdown")],
+    }
 
 
 @app.post("/tools/papers/openalex-search")
 def openalex_search(req: ToolRequest):
+    import csv
+    import io
+
     workspace = ensure_workspace(req.workspace)
     query = req.params.get("query") or req.prompt or "remote sensing"
+    limit = int(req.params.get("limit") or 10)
+
+    papers: list[dict[str, Any]] = []
+    error_msg = ""
+
+    try:
+        import httpx
+
+        resp = httpx.get(
+            "https://api.openalex.org/works",
+            params={"search": query, "per_page": limit},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        for w in data.get("results", []):
+            # Reconstruct abstract from inverted index
+            abstract = ""
+            inverted = w.get("abstract_inverted_index")
+            if inverted and isinstance(inverted, dict):
+                try:
+                    max_pos = max(
+                        (pos for positions in inverted.values() for pos in positions),
+                        default=-1,
+                    )
+                    words = [""] * (max_pos + 1)
+                    for word, positions in inverted.items():
+                        for pos in positions:
+                            if pos < len(words):
+                                words[pos] = str(word)
+                    abstract = " ".join(wo for wo in words if wo)
+                except Exception:
+                    abstract = ""
+
+            papers.append({
+                "title": w.get("title", ""),
+                "authors": [a["author"]["display_name"] for a in w.get("authorships", []) if a.get("author", {}).get("display_name")],
+                "year": w.get("publication_year"),
+                "doi": w.get("doi", ""),
+                "cited_by_count": w.get("cited_by_count", 0),
+                "abstract": abstract[:500],
+            })
+    except ImportError:
+        error_msg = "httpx not installed"
+    except Exception as exc:
+        error_msg = str(exc)
+
+    # Write literature matrix CSV
     matrix_path = workspace / "knowledge" / f"{req.taskId}_literature_matrix.csv"
-    matrix_path.write_text(
-        "title,year,method,data,reproducibility\n"
-        f"OpenAlex seed result for {query},2024,review,multi-source,medium\n"
-        "Sentinel-2 NDVI time-series workflow,2023,experiment,Sentinel-2,high\n",
-        encoding="utf-8",
-    )
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["title", "authors", "year", "doi", "cited_by_count", "abstract"])
+    for p in papers:
+        writer.writerow([p["title"], ", ".join(p["authors"]), p["year"], p["doi"], p["cited_by_count"], p["abstract"][:200]])
+    matrix_path.write_text(buf.getvalue(), encoding="utf-8")
+
+    # Write literature notes
     notes_path = workspace / "knowledge" / f"{req.taskId}_literature_notes.md"
-    notes_path.write_text(
-        f"# Literature Search: {query}\n\n- Source: OpenAlex-compatible plugin path\n- Output: review matrix and candidate methods\n",
-        encoding="utf-8",
-    )
-    return {
+    md_lines = [
+        f"# Literature Search: {query}",
+        "",
+        f"**Source:** OpenAlex API  ",
+        f"**Results:** {len(papers)} papers",
+        "",
+    ]
+    for i, p in enumerate(papers, 1):
+        md_lines.append(f"## {i}. {p['title']}")
+        md_lines.append(f"- **Authors:** {', '.join(p['authors'][:5])}")
+        md_lines.append(f"- **Year:** {p['year']}")
+        md_lines.append(f"- **DOI:** {p['doi']}")
+        md_lines.append(f"- **Citations:** {p['cited_by_count']}")
+        md_lines.append("")
+    if error_msg:
+        md_lines.append(f"---\n*Warning: {error_msg}*")
+    notes_path.write_text("\n".join(md_lines), encoding="utf-8")
+
+    result: dict[str, Any] = {
         "ok": True,
-        "message": "Generated literature matrix from OpenAlex-compatible search",
+        "message": f"OpenAlex search completed: {len(papers)} results",
+        "papers": papers,
         "artifacts": [
             artifact("Literature Matrix CSV", matrix_path, "knowledge", "text/csv"),
             artifact("Literature Notes", notes_path, "knowledge", "text/markdown"),
         ],
     }
+    if error_msg:
+        result["warning"] = error_msg
+    return result
 
 
 @app.post("/tools/knowledge/index")

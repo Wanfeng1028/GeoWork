@@ -1,142 +1,48 @@
 # GeoWork Python Worker - Tool Implementations
 
-"""Tool implementations for GeoWork worker operations."""
+"""Shared tool utilities for GeoWork worker operations.
+
+Note: The actual GIS tool logic lives in ``app.api.gis`` (FastAPI router).
+This module only keeps small cross-cutting helpers that are reused by
+multiple endpoints.
+"""
 
 from typing import Any
 
 
-def gdal_inspect(path: str) -> dict[str, Any]:
-    """Inspect a geospatial dataset using GDAL."""
-    return {
-        "ok": True,
-        "path": path,
-        "driver": "GeoTIFF",
-        "crs": "EPSG:4326",
-        "geometry": "valid",
-        "recommendations": ["Configure GDAL local path for production processing."],
-    }
+# ---------------------------------------------------------------------------
+# MIME-type helper
+# ---------------------------------------------------------------------------
+
+_MIME_MAP: dict[str, str] = {
+    "html": "text/html",
+    "png": "image/png",
+    "svg": "image/svg+xml",
+    "pdf": "application/pdf",
+    "geojson": "application/geo+json",
+    "tif": "image/tiff",
+    "tiff": "image/tiff",
+    "json": "application/json",
+    "csv": "text/csv",
+    "md": "text/markdown",
+}
 
 
-def gdal_clip(input_path: str, output_path: str, bbox: list[float]) -> dict[str, Any]:
-    """Clip a raster to a bounding box using GDAL.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "Raster clip task queued for execution",
-        "task_type": "gdal_clip",
-        "input": input_path,
-        "output": output_path,
-        "bbox": bbox,
-        "status": "pending",
-    }
+def mime_for_format(fmt: str) -> str:
+    """Return the MIME type for a given format string."""
+    return _MIME_MAP.get(fmt.lower().lstrip("."), "application/octet-stream")
 
 
-def gdal_reproject(input_path: str, output_path: str, crs: str) -> dict[str, Any]:
-    """Reproject a raster to a target CRS using GDAL.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "Raster reprojection task queued for execution",
-        "task_type": "gdal_reproject",
-        "input": input_path,
-        "output": output_path,
-        "target_crs": crs,
-        "status": "pending",
-    }
+# ---------------------------------------------------------------------------
+# Status helper
+# ---------------------------------------------------------------------------
 
 
-def gdal_write_cog(input_path: str, output_path: str) -> dict[str, Any]:
-    """Write a Cloud Optimized GeoTIFF using GDAL.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "COG generation task queued for execution",
-        "task_type": "gdal_write_cog",
-        "input": input_path,
-        "output": output_path,
-        "status": "pending",
-    }
+def ok_result(**extra: Any) -> dict[str, Any]:
+    """Build a standard ``{"ok": True, ...}`` response dict."""
+    return {"ok": True, **extra}
 
 
-def vector_buffer(input_path: str, output_path: str, distance: float) -> dict[str, Any]:
-    """Create a buffer around vector features using GDAL/OGR.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "Vector buffer task queued for execution",
-        "task_type": "vector_buffer",
-        "input": input_path,
-        "output": output_path,
-        "distance": distance,
-        "status": "pending",
-    }
-
-
-def vector_clip(input_path: str, output_path: str, clip_path: str) -> dict[str, Any]:
-    """Clip vector features to a boundary using GDAL/OGR.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "Vector clip task queued for execution",
-        "task_type": "vector_clip",
-        "input": input_path,
-        "output": output_path,
-        "clip_boundary": clip_path,
-        "status": "pending",
-    }
-
-
-def vector_reproject(input_path: str, output_path: str, crs: str) -> dict[str, Any]:
-    """Reproject vector data to a target CRS using GDAL/OGR.
-
-    Returns task metadata for async execution via the Python worker.
-    """
-    return {
-        "ok": True,
-        "message": "Vector reprojection task queued for execution",
-        "task_type": "vector_reproject",
-        "input": input_path,
-        "output": output_path,
-        "target_crs": crs,
-        "status": "pending",
-    }
-
-
-def map_layout_export(
-    output_path: str,
-    formats: list[str] | None = None,
-) -> dict[str, Any]:
-    """Export a map layout to multiple formats."""
-    fmts = formats or ["html", "png", "svg"]
-    artifacts = []
-    for fmt in fmts:
-        artifacts.append({
-            "name": f"Map Layout ({fmt.upper()})",
-            "type": fmt,
-            "mimeType": _mime_for_format(fmt),
-        })
-    return {
-        "ok": True,
-        "message": "Map layout exported",
-        "artifacts": artifacts,
-    }
-
-
-def _mime_for_format(fmt: str) -> str:
-    mapping = {
-        "html": "text/html",
-        "png": "image/png",
-        "svg": "image/svg+xml",
-        "pdf": "application/pdf",
-    }
-    return mapping.get(fmt, "application/octet-stream")
+def error_result(message: str, **extra: Any) -> dict[str, Any]:
+    """Build a standard ``{"ok": False, "error": ..., ...}`` response dict."""
+    return {"ok": False, "error": message, **extra}

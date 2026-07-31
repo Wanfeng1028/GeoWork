@@ -6,6 +6,7 @@ import sys
 import subprocess
 import json
 import tempfile
+import threading
 import time
 from typing import Dict, Optional, List
 
@@ -128,12 +129,16 @@ class SandboxRunner:
         return False
 
 
-# Singleton instance
-_runner = None
+# Singleton instance with thread-safe initialization
+_runner: Optional[SandboxRunner] = None
+_lock = threading.Lock()
 
 
 def get_runner(policy: Optional[Dict] = None) -> SandboxRunner:
+    """Return the global SandboxRunner singleton (thread-safe double-checked locking)."""
     global _runner
     if _runner is None:
-        _runner = SandboxRunner(policy)
+        with _lock:
+            if _runner is None:
+                _runner = SandboxRunner(policy)
     return _runner
