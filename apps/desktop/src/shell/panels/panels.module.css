@@ -1,0 +1,189 @@
+/* ── 面板共享样式 ── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+/* 顶部工具条 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--geowork-border);
+}
+
+.toolbarInput {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 滚动内容区 */
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  min-height: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.content::-webkit-scrollbar {
+  display: none;
+}
+
+/* 无滚动的内容区（浏览器/终端由自身管理） */
+.fill {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* 占位区（选择目录前的空状态） */
+.placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* 文件树 */
+.treeWrap {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+.treeWrap :global(.ant-tree-treenode) {
+  padding: 1px 0;
+}
+
+.treeWrap :global(.ant-tree-node-content-wrapper) {
+  font-size: 12px;
+}
+
+/* 文件预览 */
+.previewHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  border-bottom: 1px solid var(--geowork-border);
+}
+
+.previewBody {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  white-space: pre;
+  min-height: 0;
+}
+
+/* Diff 审查 */
+.diffList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diffItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.diffPath {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diffView {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.diffLine {
+  white-space: pre;
+  padding: 0 8px;
+}
+
+.lineAdd {
+  background: rgba(82, 196, 26, 0.16);
+}
+
+.lineDel {
+  background: rgba(245, 63, 63, 0.16);
+}
+
+.lineHunk {
+  color: var(--geowork-text-tertiary);
+  background: var(--geowork-fill-quaternary);
+}
+
+/* 悬浮助手 */
+.floatRoot {
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.floatHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.floatBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.floatMessages {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 12px;
+  min-height: 0;
+}
+
+.floatComposer {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--geowork-border);
+}

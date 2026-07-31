@@ -23,20 +23,29 @@ import {
   ClockCircleOutlined,
   CopyOutlined,
   ExpandOutlined,
-  DeleteOutlined,
   ReloadOutlined,
+  FileTextOutlined,
+  DiffOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons'
 import styles from './RightWorkspacePanel.module.css'
+import { FileTreePanel } from './panels/FileTreePanel'
+import { ReviewPanel } from './panels/ReviewPanel'
+import { BrowserPanel } from './panels/BrowserPanel'
+import { TerminalPanel } from './panels/TerminalPanel'
 
 const { Text } = Typography
 
 /* ── 类型定义 ── */
-type WorkspaceTabKey = 'task' | 'terminal' | 'preview' | 'context'
+type WorkspaceTabKey = 'task' | 'terminal' | 'preview' | 'context' | 'files' | 'review' | 'browser'
 type DynamicWorkspaceTabKey = Exclude<WorkspaceTabKey, 'task'>
 
-const VALID_DYNAMIC_TABS: DynamicWorkspaceTabKey[] = ['terminal', 'preview', 'context']
+const VALID_DYNAMIC_TABS: DynamicWorkspaceTabKey[] = ['files', 'review', 'browser', 'terminal', 'preview', 'context']
 
 const DYNAMIC_TAB_CONFIG: Record<DynamicWorkspaceTabKey, { label: string; icon: React.ReactNode }> = {
+  files: { label: '文件', icon: <FileTextOutlined /> },
+  review: { label: '审查', icon: <DiffOutlined /> },
+  browser: { label: '浏览器', icon: <GlobalOutlined /> },
   terminal: { label: '终端', icon: <CodeOutlined /> },
   preview: { label: '预览', icon: <EyeOutlined /> },
   context: { label: '上下文', icon: <FolderOpenOutlined /> },
@@ -106,18 +115,6 @@ const MOCK_LOGS = [
   { time: '19:52', text: '已创建右侧工作台组件' },
   { time: '19:53', text: '已切换为动态 Tab 结构' },
   { time: '19:54', text: '等待接入真实任务状态' },
-]
-
-const MOCK_TERMINAL_LINES = [
-  'PS E:\\code\\javascript\\project\\GeoFrontend2.0>',
-  'npm run dev',
-  '',
-  '  VITE v8.1.1  ready in 521ms',
-  '',
-  '  ➜  Local:   http://localhost:5173/',
-  '  ➜  Network: use --host to expose',
-  '  ➜  press h + enter to show help',
-  '',
 ]
 
 const MOCK_MODIFIED_FILES = [
@@ -217,52 +214,6 @@ function TaskPanelContent({ token }: { token: ReturnType<typeof theme.useToken>[
             <div key={i} className={styles.logItem}>
               <span className={styles.logTime} style={{ color: token.colorTextTertiary }}>{log.time}</span>
               <Text style={{ fontSize: 12 }}>{log.text}</Text>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TerminalPanelContent({ token }: { token: ReturnType<typeof theme.useToken>['token'] }) {
-  return (
-    <div className={styles.content} style={{ padding: 0 }}>
-      <div className={styles.terminalArea}>
-        <div
-          className={styles.terminalHeader}
-          style={{ background: token.colorFillSecondary, borderBottom: `1px solid ${token.colorBorderSecondary}` }}
-        >
-          <FolderOpenOutlined style={{ fontSize: 12, color: token.colorTextTertiary }} />
-          <Text type="secondary" style={{ fontSize: 12, flex: 1 }}>E:\code\javascript\project\GeoFrontend2.0</Text>
-          <Space size={0}>
-            <Tooltip title="清空">
-              <Button type="text" size="small" icon={<DeleteOutlined />} style={{ fontSize: 11, width: 24, height: 24 }} />
-            </Tooltip>
-            <Tooltip title="复制">
-              <Button type="text" size="small" icon={<CopyOutlined />} style={{ fontSize: 11, width: 24, height: 24 }} />
-            </Tooltip>
-            <Tooltip title="展开">
-              <Button type="text" size="small" icon={<ExpandOutlined />} style={{ fontSize: 11, width: 24, height: 24 }} />
-            </Tooltip>
-          </Space>
-        </div>
-        <div
-          className={styles.terminalBody}
-          style={{
-            background: token.colorBgLayout,
-            color: token.colorText,
-          }}
-        >
-          {MOCK_TERMINAL_LINES.map((line, i) => (
-            <div key={i}>
-              {line.startsWith('PS ') ? (
-                <span style={{ color: token.colorPrimary }}>{line}</span>
-              ) : line.startsWith('  VITE') || line.startsWith('  ➜') ? (
-                <span style={{ color: token.colorSuccess }}>{line}</span>
-              ) : (
-                line
-              )}
             </div>
           ))}
         </div>
@@ -384,9 +335,11 @@ interface RightWorkspacePanelProps {
   setCollapsed: (v: boolean) => void
   width: number
   panelRef: RefObject<HTMLDivElement | null>
+  /** 当前工作区绝对路径(用于文件树面板) */
+  workspacePath?: string
 }
 
-export function RightWorkspacePanel({ collapsed, setCollapsed, width, panelRef }: RightWorkspacePanelProps) {
+export function RightWorkspacePanel({ collapsed, setCollapsed, width, panelRef, workspacePath }: RightWorkspacePanelProps) {
   const { token } = theme.useToken()
 
   const [openTabs, setOpenTabs] = useState<DynamicWorkspaceTabKey[]>(() => safeReadTabs(LS_OPEN_TABS))
@@ -461,7 +414,10 @@ export function RightWorkspacePanel({ collapsed, setCollapsed, width, panelRef }
       key,
       label: DYNAMIC_TAB_CONFIG[key].label,
       closable: true,
-      children: key === 'terminal' ? <TerminalPanelContent token={token} />
+      children: key === 'files' ? <FileTreePanel workspacePath={workspacePath} />
+        : key === 'review' ? <ReviewPanel />
+        : key === 'browser' ? <BrowserPanel active={activeTab === 'browser'} />
+        : key === 'terminal' ? <TerminalPanel active={activeTab === 'terminal'} />
         : key === 'preview' ? <PreviewPanelContent token={token} />
         : <ContextPanelContent token={token} />,
     })),
