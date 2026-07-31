@@ -55,6 +55,7 @@ import {
   updateSidebarTask,
   archiveSidebarTasksByWorkspace,
   upsertWorkspaceMeta,
+  refreshSidebarTasksFromCore,
 } from '../shared/stores/taskSidebarStore'
 import type { SidebarTaskItem, SidebarWorkspaceMeta } from '../shared/stores/taskSidebarStore'
 import { getConversation, upsertConversation } from '../pages/NewTask/components/conversationStorage'
@@ -218,6 +219,9 @@ export function AppShell() {
     }
     window.addEventListener('geowork:sidebar-tasks-updated', refresh)
     window.addEventListener('storage', refresh)
+    /* 启动时从 Core API 拉取任务列表并合并到 localStorage；
+       失败静默降级，refresh() 由 dispatchUpdated 触发 */
+    refreshSidebarTasksFromCore()
     return () => {
       window.removeEventListener('geowork:sidebar-tasks-updated', refresh)
       window.removeEventListener('storage', refresh)

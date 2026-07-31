@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Alert,
   App,
@@ -8,6 +8,7 @@ import {
   Segmented,
   Select,
   Space,
+  Spin,
   Switch,
   Table,
   Tabs,
@@ -30,6 +31,7 @@ import {
 import { useNavigate } from 'react-router'
 import { ScheduledTaskCard } from './components/ScheduledTaskCard'
 import { ScheduledTaskModal } from './components/ScheduledTaskModal'
+import { apiGet, apiPost, apiDelete, apiPatch } from '../../shared/api/client'
 import styles from './TasksPage.module.css'
 
 const { Title, Text } = Typography
@@ -167,12 +169,125 @@ const statusConfig: Record<ExecutionStatus, { label: string; color: string; icon
   cancelled: { label: '已取消', color: 'default', icon: <StopOutlined /> },
 }
 
+/* ── Core Task 对接（/api/db/tasks） ── */
+
+const TASKS_CACHE_KEY = 'geowork.tasks.cache.v1'
+
+/** Core 端 Task 形状（tasks.go Task 的 JSON 投影）。 */
+interface CoreTask {
+  id: string
+  workspaceId: string
+  name: string
+  description?: string
+  status: string // pending | running | completed | failed | cancelled | paused | recovered
+  mode: string
+  prompt?: string
+  plan?: string
+  progress: number
+  startedAt?: string
+  completedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** Core Task → 前端 ScheduledTask 映射。 */
+function mapCoreTaskToScheduled(t: CoreTask): ScheduledTask {
+  return {
+    id: t.id,
+    name: t.name,
+    description: t.description ?? '',
+    schedule: t.mode ? `模式：${t.mode}` : '—',
+    prompt: t.prompt ?? '',
+    enabled: t.status === 'pending' || t.status === 'running',
+  }
+}
+
+/** Core Task → 前端 ExecutionRecord 映射（用于"执行记录"标签页）。 */
+function mapCoreTaskToExecution(t: CoreTask): ExecutionRecord {
+  const statusMap: Record<string, ExecutionStatus> = {
+    completed: 'success',
+    failed: 'failed',
+    running: 'running',
+    cancelled: 'cancelled',
+    recovered: 'success',
+    paused: 'cancelled',
+  }
+  const status = statusMap[t.status] ?? 'success'
+  let duration = '—'
+  if (t.startedAt && t.completedAt) {
+    const ms = Date.parse(t.completedAt) - Date.parse(t.startedAt)
+    if (!Number.isNaN(ms) && ms > 0) {
+      const secs = Math.round(ms / 1000)
+      duration = secs >= 60 ? `${Math.floor(secs / 60)}分${secs % 60}秒` : `${secs}秒`
+    }
+  }
+  const iso = t.completedAt ?? t.updatedAt ?? t.createdAt
+  return {
+    id: t.id,
+    taskName: t.name,
+    executedAt: formatCoreTime(iso),
+    status,
+    duration,
+    summary: t.description || (t.prompt ? t.prompt.slice(0, 60) : '已完成'),
+  }
+}
+
+function formatCoreTime(iso: string): string {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return iso
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  } catch {
+    return iso
+  }
+}
+
+interface CoreTasksBundle {
+  tasks: ScheduledTask[]
+  executions: ExecutionRecord[]
+}
+
+/** 从 Core 加载任务列表 + 执行记录。 */
+async function loadTasksFromCore(): Promise<CoreTasksBundle> {
+  const res = await apiGet<{ total: number; tasks: CoreTask[] }>('/api/db/tasks?workspaceId=default')
+  const coreTasks = res?.tasks ?? []
+  return {
+    tasks: coreTasks.map(mapCoreTaskToScheduled),
+    executions: coreTasks
+      .filter((t) => ['completed', 'failed', 'cancelled', 'running', 'recovered', 'paused'].includes(t.status))
+      .map(mapCoreTaskToExecution),
+  }
+}
+
+/** 读取 localStorage 缓存的任务数据（Core 不可用时的降级数据源）。 */
+function loadCachedTasks(): CoreTasksBundle | null {
+  try {
+    const raw = window.localStorage.getItem(TASKS_CACHE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as CoreTasksBundle
+  } catch {
+    return null
+  }
+}
+
+function saveCachedTasks(data: CoreTasksBundle): void {
+  try {
+    window.localStorage.setItem(TASKS_CACHE_KEY, JSON.stringify(data))
+  } catch {
+    /* 静默忽略 */
+  }
+}
+
 export function TasksPage() {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { token } = theme.useToken()
 
   const [tasks, setTasks] = useState<ScheduledTask[]>(INITIAL_TASKS)
+  const [executions, setExecutions] = useState<ExecutionRecord[]>(MOCK_EXECUTIONS)
+  const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<ScheduledTask | null>(null)
   const [activeTab, setActiveTab] = useState('tasks')
@@ -182,17 +297,53 @@ export function TasksPage() {
   const [filterTask, setFilterTask] = useState<string>('all-tasks')
   const [filterStatus, setFilterStatus] = useState<string>('all-status')
 
-  /* 任务操作 */
-  const handleToggle = (id: string, enabled: boolean) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, enabled } : t)),
-    )
-    message.info(enabled ? '任务已启用' : '任务已停用')
+  /* ── 从 Core 加载任务列表（失败降级 localStorage 缓存 → mock） ── */
+  const refreshFromCore = useCallback(async () => {
+    setLoading(true)
+    try {
+      const bundle = await loadTasksFromCore()
+      setTasks(bundle.tasks)
+      setExecutions(bundle.executions)
+      saveCachedTasks(bundle)
+    } catch {
+      /* Core 不可用：尝试 localStorage 缓存，最后保留 mock 初始数据 */
+      const cached = loadCachedTasks()
+      if (cached) {
+        setTasks(cached.tasks)
+        setExecutions(cached.executions)
+      }
+      /* 无缓存则保留 INITIAL_TASKS / MOCK_EXECUTIONS */
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshFromCore()
+  }, [refreshFromCore])
+
+  /* 任务操作：均先乐观更新本地状态，再尝试 Core 同步，失败降级本地 */
+  const handleToggle = async (id: string, enabled: boolean) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, enabled } : t)))
+    try {
+      const status = enabled ? 'pending' : 'cancelled'
+      await apiPatch<CoreTask>(`/api/db/tasks/${encodeURIComponent(id)}/status`, { status })
+      message.info(enabled ? '任务已启用' : '任务已停用')
+    } catch {
+      message.warning(enabled ? '任务已本地启用（后端同步失败）' : '任务已本地停用（后端同步失败）')
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id))
-    message.success('定时任务已删除')
+    try {
+      await apiDelete<{ status: string }>(`/api/db/tasks/${encodeURIComponent(id)}`)
+      message.success('定时任务已删除')
+      /* 删除后刷新执行记录 */
+      refreshFromCore()
+    } catch {
+      message.warning('已本地删除（后端同步失败）')
+    }
   }
 
   const handleEdit = (task: ScheduledTask) => {
@@ -209,13 +360,14 @@ export function TasksPage() {
     setModalOpen(true)
   }
 
-  const handleSaveTask = (data: {
+  const handleSaveTask = async (data: {
     name: string
     description: string
     schedule: string
     prompt: string
   }) => {
     if (editingTask) {
+      /* 编辑：Core 暂无通用更新端点（仅 status），本地更新即可 */
       setTasks((prev) =>
         prev.map((t) =>
           t.id === editingTask.id
@@ -223,20 +375,42 @@ export function TasksPage() {
             : t,
         ),
       )
-    } else {
-      const newTask: ScheduledTask = {
-        id: Date.now().toString(),
-        name: data.name,
-        description: data.description,
-        schedule: data.schedule,
-        prompt: data.prompt,
-        enabled: false,
-      }
-      setTasks((prev) => [...prev, newTask])
+      setModalOpen(false)
+      setEditingTask(null)
+      message.success('定时任务已保存')
+      return
     }
+
+    /* 新建：先用临时 id 乐观插入，再尝试 Core 创建并替换 id */
+    const tempId = `temp_${Date.now()}`
+    const newTask: ScheduledTask = {
+      id: tempId,
+      name: data.name,
+      description: data.description,
+      schedule: data.schedule,
+      prompt: data.prompt,
+      enabled: false,
+    }
+    setTasks((prev) => [...prev, newTask])
     setModalOpen(false)
     setEditingTask(null)
-    message.success('定时任务已保存')
+
+    try {
+      const coreTask = await apiPost<CoreTask>('/api/db/tasks', {
+        workspaceId: 'default',
+        name: data.name,
+        description: data.description,
+        mode: 'Work',
+        prompt: data.prompt,
+        status: 'pending',
+      })
+      /* 用 Core 返回的 id 替换临时 id */
+      setTasks((prev) => prev.map((t) => (t.id === tempId ? { ...t, id: coreTask.id } : t)))
+      message.success('定时任务已保存')
+      refreshFromCore()
+    } catch {
+      message.warning('任务已本地保存（后端同步失败）')
+    }
   }
 
   const handleCreateViaGeoWork = () => {
@@ -295,8 +469,8 @@ export function TasksPage() {
     },
   ]
 
-  /* 筛选执行记录 */
-  const filteredExecutions = MOCK_EXECUTIONS.filter((record) => {
+  /* 筛选执行记录（基于 Core 加载的 executions 状态） */
+  const filteredExecutions = executions.filter((record) => {
     if (filterTask !== 'all-tasks') {
       const task = tasks.find((t) => t.id === filterTask)
       if (task && record.taskName !== task.name) return false
@@ -324,7 +498,8 @@ export function TasksPage() {
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => message.info('定时任务列表已刷新')}
+            loading={loading}
+            onClick={refreshFromCore}
           />
           <Button color="primary" variant="filled" onClick={handleCreateViaGeoWork}>
             通过 GeoWork 创建
@@ -392,16 +567,34 @@ export function TasksPage() {
                   </Dropdown>
                 </div>
                 <div className={styles.cardGrid}>
-                  {sortedTasks.map((task) => (
-                    <ScheduledTaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={handleToggle}
-                      onEdit={handleEdit}
-                      onCopyToNew={handleCopyToNew}
-                      onDelete={handleDelete}
+                  {loading && sortedTasks.length === 0 ? (
+                    <div style={{ padding: 48, textAlign: 'center' }}>
+                      <Spin />
+                    </div>
+                  ) : sortedTasks.length === 0 ? (
+                    <Empty
+                      image={<ClockCircleOutlined style={{ fontSize: 48, opacity: 0.3 }} />}
+                      description={
+                        <Space direction="vertical" size={4}>
+                          <Text>暂无定时任务</Text>
+                          <Text type="secondary" style={{ fontSize: 13 }}>
+                            新建定时任务后，将显示在这里。
+                          </Text>
+                        </Space>
+                      }
                     />
-                  ))}
+                  ) : (
+                    sortedTasks.map((task) => (
+                      <ScheduledTaskCard
+                        key={task.id}
+                        task={task}
+                        onToggle={handleToggle}
+                        onEdit={handleEdit}
+                        onCopyToNew={handleCopyToNew}
+                        onDelete={handleDelete}
+                      />
+                    ))
+                  )}
                 </div>
               </>
             ),
