@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { createHelpers } from '../helpers/app-helpers'
+import { createHelpers } from './helpers/app-helpers'
 
 test.describe('Desktop Smoke Tests', () => {
-  test.skip(({ baseURL }) => !baseURL, 'Desktop app must be running for e2e tests')
-
   test.beforeEach(async ({ page }) => {
     // Intercept console messages for debugging
     page.on('console', (msg) => {

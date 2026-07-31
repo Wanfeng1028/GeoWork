@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { createHelpers } from '../helpers/app-helpers'
+import { createHelpers } from './helpers/app-helpers'
 
 test.describe('Artifact Preview Tests', () => {
-  test.skip(({ baseURL }) => !baseURL, 'Desktop app must be running for e2e tests')
-
   test.beforeEach(async ({ page }) => {
     page.on('console', (msg) => {
       if (msg.type() === 'error') console.error('[E2E] Page error:', msg.text())
