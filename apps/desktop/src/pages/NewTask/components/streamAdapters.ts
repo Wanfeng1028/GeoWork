@@ -387,5 +387,252 @@ export const websocketStreamAdapter: StreamAdapter = {
   },
 }
 
+/* ───────────────────────────────────────────────────────────
+ *  realStreamAdapter
+ *
+ *  通过直连 Go Core（HTTP + SSE）驱动真实的 Orchestrator 执行链路。
+ *  流程：
+ *    1. 确保 Core 端会话存在（本地 temp id → 创建 Core 会话并缓存映射）
+ *    2. POST /api/conversations/{id}/messages 触发 orchestrator.StartRun
+ *    3. 订阅 /api/conversations/{id}/events SSE，把 orchestrator 事件
+ *       映射为 onDelta / onToolCall / onWorkflow / onStatus / onDone / onError
+ *
+ *  说明：Go Core 的 orchestrator 执行的是"工具调用计划"而非聊天文本流，
+ *  因此 onDelta 主要用于步骤摘要与完成提示，onToolCall 承载真实工具执行。
+ * ─────────────────────────────────────────────────────────── */
+
+const CORE_BASE_URL =
+  (import.meta as unknown as { env?: { VITE_CORE_API_URL?: string } }).env?.VITE_CORE_API_URL ??
+  'http://127.0.0.1:8765'
+
+/** 本地 temp 会话 id → Core 会话 id 的缓存，支持多轮复用同一 Core 会话。 */
+const coreConvIdCache = new Map<string, string>()
+
+/** 读取本地会话对应的 Core 会话 id（用于复用同一 Core 会话）。 */
+export function getCoreConversationId(localConvId: string): string | undefined {
+  return coreConvIdCache.get(localConvId)
+}
+
+/** 设置本地会话与 Core 会话的映射（如从 URL 直连 Core 会话后恢复缓存）。 */
+export function setCoreConversationId(localConvId: string, coreConvId: string): void {
+  coreConvIdCache.set(localConvId, coreConvId)
+}
+
+/** 前端 WorkMode → orchestrator mode 映射。 */
+function mapWorkModeToMode(workMode?: WorkMode): string {
+  switch (workMode) {
+    case 'code':
+      return 'Code'
+    case 'map':
+      return 'Analysis'
+    case 'work':
+    default:
+      return 'Work'
+  }
+}
+
+/** Core 端 TaskEventPayload 的 JSON 形状。 */
+interface CoreEventPayload {
+  type: string
+  taskId?: string
+  message?: string
+  data?: Record<string, unknown>
+  error?: string
+}
+
+/** Core 端 Run.Plan.Step 形状（用于 onWorkflow 映射）。 */
+interface CoreRunStep {
+  id: string
+  title: string
+  tool?: string
+  status?: string
+}
+
+/** 确保 Core 会话存在：本地 temp id 首次发送时创建 Core 会话并缓存。 */
+async function ensureCoreConversation(
+  localConvId: string,
+  input: string,
+  mode: string,
+  signal: AbortSignal,
+): Promise<string> {
+  const cached = coreConvIdCache.get(localConvId)
+  if (cached) return cached
+
+  const res = await fetch(`${CORE_BASE_URL}/api/conversations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      workspaceId: 'default',
+      title: input.slice(0, 40) || '新任务',
+      mode,
+    }),
+    signal,
+  })
+  if (!res.ok) throw new Error(`create conversation failed: HTTP ${res.status}`)
+  const conv = (await res.json()) as { id: string }
+  coreConvIdCache.set(localConvId, conv.id)
+  return conv.id
+}
+
+export const realStreamAdapter: StreamAdapter = {
+  async start(payload, callbacks, signal) {
+    const mode = mapWorkModeToMode(payload.workMode)
+    callbacks.onStatus?.('thinking')
+
+    // 1. 确保 Core 会话存在（失败则抛出，由 autoStreamAdapter 降级 mock）
+    const coreConvId = await ensureCoreConversation(
+      payload.conversationId,
+      payload.input,
+      mode,
+      signal,
+    )
+
+    // 2. 发送消息，触发 orchestrator
+    const msgRes = await fetch(`${CORE_BASE_URL}/api/conversations/${coreConvId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: payload.input, mode }),
+      signal,
+    })
+    if (!msgRes.ok) {
+      throw new Error(`send message failed: HTTP ${msgRes.status}`)
+    }
+    const msgData = (await msgRes.json()) as { runId?: string; error?: string }
+    if (msgData.error) {
+      throw new Error(msgData.error)
+    }
+    const runId = msgData.runId
+    callbacks.onStatus?.('planning')
+
+    // 3. 订阅 SSE 事件流
+    await new Promise<void>((resolve) => {
+      if (signal.aborted) {
+        resolve()
+        return
+      }
+
+      const es = new EventSource(`${CORE_BASE_URL}/api/conversations/${coreConvId}/events`)
+      let resolved = false
+      const finish = () => {
+        if (resolved) return
+        resolved = true
+        es.close()
+        resolve()
+      }
+
+      signal.addEventListener('abort', () => {
+        finish()
+      })
+
+      const parse = (e: MessageEvent): CoreEventPayload => {
+        try {
+          return JSON.parse(e.data) as CoreEventPayload
+        } catch {
+          return { type: 'unknown' }
+        }
+      }
+
+      // 计划就绪：尝试拉取 run 详情以填充工作流步骤
+      es.addEventListener('plan', (e) => {
+        callbacks.onStatus?.('planning')
+        if (!runId) return
+        fetch(`${CORE_BASE_URL}/api/agent/runs/${runId}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((run: { plan?: CoreRunStep[] } | null) => {
+            if (run?.plan && run.plan.length > 0) {
+              callbacks.onWorkflow?.(
+                run.plan.map((s, idx) => ({
+                  key: s.id || `step-${idx}`,
+                  title: s.title || s.tool || `步骤 ${idx + 1}`,
+                  description: s.tool ? `工具：${s.tool}` : '',
+                  status: s.status === 'completed' ? 'finish' : s.status === 'running' ? 'process' : 'wait',
+                })),
+              )
+            }
+          })
+          .catch(() => {
+            /* 拉取计划失败不影响主流程 */
+          })
+      })
+
+      // 步骤开始：触发 running 工具调用
+      es.addEventListener('step_start', (e) => {
+        const evt = parse(e as MessageEvent)
+        const d = evt.data ?? {}
+        callbacks.onToolCall?.({
+          id: String(d.stepId ?? `step-${Date.now()}`),
+          name: String(d.title ?? d.tool ?? '执行步骤'),
+          status: 'running',
+          inputSummary: d.tool ? `工具：${d.tool}` : '',
+          startedAt: Date.now(),
+        })
+        callbacks.onStatus?.('running')
+      })
+
+      // 步骤完成：更新工具调用为 success
+      es.addEventListener('step_done', (e) => {
+        const evt = parse(e as MessageEvent)
+        const d = evt.data ?? {}
+        callbacks.onToolCall?.({
+          id: String(d.stepId ?? `step-${Date.now()}`),
+          name: String(d.title ?? d.tool ?? '执行步骤'),
+          status: 'success',
+          inputSummary: d.tool ? `工具：${d.tool}` : '',
+          outputSummary: d.duration ? `耗时 ${d.duration}ms` : '已完成',
+          startedAt: Date.now(),
+          endedAt: Date.now(),
+        })
+      })
+
+      // 完成：输出摘要并结束
+      es.addEventListener('done', (e) => {
+        const evt = parse(e as MessageEvent)
+        callbacks.onDelta(`\n\n✅ 执行完成（run: ${evt.data?.runId ?? runId ?? 'unknown'}）`)
+        callbacks.onStatus?.('completed')
+        callbacks.onDone()
+        finish()
+      })
+
+      // 服务端 error 事件 vs 连接错误：MessageEvent 带 data 为服务端错误
+      es.addEventListener('error', (e) => {
+        if (signal.aborted) {
+          finish()
+          return
+        }
+        const me = e as MessageEvent
+        if (me && typeof me.data === 'string') {
+          const evt = parse(me)
+          callbacks.onError(new Error(evt.error || evt.message || '执行失败'))
+        } else {
+          // 连接级错误（非 aborted）
+          callbacks.onError(new Error('与 GeoWork Core 的连接中断'))
+        }
+        finish()
+      })
+    })
+  },
+}
+
+/* ───────────────────────────────────────────────────────────
+ *  autoStreamAdapter
+ *
+ *  优先使用真实后端（realStreamAdapter）；若后端不可用（初始连接失败），
+ *  自动降级到 mockStreamAdapter，保证前端体验不中断。
+ *  一旦真实流式开始（SSE 已连接），中途错误走 onError，不再降级。
+ * ─────────────────────────────────────────────────────────── */
+
+export const autoStreamAdapter: StreamAdapter = {
+  async start(payload, callbacks, signal) {
+    try {
+      await realStreamAdapter.start(payload, callbacks, signal)
+    } catch (err) {
+      if (signal.aborted) return
+      // 初始连接失败：降级到 mock
+      callbacks.onStatus?.('idle')
+      await mockStreamAdapter.start(payload, callbacks, signal)
+    }
+  },
+}
+
 /* ── 当前默认适配器 ── */
-export const activeAdapter: StreamAdapter = mockStreamAdapter
+export const activeAdapter: StreamAdapter = autoStreamAdapter

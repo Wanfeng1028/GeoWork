@@ -17,9 +17,11 @@ import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
 import { ConversationMessageView } from './components/ConversationMessage'
-import { activeAdapter } from './components/streamAdapters'
+import { activeAdapter, getCoreConversationId, setCoreConversationId } from './components/streamAdapters'
 import type { ConversationMessage, RunStatus, ToolCallLog, SelectedContextItem, SelectedContextKind, WorkMode } from './components/conversationStorage'
 import { createEmptyConversation, getConversation, upsertConversation } from './components/conversationStorage'
+import type { Conversation } from './components/conversationStorage'
+import { apiGet } from '../../shared/api/client'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
@@ -52,6 +54,84 @@ const WORK_MODE_OPTIONS = [
   { value: 'code', icon: <CodeOutlined />, label: 'Code' },
   { value: 'map', icon: <EnvironmentOutlined />, label: 'Map' },
 ] as const
+
+/* ── Core API 响应类型 ── */
+interface CoreConversation {
+  id: string
+  workspaceId?: string
+  title?: string
+  mode?: string
+  status?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface CoreMessage {
+  id: string
+  conversationId?: string
+  role: string
+  content: string
+  toolCalls?: string
+  metadata?: string
+  tokenCount?: number
+  createdAt?: string
+}
+
+/** Core mode → 前端 WorkMode 映射。 */
+function mapCoreModeToWorkMode(mode?: string): WorkMode {
+  switch (mode) {
+    case 'Code':
+      return 'code'
+    case 'Analysis':
+      return 'map'
+    case 'Work':
+    default:
+      return 'work'
+  }
+}
+
+/**
+ * 从 Core API 加载会话 + 消息历史。
+ * 任何错误（网络/404/解析）都返回 null，由调用方降级到 localStorage。
+ */
+async function loadConversationFromCore(convId: string): Promise<Conversation | null> {
+  try {
+    const coreConv = await apiGet<CoreConversation>(`/api/conversations/${encodeURIComponent(convId)}`)
+    if (!coreConv || !coreConv.id) return null
+
+    const msgsRes = await apiGet<{ total: number; messages: CoreMessage[] }>(
+      `/api/conversations/${encodeURIComponent(convId)}/messages?limit=500`,
+    )
+    const coreMsgs = msgsRes?.messages ?? []
+
+    const messages: ConversationMessage[] = coreMsgs
+      .filter((m) => m.role === 'user' || m.role === 'assistant')
+      .map((m) => ({
+        id: m.id,
+        role: m.role as 'user' | 'assistant',
+        content: m.content ?? '',
+        status: 'done' as const,
+        createdAt: m.createdAt ? Date.parse(m.createdAt) : Date.now(),
+      }))
+
+    const now = Date.now()
+    return {
+      id: convId,
+      title: coreConv.title || '新任务',
+      messages,
+      model: 'Auto',
+      mode: coreConv.mode ?? '通用 GIS',
+      workMode: mapCoreModeToWorkMode(coreConv.mode),
+      runStatus: 'idle',
+      createdAt: coreConv.createdAt ? Date.parse(coreConv.createdAt) : now,
+      updatedAt: coreConv.updatedAt ? Date.parse(coreConv.updatedAt) : now,
+      workspaceId: coreConv.workspaceId,
+      coreConversationId: coreConv.id,
+    }
+  } catch {
+    return null
+  }
+}
 
 export function NewTaskPage() {
   const { message } = App.useApp()
@@ -156,14 +236,16 @@ export function NewTaskPage() {
     }
   }, [location.state])
 
-  /* ── 从 URL conversationId 加载历史会话 ── */
+  /* ── 从 URL conversationId 加载历史会话（先 Core，失败降级 localStorage） ── */
   useEffect(() => {
     const convId = searchParams.get('conversationId')
     if (!convId) return
     if (currentConvIdRef.current === convId) return
 
-    const conv = getConversation(convId)
-    if (conv) {
+    let cancelled = false
+
+    const applyConv = (conv: Conversation) => {
+      if (cancelled) return
       currentConvIdRef.current = convId
       currentTaskIdRef.current = convId
       taskTitleRef.current = conv.title
@@ -172,9 +254,50 @@ export function NewTaskPage() {
       setRunStatus(conv.runStatus)
       setWorkDir(conv.workDirName ?? null)
       setWorkMode(conv.workMode ?? 'work')
-    } else {
+      /* 恢复 Core 会话映射，使后续消息复用同一 Core 会话 */
+      if (conv.coreConversationId) {
+        setCoreConversationId(convId, conv.coreConversationId)
+      }
+    }
+
+    const fail = () => {
+      if (cancelled) return
       messageRef.current.error('未找到该会话记录')
       navigate('/new-task', { replace: true })
+    }
+
+    /* 1. 优先从 Core API 加载（URL 中的 id 可能是 Core 会话 id） */
+    loadConversationFromCore(convId)
+      .then((coreConv) => {
+        if (cancelled) return
+        if (coreConv) {
+          /* 加载成功：缓存 Core 会话映射并落盘到 localStorage 以便下次直接命中 */
+          setCoreConversationId(convId, coreConv.coreConversationId ?? convId)
+          upsertConversation(coreConv)
+          applyConv(coreConv)
+          return
+        }
+        /* 2. Core 未命中：降级到 localStorage */
+        const localConv = getConversation(convId)
+        if (localConv) {
+          applyConv(localConv)
+        } else {
+          fail()
+        }
+      })
+      .catch(() => {
+        if (cancelled) return
+        /* 异常时也尝试 localStorage 兜底 */
+        const localConv = getConversation(convId)
+        if (localConv) {
+          applyConv(localConv)
+        } else {
+          fail()
+        }
+      })
+
+    return () => {
+      cancelled = true
     }
   }, [searchParams, navigate])
 
@@ -234,6 +357,8 @@ export function NewTaskPage() {
       updatedAt: Date.now(),
       workspaceId: currentWorkspaceId,
       workspaceName: currentWorkspaceName,
+      /* 同步持久化 Core 会话映射，刷新后仍可复用同一 Core 会话 */
+      coreConversationId: getCoreConversationId(convId),
     })
   }, [messages, runStatus, isStreaming, currentWorkspaceId, currentWorkspaceName, workDir, workMode])
 

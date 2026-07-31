@@ -100,6 +100,8 @@ export interface Conversation {
 
   workspaceId?: string
   workspaceName?: string
+  /** 关联的 Go Core 会话 id（用于复用同一 Core 会话、跨刷新恢复）。 */
+  coreConversationId?: string
 }
 
 /* ── 会话存储根对象 ── */
