@@ -31,6 +31,7 @@ func (s *Service) Init() error {
 			mode TEXT DEFAULT 'Analysis',
 			prompt TEXT DEFAULT '',
 			plan TEXT DEFAULT '',
+			progress REAL DEFAULT 0,
 			started_at TEXT,
 			completed_at TEXT,
 			created_at TEXT NOT NULL,
@@ -57,8 +58,8 @@ func (s *Service) Create(ctx context.Context, t *Task) error {
 	t.UpdatedAt = time.Now().UTC()
 
 	_, err := s.db.Exec(
-		"INSERT INTO tasks (id, workspace_id, name, description, status, mode, prompt, plan, started_at, completed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		t.ID, t.WorkspaceID, t.Name, t.Description, string(t.Status), t.Mode, t.Prompt, t.Plan,
+		"INSERT INTO tasks (id, workspace_id, name, description, status, mode, prompt, plan, progress, started_at, completed_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		t.ID, t.WorkspaceID, t.Name, t.Description, string(t.Status), t.Mode, t.Prompt, t.Plan, t.Progress,
 		nullTime(t.StartedAt), nullTime(t.CompletedAt), t.CreatedAt.Format(time.RFC3339), t.UpdatedAt.Format(time.RFC3339),
 	)
 	return err
@@ -69,8 +70,8 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Task, error) {
 	t := &Task{}
 	var startedAt, completedAt, createdAt, updatedAt string
 	err := s.db.QueryRowContext(ctx,
-		"SELECT id, workspace_id, name, description, status, mode, prompt, plan, started_at, completed_at, created_at, updated_at FROM tasks WHERE id = ?", id).
-		Scan(&t.ID, &t.WorkspaceID, &t.Name, &t.Description, (*string)(&t.Status), &t.Mode, &t.Prompt, &t.Plan,
+		"SELECT id, workspace_id, name, description, status, mode, prompt, plan, progress, started_at, completed_at, created_at, updated_at FROM tasks WHERE id = ?", id).
+		Scan(&t.ID, &t.WorkspaceID, &t.Name, &t.Description, (*string)(&t.Status), &t.Mode, &t.Prompt, &t.Plan, &t.Progress,
 			&startedAt, &completedAt, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
@@ -100,7 +101,7 @@ func (s *Service) ListByWorkspace(ctx context.Context, workspaceID string, statu
 		}
 		args = append(args, string(*status))
 	}
-	query := fmt.Sprintf("SELECT id, workspace_id, name, description, status, mode, prompt, plan, started_at, completed_at, created_at, updated_at FROM tasks WHERE %s ORDER BY updated_at DESC", where)
+	query := fmt.Sprintf("SELECT id, workspace_id, name, description, status, mode, prompt, plan, progress, started_at, completed_at, created_at, updated_at FROM tasks WHERE %s ORDER BY updated_at DESC", where)
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -112,7 +113,7 @@ func (s *Service) ListByWorkspace(ctx context.Context, workspaceID string, statu
 	for rows.Next() {
 		var t Task
 		var startedAt, completedAt, createdAt, updatedAt string
-		if err := rows.Scan(&t.ID, &t.WorkspaceID, &t.Name, &t.Description, (*string)(&t.Status), &t.Mode, &t.Prompt, &t.Plan,
+		if err := rows.Scan(&t.ID, &t.WorkspaceID, &t.Name, &t.Description, (*string)(&t.Status), &t.Mode, &t.Prompt, &t.Plan, &t.Progress,
 			&startedAt, &completedAt, &createdAt, &updatedAt); err != nil {
 			continue
 		}
@@ -130,6 +131,10 @@ func (s *Service) UpdateStatus(ctx context.Context, id string, newStatus Status)
 	task, err := s.GetByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	// Validate state transition before applying
+	if err := ValidateTransition(task.Status, newStatus); err != nil {
+		return fmt.Errorf("status transition rejected: %w", err)
 	}
 	task.Status = newStatus
 	task.UpdatedAt = time.Now().UTC()
@@ -220,6 +225,21 @@ func (s *Service) UpdateTask(ctx context.Context, t *Task) error {
 		"UPDATE tasks SET status = ?, started_at = ?, completed_at = ?, updated_at = ? WHERE id = ?",
 		string(t.Status), nullTime(t.StartedAt), nullTime(t.CompletedAt),
 		t.UpdatedAt.Format(time.RFC3339), t.ID,
+	)
+	return err
+}
+
+// UpdateProgress sets the progress value (0.0–1.0) for a task.
+func (s *Service) UpdateProgress(ctx context.Context, id string, progress float64) error {
+	if progress < 0 {
+		progress = 0
+	}
+	if progress > 1 {
+		progress = 1
+	}
+	_, err := s.db.ExecContext(ctx,
+		"UPDATE tasks SET progress = ?, updated_at = ? WHERE id = ?",
+		progress, time.Now().UTC().Format(time.RFC3339), id,
 	)
 	return err
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"geowork/core/internal/worker"
 
@@ -15,14 +17,20 @@ type Runner struct {
 	logger     *zap.Logger
 	worker     *worker.Client
 	httpClient *http.Client
+	// maxRetries is the maximum number of retry attempts for transient errors.
+	maxRetries int
+	// callTimeout is the per-call timeout for worker requests.
+	callTimeout time.Duration
 }
 
 // NewRunner creates a new node runner.
 func NewRunner(logger *zap.Logger, workerClient *worker.Client) *Runner {
 	return &Runner{
-		logger:     logger,
-		worker:     workerClient,
-		httpClient: &http.Client{},
+		logger:      logger,
+		worker:      workerClient,
+		httpClient:  &http.Client{},
+		maxRetries:  3,
+		callTimeout: 30 * time.Second,
 	}
 }
 
@@ -118,15 +126,91 @@ func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 	if _, ok := payload["workspace"]; !ok {
 		payload["workspace"] = "."
 	}
-	result, err := r.worker.RunTool(ctx, toolName, payload)
-	if err != nil {
-		return fmt.Errorf("run worker tool %s: %w", toolName, err)
+
+	// Execute with timeout and retry logic
+	var result map[string]any
+	var err error
+	for attempt := 0; attempt <= r.maxRetries; attempt++ {
+		callCtx, cancel := context.WithTimeout(ctx, r.callTimeout)
+		result, err = r.worker.RunTool(callCtx, toolName, payload)
+		cancel()
+
+		if err == nil {
+			break
+		}
+
+		// Only retry on transient errors (network/timeout), not on logic errors
+		if !isTransientError(err) {
+			r.logger.Warn("non-transient worker error, not retrying",
+				zap.String("nodeId", node.ID),
+				zap.String("tool", toolName),
+				zap.Int("attempt", attempt+1),
+				zap.Error(err),
+			)
+			break
+		}
+
+		if attempt < r.maxRetries {
+			r.logger.Warn("transient worker error, retrying",
+				zap.String("nodeId", node.ID),
+				zap.String("tool", toolName),
+				zap.Int("attempt", attempt+1),
+				zap.Error(err),
+			)
+			time.Sleep(time.Duration(200*(attempt+1)) * time.Millisecond)
+		}
 	}
+
+	if err != nil {
+		return fmt.Errorf("run worker tool %s (after %d attempts): %w", toolName, r.maxRetries+1, err)
+	}
+
+	// Validate worker result
+	if err := validateWorkerResult(result); err != nil {
+		r.logger.Warn("worker result validation failed",
+			zap.String("nodeId", node.ID),
+			zap.String("tool", toolName),
+			zap.Error(err),
+		)
+		// Validation failure is not fatal; log and continue
+	}
+
 	r.logger.Debug("worker tool completed",
 		zap.String("nodeId", node.ID),
 		zap.String("tool", toolName),
 		zap.Any("result", result),
 	)
+	return nil
+}
+
+// isTransientError returns true for network/timeout errors worth retrying.
+func isTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "timeout") ||
+		strings.Contains(msg, "connection refused") ||
+		strings.Contains(msg, "connection reset") ||
+		strings.Contains(msg, "EOF") ||
+		strings.Contains(msg, "i/o timeout") ||
+		strings.Contains(msg, "temporary failure")
+}
+
+// validateWorkerResult checks that the worker returned a non-empty result.
+func validateWorkerResult(result map[string]any) error {
+	if result == nil {
+		return fmt.Errorf("worker returned nil result")
+	}
+	if len(result) == 0 {
+		return fmt.Errorf("worker returned empty result")
+	}
+	// Check for explicit error field from worker
+	if errVal, ok := result["error"]; ok {
+		if errStr, isStr := errVal.(string); isStr && errStr != "" {
+			return fmt.Errorf("worker reported error: %s", errStr)
+		}
+	}
 	return nil
 }
 

@@ -22,7 +22,8 @@ func NewExecutor() *Executor {
 	return &Executor{}
 }
 
-// ParseResponse parses a model response for tool calls.
+// ParseResponse parses a model response for tool calls in legacy XML format.
+// Deprecated: Use ParseModelResponse for OpenAI native tool_calls support.
 func (e *Executor) ParseResponse(content string) ([]ToolCall, string) {
 	// Check if the model is requesting tool calls
 	// The format is typically: <tool_call>tool_name{"args": "values"}
@@ -78,6 +79,50 @@ func parseToolXML(xml string) []ToolCall {
 	}
 
 	return calls
+}
+
+// openaiToolCallJSON is the JSON structure for OpenAI native tool_calls.
+type openaiToolCallJSON struct {
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Function struct {
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+	} `json:"function"`
+}
+
+// ParseModelResponse parses a model response that may contain OpenAI native tool_calls JSON.
+// It first tries to parse the content as a JSON object with a "tool_calls" array.
+// If that fails, it falls back to the legacy XML ParseResponse.
+func (e *Executor) ParseModelResponse(content string) ([]ToolCall, string) {
+	// Try to parse as JSON with tool_calls
+	var parsed struct {
+		ToolCalls []openaiToolCallJSON `json:"tool_calls"`
+		Content   string              `json:"content"`
+	}
+	if err := json.Unmarshal([]byte(content), &parsed); err == nil && len(parsed.ToolCalls) > 0 {
+		calls := make([]ToolCall, 0, len(parsed.ToolCalls))
+		for _, tc := range parsed.ToolCalls {
+			var args map[string]any
+			if tc.Function.Arguments != "" {
+				_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
+			}
+			calls = append(calls, ToolCall{
+				ID:   tc.ID,
+				Name: tc.Function.Name,
+				Args: args,
+			})
+		}
+		plainContent := parsed.Content
+		if plainContent == "" {
+			// Strip the JSON from content to get plain text
+			plainContent = strings.TrimSpace(content)
+		}
+		return calls, plainContent
+	}
+
+	// Fallback: legacy XML format
+	return e.ParseResponse(content)
 }
 
 // BuildMessages constructs the message list for the model.

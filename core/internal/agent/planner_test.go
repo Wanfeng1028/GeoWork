@@ -2,10 +2,12 @@ package agent
 
 import (
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestCreatePlanResearch(t *testing.T) {
-	planner := Planner{}
+	planner := NewPlanner(zap.NewNop(), nil)
 	steps := planner.CreatePlan("论文 NDVI 综述")
 	if len(steps) != 3 {
 		t.Fatalf("expected 3 steps for research, got %d", len(steps))
@@ -19,7 +21,7 @@ func TestCreatePlanResearch(t *testing.T) {
 }
 
 func TestCreatePlanGIS(t *testing.T) {
-	planner := Planner{}
+	planner := NewPlanner(zap.NewNop(), nil)
 	steps := planner.CreatePlan("GIS 裁剪和缓冲分析")
 	if len(steps) != 3 {
 		t.Fatalf("expected 3 steps for GIS, got %d", len(steps))
@@ -30,7 +32,7 @@ func TestCreatePlanGIS(t *testing.T) {
 }
 
 func TestCreatePlanNDVI(t *testing.T) {
-	planner := Planner{}
+	planner := NewPlanner(zap.NewNop(), nil)
 	steps := planner.CreatePlan("NDVI 实验报告")
 	if len(steps) != 3 {
 		t.Fatalf("expected 3 steps for NDVI, got %d", len(steps))
@@ -41,7 +43,7 @@ func TestCreatePlanNDVI(t *testing.T) {
 }
 
 func TestCreatePlanEmpty(t *testing.T) {
-	planner := Planner{}
+	planner := NewPlanner(zap.NewNop(), nil)
 	steps := planner.CreatePlan("")
 	if len(steps) < 2 {
 		t.Fatalf("expected at least 2 steps for empty prompt, got %d", len(steps))

@@ -5,7 +5,7 @@ package modelgateway
 import (
 	"fmt"
 	"sync"
-	"sync/atomic"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -126,12 +126,6 @@ func GetSpeedProfile(kind string) SpeedProfile {
 	return speedProfiles["1x"]
 }
 
-var startTimeMs = atomic.Int64{}
-
-func init() {
-	startTimeMs.Store(nowMs())
-}
-
 func nowMs() int64 {
-	return startTimeMs.Load()
+	return time.Now().UnixMilli()
 }

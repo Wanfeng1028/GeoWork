@@ -65,3 +65,16 @@ func (p *PermissionPolicy) SetAction(action string, allow bool) {
 		p.Actions[action] = "deny"
 	}
 }
+
+// highRiskTools are tools that can mutate state or execute arbitrary code.
+var highRiskTools = map[string]bool{
+	"run_shell":   true,
+	"run_python":  true,
+	"delete_file": true,
+	"write_file":  true,
+}
+
+// isHighRiskTool returns true if the named tool is considered high-risk.
+func isHighRiskTool(name string) bool {
+	return highRiskTools[name]
+}

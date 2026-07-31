@@ -8,7 +8,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 )
+
+// workspaceDirKey is the context key for the workspace directory used by git tools.
+type workspaceDirKey struct{}
+
+// WithWorkspaceDir attaches a workspace directory to the context for git tools.
+func WithWorkspaceDir(ctx context.Context, dir string) context.Context {
+	return context.WithValue(ctx, workspaceDirKey{}, dir)
+}
 
 // RegisterBuiltinTools registers all built-in tools to the registry.
 func RegisterBuiltinTools(reg *Registry) error {
@@ -192,7 +202,11 @@ func RegisterBuiltinTools(reg *Registry) error {
 			Streaming(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				script, _ := args["script"].(string)
-				cmd := exec.CommandContext(ctx, "python3", "-c", script)
+				pythonCmd := "python3"
+				if runtime.GOOS == "windows" {
+					pythonCmd = "python"
+				}
+				cmd := exec.CommandContext(ctx, pythonCmd, "-c", script)
 				out, err := cmd.CombinedOutput()
 				return map[string]any{
 					"stdout": string(out),
@@ -224,7 +238,12 @@ func RegisterBuiltinTools(reg *Registry) error {
 			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				command, _ := args["command"].(string)
-				cmd := exec.CommandContext(ctx, "sh", "-c", command)
+				var cmd *exec.Cmd
+				if runtime.GOOS == "windows" {
+					cmd = exec.CommandContext(ctx, "cmd", "/C", command)
+				} else {
+					cmd = exec.CommandContext(ctx, "sh", "-c", command)
+				}
 				out, err := cmd.CombinedOutput()
 				return map[string]any{
 					"stdout": string(out),
@@ -315,8 +334,35 @@ func RegisterBuiltinTools(reg *Registry) error {
 			RiskLevel("high").
 			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
-				_ = args
-				return map[string]any{"hash": ""}, fmt.Errorf("git not configured")
+				message, _ := args["message"].(string)
+				addAll, _ := args["addAll"].(bool)
+
+				workspaceDir, _ := ctx.Value(workspaceDirKey{}).(string)
+				if workspaceDir == "" {
+					workspaceDir = "."
+				}
+
+				if addAll {
+					addCmd := exec.CommandContext(ctx, "git", "add", "-A")
+					addCmd.Dir = workspaceDir
+					if out, err := addCmd.CombinedOutput(); err != nil {
+						return nil, fmt.Errorf("git add failed: %s: %w", string(out), err)
+					}
+				}
+
+				cmd := exec.CommandContext(ctx, "git", "commit", "-m", message)
+				cmd.Dir = workspaceDir
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					return nil, fmt.Errorf("git commit failed: %s: %w", strings.TrimSpace(string(output)), err)
+				}
+
+				// Extract commit hash
+				hashCmd := exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
+				hashCmd.Dir = workspaceDir
+				hash, _ := hashCmd.Output()
+
+				return map[string]any{"hash": strings.TrimSpace(string(hash))}, nil
 			}).
 			Build(),
 

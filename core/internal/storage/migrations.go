@@ -173,6 +173,11 @@ var AllMigrations = []Migration{
 		`,
 		Desc: "Create performance indexes",
 	},
+	{
+		Version: 11,
+		Query:   `ALTER TABLE tasks ADD COLUMN progress REAL DEFAULT 0;`,
+		Desc:    "Add progress column to tasks",
+	},
 }
 
 // RunMigrations executes all pending migrations up to the latest version.

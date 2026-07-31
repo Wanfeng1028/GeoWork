@@ -53,7 +53,7 @@ func (cb *ContextBuilder) WithBudget(budget ContextBudget) *ContextBuilder {
 
 // BuildAssembles the system prompt, tool definitions, and conversation history.
 func (cb *ContextBuilder) Build(mode, prompt, memory string) (messages []ChatMessage, tools []ToolDef) {
-	planner := NewPlanner(cb.log)
+	planner := NewPlanner(cb.log, nil)
 	systemPrompt := planner.BuildSystemPrompt(mode, memory)
 
 	messages = []ChatMessage{

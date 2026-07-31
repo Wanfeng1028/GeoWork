@@ -164,6 +164,19 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 		}
 	}
 
+	// Enforce policy on high-risk tools: deny when no policy is present or policy is read-only.
+	if isHighRiskTool(name) {
+		policy, hasPolicy := ctx.Value(policyKey{}).(*PermissionPolicy)
+		if !hasPolicy || policy == nil {
+			return nil, fmt.Errorf("high-risk tool %s requires an explicit permission policy", name)
+		}
+		if policy.DefaultLevel == "read_only" || policy.DefaultLevel == "limited" {
+			if !CheckPermission(ctx, name) {
+				return nil, fmt.Errorf("high-risk tool %s denied by read-only/limited policy", name)
+			}
+		}
+	}
+
 	// Check sandbox
 	if t.SandboxRequired() {
 		// Sandbox enforcement would go here

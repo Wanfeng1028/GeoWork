@@ -29,6 +29,7 @@ type Task struct {
 	Mode        string    `json:"mode"` // Research/Data/GeoCode/Analysis/Write
 	Prompt      string    `json:"prompt,omitempty"`
 	Plan        string    `json:"plan,omitempty"`
+	Progress    float64   `json:"progress"`
 	StartedAt   time.Time `json:"startedAt,omitempty"`
 	CompletedAt time.Time `json:"completedAt,omitempty"`
 	CreatedAt   time.Time `json:"createdAt"`

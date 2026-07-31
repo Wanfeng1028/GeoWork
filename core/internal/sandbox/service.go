@@ -27,12 +27,14 @@ func NewService() *Service {
 	return &Service{
 		procs: make(map[string]*SandboxProcess),
 		policy: &SandboxPolicy{
-			AllowedPaths:  []string{}, // empty = allow all paths in dev
-			BlockedCmds:   []string{"rm", "sudo", "mkfs", "fdisk"},
-			NetworkAccess: false,
-			Timeout:       300,
-			MaxMemoryMB:   512,
-			EnvWhitelist:  []string{"PATH", "HOME", "LANG"},
+			AllowedPaths:     []string{}, // empty = allow all paths in dev
+			BlockedCmds:      []string{"rm", "sudo", "mkfs", "fdisk"},
+			AllowedCmds:      []string{"ls", "dir", "cat", "type", "echo", "pwd", "whoami", "date", "python", "pip", "git", "node", "npm", "go"},
+			AllowAllCommands: true, // dev mode: backward compatible
+			NetworkAccess:    false,
+			Timeout:          300,
+			MaxMemoryMB:      512,
+			EnvWhitelist:     []string{"PATH", "HOME", "LANG"},
 		},
 	}
 }
@@ -42,8 +44,14 @@ func (s *Service) SetPolicy(policy *SandboxPolicy) {
 }
 
 func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess, error) {
+	// Step 1: hard deny — always block dangerous commands
 	if s.isBlocked(command) {
 		return nil, fmt.Errorf("command blocked by sandbox policy: %s", command)
+	}
+
+	// Step 2: whitelist check
+	if !s.isAllowed(command) {
+		return nil, fmt.Errorf("command not in sandbox whitelist: %s", command)
 	}
 
 	if !s.isPathAllowed(workspace) {
@@ -207,6 +215,51 @@ func (s *Service) isBlocked(command string) bool {
 			return true
 		}
 	}
+	// Also block absolute-path variants of blocked commands, e.g. /bin/rm
+	for _, blocked := range s.policy.BlockedCmds {
+		if strings.Contains(command, "/"+blocked) || strings.Contains(command, "\\"+blocked) {
+			return true
+		}
+	}
+	return false
+}
+
+// isAllowed checks whether the command passes the whitelist.
+// If AllowAllCommands is true (dev mode), every non-blocked command is allowed.
+// Otherwise the command's base executable must appear in AllowedCmds.
+func (s *Service) isAllowed(command string) bool {
+	if s.policy.AllowAllCommands {
+		return true
+	}
+
+	// Extract the base command name (first token, then basename)
+	tokens := strings.Fields(command)
+	if len(tokens) == 0 {
+		return false
+	}
+	baseCmd := filepath.Base(tokens[0])
+	// Strip .exe suffix on Windows
+	baseCmd = strings.TrimSuffix(baseCmd, ".exe")
+
+	// Check whitelist
+	for _, allowed := range s.policy.AllowedCmds {
+		if strings.EqualFold(baseCmd, allowed) {
+			return true
+		}
+	}
+
+	// Also verify via LookPath to resolve the real path and prevent bypass
+	resolved, err := exec.LookPath(tokens[0])
+	if err != nil {
+		return false // command not found on PATH
+	}
+	resolvedBase := strings.TrimSuffix(filepath.Base(resolved), ".exe")
+	for _, allowed := range s.policy.AllowedCmds {
+		if strings.EqualFold(resolvedBase, allowed) {
+			return true
+		}
+	}
+
 	return false
 }
 

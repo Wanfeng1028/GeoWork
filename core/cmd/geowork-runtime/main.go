@@ -15,6 +15,7 @@ import (
 	gruntime "geowork/core/internal/runtime"
 	"geowork/core/internal/sandbox"
 	"geowork/core/internal/storage"
+	"geowork/core/internal/toolregistry"
 	"geowork/core/internal/worker"
 	"geowork/core/internal/workspace"
 )
@@ -56,6 +57,23 @@ func main() {
 
 	permEngine := permissions.NewEngine()
 	sbSvc := sandbox.NewService()
+
+	// Register built-in tools
+	toolRegistry := toolregistry.NewRegistry(logger)
+	if err := toolregistry.RegisterBuiltinTools(toolRegistry); err != nil {
+		logger.Fatal("Failed to register built-in tools", zap.Error(err))
+	}
+	logger.Info("Built-in tools registered", zap.Int("count", len(toolRegistry.List())))
+
+	// TODO(P1-14): Connect scheduler with orchestrator once aiagent.Orchestrator interface stabilises.
+	//
+	// Planned wiring:
+	//   orchestrator := aiagent.NewOrchestrator(toolRegistry, permEngine, logger)
+	//   scheduler := tasks.NewScheduler(taskSvc, orchestrator)
+	//   scheduler.OnTaskReady(func(t *tasks.Task) { _ = orchestrator.StartRun(ctx, t) })
+	//
+	// For now the tool registry is only exposed via the API router.
+	_ = toolRegistry
 
 	logDir := filepath.Join(app.Workspace(), "logs")
 

@@ -113,7 +113,7 @@ func NewOrchestrator(
 		gateway:      gateway,
 		providerID:   provider.ID,
 		provider:     provider,
-		planner:      NewPlanner(log),
+		planner:      NewPlanner(log, gateway),
 		memory:       NewMemory(),
 		recovery:     NewRecovery(log),
 		stateMachine: NewStateMachine(),
@@ -204,6 +204,23 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		o.currentState = StateCompleted
 	}()
 
+	// Build conversation history for LLM feedback loop
+	var chatHistory []modelgateway.ChatMessage
+	if o.gateway != nil {
+		config, ok := modeConfigs[run.Mode]
+		if !ok {
+			config = modeConfigs["Work"]
+		}
+		chatHistory = append(chatHistory, modelgateway.ChatMessage{
+			Role:    "system",
+			Content: config.Prompt + "\nYou are executing a plan step by step. After each step you will receive the result. Decide if the step succeeded or if retry is needed.",
+		})
+		chatHistory = append(chatHistory, modelgateway.ChatMessage{
+			Role:    "user",
+			Content: run.Prompt,
+		})
+	}
+
 	turnCount := 0
 	for i, step := range run.Plan {
 		o.mu.Lock()
@@ -229,6 +246,27 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run) {
 		// Auto-advance state based on step completion
 		if step.Status == "completed" {
 			o.advanceStateForStep(&step)
+		}
+
+		// Feed step result back to LLM for adaptive planning
+		if o.gateway != nil && len(chatHistory) > 0 {
+			chatHistory = append(chatHistory, modelgateway.ChatMessage{
+				Role:    "assistant",
+				Content: fmt.Sprintf("Step %d (%s) tool=%s status=%s result=%s", i+1, step.Title, step.Tool, step.Status, step.Result),
+			})
+
+			llmCtx, llmCancel := context.WithTimeout(ctx, 5*time.Second)
+			resp, err := o.gateway.Chat(llmCtx, chatHistory, nil, false)
+			llmCancel()
+
+			if err == nil && len(resp.Choices) > 0 {
+				reply := resp.Choices[0].Message.Content
+				chatHistory = append(chatHistory, modelgateway.ChatMessage{
+					Role:    "user",
+					Content: reply,
+				})
+				o.log.Debug("LLM feedback received", zap.String("reply", reply))
+			}
 		}
 	}
 }
@@ -260,7 +298,21 @@ func (o *Orchestrator) executeStep(ctx context.Context, run *Run, step *Step) {
 
 	var args map[string]any
 	if step.Args != "" {
-		json.Unmarshal([]byte(step.Args), &args)
+		if err := json.Unmarshal([]byte(step.Args), &args); err != nil {
+			o.log.Warn("failed to parse step args",
+				zap.String("stepId", step.ID),
+				zap.String("args", step.Args),
+				zap.Error(err),
+			)
+			step.Status = "failed"
+			step.Result = fmt.Sprintf("invalid args JSON: %s", err.Error())
+			o.emitEvent(Event{
+				Type:      "error",
+				Timestamp: time.Now(),
+				Data:      map[string]any{"stepId": step.ID, "error": step.Result},
+			})
+			return
+		}
 	}
 
 	// Call tool via registry

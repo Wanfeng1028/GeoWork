@@ -13,6 +13,7 @@ type Engine struct {
 	policies   map[string]*PermissionPolicy // taskID -> policy
 	requests   map[string]*PermissionRequest
 	decisions  map[string]Decision // taskID+action -> decision
+	repo       *Repository         // optional persistent store
 }
 
 type Decision struct {
@@ -97,6 +98,7 @@ func (e *Engine) ApproveRequest(id, reason string) error {
 		Reason:   reason,
 		At:       time.Now(),
 	}
+	e.persistDecision(req.TaskID, req.Action, "approved", reason)
 	return nil
 }
 
@@ -117,6 +119,7 @@ func (e *Engine) DenyRequest(id, reason string) error {
 		Reason:   reason,
 		At:       time.Now(),
 	}
+	e.persistDecision(req.TaskID, req.Action, "denied", reason)
 	return nil
 }
 
@@ -130,4 +133,46 @@ func (e *Engine) UpdatePolicy(taskID string, policy *PermissionPolicy) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.policies[taskID] = policy
+}
+
+// WithRepository attaches a persistent repository so that decisions survive restarts.
+func (e *Engine) WithRepository(repo *Repository) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.repo = repo
+}
+
+// IsAllowed evaluates whether the given action is permitted for a task.
+// It returns false when the effective level is read_only or limited and the
+// action is classified as a write action.
+func (e *Engine) IsAllowed(taskID string, action string, context map[string]string) (bool, error) {
+	level, err := e.Evaluate(taskID, DangerousAction(action), context)
+	if err != nil {
+		return false, err
+	}
+	if level == string(ReadOnly) || level == string(Limited) {
+		if isWriteAction(action) {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// isWriteAction returns true for actions that mutate state.
+func isWriteAction(action string) bool {
+	writeActions := map[string]bool{
+		"write_file": true, "delete_file": true, "run_shell": true,
+		"run_python": true, "git_commit": true, "git_push": true,
+		"modify": true, "create": true, "delete": true,
+	}
+	return writeActions[action]
+}
+
+// persistDecision writes a decision to the repository if one is attached.
+func (e *Engine) persistDecision(taskID string, action DangerousAction, decision, reason string) {
+	if e.repo == nil {
+		return
+	}
+	// Best-effort persistence; ignore errors so the hot path is not blocked.
+	_ = e.repo.Save(taskID, action, decision, reason, 24)
 }

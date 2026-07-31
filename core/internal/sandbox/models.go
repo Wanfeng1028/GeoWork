@@ -26,10 +26,12 @@ type SandboxProcess struct {
 
 // SandboxPolicy defines sandbox constraints
 type SandboxPolicy struct {
-	AllowedPaths  []string `json:"allowedPaths"`
-	BlockedCmds   []string `json:"blockedCmds"`
-	NetworkAccess bool     `json:"networkAccess"`
-	Timeout       int      `json:"timeout"` // seconds
-	MaxMemoryMB   int      `json:"maxMemoryMB"`
-	EnvWhitelist  []string `json:"envWhitelist"`
+	AllowedPaths     []string `json:"allowedPaths"`
+	BlockedCmds      []string `json:"blockedCmds"`
+	AllowedCmds      []string `json:"allowed_cmds"`
+	AllowAllCommands bool     `json:"allow_all_commands"` // dev mode bypass
+	NetworkAccess    bool     `json:"networkAccess"`
+	Timeout          int      `json:"timeout"` // seconds
+	MaxMemoryMB      int      `json:"maxMemoryMB"`
+	EnvWhitelist     []string `json:"envWhitelist"`
 }

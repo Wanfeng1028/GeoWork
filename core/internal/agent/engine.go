@@ -12,6 +12,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// maxLogEntries is the maximum number of log entries per run to prevent unbounded growth.
+const maxLogEntries = 1000
+
 // Engine orchestrates workflow CRUD and execution.
 type Engine struct {
 	db     *Store
@@ -208,7 +211,7 @@ func (e *Engine) executeRun(ctx context.Context, run *Run, wf *Workflow, cancelF
 		}
 
 		logMsg := fmt.Sprintf("执行节点 [%s] (%s)", node.Name, node.Type)
-		run.Logs = append(run.Logs, logMsg)
+		run.Logs = appendLogBounded(run.Logs, logMsg)
 		e.db.UpdateRunStatus(run.ID, "running", float64(i)/float64(totalNodes)*100, run.Logs)
 
 		if err := e.runner.ExecuteNode(ctx, node, wf); err != nil {
@@ -216,20 +219,20 @@ func (e *Engine) executeRun(ctx context.Context, run *Run, wf *Workflow, cancelF
 				return
 			}
 			failMsg := fmt.Sprintf("节点 [%s] 执行失败: %v", node.Name, err)
-			run.Logs = append(run.Logs, failMsg)
+			run.Logs = appendLogBounded(run.Logs, failMsg)
 			e.logger.Error("node execution failed", zap.String("nodeId", nodeID), zap.Error(err))
 			e.db.CompleteRun(run.ID, "failed")
 			return
 		}
 
 		doneMsg := fmt.Sprintf("节点 [%s] 执行完成", node.Name)
-		run.Logs = append(run.Logs, doneMsg)
+		run.Logs = appendLogBounded(run.Logs, doneMsg)
 		progress := float64(i+1) / float64(totalNodes) * 100
 		e.db.UpdateRunStatus(run.ID, "running", progress, run.Logs)
 	}
 
 	e.db.CompleteRun(run.ID, "completed")
-	run.Logs = append(run.Logs, "工作流执行完成")
+	run.Logs = appendLogBounded(run.Logs, "工作流执行完成")
 	e.db.UpdateRunStatus(run.ID, "completed", 100, run.Logs)
 	e.logger.Info("workflow run completed", zap.String("runId", run.ID))
 }
@@ -241,4 +244,15 @@ func findNode(wf *Workflow, id string) *WorkflowNode {
 		}
 	}
 	return nil
+}
+
+// appendLogBounded appends a log entry, enforcing a maximum size.
+// When the limit is reached, the last entry is replaced instead of appending.
+func appendLogBounded(logs []string, entry string) []string {
+	if len(logs) >= maxLogEntries {
+		// Replace the last entry to keep the log bounded
+		logs[len(logs)-1] = entry
+		return logs
+	}
+	return append(logs, entry)
 }

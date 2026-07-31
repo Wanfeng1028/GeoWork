@@ -138,7 +138,7 @@ type App struct {
 	mu            sync.Mutex
 	workspace     string
 	statePath     string
-	planner       agent.Planner
+	planner       *agent.Planner
 	worker        *worker.Client
 	registry      *tools.Registry
 	knowledgeMgr  *knowledge.KnowledgeManager
@@ -215,6 +215,9 @@ func New(workspace string, workerBaseURL string) *App {
 			app.agentEngine = agent.NewEngine(store, agentLogger, app.worker)
 		}
 	}
+
+	// Initialize agent planner (LLM-backed, falls back to keyword matching)
+	app.planner = agent.NewPlanner(agentLogger, nil)
 
 	return app
 }
