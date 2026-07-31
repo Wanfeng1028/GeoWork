@@ -41,11 +41,11 @@ async function createWindow() {
     minHeight: 640,
     titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: "#EEF4F7",
+      color: "#F7FBFD",
       symbolColor: "#333333",
       height: 36,
     },
-    backgroundColor: "#EEF4F7",
+    backgroundColor: "#F7FBFD",
     icon: join(__dirname, "../../assets/app-icon.png"),
     webPreferences: {
       preload: preloadPath,
@@ -88,7 +88,7 @@ async function createWindow() {
   ipcMain.handle("window:set-titlebar-theme", (_event, dark: boolean) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setTitleBarOverlay({
-        color: dark ? "#1c1917" : "#EEF4F7",
+        color: dark ? "#141414" : "#F7FBFD",
         symbolColor: dark ? "#d6d3d1" : "#333333",
         height: 36,
       });

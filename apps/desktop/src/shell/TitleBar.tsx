@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import {
   Button,
   Tooltip,
+  theme,
 } from 'antd'
 import {
   MenuFoldOutlined,
@@ -31,6 +32,7 @@ export function TitleBar({
   onOpenSearch,
   onOpenModal,
 }: TitleBarProps) {
+  const { token } = theme.useToken()
   const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
 
   // 原生标题栏（titleBarOverlay）无法用 CSS 控制，需随主题通知主进程切换配色
@@ -42,7 +44,7 @@ export function TitleBar({
   if (!isElectron) return null
 
   return (
-    <div className={styles.titleBar}>
+    <div className={styles.titleBar} style={{ background: token.colorBgContainer }}>
       <AppMenu
         onToggleSidebar={onToggleSidebar}
         onOpenSearch={onOpenSearch}
