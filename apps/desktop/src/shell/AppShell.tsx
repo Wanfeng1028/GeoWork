@@ -512,46 +512,26 @@ export function AppShell() {
         </Space>
       ),
     },
+  ]
+
+  const themeMenuItems = [
     {
       key: 'editorial',
-      icon: <SkinOutlined />,
+      icon: <SunOutlined />,
       label: (
         <Space>
-          石灰·亮
+          亮色
           {appearance === 'editorial' && <CheckOutlined />}
         </Space>
       ),
     },
     {
       key: 'editorial-dark',
-      icon: <SkinOutlined />,
-      label: (
-        <Space>
-          石灰·暗
-          {appearance === 'editorial-dark' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-  ]
-
-  const themeMenuItems = [
-    {
-      key: 'mode-light',
-      icon: <SunOutlined />,
-      label: (
-        <Space>
-          亮色
-          {appearance === 'light' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-    {
-      key: 'mode-dark',
       icon: <MoonOutlined />,
       label: (
         <Space>
           暗色
-          {appearance === 'dark' && <CheckOutlined />}
+          {appearance === 'editorial-dark' && <CheckOutlined />}
         </Space>
       ),
     },
@@ -926,7 +906,6 @@ export function AppShell() {
         className={styles.workspace}
         style={{
           background: token.colorBgLayout,
-          padding: token.paddingLG,
         }}
       >
         <Outlet />
