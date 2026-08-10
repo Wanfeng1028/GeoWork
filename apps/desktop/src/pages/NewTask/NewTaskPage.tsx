@@ -26,7 +26,8 @@ import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
 import styles from './NewTaskPage.module.css'
-import logoAnimated from '../../assets/brand/geowork-logo-horizontal-gradient.svg'
+// 主界面大 logo 已注释，暂不需要该资源
+// import logoAnimated from '../../assets/brand/geowork-logo-horizontal-gradient.svg'
 
 const { Title, Text } = Typography
 
@@ -622,8 +623,9 @@ export function NewTaskPage() {
   /* ══════════════ Home 态 ══════════════ */
   const homeView = (
     <div className={styles.homeView}>
-      {/* Animated Logo (顶部居中，循环播放) */}
+      {/* Animated Logo (顶部居中，循环播放) —— 主界面大 logo，暂不需要，注释掉
       <img className={styles.logoAnimated} src={logoAnimated} alt="GeoWork" />
+      */}
 
       {/* Mode Switcher */}
       <div className={styles.modeSwitcherWrap}>
