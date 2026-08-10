@@ -1,0 +1,15 @@
+:root {
+  --geowork-navy-950: #040A18;
+  --geowork-navy-900: #071329;
+  --geowork-navy-800: #102650;
+  --geowork-blue-600: #1B6DB0;
+  --geowork-cyan-500: #25BDF4;
+  --geowork-cyan-300: #73DEFF;
+  --geowork-ice-200: #BDD3F3;
+  --geowork-ui-teal: #006A61;
+}
+
+.geowork-logo { display:block; width:auto; height:32px; }
+.geowork-logo--header { height:28px; }
+.geowork-logo--footer { height:36px; }
+.geowork-symbol { display:block; width:32px; height:32px; }

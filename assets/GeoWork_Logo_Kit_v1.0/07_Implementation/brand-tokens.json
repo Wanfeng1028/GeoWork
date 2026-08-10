@@ -1,0 +1,25 @@
+{
+  "brand": "GeoWork",
+  "version": "1.0",
+  "colors": {
+    "navy_950": "#040A18",
+    "navy_900": "#071329",
+    "navy_800": "#102650",
+    "navy_700": "#17396F",
+    "blue_600": "#1B6DB0",
+    "cyan_500": "#25BDF4",
+    "cyan_300": "#73DEFF",
+    "ice_200": "#BDD3F3",
+    "slate_700": "#334A68",
+    "slate_500": "#6D88A8",
+    "white": "#FFFFFF",
+    "black": "#06101D",
+    "teal_ui": "#006A61"
+  },
+  "recommended": {
+    "website_on_light": "02_Web/Navbar/geowork-logo-horizontal-on-light.svg",
+    "website_on_dark": "02_Web/Navbar/geowork-logo-horizontal-on-dark.svg",
+    "app_icon": "03_Desktop/geowork-app-icon-2048.png",
+    "small_symbol": "01_Master_SVG/geowork-symbol-gradient.svg"
+  }
+}
