@@ -18,10 +18,6 @@ pnpm-lock.yaml
 *.egg-info/
 __pycache__/
 
-# Docs & documentation source (文档都不需要上传)
-docs/
-docx/
-
 # AI/IDE config
 .qwen/
 .codebuddy/
@@ -50,8 +46,7 @@ logs/
 *.sketch
 *.fig
 *.xd
-/assets/
- design/
+design/
 
 # 前端迁移源目录（不入库）
 GeoFrontend2.0/
