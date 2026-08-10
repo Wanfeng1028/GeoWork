@@ -2,13 +2,16 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 138px; /* 避让原生窗口按钮 */
+  right: 0; /* 背景色覆盖全屏宽，避免右侧按钮下方透出默认背景 */
   height: 36px;
   z-index: 9999;
   display: flex;
   align-items: center;
   -webkit-app-region: drag;
   user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .dragRegion {
@@ -22,7 +25,7 @@
   gap: 4px;
   height: 100%;
   margin-left: auto;
-  margin-right: 16px;
+  margin-right: calc(180px + 16px); /* 避让原生窗口按钮 + 本身留白 */
   -webkit-app-region: no-drag;
 }
 
