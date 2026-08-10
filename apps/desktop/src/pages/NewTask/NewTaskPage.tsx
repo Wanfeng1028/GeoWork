@@ -26,7 +26,7 @@ import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
 import styles from './NewTaskPage.module.css'
-import logoAnimated from '../../assets/geowork-logo-animated.svg'
+import logoAnimated from '../../assets/brand/geowork-logo-horizontal-gradient.svg'
 
 const { Title, Text } = Typography
 

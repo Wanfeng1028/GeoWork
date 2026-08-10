@@ -9,18 +9,35 @@ interface Props {
   onClose: () => void
 }
 
-/* SVG 占位 Logo */
+/* GeoWork 品牌符号 Logo */
 function FeedbackLogo() {
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="8" fill="#52c41a" />
-      <path
-        d="M10 22c0-3.3 2.7-6 6-6s6 2.7 6 6"
-        stroke="#fff"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <circle cx="16" cy="12" r="4" fill="#fff" />
+    <svg width="40" height="40" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="brandGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#73DEFF" />
+          <stop offset="0.48" stopColor="#25BDF4" />
+          <stop offset="1" stopColor="#1B6DB0" />
+        </linearGradient>
+      </defs>
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="128" cy="128" r="91" stroke="url(#brandGradient)" strokeWidth="13" />
+        <path d="M53 188 C83 102 132 48 204 53" stroke="url(#brandGradient)" strokeWidth="12" />
+        <path d="M52 58 C105 99 157 157 205 201" stroke="url(#brandGradient)" strokeWidth="12" />
+        <path d="M45 136 C86 92 161 82 213 116" stroke="url(#brandGradient)" strokeWidth="10" />
+        <path d="M63 174 C108 213 171 207 208 155" stroke="url(#brandGradient)" strokeWidth="10" />
+        <path d="M76 40 C45 91 45 164 86 209" stroke="url(#brandGradient)" strokeWidth="9" />
+        <path d="M198 49 C176 76 164 98 158 127" stroke="#73DEFF" strokeWidth="13" />
+        <path d="M157 127 C181 97 198 76 204 53" stroke="#73DEFF" strokeWidth="13" />
+      </g>
+      <g>
+        <circle cx="52" cy="58" r="13" fill="#17396F" />
+        <circle cx="204" cy="53" r="13" fill="#73DEFF" />
+        <circle cx="53" cy="188" r="13" fill="#17396F" />
+        <circle cx="205" cy="201" r="13" fill="#17396F" />
+        <circle cx="109" cy="104" r="11" fill="#25BDF4" />
+        <circle cx="158" cy="127" r="11" fill="#25BDF4" />
+      </g>
     </svg>
   )
 }

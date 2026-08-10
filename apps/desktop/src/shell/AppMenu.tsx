@@ -4,7 +4,7 @@ import { CheckOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
-import logoStatic from '../assets/geowork-logo-static.svg'
+import logoStatic from '../assets/brand/geowork-logo-horizontal-gradient.svg'
 import styles from './AppMenu.module.css'
 
 type MenuItem = Required<MenuProps>['items'][number]
