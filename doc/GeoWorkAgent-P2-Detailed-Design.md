@@ -11,6 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P2 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 新增 P2-7 Browser/Computer Use：接入已有 browserbridge 代码 + 注册 3 个工具到 ToolRegistry + CDP 协议集成 + 沙箱约束 |
+| v0.3 | 2026-08-11 | GLM | 千问审查硬伤 3 修复：P2-1 Skills Loader 从 .json 文件改为 SKILL.md + meta.json 目录结构（与主文档 §7.1 一致）+ 两阶段加载 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -125,37 +126,98 @@ func (r *Registry) List() []*Skill {
 
 ### 2.6 技能加载器
 
+> **【v0.3 修正 — 千问审查硬伤 3】**：v0.2 的 Loader 从目录加载 `.json` 文件，但主文档 §7.1 定义的技能结构是**目录 + SKILL.md + meta.json**（文件系统形式）。两者不兼容。v0.3 统一为主文档格式：每个技能是一个子目录，包含 `manifest/meta.json`（元数据）和 `skill/SKILL.md`（核心提示，含 frontmatter）。
+
+**技能目录结构**（与主文档 §7.1 一致）：
+
+```
+skills/<skill-id>/
+├── manifest/
+│   ├── README.md       # 面向人类的技能描述
+│   └── meta.json       # 元数据：name/version/description/tags/mode/dependencies
+└── skill/
+    ├── SKILL.md        # 核心提示（LLM 导向，含 frontmatter）
+    └── <dir>/          # 参考资料、模板、脚本
+```
+
+**两阶段加载**（与主文档 §7.3 一致）：
+- 阶段 1（启动时）：只读 `meta.json` 的 frontmatter（name/description/tags/mode）→ 构建技能索引
+- 阶段 2（调用时）：按需加载 `SKILL.md` 全文 → 注入 System Prompt
+
 ```go
 type Loader struct {
-    dir string  // 技能定义文件目录
-    log *zap.Logger
+    rootDir string  // skills/ 根目录
+    log     *zap.Logger
 }
 
-// LoadFromDir 从目录加载所有技能定义（JSON 文件）
-func (l *Loader) LoadFromDir() ([]*Skill, error) {
-    files, err := os.ReadDir(l.dir)
+// SkillMeta 是 meta.json 的结构（阶段 1 只加载这个）
+type SkillMeta struct {
+    ID           string   `json:"id"`           // 如 "ndvi-timeseries"
+    Name         string   `json:"name"`
+    Version      string   `json:"version"`
+    Description  string   `json:"description"`
+    Tags         []string `json:"tags"`         // 用于匹配
+    Mode         string   `json:"mode"`         // 适用模式：Work/Code/Paper/Analysis/Write
+    Dependencies []string `json:"dependencies"` // 依赖的其他技能 ID
+}
+
+// Skill 是完整的技能（阶段 2 加载 SKILL.md 后填充 Prompt 字段）
+type Skill struct {
+    Meta     SkillMeta
+    Prompt   string  // SKILL.md 全文（阶段 2 才填充）
+    Dir      string  // 技能目录路径
+    Loaded   bool    // 是否已加载全文
+}
+
+// LoadAllMeta 阶段 1：扫描 skills/ 下所有子目录，只读 meta.json
+func (l *Loader) LoadAllMeta() ([]*Skill, error) {
+    entries, err := os.ReadDir(l.rootDir)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("read skills dir: %w", err)
     }
 
     var skills []*Skill
-    for _, f := range files {
-        if !strings.HasSuffix(f.Name(), ".json") {
+    for _, entry := range entries {
+        if !entry.IsDir() {
             continue
         }
-        data, err := os.ReadFile(filepath.Join(l.dir, f.Name()))
+        skillDir := filepath.Join(l.rootDir, entry.Name())
+        metaPath := filepath.Join(skillDir, "manifest", "meta.json")
+
+        data, err := os.ReadFile(metaPath)
         if err != nil {
-            l.log.Warn("failed to read skill file", zap.String("file", f.Name()), zap.Error(err))
+            l.log.Warn("failed to read skill meta",
+                zap.String("skill", entry.Name()),
+                zap.Error(err))
             continue
         }
-        var skill Skill
-        if err := json.Unmarshal(data, &skill); err != nil {
-            l.log.Warn("failed to parse skill file", zap.String("file", f.Name()), zap.Error(err))
+
+        var meta SkillMeta
+        if err := json.Unmarshal(data, &meta); err != nil {
+            l.log.Warn("failed to parse skill meta",
+                zap.String("skill", entry.Name()),
+                zap.Error(err))
             continue
         }
-        skills = append(skills, &skill)
+
+        skills = append(skills, &Skill{
+            Meta: meta,
+            Dir:  skillDir,
+        })
     }
     return skills, nil
+}
+
+// LoadFullContent 阶段 2：按需加载某个技能的 SKILL.md 全文
+func (l *Loader) LoadFullContent(skill *Skill) error {
+    skillMDPath := filepath.Join(skill.Dir, "skill", "SKILL.md")
+    data, err := os.ReadFile(skillMDPath)
+    if err != nil {
+        return fmt.Errorf("read SKILL.md for %s: %w", skill.Meta.ID, err)
+    }
+    skill.Prompt = string(data)
+    skill.Loaded = true
+    return nil
 }
 ```
 
@@ -1240,6 +1302,11 @@ NewBuilder("paper_search").
 ---
 
 ## 变更记录
+
+### v0.3（2026-08-11）— GLM 千问审查硬伤 3 修复
+
+**变更**
+1. **硬伤 3 修复**（§2.6）：P2-1 Skills Loader 从 `.json` 文件改为 `SKILL.md + meta.json` 目录结构。原来与主文档 §7.1 矛盾（主文档定义目录结构，P2-1 设计了 JSON 文件）。统一为主文档格式：`skills/<skill-id>/manifest/meta.json` + `skill/SKILL.md` + 两阶段加载（LoadAllMeta + LoadFullContent）。
 
 ### v0.2（2026-08-11）— GLM 补充 Browser/Computer Use
 

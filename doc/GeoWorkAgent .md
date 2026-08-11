@@ -15,8 +15,9 @@
 | v1.2 | 2026-08-11 | GLM | 学科清单补全 15→18（新增 Harness Engineering / Prompt Engineering / Streaming & Event Engineering）；关系图重绘（Harness 提升为最外层外壳）；第 22 节记录 4 项已拍板决策（D5 不合并+统一入口+审批分层 / D6 方案A / D7 修白名单+保留phase约束 / D8 启用 Executor） |
 | v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
 | v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；§0.1.2 学科清单 18→19（Browser/Computer Use 作为第 19 个学科，与 Python Worker 同为执行层）；§0.1.3 关系图补入 Browser；第 21 节优先级表新增 P2-7 行 |
+| v1.5 | 2026-08-11 | GLM | 千问审查 6 处硬伤 + 4 处软伤修复：P0 v0.3（idx 写死/工具名映射/ModelGateway interface/状态机转换）；P1 v0.2（审批超时/CachedTokens）；P2 v0.3（Skills 格式统一 SKILL.md）；主文档 §3.3 工具数 12→13 修正 |
 
-> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4 的修正以 > 引用块或 【现状/目标】 标注注入。
+> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4/v1.5 的修正以 > 引用块或 【现状/目标】 标注注入。
 
 ---
 
@@ -449,7 +450,7 @@ ToolRegistry
 
 > **【GLM 注 — 状态机与工具表不一致】**
 >
-> 上面 12 个工具是 ToolRegistry 中**真实注册**的。但 `state_machine.go` 的 `AllowedToolSet.Tools` 白名单引用了以下**注册表中不存在的工具名**：
+> 上面 13 个工具是 ToolRegistry 中**真实注册**的（v1.4 修正：v1.0 误写为 12 个，实际 13 个，`scan_folder` 被漏数）。但 `state_machine.go` 的 `AllowedToolSet.Tools` 白名单引用了以下**注册表中不存在的工具名**：
 >
 > | 状态机引用的工具 | 注册表中是否存在 | 问题 |
 > |---|---|---|
@@ -1701,6 +1702,63 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
 | P1-2 与 P2-6 关系 | ✅ 清晰 | 确认 | 无需处理 |
 | P3-2 与 P1-1 边界 | ✅ 清晰但需注意版本叠加 | 确认：代码实现时处理 ToolRegistry.Execute 签名叠加 | 代码实现时注意 |
 | Browser/Computer Use 不在学科清单 | （用户审查发现） | 确认：v1.3 补 P2-7 时漏加入 §0.1.2 清单，违反阅读规则 | ✅ §0.1.2 补全 18→19 + 关系图补入 |
+
+---
+
+### v1.5（2026-08-11）— GLM 千问审查 6 硬伤 + 4 软伤修复
+
+**背景**：千问对 v1.4 + 4 份施工文档做了完整审查，指出 6 处硬伤（必须修才能开工）+ 4 处软伤（不阻塞开工但建议尽快补）+ 文档间不一致。v1.5 修复全部 6 处硬伤 + 软伤 1 + 不一致 2，其余软伤在对应文档变更记录中标注"待补"。
+
+**变更**
+
+1. **P0 文档 v0.3**（4 处硬伤）：
+   - 硬伤 1（§5.5）：`idx := 0` → `idx := tc.Index`，StreamChunk.ToolCall 新增 `Index int` 字段
+   - 硬伤 2（§2.7）：workflow → ToolRegistry 动态注册方案（Python Worker 工具名如 `research.openalex.search` 与内置工具名不同）
+   - 硬伤 4（§5.2.1）：ModelGateway interface 定义，Orchestrator 依赖接口而非具体实现
+   - 硬伤 6（§5.6.1）：`inferStateFromTool` + `transitionTo` + 状态转换规则表
+
+2. **P1 文档 v0.2**（1 处硬伤 + 1 处软伤）：
+   - 硬伤 5（§2.5.1）：`waitForApproval` 完整实现（5 分钟超时 → 自动暂停 Run + 事件）
+   - 软伤 1（§3.5）：UsageRecord 新增 `CachedTokens` 字段
+
+3. **P2 文档 v0.3**（1 处硬伤）：
+   - 硬伤 3（§2.6）：Skills Loader 从 `.json` 改为 `SKILL.md + meta.json` 目录结构（与主文档 §7.1 一致）
+
+4. **主文档修正**：
+   - §3.3 工具数 12→13（v1.0 误写为 12，实际 13 个，`scan_folder` 被漏数）
+
+**待补（软伤，不阻塞开工）**
+
+| 软伤 | 位置 | 状态 |
+|---|---|---|
+| 软伤 2：指令优先级层级（system > skill > user preference） | P0 §5.4 | 待补 |
+| 软伤 3：SSE 断线重连（Last-Event-ID） | P1 §4 | 待补 |
+| 软伤 4：测试策略（mock modelgateway） | P0 新增章节 | 待补 |
+
+**废弃**
+
+- 无（v1.4 的内容全部保留，v1.5 是纯修正）
+
+**未改**
+
+- P3 文档：v1.5 不动（千问未指出 P3 有硬伤）
+- §0.1/0.2 节、第 3-20 节正文（除 §3.3 工具数修正）、第 22/23 节：v1.5 不动
+
+**千问审查反馈处理记录**
+
+| 审查项 | 千问结论 | GLM 核实 | 处理 |
+|---|---|---|---|
+| 硬伤 1：idx 写死 | ❌ 代码级 bug | 确认：P0 §5.5.2 第 1092 行 | ✅ P0 v0.3 修复 |
+| 硬伤 2：工具名映射未定义 | ❌ 设计级缺口 | 确认：Python Worker 工具名与内置工具名完全不同 | ✅ P0 v0.3 动态注册方案 |
+| 硬伤 3：Skills 格式矛盾 | ❌ 文档间矛盾 | 确认：主文档 §7.1 是 SKILL.md，P2-1 是 .json | ✅ P2 v0.3 统一为 SKILL.md |
+| 硬伤 4：ModelGateway 接口未定义 | ❌ 设计级缺口 | 确认：Orchestrator 依赖具体类型 | ✅ P0 v0.3 新增 interface |
+| 硬伤 5：审批超时未定义 | ❌ goroutine 永远阻塞 | 确认：waitForApproval 无超时 | ✅ P1 v0.2 补全超时逻辑 |
+| 硬伤 6：状态机转换不完整 | ❌ 设计级缺口 | 确认：只有 2 处 transition | ✅ P0 v0.3 补全 inferStateFromTool |
+| 软伤 1：缓存命中率度量 | ⚠️ 缺 CachedTokens | 确认 | ✅ P1 v0.2 补 CachedTokens |
+| 软伤 2：指令优先级 | ⚠️ 未定义 | 确认 | 待补 |
+| 软伤 3：SSE 断线重连 | ⚠️ 未提 | 确认 | 待补 |
+| 软伤 4：测试策略 | ⚠️ 无 mock 方案 | 确认 | 待补 |
+| 不一致 2：工具数 12 vs 13 | 📝 主文档 vs P0 | 确认：主文档 §3.3 误写 12 | ✅ v1.5 修正为 13 |
 
 ---
 

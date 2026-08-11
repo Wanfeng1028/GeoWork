@@ -10,6 +10,7 @@
 | 版本 | 日期 | 作者 | 变更摘要 |
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
+| v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -204,6 +205,138 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 }
 ```
 
+#### 2.5.1 waitForApproval 实现（v0.2 新增 — 千问审查硬伤 5）
+
+> **【v0.2 修正 — 千问审查硬伤 5】**：v0.1 的 `waitForApproval` 被调用但从未定义实现，且没有超时逻辑。主文档 §14.3 说"用户 5 分钟未响应 → 任务自动暂停"，但 P1 设计里没有把这个超时写进 `waitForApproval`。如果用户永远不响应，goroutine 会永远阻塞。v0.2 补全。
+
+```go
+// waitForApproval 等待用户审批，带超时和自动暂停
+func (r *Runner) waitForApproval(ctx context.Context, req *ApprovalRequest) error {
+    // 1. 发送审批请求事件给前端
+    r.emitEvent(Event{
+        Type:      "approval_request",
+        Timestamp: time.Now(),
+        RunID:     req.RunID,
+        Data: map[string]any{
+            "approvalId": req.ID,
+            "toolName":   req.ToolName,
+            "args":       req.Args,
+            "riskLevel":  req.RiskLevel,
+        },
+    })
+
+    // 2. 创建超时 timer（主文档 §14.3：5 分钟）
+    timeout := 5 * time.Minute
+    timer := time.NewTimer(timeout)
+    defer timer.Stop()
+
+    // 3. 等待审批结果或超时
+    for {
+        select {
+        case <-ctx.Done():
+            // 上下文取消（如 Run 被主动停止）
+            r.governor.ResolveApproval(req.ID, ApprovalDenied, "context cancelled")
+            return fmt.Errorf("approval cancelled: %w", ctx.Err())
+
+        case <-timer.C:
+            // 超时：自动暂停 Run（主文档 §14.3）
+            r.governor.ResolveApproval(req.ID, ApprovalTimeout, "5min timeout")
+            r.emitEvent(Event{
+                Type:      "approval_timeout",
+                Timestamp: time.Now(),
+                RunID:     req.RunID,
+                Data: map[string]any{
+                    "approvalId": req.ID,
+                    "toolName":   req.ToolName,
+                    "timeout":    timeout.String(),
+                },
+            })
+            // 将 Run 状态改为 Paused，等待用户恢复
+            r.pauseRun(req.RunID, "approval timeout for "+req.ToolName)
+            return fmt.Errorf("approval timeout after %s for tool %s", timeout, req.ToolName)
+
+        case decision := <-req.DecisionCh:
+            // 用户做出了决策
+            switch decision.Decision {
+            case ApprovalApproved:
+                r.emitEvent(Event{
+                    Type:      "approval_resolved",
+                    Timestamp: time.Now(),
+                    RunID:     req.RunID,
+                    Data: map[string]any{
+                        "approvalId": req.ID,
+                        "decision":   "approved",
+                    },
+                })
+                return nil
+
+            case ApprovalDenied:
+                r.emitEvent(Event{
+                    Type:      "approval_resolved",
+                    Timestamp: time.Now(),
+                    RunID:     req.RunID,
+                    Data: map[string]any{
+                        "approvalId": req.ID,
+                        "decision":   "denied",
+                        "reason":     decision.Reason,
+                    },
+                })
+                return fmt.Errorf("approval denied: %s", decision.Reason)
+
+            default:
+                return fmt.Errorf("unknown approval decision: %s", decision.Decision)
+            }
+        }
+    }
+}
+
+// pauseRun 将 Run 暂停（等待用户恢复）
+func (r *Runner) pauseRun(runID, reason string) {
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    if run, ok := r.runs[runID]; ok {
+        run.Status = StatusPaused
+        run.UpdatedAt = time.Now()
+        r.emitEvent(Event{
+            Type:      "run_paused",
+            Timestamp: time.Now(),
+            RunID:     runID,
+            Data:      map[string]any{"reason": reason},
+        })
+    }
+}
+```
+
+**ApprovalRequest 结构体补充**（v0.2 新增 DecisionCh）：
+
+```go
+type ApprovalRequest struct {
+    ID          string
+    RunID       string
+    ToolName    string
+    Args        map[string]any
+    RiskLevel   string
+    CreatedAt   time.Time
+    Decision    ApprovalDecision  // pending/approved/denied/timeout
+    DecisionCh  chan ApprovalResult  // ← v0.2 新增：用户决策通过此 channel 传递
+}
+
+type ApprovalResult struct {
+    Decision  ApprovalDecision
+    Reason    string
+    ResolvedBy string  // user ID
+}
+```
+
+**超时行为表**：
+
+| 场景 | 行为 | 事件 |
+|---|---|---|
+| 用户 5 分钟内批准 | 继续执行工具 | `approval_resolved(approved)` |
+| 用户 5 分钟内拒绝 | 返回错误，模型收到拒绝消息 | `approval_resolved(denied)` |
+| 用户 5 分钟未响应 | Run 自动暂停，等待用户恢复 | `approval_timeout` + `run_paused` |
+| 上下文取消（Run 停止） | 审批取消 | `approval_cancelled` |
+
 ### 2.6 审批 API
 
 ```
@@ -304,6 +437,7 @@ type UsageRecord struct {
     Model         string
     PromptTokens  int
     CompletionTokens int
+    CachedTokens  int  // ← v0.2 新增（千问审查软伤 1）：prompt cache 命中的 token 数
     TotalTokens   int
     EstimatedCost float64
     Timestamp     time.Time
@@ -668,6 +802,15 @@ POST /api/agent/checkpoints/{id}/resume  从检查点恢复
 ---
 
 ## 变更记录
+
+### v0.2（2026-08-11）— GLM 千问审查硬伤 5 + 软伤 1 修复
+
+**变更**
+1. **硬伤 5 修复**（§2.5.1）：`waitForApproval` 完整实现。原来被调用但从未定义，且无超时逻辑。补全：5 分钟超时 → 自动暂停 Run + `approval_timeout` 事件 + `run_paused` 事件。ApprovalRequest 新增 `DecisionCh` channel。
+2. **软伤 1 修复**（§3.5）：UsageRecord 新增 `CachedTokens int` 字段，用于度量 prompt cache 命中率。
+
+**待补（软伤，不阻塞开工）**
+- 软伤 3：SSE 断线重连（Last-Event-ID 或重连策略）未补
 
 ### v0.1（2026-08-11）— GLM 初稿
 

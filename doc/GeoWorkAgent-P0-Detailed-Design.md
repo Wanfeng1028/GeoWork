@@ -12,6 +12,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：版本表 + 阅读约定 + 第 1 节任务依赖图 + P0-2 状态机三者对齐完整设计 |
 | v0.2 | 2026-08-11 | GLM | 补全 P0-1 接线死代码 + P0-3 per-run 化 + P0-4 ReAct 循环完整设计；P0 四项施工方案全部完成 |
+| v0.3 | 2026-08-11 | GLM | 千问审查硬伤 1/2/4/6 修复：idx 写死→tc.Index + workflow→ToolRegistry 动态注册方案 + ModelGateway interface 定义 + ReAct 状态机转换逻辑补全（inferStateFromTool）|
 
 > **阅读约定**：本文档是施工图纸，不是宪法。所有接口签名、结构体定义、白名单表都是**待实现的契约**，代码实现时必须对齐。如发现契约无法实现（如 Go 语法限制、循环依赖），先改本文档再改代码，不得私自偏离。
 
@@ -204,6 +205,65 @@ case "network_request", "browser_control":
 
 #### 2.7.2 改动方案
 
+> **【v0.3 修正 — 千问审查硬伤 2】**：v0.2 直接把 `toolName` 传给 `registry.Execute()`，但 workflow 的 `toolName` 是 Python Worker 的 API 名（如 `research.openalex.search`、`geo.gdal.inspect_dataset`、`geo.gee.generate_ndvi_script`），**不是** ToolRegistry 里注册的 13 个内置工具名（如 `read_file`、`run_python`）。直接传会导致 `registry.Execute` 找不到工具。补充动态注册方案。
+
+**Python Worker 工具名现状**（从 `agent/planner.go` 提取）：
+
+| Python Worker 工具名 | 命名空间 | 说明 |
+|---|---|---|
+| `task.parse` | task | 任务解析 |
+| `research.openalex.search` | research | 论文搜索 |
+| `geo.office.write_report` | geo.office | 报告生成 |
+| `geo.gdal.inspect_dataset` | geo.gdal | GDAL 数据检查 |
+| `geo.gee.generate_ndvi_script` | geo.gee | GEE NDVI 脚本生成 |
+
+这些工具名采用 `category.subcategory.action` 命名空间格式，与 ToolRegistry 的 13 个内置工具（扁平命名如 `read_file`）完全不同。
+
+**方案：动态注册 Python Worker 工具到 ToolRegistry**
+
+系统启动时，从 Python Worker 获取工具列表，动态注册到 ToolRegistry：
+
+```go
+// worker/client.go 新增 ListTools 方法
+func (c *Client) ListTools(ctx context.Context) ([]WorkerToolDef, error) {
+    // 调用 Python Worker 的 /tools API 获取工具列表
+    resp, err := c.http.Get(c.baseURL + "/tools")
+    // ...
+}
+
+type WorkerToolDef struct {
+    Name        string         `json:"name"`         // 如 "research.openalex.search"
+    Description string         `json:"description"`
+    InputSchema map[string]any `json:"input_schema"`
+    RiskLevel   string         `json:"risk_level"`   // low/medium/high
+}
+
+// 启动时注册到 ToolRegistry
+func RegisterWorkerTools(ctx context.Context, registry *toolregistry.Registry, workerClient *worker.Client) error {
+    tools, err := workerClient.ListTools(ctx)
+    if err != nil {
+        return fmt.Errorf("list worker tools: %w", err)
+    }
+    for _, t := range tools {
+        toolName := t.Name  // 如 "research.openalex.search"
+        // 闭包捕获 toolName
+        registry.Register(toolregistry.NewBuilder(toolName).
+            Description(t.Description).
+            InputSchema(t.InputSchema).
+            Permission("exec").
+            RiskLevel(t.RiskLevel).
+            Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+                // 转发到 Python Worker
+                return workerClient.RunTool(ctx, toolName, args)
+            }).
+            Build())
+    }
+    return nil
+}
+```
+
+**callWorker 改动**：
+
 ```go
 // Runner 结构体新增 registry 字段
 type Runner struct {
@@ -213,11 +273,24 @@ type Runner struct {
 }
 
 // callWorker 改为走 ToolRegistry
-func (r *Runner) callWorker(ctx context.Context, toolName string, args map[string]any) (map[string]any, error) {
+func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
+    toolName := firstString(node.Config["tool"], node.Config["toolName"], node.Config["workerTool"])
+    if toolName == "" {
+        toolName = node.Name
+    }
+    payload := extractPayload(node.Config)
+
     // 通过 ToolRegistry 执行（自动获得权限校验 + 审计日志 + 沙箱标记）
-    return r.registry.Execute(ctx, toolName, args)
+    // toolName 是 Python Worker 的工具名（如 "research.openalex.search"），
+    // 已在启动时动态注册到 ToolRegistry
+    result, err := r.registry.Execute(ctx, toolName, payload)
+    // ... 后续处理不变
 }
 ```
+
+**验收标准补充**：
+- Python Worker 启动后，ToolRegistry 包含 `research.openalex.search` 等动态注册的工具
+- workflow 调用 `callWorker("research.openalex.search", ...)` 时，命中 ToolRegistry 而非直接调 worker.Client
 
 #### 2.7.3 审批分层（D5 决策）
 
@@ -914,6 +987,80 @@ data: {"type":"done","timestamp":"2026-08-11T12:00:05Z","runId":"run_abc123","da
 | `core/internal/aiagent/executor.go` | 不改 | `ParseModelResponse()` / `AppendToolResult()` 已存在 |
 | `core/internal/aiagent/planner.go` | 修改 | `BuildSystemPrompt` 完善 5 Mode 模板 |
 | `core/internal/modelgateway/openai_compatible.go` | 不改 | `StreamChat()` / `Chat()` 已存在 |
+| `core/internal/modelgateway/gateway.go` | **新建** | ModelGateway interface 定义（v0.3 新增） |
+
+### 5.2.1 ModelGateway 接口定义（v0.3 新增 — 千问审查硬伤 4）
+
+> **【v0.3 修正 — 千问审查硬伤 4】**：v0.2 大量引用 `o.gateway.StreamChat()` 和 `o.gateway.Chat()`，但 Orchestrator 依赖的是具体类型 `*modelgateway.OpenAICompatibleClient`，不是接口。P2-5 要引入 Router 替换直接 gateway 调用时无法无缝替换。v0.3 新增 ModelGateway interface，Orchestrator 依赖接口而非具体实现。
+
+```go
+// core/internal/modelgateway/gateway.go（新建）
+
+package modelgateway
+
+// ModelGateway 是模型网关的抽象接口。
+// Orchestrator 依赖此接口而非具体实现（OpenAICompatibleClient），
+// 以便 P2-5 的 Router 可以无缝替换为多 provider 路由。
+type ModelGateway interface {
+    // Chat 发起非流式对话，返回完整响应
+    Chat(ctx context.Context, messages []ChatMessage, tools []ToolDef, stream bool) (*ChatCompletionResponse, error)
+
+    // StreamChat 发起流式对话，返回 chunk 通道
+    StreamChat(ctx context.Context, messages []ChatMessage, tools []ToolDef) (<-chan StreamChunk, error)
+
+    // ProviderID 返回当前 provider 的标识（用于审计/路由日志）
+    ProviderID() string
+}
+
+// 确保 OpenAICompatibleClient 实现 ModelGateway 接口
+// （编译期检查：如果接口不匹配会报错）
+var _ ModelGateway = (*OpenAICompatibleClient)(nil)
+```
+
+**Orchestrator 改动**：
+
+```go
+// orchestrator.go 的 Orchestrator 结构体
+type Orchestrator struct {
+    // ... 已有字段 ...
+    gateway ModelGateway  // ← 改为接口类型（原来是 *modelgateway.OpenAICompatibleClient）
+    // ...
+}
+
+// NewOrchestrator 的参数也改为接口
+func NewOrchestrator(
+    registry *toolregistry.Registry,
+    gateway ModelGateway,  // ← 接口类型
+    provider *modelgateway.ModelProvider,
+    log *zap.Logger,
+) *Orchestrator {
+    // ...
+}
+```
+
+**P2-5 Router 的接入点**：P2-5 的 Router 只需实现 ModelGateway 接口，即可替换 OpenAICompatibleClient：
+
+```go
+// P2-5 的 Router 实现 ModelGateway 接口
+type Router struct {
+    providers map[string]ModelGateway  // providerID → gateway
+    rules     []RoutingRule
+}
+
+func (r *Router) Chat(ctx context.Context, messages []ChatMessage, tools []ToolDef, stream bool) (*ChatCompletionResponse, error) {
+    gw := r.selectProvider(messages)
+    return gw.Chat(ctx, messages, tools, stream)
+}
+
+func (r *Router) StreamChat(ctx context.Context, messages []ChatMessage, tools []ToolDef) (<-chan StreamChunk, error) {
+    gw := r.selectProvider(messages)
+    return gw.StreamChat(ctx, messages, tools)
+}
+
+func (r *Router) ProviderID() string {
+    return "router"  // 或当前选中的 provider ID
+}
+```
 
 ### 5.3 API 请求构建
 
@@ -1052,7 +1199,20 @@ type StreamChunk struct {
     IsDone    bool
     Usage     *UsageInfo
 }
+
+// ToolCall（流式 delta）—— v0.3 修正：新增 Index 字段
+// OpenAI 流式格式中，每个 tool_call delta 带 index 字段表示它属于第几个 tool_call
+// 当模型一次返回多个 tool_calls 时（如同时调 read_file 和 list_files），
+// 必须按 index 分别拼接，否则所有 delta 会混到同一个 tool_call 上
+type ToolCall struct {
+    Index    int          // ← 新增：delta 的 index（OpenAI 流式协议字段）
+    ID       string
+    Type     string
+    Function ToolFunctionCall
+}
 ```
+
+> **【v0.3 修正 — 千问审查硬伤 1】**：v0.2 的 `idx := 0` 写死了 index，导致多 tool_call 时参数拼错。OpenAI 流式 delta 中每个 tool_call 带 `index` 字段，必须用 `tc.Index` 而非硬编码 0。
 
 #### 5.5.2 chunk 拼接规则
 
@@ -1089,7 +1249,7 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 
         // 2. tool_calls 增量拼接
         for _, tc := range chunk.ToolCalls {
-            idx := 0  // OpenAI delta 中 index 表示第几个 tool_call
+            idx := tc.Index  // ← v0.3 修正：用 delta 的 index，不再写死 0
             if existing, ok := toolCallMap[idx]; ok {
                 // 增量拼接 arguments
                 existing.Function.Arguments += tc.Function.Arguments
@@ -1194,6 +1354,21 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 
         // 2.7 执行工具调用
         for _, tc := range toolCalls {
+            // 2.7.0 根据工具类型推断状态转换（v0.3 新增 — 千问审查硬伤 6）
+            //
+            // 【v0.3 修正 — 千问审查硬伤 6】
+            // v0.2 的 ReAct 循环只有 PlanReady 和 InspectDone 两个 transition，
+            // 缺少根据工具类型推断状态转换的逻辑。
+            // 9 个状态之间的转换规则（§10.3）：planning → inspecting → editing → verifying
+            // ReAct 循环中由 Harness 根据工具类型推断（不是模型决定）：
+            //   - read_only 工具（read_file/list_files/search_workspace/scan_folder/screenshot）→ Inspecting
+            //   - write 类工具（write_file/run_python/run_shell/delete_file/git_*）→ Editing
+            //   - 验证类工具（无内置验证工具，由模型在 prompt 中声明完成验证时）→ Verifying
+            targetState := o.inferStateFromTool(tc.Function.Name)
+            if targetState != rc.State && targetState != StateIdle {
+                o.transitionTo(targetState, fmt.Sprintf("tool %s requires %s", tc.Function.Name, targetState), rc)
+            }
+
             // 2.7.1 状态机检查
             if !o.stateMachine.ToolIsAllowed(rc.State, tc.Function.Name) {
                 o.emitEvent(rc, Event{Type: "error", Data: map[string]any{
@@ -1249,6 +1424,78 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
     rc.Memory.SetTaskSummary(run.Prompt)
 }
 ```
+
+#### 5.6.1 inferStateFromTool 工具→状态推断（v0.3 新增 — 千问审查硬伤 6）
+
+```go
+// inferStateFromTool 根据工具名推断应该处于哪个状态
+// ReAct 循环中由 Harness 根据工具类型推断状态转换（不是模型决定）
+func (o *Orchestrator) inferStateFromTool(toolName string) State {
+    switch toolName {
+    // read_only 工具 → Inspecting（检查/读取阶段）
+    case "read_file", "list_files", "search_workspace", "scan_folder",
+         "screenshot", "paper_search":
+        return StateInspecting
+
+    // write 类工具 → Editing（编辑/执行阶段）
+    case "write_file", "run_python", "run_shell", "delete_file",
+         "git_commit", "git_push", "run_git_add", "run_git_reset",
+         "create_artifact",
+         "browser_control", "network_request":  // P2-7 的浏览器操控也算编辑
+        return StateEditing
+
+    // 无内置验证工具
+    // 当模型在 prompt 中声明"任务完成，进行验证"时，
+    // 由 transitionTo(StateVerifying) 手动触发
+    default:
+        // 动态注册的 Python Worker 工具（如 research.openalex.search）
+        // 默认归为 Inspecting（读取/分析类）
+        if strings.Contains(toolName, "search") || strings.Contains(toolName, "inspect") {
+            return StateInspecting
+        }
+        if strings.Contains(toolName, "write") || strings.Contains(toolName, "generate") {
+            return StateEditing
+        }
+        return StateIdle  // 未知工具，不触发状态转换
+    }
+}
+
+// transitionTo 直接转换到目标状态（带日志和事件）
+func (o *Orchestrator) transitionTo(target State, reason string, rc *RunContext) {
+    oldState := rc.State
+    rc.State = target
+    o.log.Info("state transition",
+        zap.String("from", string(oldState)),
+        zap.String("to", string(target)),
+        zap.String("reason", reason),
+        zap.String("runId", rc.Run.ID),
+    )
+    o.emitEvent(rc, Event{
+        Type:      "state_transition",
+        Timestamp: time.Now(),
+        RunID:     rc.Run.ID,
+        Data: map[string]any{
+            "from":   string(oldState),
+            "to":     string(target),
+            "reason": reason,
+        },
+    })
+}
+```
+
+**状态转换规则表**（ReAct 循环中的完整转换逻辑）：
+
+| 当前状态 | 工具类型 | 目标状态 | 触发条件 |
+|---|---|---|---|
+| Planning | 任何 | Inspecting | 模型返回第一个 tool_call |
+| Inspecting | read_only 工具 | Inspecting | 保持（读取操作不改状态） |
+| Inspecting | write 类工具 | Editing | 写入/执行操作触发编辑态 |
+| Editing | write 类工具 | Editing | 保持（连续编辑） |
+| Editing | read_only 工具 | Inspecting | 切回检查态（如读取执行结果） |
+| 任何 | 模型声明"验证" | Verifying | 模型在 content 中声明验证完成 |
+| Verifying | 模型声明"完成" | Completed | 模型不再调用工具 |
+
+**模型如何声明验证**：System Prompt 中告知模型"完成任务后，在回复中包含 `<verify>` 标签表示进入验证阶段"。Orchestrator 解析 content 中的 `<verify>` 标签触发 Verifying 状态。
 
 ### 5.7 Executor 接入点
 
@@ -1375,6 +1622,20 @@ ReAct 循环开始
 ---
 
 ## 变更记录
+
+### v0.3（2026-08-11）— GLM 千问审查硬伤修复
+
+**背景**：千问审查发现 6 处硬伤，其中 4 处在 P0 文档（硬伤 1/2/4/6）。本版修复全部 4 处。
+
+**变更**
+1. **硬伤 1 修复**（§5.5.1-5.5.2）：`idx := 0` → `idx := tc.Index`，StreamChunk.ToolCall 新增 `Index int` 字段。OpenAI 流式 delta 中每个 tool_call 带 index 字段，写死 0 会导致多 tool_call 时参数拼错。
+2. **硬伤 2 修复**（§2.7.2）：workflow → ToolRegistry 的工具名映射。Python Worker 的工具名（如 `research.openalex.search`）与 ToolRegistry 的 13 个内置工具名不同，补充动态注册方案（`RegisterWorkerTools` + `ListTools`）。
+3. **硬伤 4 修复**（§5.2.1）：ModelGateway interface 定义。Orchestrator 原来依赖具体类型 `*OpenAICompatibleClient`，改为依赖接口 `ModelGateway`，以便 P2-5 Router 无缝替换。
+4. **硬伤 6 修复**（§5.6.1）：ReAct 循环中状态机转换逻辑补全。新增 `inferStateFromTool` 函数根据工具类型推断状态（read_only→Inspecting，write→Editing），新增 `transitionTo` 函数，新增状态转换规则表。
+
+**待补（软伤，不阻塞开工）**
+- 软伤 2：§5.4 指令优先级层级（system > skill > user preference）未定义
+- 软伤 4：测试策略（mock modelgateway 的方案）未补
 
 ### v0.1（2026-08-11）— GLM 初稿
 
