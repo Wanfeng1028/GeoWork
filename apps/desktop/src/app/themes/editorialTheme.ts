@@ -1,22 +1,22 @@
 import type { ConfigProviderProps } from 'antd'
 
 // 对应 doc/前端设计系统.md 第三节 editorial-light
-// 关键：亮色主色用可访问深青 #0e7490，不用品牌亮蓝直接怼白底
+// 关键：亮色主色用可访问深青 #1d4ed8，不用品牌亮蓝直接怼白底
 export function useEditorialTheme(): ConfigProviderProps {
   return {
     theme: {
       token: {
         // ── 品牌/状态色（3.4，亮色可访问变体）──
-        colorPrimary: '#0e7490',
-        colorPrimaryHover: '#0c6b82',
-        colorPrimaryActive: '#0a5c70',
-        colorPrimaryBg: 'rgba(14, 116, 144, 0.06)',
-        colorPrimaryBgHover: 'rgba(14, 116, 144, 0.10)',
+        colorPrimary: '#1d4ed8',
+        colorPrimaryHover: '#3b82f6',
+        colorPrimaryActive: '#1e40af',
+        colorPrimaryBg: 'rgba(29, 78, 216, 0.06)',
+        colorPrimaryBgHover: 'rgba(29, 78, 216, 0.10)',
         colorPrimaryBorder: 'rgba(14, 116, 144, 0.20)',
         colorPrimaryBorderHover: 'rgba(14, 116, 144, 0.35)',
-        colorPrimaryText: '#0e7490',
-        colorPrimaryTextHover: '#0c6b82',
-        colorPrimaryTextActive: '#0a5c70',
+        colorPrimaryText: '#1d4ed8',
+        colorPrimaryTextHover: '#3b82f6',
+        colorPrimaryTextActive: '#1e40af',
 
         colorSuccess: '#0f766e',
         colorSuccessBg: 'rgba(15, 118, 110, 0.06)',
@@ -33,12 +33,12 @@ export function useEditorialTheme(): ConfigProviderProps {
         colorErrorBorder: 'rgba(220, 38, 38, 0.20)',
         colorErrorText: '#dc2626',
 
-        colorInfo: '#0e7490',
-        colorInfoBg: 'rgba(14, 116, 144, 0.06)',
-        colorInfoText: '#0e7490',
-        colorLink: '#0e7490',
-        colorLinkHover: '#0c6b82',
-        colorLinkActive: '#0a5c70',
+        colorInfo: '#1d4ed8',
+        colorInfoBg: 'rgba(29, 78, 216, 0.06)',
+        colorInfoText: '#1d4ed8',
+        colorLink: '#1d4ed8',
+        colorLinkHover: '#3b82f6',
+        colorLinkActive: '#1e40af',
 
         // ── 背景 / 容器 / 文字（3.2 / 3.5）──
         colorBgBase: '#f7f8fa',
@@ -90,9 +90,9 @@ export function useEditorialTheme(): ConfigProviderProps {
           controlHeightSM: 28,
           paddingContentHorizontal: 14,
           primaryColor: '#ffffff',
-          colorPrimary: '#0e7490',
-          colorPrimaryHover: '#0c6b82',
-          colorPrimaryActive: '#0a5c70',
+          colorPrimary: '#1d4ed8',
+          colorPrimaryHover: '#3b82f6',
+          colorPrimaryActive: '#1e40af',
           defaultBg: 'rgba(15,23,42,0.04)',
           defaultHoverBg: 'rgba(15,23,42,0.07)',
           defaultActiveBg: 'rgba(15,23,42,0.06)',
@@ -132,7 +132,7 @@ export function useEditorialTheme(): ConfigProviderProps {
           colorBgContainer: 'rgba(15,23,42,0.03)',
           colorBorder: 'rgba(15,23,42,0.10)',
           hoverBorderColor: 'rgba(14,116,144,0.25)',
-          activeBorderColor: '#0e7490',
+          activeBorderColor: '#1d4ed8',
           activeShadow: '0 0 0 2px rgba(14,116,144,0.12)',
           colorTextPlaceholder: '#94a3b8',
         },
