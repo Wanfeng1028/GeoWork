@@ -10,6 +10,7 @@
 | 版本 | 日期 | 作者 | 变更摘要 |
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P3 四项施工方案 |
+| v0.2 | 2026-08-11 | GLM | P3-3 补充 §4.5 流式提前执行：SpeculativeExecutor + ReadOnly 标记 + 集成到 streamModelCall + 时序对比 + 安全约束 + 7 条验收标准 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -488,7 +489,7 @@ func (e *ParallelExecutor) executeGroup(ctx context.Context, calls []ToolCall, r
 }
 ```
 
-### 4.4 验收标准
+### 4.4 验收标准（批次并行）
 
 | # | 检查项 | 验证方法 |
 |---|---|---|
@@ -496,6 +497,337 @@ func (e *ParallelExecutor) executeGroup(ctx context.Context, calls []ToolCall, r
 | 2 | 不同类型工具串行执行 | read_file 后 write_file，顺序执行 |
 | 3 | 并行度可配置 | maxParallel=2 时最多 2 个并发 |
 | 4 | 并行结果顺序正确 | 结果按调用顺序返回，不是完成顺序 |
+
+### 4.5 流式提前执行（Speculative Execution in Stream）
+
+> **v0.2 补充**：主文档 §6.6 明确描述了"模型流式输出中识别到 read_only tool_call → 立即开始执行"的策略，但 v0.1 的 `groupByDependency` 只做了批次并行，没有实现流式提前执行。本节补全这一缺失。
+
+#### 4.5.1 目标
+
+在模型**流式输出过程中**（而非等模型输出完毕后）就开始执行 `read_only` 工具，减少用户等待时间。主文档 §6.6 的定义：
+
+```
+read_only：read_file, list_files, search_workspace, scan_folder, screenshot, paper_search
+  → 可并行、可在模型流式输出中提前执行
+
+write：write_file, run_python, run_shell, delete_file, browser_control, network_request, git_*
+  → 必须串行、必须等模型输出完毕
+```
+
+#### 4.5.2 工具分类标记
+
+在 `tool_policy.go` 中为每个工具新增 `ReadOnly` 标记：
+
+```go
+// ToolPolicy 新增字段
+type ToolPolicy struct {
+    // ... 已有字段 ...
+    ReadOnly bool  // true 表示该工具只读，可流式提前执行
+}
+
+// 在策略定义中标记
+{
+    Name:     "read_file",
+    ReadOnly: true,
+    // ...
+},
+{
+    Name:     "list_files",
+    ReadOnly: true,
+    // ...
+},
+{
+    Name:     "search_workspace",
+    ReadOnly: true,
+    // ...
+},
+{
+    Name:     "scan_folder",
+    ReadOnly: true,
+    // ...
+},
+{
+    Name:     "screenshot",
+    ReadOnly: true,    // 截图是只读操作
+    // ...
+},
+{
+    Name:     "paper_search",
+    ReadOnly: true,    // 论文搜索是只读操作
+    // ...
+},
+// write 类工具 ReadOnly 默认为 false
+```
+
+#### 4.5.3 流式提前执行器
+
+```go
+// SpeculativeExecutor 流式提前执行器
+type SpeculativeExecutor struct {
+    registry   *toolregistry.Registry
+    policy     *toolregistry.PolicyTable
+    log        *zap.Logger
+
+    // 提前执行的结果缓存：toolCallID → result
+    results    sync.Map  // map[string]*SpeculativeResult
+}
+
+// SpeculativeResult 提前执行的结果
+type SpeculativeResult struct {
+    ToolCallID string
+    Result     map[string]any
+    Error      error
+    Done       bool
+    StartedAt  time.Time
+    CompletedAt time.Time
+}
+
+// TryExecuteInStream 在流式输出中尝试提前执行 read_only 工具
+// 当 StreamChat 的 chunk 中解析到完整的 tool_call 时调用
+func (e *SpeculativeExecutor) TryExecuteInStream(ctx context.Context, tc ToolCall) (*SpeculativeResult, bool) {
+    // 1. 检查工具是否为 read_only
+    policy := e.policy.Get(tc.Name)
+    if policy == nil || !policy.ReadOnly {
+        return nil, false  // 非 read_only，不提前执行
+    }
+
+    // 2. 检查是否已执行过（同一 toolCallID）
+    if cached, ok := e.results.Load(tc.ID); ok {
+        return cached.(*SpeculativeResult), true  // 已在执行中或已完成
+    }
+
+    // 3. 提前执行
+    result := &SpeculativeResult{
+        ToolCallID: tc.ID,
+        StartedAt:  time.Now(),
+    }
+    e.results.Store(tc.ID, result)
+
+    go func() {
+        defer func() {
+            result.CompletedAt = time.Now()
+            result.Done = true
+        }()
+        res, err := e.registry.Execute(ctx, tc.Name, tc.Args)
+        result.Result = res
+        result.Error = err
+        e.log.Info("speculative execution completed",
+            zap.String("tool", tc.Name),
+            zap.Duration("duration", time.Since(result.StartedAt)),
+        )
+    }()
+
+    return result, true
+}
+
+// GetResult 获取提前执行的结果（阻塞等待完成）
+func (e *SpeculativeExecutor) GetResult(toolCallID string) (*SpeculativeResult, error) {
+    val, ok := e.results.Load(toolCallID)
+    if !ok {
+        return nil, fmt.Errorf("no speculative result for %s", toolCallID)
+    }
+    result := val.(*SpeculativeResult)
+    // 等待完成
+    for !result.Done {
+        time.Sleep(10 * time.Millisecond)
+    }
+    return result, nil
+}
+
+// Cleanup 清理本轮的提前执行结果
+func (e *SpeculativeExecutor) Cleanup() {
+    e.results.Range(func(key, value any) bool {
+        e.results.Delete(key)
+        return true
+    })
+}
+```
+
+#### 4.5.4 集成到 ReAct 循环
+
+修改 P0-4 的 `streamModelCall`，在流式解析 chunk 时插入提前执行逻辑：
+
+```go
+func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgateway.ChatMessage, tools []modelgateway.ToolDef, rc *RunContext) (string, []ToolCall, error) {
+    ch, err := o.gateway.StreamChat(ctx, messages, tools)
+    if err != nil {
+        return "", nil, err
+    }
+
+    var contentBuilder strings.Builder
+    var toolCalls []modelgateway.ToolCall
+    toolCallMap := map[int]*modelgateway.ToolCall{}
+
+    // 创建提前执行器（每轮一个）
+    specExec := NewSpeculativeExecutor(o.registry, o.policy, o.log)
+    defer specExec.Cleanup()
+
+    for chunk := range ch {
+        if chunk.IsDone {
+            break
+        }
+
+        // 1. 文本内容增量
+        if chunk.Content != "" {
+            contentBuilder.WriteString(chunk.Content)
+            o.emitEvent(rc, Event{
+                Type:      "message",
+                Timestamp: time.Now(),
+                RunID:     rc.Run.ID,
+                Data:      map[string]any{"content": chunk.Content, "role": "assistant"},
+            })
+        }
+
+        // 2. tool_calls 增量拼接
+        for _, tc := range chunk.ToolCalls {
+            idx := 0
+            if existing, ok := toolCallMap[idx]; ok {
+                existing.Function.Arguments += tc.Function.Arguments
+
+                // 【新增】当 arguments 拼接完成（检测到 JSON 闭合）时尝试提前执行
+                if isJSONComplete(existing.Function.Arguments) {
+                    var args map[string]any
+                    if json.Unmarshal([]byte(existing.Function.Arguments), &args) == nil {
+                        call := ToolCall{
+                            ID:   existing.ID,
+                            Name: existing.Function.Name,
+                            Args: args,
+                        }
+                        // 尝试提前执行（只有 read_only 工具会真正执行）
+                        specExec.TryExecuteInStream(ctx, call)
+                    }
+                }
+            } else {
+                // 新 tool_call
+                toolCallMap[idx] = &modelgateway.ToolCall{
+                    ID:   tc.ID,
+                    Type: tc.Type,
+                    Function: modelgateway.ToolFunctionCall{
+                        Name:      tc.Function.Name,
+                        Arguments: tc.Function.Arguments,
+                    },
+                }
+            }
+        }
+    }
+
+    // 收集所有 tool_calls
+    for i := 0; i < len(toolCallMap); i++ {
+        if tc, ok := toolCallMap[i]; ok {
+            toolCalls = append(toolCalls, *tc)
+        }
+    }
+
+    // 3. 模型输出完毕后，处理工具执行
+    //    read_only 工具：从提前执行器拿结果（可能已完成）
+    //    write 工具：现在才执行
+    for i := range toolCalls {
+        tc := &toolCalls[i]
+        var args map[string]any
+        json.Unmarshal([]byte(tc.Function.Arguments), &args)
+
+        // 尝试从提前执行器拿结果
+        if result, err := specExec.GetResult(tc.ID); err == nil && result.Done {
+            // 提前执行已完成，直接用结果
+            tc.Result = result.Result
+            tc.Error = result.Error
+            o.log.Info("tool executed speculatively",
+                zap.String("tool", tc.Function.Name),
+                zap.Duration("aheadTime", time.Since(result.CompletedAt)),
+            )
+        } else {
+            // 非 read_only 或提前执行失败，现在执行
+            result, err := o.registry.Execute(ctx, tc.Function.Name, args)
+            tc.Result = result
+            tc.Error = err
+        }
+    }
+
+    return contentBuilder.String(), toolCalls, nil
+}
+
+// isJSONComplete 检查 JSON 字符串是否闭合（粗略检查：花括号配对）
+func isJSONComplete(s string) bool {
+    count := 0
+    inString := false
+    escape := false
+    for _, r := range s {
+        if escape {
+            escape = false
+            continue
+        }
+        if r == '\\' {
+            escape = true
+            continue
+        }
+        if r == '"' {
+            inString = !inString
+            continue
+        }
+        if inString {
+            continue
+        }
+        if r == '{' {
+            count++
+        }
+        if r == '}' {
+            count--
+        }
+    }
+    return count == 0 && len(s) > 0
+}
+```
+
+#### 4.5.5 时序对比
+
+**无提前执行（当前 P0-4）**：
+```
+t=0s   模型开始流式输出
+t=3s   模型输出完毕，返回 3 个 tool_calls [read_file, read_file, write_file]
+t=3s   开始执行 read_file #1
+t=3.5s read_file #1 完成
+t=3.5s 开始执行 read_file #2
+t=4s   read_file #2 完成
+t=4s   开始执行 write_file
+t=5s   write_file 完成
+总耗时：5s
+```
+
+**有提前执行（P3-3 §4.5）**：
+```
+t=0s   模型开始流式输出
+t=1s   chunk 中解析到 read_file #1 的 tool_call（JSON 闭合）→ 立即开始执行
+t=1.5s read_file #1 提前执行完成（结果缓存）
+t=2s   chunk 中解析到 read_file #2 的 tool_call → 立即开始执行
+t=2.5s read_file #2 提前执行完成（结果缓存）
+t=3s   模型输出完毕，返回 3 个 tool_calls
+t=3s   read_file #1/#2 从缓存拿结果（已完成）
+t=3s   开始执行 write_file（不能提前）
+t=4s   write_file 完成
+总耗时：4s（节省 1s）
+```
+
+#### 4.5.6 安全约束
+
+| 约束 | 规则 | 理由 |
+|---|---|---|
+| 只对 read_only 工具提前执行 | `policy.ReadOnly == true` 才触发 | write 类工具有副作用，必须等模型确认 |
+| 提前执行结果可丢弃 | 如果模型最终不返回该 tool_call，结果直接丢弃 | 模型可能在流式过程中改变主意 |
+| 提前执行不计入 Trajectory | 只有被模型确认的工具调用才记录 | 避免轨迹污染 |
+| 提前执行遵守 Governor 审批 | read_only 工具通常无需审批，但仍走 CheckPermission | 审批流不因提前执行而绕过 |
+| 单轮提前执行数量限制 | 最多 3 个并发提前执行 | 防止资源耗尽 |
+
+#### 4.5.7 验收标准（流式提前执行）
+
+| # | 检查项 | 验证方法 |
+|---|---|---|
+| 1 | read_only 工具在流式中提前执行 | 模型输出 read_file 时，日志显示 "speculative execution started" 在 "model output done" 之前 |
+| 2 | write 工具不提前执行 | 模型输出 write_file 时，无 "speculative execution" 日志 |
+| 3 | 提前执行结果被复用 | 模型输出完毕后，read_file 的结果从缓存获取（日志 "executed speculatively"） |
+| 4 | 提前执行节省时间 | 3 个 read_file + 1 个 write_file，总耗时 < 无提前执行的 80% |
+| 5 | 模型不返回该 tool_call 时结果被丢弃 | 构造模型中途停止的场景，验证缓存被 Cleanup |
+| 6 | 提前执行遵守审批 | read_only 工具的 CheckPermission 仍被调用 |
+| 7 | 并发提前执行数 ≤ 3 | 构造 5 个 read_file，验证最多 3 个并发 |
 
 ---
 
@@ -634,6 +966,18 @@ func (cb *ContextBuilder) BuildWithMessages(mode, prompt, memory string, existin
 ---
 
 ## 变更记录
+
+### v0.2（2026-08-11）— GLM 补充 P3-3 流式提前执行
+
+**背景**：豆包-code 审查发现主文档 §6.6 明确描述了"流式输出中提前执行 read_only 工具"的策略，但 P3-3 v0.1 只做了批次并行（groupByDependency），流式提前执行逻辑完全缺失。本版补全。
+
+**变更**
+1. P3-3 新增 §4.5 流式提前执行：SpeculativeExecutor 结构体 + TryExecuteInStream/GetResult/Cleanup 方法
+2. tool_policy.go 新增 ReadOnly 标记（6 个 read_only 工具：read_file/list_files/search_workspace/scan_folder/screenshot/paper_search）
+3. streamModelCall 集成：chunk 解析到 JSON 闭合的 tool_call 时触发提前执行 + 模型输出完毕后从缓存拿结果
+4. 时序对比（无提前执行 5s vs 有提前执行 4s）
+5. 5 条安全约束 + 7 条验收标准
+6. §4.4 标题改为"验收标准（批次并行）"以区分 §4.5.7"验收标准（流式提前执行）"
 
 ### v0.1（2026-08-11）— GLM 初稿
 

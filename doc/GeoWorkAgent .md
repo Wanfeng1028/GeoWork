@@ -14,8 +14,9 @@
 | v1.1 | 2026-08-11 | GLM | 新增第 0.1 节"整体架构设计原则"（设计宪法：6 条哲学 + 15 个学科清单 + 关系图 + 8 条不可妥协约束）；新增第 0.2 节"现状诊断"如实标注代码与文档的 8 处重大偏差；修正第 3/4/5/7/9/10/15/21/22 节中"已有"与"目标"的界限；标注死代码与并发缺陷；补全状态机/工具注册表/Planner 三者不一致问题 |
 | v1.2 | 2026-08-11 | GLM | 学科清单补全 15→18（新增 Harness Engineering / Prompt Engineering / Streaming & Event Engineering）；关系图重绘（Harness 提升为最外层外壳）；第 22 节记录 4 项已拍板决策（D5 不合并+统一入口+审批分层 / D6 方案A / D7 修白名单+保留phase约束 / D8 启用 Executor） |
 | v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
+| v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；第 21 节优先级表新增 P2-7 行 |
 
-> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3 的修正以 > 引用块或 【现状/目标】 标注注入。
+> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4 的修正以 > 引用块或 【现状/目标】 标注注入。
 
 ---
 
@@ -1399,9 +1400,10 @@ workers/geo-python/
 | **P2（下版本）** | P2-4 | Automation（定时任务/事件触发） | 工作流串联与自动恢复 | [`GeoWorkAgent-P2-Detailed-Design.md` §5](./GeoWorkAgent-P2-Detailed-Design.md) |
 | **P2（下版本）** | P2-5 | Model Routing（多 provider 路由 + 降级 + 成本控制） | 规则引擎先做，AI 审批后做 | [`GeoWorkAgent-P2-Detailed-Design.md` §6](./GeoWorkAgent-P2-Detailed-Design.md) |
 | **P2（下版本）** | P2-6 | Eval 评估体系（质量评分 + 回归测试） | 让 Agent 行为可度量可比较 | [`GeoWorkAgent-P2-Detailed-Design.md` §7](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-7 | Browser/Computer Use（接入已有 browserbridge + CDP + 沙箱） | 已有代码但未注册为工具，又是死代码 | [`GeoWorkAgent-P2-Detailed-Design.md` §8](./GeoWorkAgent-P2-Detailed-Design.md) |
 | **P3（远期）** | P3-1 | Sub-agent（独立子 Orchestrator + 上下文继承） | 复杂子任务隔离执行 | [`GeoWorkAgent-P3-Detailed-Design.md` §2](./GeoWorkAgent-P3-Detailed-Design.md) |
 | **P3（远期）** | P3-2 | Harness 规则统一（规则引擎 + JSON 配置） | 安全约束集中管理 | [`GeoWorkAgent-P3-Detailed-Design.md` §3](./GeoWorkAgent-P3-Detailed-Design.md) |
-| **P3（远期）** | P3-3 | 推测执行（并行工具路径 + 择优采用） | 独立工具调用并行加速 | [`GeoWorkAgent-P3-Detailed-Design.md` §4](./GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-3 | 推测执行（批次并行 + 流式提前执行 read_only） | 独立工具调用并行加速 + 流式中提前执行减少等待 | [`GeoWorkAgent-P3-Detailed-Design.md` §4](./GeoWorkAgent-P3-Detailed-Design.md) |
 | **P3（远期）** | P3-4 | 5 层压缩完整版（L4 对话摘要 + L5 记忆固化） | 基础不牢不碰这些 | [`GeoWorkAgent-P3-Detailed-Design.md` §5](./GeoWorkAgent-P3-Detailed-Design.md) |
 
 ### 21.1 阶段依赖与验收边界（v1.3 新增）
@@ -1627,6 +1629,54 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
 - **P0-P3 子文档**：每个阶段的施工方案（接口签名 + 数据结构 + 改动文件 + 验收标准）
 
 主文档回答"**做什么、为什么**"，子文档回答"**怎么做、做到什么程度**"。代码实现时以子文档为准，主文档作为架构约束的参照。
+
+---
+
+### v1.4（2026-08-11）— GLM 豆包-code 审查反馈补全
+
+**背景**：豆包-code 对 v1.3 的 14 个核心模块覆盖情况做了完整审查，发现两个缺口：(1) Browser/Computer Use 模块完全没有详细设计；(2) P3-3 推测执行策略粗糙，主文档 §6.6 描述的"流式中提前执行 read_only"在 P3-3 中缺失。经核实两个缺口均真实存在，v1.4 补全。
+
+**变更**
+
+1. **P2 新增 P2-7 Browser/Computer Use**（`GeoWorkAgent-P2-Detailed-Design.md` v0.2）：
+   - 现状诊断：`browserbridge/` 已有 6 个 Go 文件 + `tool_policy.go` 已有 3 个工具策略定义，但 `builtin_tools.go` 未注册——又是死代码
+   - 3 个工具注册：`browser_control`(High/需审批) + `screenshot`(Medium/无需审批) + `network_request`(High/需审批)
+   - 可选第 4 个工具 `paper_search`(Low/无需审批，已有 OpenAlexSearch 函数)
+   - CDP 协议适配器（`cdp_adapter.go` 新建，建议用 chromedp）
+   - 沙箱约束：URL 白名单 + 下载路径限制 + 截图尺寸 + 会话数量 + 超时
+   - 状态机白名单对齐（StateInspecting/StateExecuting 新增 3 个工具）
+   - 数据流 + 10 条验收标准
+
+2. **P3-3 补充 §4.5 流式提前执行**（`GeoWorkAgent-P3-Detailed-Design.md` v0.2）：
+   - `SpeculativeExecutor` 结构体：`TryExecuteInStream`/`GetResult`/`Cleanup`
+   - `tool_policy.go` 新增 `ReadOnly` 标记（6 个 read_only 工具：read_file/list_files/search_workspace/scan_folder/screenshot/paper_search）
+   - `streamModelCall` 集成：chunk 解析到 JSON 闭合的 tool_call 时触发提前执行 + 模型输出完毕后从缓存拿结果
+   - `isJSONComplete` 辅助函数（花括号配对检测）
+   - 时序对比（无提前执行 5s vs 有提前执行 4s，节省 20%）
+   - 5 条安全约束（只对 read_only/结果可丢弃/不计入 Trajectory/遵守审批/并发≤3）
+   - 7 条验收标准
+
+3. **第 21 节优先级表更新**：
+   - 新增 P2-7 行（Browser/Computer Use）
+   - P3-3 描述更新：从"并行工具路径 + 择优采用"改为"批次并行 + 流式提前执行 read_only"
+
+**废弃**
+
+- 无（v1.3 的内容全部保留，v1.4 是纯增补）
+
+**未改**
+
+- 0.1/0.2 节、第 3-20 节正文、第 22/23 节：v1.4 不动
+- P0/P1 详细设计文档：v1.4 不动（P2-7 的状态机白名单对齐是 P0-2 的延伸，但 P0-2 文档不需要改，因为 P2-7 在自己的文档里说明了）
+
+**审查反馈处理记录**
+
+| 审查项 | 豆包-code 结论 | GLM 核实 | 处理 |
+|---|---|---|---|
+| Browser/Computer Use 无详细设计 | ❌ 缺失 | 确认：6 个 Go 文件 + 3 个策略定义但未注册 | ✅ P2-7 补全 |
+| P3-3 推测执行粗糙 | ⚠️ 缺流式提前执行 | 确认：主文档 §6.6 有描述但 P3-3 没实现 | ✅ §4.5 补全 |
+| P1-2 与 P2-6 关系 | ✅ 清晰 | 确认 | 无需处理 |
+| P3-2 与 P1-1 边界 | ✅ 清晰但需注意版本叠加 | 确认：代码实现时处理 ToolRegistry.Execute 签名叠加 | 代码实现时注意 |
 
 ---
 

@@ -3,13 +3,14 @@
 > **文档路径**：`doc/GeoWorkAgent-P2-Detailed-Design.md`
 > **父文档**：`doc/GeoWorkAgent .md`（主文档/宪法）
 > **前置条件**：P1 六项全部完成并验收通过
-> **文档定位**：P2 阶段——技能体系、MCP 真实运行、生命周期钩子、自动化、模型路由策略、评估体系
+> **文档定位**：P2 阶段——技能体系、MCP 真实运行、生命周期钩子、自动化、模型路由策略、评估体系、浏览器/GUI 操控
 
 ## 版本表
 
 | 版本 | 日期 | 作者 | 变更摘要 |
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P2 六项施工方案 |
+| v0.2 | 2026-08-11 | GLM | 新增 P2-7 Browser/Computer Use：接入已有 browserbridge 代码 + 注册 3 个工具到 ToolRegistry + CDP 协议集成 + 沙箱约束 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -25,6 +26,7 @@
 | P2-4 | #17 Automation | 定时任务/触发器/批处理 | P0-3 |
 | P2-5 | #11 Model Routing（策略） | 多模型路由/降级/成本控制 | P0-4 |
 | P2-6 | #12 Eval（评估体系） | 轨迹评估/质量评分/回归测试 | P1-2 |
+| P2-7 | Browser/Computer Use | 接入已有 browserbridge 代码 + 注册工具到 ToolRegistry + CDP 协议 + 沙箱约束 | P0-2/P1-1 |
 
 ---
 
@@ -928,7 +930,325 @@ GET /api/agent/eval/regression/results  获取回归测试结果
 
 ---
 
+## 8. P2-7：Browser / Computer Use（浏览器/GUI 操控）
+
+### 8.1 目标
+
+将已有的 `browserbridge` 模块接入 Agent 工具链：把 Controller 的会话管理、导航、截图、论文搜索能力注册为 ToolRegistry 工具，让 ReAct 循环中的模型可以自主调用浏览器能力。
+
+**现状问题**（v0.2 诊断）：
+- `core/internal/browserbridge/` 已有 6 个 Go 文件（controller/session/network/screenshot/paper_search/routes）
+- `tool_policy.go` 已定义 `browser_control`/`screenshot`/`network_request` 三个工具的策略（RiskLevel/Approval/限频）
+- 但 `builtin_tools.go` **未注册这三个工具**——策略定义了、代码写了，但 Agent 调不到
+- 这是与 executor/context_builder 同类的"死代码"问题
+
+### 8.2 涉及文件
+
+| 文件 | 改动类型 | 说明 |
+|---|---|---|
+| `core/internal/toolregistry/builtin_tools.go` | 修改 | 新增 3 个浏览器工具注册 |
+| `core/internal/browserbridge/controller.go` | 修改 | 暴露 Execute 方法供工具调用 |
+| `core/internal/browserbridge/cdp_adapter.go` | 新建 | CDP 协议适配器（真实浏览器操控） |
+| `core/internal/aiagent/state_machine.go` | 修改 | 白名单新增 browser_control/screenshot/network_request |
+| `core/internal/sandbox/` | 修改 | 浏览器沙箱约束（URL 白名单/下载路径限制） |
+
+### 8.3 工具清单
+
+| 工具名 | 风险等级 | 需审批 | 对应 Controller 方法 | 说明 |
+|---|---|---|---|---|
+| `browser_control` | High | ✅ | Navigate/GoBack/GoForward/Refresh/CreateSession/DeleteSession | 浏览器会话管理与导航 |
+| `screenshot` | Medium | ❌ | CaptureScreenshot/ExtractText | 截图 + OCR 文本提取 |
+| `network_request` | High | ✅ | （新增）HTTPRequest | 发起 HTTP 请求并记录网络日志 |
+
+### 8.4 工具注册（builtin_tools.go 改动）
+
+```go
+// browser_control 工具
+NewBuilder("browser_control").
+    Description("Control a browser session: navigate, go back/forward, refresh, create/delete session.").
+    InputSchema(map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "action": map[string]any{
+                "type": "string",
+                "enum": []string{"navigate", "back", "forward", "refresh", "create_session", "delete_session"},
+                "description": "Browser action to perform",
+            },
+            "sessionId": map[string]any{"type": "string", "description": "Browser session ID (required for navigate/back/forward/refresh/delete)"},
+            "url":       map[string]any{"type": "string", "description": "URL to navigate to (required for navigate action)"},
+        },
+        "required": []string{"action"},
+    }).
+    Permission("exec").
+    RiskLevel("high").
+    Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+        action, _ := args["action"].(string)
+        switch action {
+        case "create_session":
+            sess := browserCtrl.CreateSession()
+            return map[string]any{"sessionId": sess.ID, "url": sess.URL}, nil
+        case "navigate":
+            sessionID, _ := args["sessionId"].(string)
+            url, _ := args["url"].(string)
+            if err := browserCtrl.Navigate(sessionID, url); err != nil {
+                return nil, err
+            }
+            sess, _ := browserCtrl.GetSession(sessionID)
+            return map[string]any{"sessionId": sessionID, "url": url, "title": sess.Title}, nil
+        case "back":
+            sessionID, _ := args["sessionId"].(string)
+            browserCtrl.GoBack(sessionID)
+            return map[string]any{"sessionId": sessionID, "action": "back"}, nil
+        case "forward":
+            sessionID, _ := args["sessionId"].(string)
+            browserCtrl.GoForward(sessionID)
+            return map[string]any{"sessionId": sessionID, "action": "forward"}, nil
+        case "refresh":
+            sessionID, _ := args["sessionId"].(string)
+            browserCtrl.Refresh(sessionID)
+            return map[string]any{"sessionId": sessionID, "action": "refresh"}, nil
+        case "delete_session":
+            sessionID, _ := args["sessionId"].(string)
+            browserCtrl.DeleteSession(sessionID)
+            return map[string]any{"sessionId": sessionID, "deleted": true}, nil
+        default:
+            return nil, fmt.Errorf("unknown browser action: %s", action)
+        }
+    }).
+    Build(),
+
+// screenshot 工具
+NewBuilder("screenshot").
+    Description("Capture a screenshot of the browser page and optionally extract text via OCR.").
+    InputSchema(map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "sessionId": map[string]any{"type": "string", "description": "Browser session ID"},
+            "format":    map[string]any{"type": "string", "enum": []string{"png", "jpeg"}, "description": "Image format"},
+            "extractText": map[string]any{"type": "boolean", "description": "Whether to extract text from the page"},
+        },
+        "required": []string{"sessionId"},
+    }).
+    Permission("read").
+    RiskLevel("medium").
+    Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+        sessionID, _ := args["sessionId"].(string)
+        format, _ := args["format"].(string)
+        if format == "" {
+            format = "png"
+        }
+        sess, err := browserCtrl.GetSession(sessionID)
+        if err != nil {
+            return nil, err
+        }
+        // 截图（需要 CDP 适配器真实运行，当前为 mock）
+        data, w, h, err := sess.Browser.CaptureScreenshot(ctx, sess.Page, format, 80)
+        if err != nil {
+            return nil, err
+        }
+        result := map[string]any{
+            "sessionId": sessionID,
+            "width":     w,
+            "height":    h,
+            "imageBase64": base64.StdEncoding.EncodeToString(data),
+        }
+        if extract, _ := args["extractText"].(bool); extract {
+            text, _ := sess.Browser.ExtractText(sess.Page)
+            result["text"] = text
+        }
+        return result, nil
+    }).
+    Build(),
+
+// network_request 工具
+NewBuilder("network_request").
+    Description("Send an HTTP request and log it to the browser session's network history.").
+    InputSchema(map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "url":    map[string]any{"type": "string", "description": "Request URL"},
+            "method": map[string]any{"type": "string", "enum": []string{"GET", "POST", "PUT", "DELETE"}, "description": "HTTP method"},
+            "headers": map[string]any{"type": "object", "description": "Request headers"},
+            "body":    map[string]any{"type": "string", "description": "Request body"},
+        },
+        "required": []string{"url", "method"},
+    }).
+    Permission("exec").
+    RiskLevel("high").
+    Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+        url, _ := args["url"].(string)
+        method, _ := args["method"].(string)
+        // 沙箱检查：URL 必须通过白名单
+        if err := sandbox.CheckURLAllowed(url); err != nil {
+            return nil, fmt.Errorf("URL blocked by sandbox: %w", err)
+        }
+        // 发起请求
+        req, _ := http.NewRequestWithContext(ctx, method, url, nil)
+        resp, err := http.DefaultClient.Do(req)
+        if err != nil {
+            return nil, err
+        }
+        defer resp.Body.Close()
+        body, _ := io.ReadAll(resp.Body)
+        return map[string]any{
+            "status":   resp.StatusCode,
+            "headers":  resp.Header,
+            "body":     string(body),
+            "bodySize": len(body),
+        }, nil
+    }).
+    Build(),
+```
+
+### 8.5 状态机白名单对齐
+
+`state_machine.go` 的 `allowed` 白名单需新增（P0-2 对齐的延伸）：
+
+```go
+// 在 StateInspecting / StateExecuting 状态的 allowed 列表新增：
+"browser_control",   // High risk, 需审批
+"screenshot",        // Medium risk, 无需审批
+"network_request",   // High risk, 需审批
+```
+
+### 8.6 CDP 协议适配器（新建 cdp_adapter.go）
+
+当前 `BrowserInterface` 是接口，`Session.Browser` 字段类型为 `BrowserInterface`。需要一个真实的 CDP 适配器实现：
+
+```go
+// CDPAdapter 通过 Chrome DevTools Protocol 操控真实浏览器
+type CDPAdapter struct {
+    browser *chromedp.Context  // 或 rod.Browser，取决于依赖选择
+    log     *zap.Logger
+}
+
+// 实现 BrowserInterface
+func (a *CDPAdapter) CaptureScreenshot(ctx context.Context, page interface{}, format string, quality int) ([]byte, int, int, error) {
+    // chromedp.Screenshot
+    var buf []byte
+    if err := chromedp.Run(ctx, chromedp.CaptureScreenshot(&buf)); err != nil {
+        return nil, 0, 0, err
+    }
+    // 解析尺寸（从 PNG header）
+    w, h := parseImageSize(buf, format)
+    return buf, w, h, nil
+}
+
+func (a *CDPAdapter) ExtractText(page interface{}) (string, error) {
+    // chromedp.ActionFunc 获取页面文本
+    var text string
+    if err := chromedp.Run(ctx, chromedp.Text("body", &text)); err != nil {
+        return "", err
+    }
+    return text, nil
+}
+```
+
+**依赖选择**（待决策）：
+- `chromedp`：纯 Go，CDP 协议直接对接，无外部依赖，但 API 较底层
+- `rod`：纯 Go，封装更友好，社区活跃
+- 建议：`chromedp`（与 Go 生态对齐，无额外二进制依赖）
+
+### 8.7 沙箱约束
+
+浏览器工具的安全边界：
+
+| 约束 | 实现位置 | 规则 |
+|---|---|---|
+| URL 白名单 | `sandbox/check_url.go`（新建） | 默认允许 http/https，禁止 file://、localhost 内网地址（可配置） |
+| 下载路径限制 | `sandbox/download_path.go` | 浏览器下载文件只能写入沙箱工作目录的 `downloads/` 子目录 |
+| 截图尺寸限制 | 工具 Execute 内 | 单张截图 ≤ 2MB，超出则缩放 |
+| 会话数量限制 | Controller | 单 Run 最多 3 个并发浏览器会话 |
+| 超时 | Controller | 单次导航超时 30s，会话空闲超时 10min |
+
+### 8.8 论文搜索工具化（可选）
+
+`paper_search.go` 已有 `PaperSearch` 和 `OpenAlexSearch` 函数，可作为第 4 个工具注册：
+
+```go
+// paper_search 工具（可选，优先级低于上述 3 个）
+NewBuilder("paper_search").
+    Description("Search academic papers via OpenAlex or other sources.").
+    InputSchema(map[string]any{
+        "type": "object",
+        "properties": map[string]any{
+            "query": map[string]any{"type": "string", "description": "Search query"},
+            "source": map[string]any{"type": "string", "enum": []string{"openalex", "semantic_scholar"}, "description": "Search source"},
+            "limit":  map[string]any{"type": "integer", "description": "Max results (default 10)"},
+        },
+        "required": []string{"query"},
+    }).
+    Permission("read").
+    RiskLevel("low").
+    Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
+        query, _ := args["query"].(string)
+        source, _ := args["source"].(string)
+        if source == "" {
+            source = "openalex"
+        }
+        limit := 10
+        if l, ok := args["limit"].(int); ok && l > 0 {
+            limit = l
+        }
+        results, err := browserbridge.OpenAlexSearch(ctx, query, limit)
+        if err != nil {
+            return nil, err
+        }
+        return map[string]any{"results": results, "count": len(results)}, nil
+    }).
+    Build(),
+```
+
+### 8.9 数据流
+
+```
+模型返回 tool_call: browser_control(navigate, url)
+  → 状态机检查（StateInspecting 允许 browser_control）
+  → Governor 审批（High risk → 发送 approval_request 事件）
+    → 用户批准 → 继续
+    → 用户拒绝 → 返回拒绝消息给模型
+  → 沙箱 URL 检查（CheckURLAllowed）
+  → Controller.Navigate(sessionID, url)
+  → 返回结果 {sessionId, url, title}
+  → Memory.AppendToolResult()
+  → 下一轮 ReAct
+
+模型返回 tool_call: screenshot(sessionId, extractText=true)
+  → 状态机检查（StateInspecting 允许 screenshot）
+  → Governor 审批（Medium risk → 无需审批，直接执行）
+  → CDPAdapter.CaptureScreenshot()
+  → CDPAdapter.ExtractText()
+  → 返回结果 {imageBase64, width, height, text}
+  → 下一轮 ReAct
+```
+
+### 8.10 验收标准
+
+| # | 检查项 | 验证方法 |
+|---|---|---|
+| 1 | browser_control 工具已注册 | `registry.List()` 包含 `browser_control` |
+| 2 | screenshot 工具已注册 | `registry.List()` 包含 `screenshot` |
+| 3 | network_request 工具已注册 | `registry.List()` 包含 `network_request` |
+| 4 | 状态机白名单包含三个工具 | `ToolIsAllowed(StateInspecting, "browser_control")` 返回 true |
+| 5 | browser_control 触发审批 | 执行 navigate 时前端收到 `approval_request` 事件 |
+| 6 | screenshot 不触发审批 | 执行截图时无审批事件，直接返回结果 |
+| 7 | URL 沙箱约束生效 | navigate 到 `file:///etc/passwd` 被拒绝 |
+| 8 | 会话管理正确 | create_session → navigate → screenshot → delete_session 全链路通过 |
+| 9 | CDP 真实截图 | 截图返回非空 base64 数据，可解码为图片 |
+| 10 | OCR 文本提取 | extractText=true 时返回非空 text 字段 |
+
+---
+
 ## 变更记录
+
+### v0.2（2026-08-11）— GLM 补充 Browser/Computer Use
+
+**背景**：豆包-code 审查发现 14 个核心模块中唯独 Browser/Computer Use 没有详细设计。经核实，`browserbridge/` 已有 6 个 Go 文件、`tool_policy.go` 已有 3 个工具策略定义，但 `builtin_tools.go` 未注册——又是死代码。补充 P2-7 将其接入工具链。
+
+**变更**
+1. 新增第 8 节 P2-7 Browser/Computer Use：3 个工具注册（browser_control/screenshot/network_request）+ 状态机白名单对齐 + CDP 适配器 + 沙箱约束 + 数据流 + 10 条验收标准
+2. 可选第 4 个工具 paper_search（已有 OpenAlexSearch 函数）
+3. 版本表新增 v0.2，任务总览新增 P2-7 行
 
 ### v0.1（2026-08-11）— GLM 初稿
 
