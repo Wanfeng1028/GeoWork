@@ -30,10 +30,6 @@ export function useAntdTheme(
   // editorial-dark 走暗色算法，优先判断
   if (appearance === 'editorial-dark') return editorialDarkProps
 
-  if (resolvedAppearance === 'dark') {
-    return { theme: darkTheme }
-  }
-
   switch (appearance) {
     case 'illustration':
       return illustrationProps
@@ -41,7 +37,11 @@ export function useAntdTheme(
       return glassProps
     case 'editorial':
       return editorialProps
+    case 'system':
+      // 跟随系统 → 映射到 editorial 旗舰（暗→editorial-dark，亮→editorial）
+      return resolvedAppearance === 'dark' ? editorialDarkProps : editorialProps
     default:
-      return bootstrapProps
+      // light / dark 已下架但代码保留，仍走原实现
+      return resolvedAppearance === 'dark' ? { theme: darkTheme } : bootstrapProps
   }
 }

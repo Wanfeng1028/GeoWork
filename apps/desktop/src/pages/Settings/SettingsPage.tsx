@@ -50,11 +50,9 @@ const { Text } = Typography
 /* ── 常量 ── */
 
 const APPEARANCE_OPTIONS = [
-  { value: 'light', label: '晴空' },
-  { value: 'dark', label: '暗色' },
   { value: 'system', label: '跟随系统' },
-  { value: 'illustration', label: '插画风格' },
-  { value: 'glass', label: '玻璃风格' },
+  { value: 'editorial', label: '亮色' },
+  { value: 'editorial-dark', label: '暗色' },
 ]
 
 const AVATAR_COLORS = ['#2F80ED', '#52C41A', '#FA8C16', '#F5222D', '#722ED1', '#13C2C2']

@@ -83,11 +83,9 @@ export function AppMenu({ onToggleSidebar, onOpenSearch, onOpenModal }: AppMenuP
 
   /* ── 视图 ── */
   const themeChildren: MenuItem[] = [
-    { key: 'light', label: themeLabel('晴空', appearance === 'light'), onClick: () => setAppearance('light' as Appearance) },
-    { key: 'dark', label: themeLabel('暗色', appearance === 'dark'), onClick: () => setAppearance('dark' as Appearance) },
     { key: 'system', label: themeLabel('跟随系统', appearance === 'system'), onClick: () => setAppearance('system' as Appearance) },
-    { key: 'illustration', label: themeLabel('插画风格', appearance === 'illustration'), onClick: () => setAppearance('illustration' as Appearance) },
-    { key: 'glass', label: themeLabel('玻璃风格', appearance === 'glass'), onClick: () => setAppearance('glass' as Appearance) },
+    { key: 'editorial', label: themeLabel('亮色', appearance === 'editorial'), onClick: () => setAppearance('editorial' as Appearance) },
+    { key: 'editorial-dark', label: themeLabel('暗色', appearance === 'editorial-dark'), onClick: () => setAppearance('editorial-dark' as Appearance) },
   ]
 
   const viewMenu: MenuItem[] = [

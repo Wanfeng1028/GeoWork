@@ -35,9 +35,6 @@ import {
   ToolOutlined,
   ApiOutlined,
   LinkOutlined,
-  FormatPainterOutlined,
-  BgColorsOutlined,
-  SkinOutlined,
   FolderOutlined,
   EllipsisOutlined,
   PushpinOutlined,
@@ -471,49 +468,6 @@ export function AppShell() {
   }
 
   /* 主题 Dropdown */
-  const themeStyleChildren = [
-    {
-      key: 'light',
-      icon: <SunOutlined />,
-      label: (
-        <Space>
-          晴空
-          {appearance === 'light' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-    {
-      key: 'dark',
-      icon: <MoonOutlined />,
-      label: (
-        <Space>
-          暗色
-          {appearance === 'dark' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-    {
-      key: 'illustration',
-      icon: <FormatPainterOutlined />,
-      label: (
-        <Space>
-          插画风格
-          {appearance === 'illustration' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-    {
-      key: 'glass',
-      icon: <BgColorsOutlined />,
-      label: (
-        <Space>
-          玻璃风格
-          {appearance === 'glass' && <CheckOutlined />}
-        </Space>
-      ),
-    },
-  ]
-
   const themeMenuItems = [
     {
       key: 'editorial',
@@ -544,12 +498,6 @@ export function AppShell() {
           {appearance === 'system' && <CheckOutlined />}
         </Space>
       ),
-    },
-    {
-      key: 'theme-style',
-      icon: <SkinOutlined />,
-      label: '主题风格',
-      children: themeStyleChildren,
     },
   ]
 
