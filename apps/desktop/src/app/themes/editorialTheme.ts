@@ -1,102 +1,185 @@
 import type { ConfigProviderProps } from 'antd'
-import { createStyles } from 'antd-style'
 
-const useEditorialStyles = createStyles(({ css }) => ({
-  button: css`
-    border-radius: 0 !important;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  `,
-  tag: css`
-    border-radius: 0 !important;
-  `,
-  card: css`
-    background: transparent;
-    border: 1px solid transparent;
-    box-shadow: none;
-    transition: border-color 0.25s;
-    &:hover {
-      border-color: #9b8976;
-    }
-  `,
-  input: css`
-    border-radius: 2px;
-  `,
-  modal: css`
-    .ant-modal-content {
-      border-radius: 0;
-    }
-  `,
-}))
-
+// 对应 doc/前端设计系统.md 第三节 editorial-light
+// 关键：亮色主色用可访问深青 #0e7490，不用品牌亮蓝直接怼白底
 export function useEditorialTheme(): ConfigProviderProps {
-  const { styles } = useEditorialStyles()
-
   return {
     theme: {
       token: {
-        colorPrimary: '#9B8976',
-        colorInfo: '#9B8976',
-        colorBgLayout: '#f5f5f4',
+        // ── 品牌/状态色（3.4，亮色可访问变体）──
+        colorPrimary: '#0e7490',
+        colorPrimaryHover: '#0c6b82',
+        colorPrimaryActive: '#0a5c70',
+        colorPrimaryBg: 'rgba(14, 116, 144, 0.06)',
+        colorPrimaryBgHover: 'rgba(14, 116, 144, 0.10)',
+        colorPrimaryBorder: 'rgba(14, 116, 144, 0.20)',
+        colorPrimaryBorderHover: 'rgba(14, 116, 144, 0.35)',
+        colorPrimaryText: '#0e7490',
+        colorPrimaryTextHover: '#0c6b82',
+        colorPrimaryTextActive: '#0a5c70',
+
+        colorSuccess: '#0f766e',
+        colorSuccessBg: 'rgba(15, 118, 110, 0.06)',
+        colorSuccessBorder: 'rgba(15, 118, 110, 0.20)',
+        colorSuccessText: '#0f766e',
+
+        colorWarning: '#b45309',
+        colorWarningBg: 'rgba(180, 83, 9, 0.06)',
+        colorWarningBorder: 'rgba(180, 83, 9, 0.20)',
+        colorWarningText: '#b45309',
+
+        colorError: '#dc2626',
+        colorErrorBg: 'rgba(220, 38, 38, 0.06)',
+        colorErrorBorder: 'rgba(220, 38, 38, 0.20)',
+        colorErrorText: '#dc2626',
+
+        colorInfo: '#0e7490',
+        colorInfoBg: 'rgba(14, 116, 144, 0.06)',
+        colorInfoText: '#0e7490',
+        colorLink: '#0e7490',
+        colorLinkHover: '#0c6b82',
+        colorLinkActive: '#0a5c70',
+
+        // ── 背景 / 容器 / 文字（3.2 / 3.5）──
+        colorBgBase: '#f7f8fa',
+        colorBgLayout: '#f7f8fa',
         colorBgContainer: '#ffffff',
-        colorBgElevated: '#ffffff',
-        colorBorder: '#e7e5e4',
-        colorBorderSecondary: '#f0efed',
-        colorText: '#1c1917',
-        colorTextSecondary: '#44403c',
-        colorTextTertiary: '#78716c',
-        colorTextQuaternary: '#a8a29e',
-        colorSuccess: '#16a34a',
-        colorLink: '#2563eb',
+        colorBgElevated: '#f1f4f8',
+        colorBgSpotlight: '#e8edf4',
+        colorFillSecondary: 'rgba(15,23,42,0.03)',
+        colorFillTertiary: 'rgba(15,23,42,0.02)',
 
-        borderRadius: 0,
-        borderRadiusLG: 0,
-        borderRadiusSM: 0,
-        borderRadiusXS: 0,
-        borderRadiusOuter: 0,
+        colorText: '#0f172a',
+        colorTextSecondary: '#475569',
+        colorTextTertiary: '#94a3b8',
+        colorTextQuaternary: '#cbd5e1',
+        colorTextDisabled: '#cbd5e1',
 
-        fontFamily: "'Inter', -apple-system, sans-serif",
-        fontSize: 13,
+        // ── 边框（3.3）──
+        colorBorder: 'rgba(15,23,42,0.08)',
+        colorBorderSecondary: 'rgba(15,23,42,0.05)',
 
-        lineWidth: 1,
+        // ── 圆角 / 间距 / 高度（4）──
+        borderRadius: 8,
+        borderRadiusLG: 12,
+        borderRadiusSM: 4,
+        borderRadiusXS: 4,
+        borderRadiusOuter: 8,
         controlHeight: 34,
+        controlHeightLG: 40,
+        controlHeightSM: 28,
+
+        // ── 字体（5）──
+        fontFamily: "'Inter', 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+        fontFamilyCode: "'JetBrains Mono', 'IBM Plex Mono', Consolas, monospace",
+        fontSize: 13,
+        fontSizeLG: 14,
+        fontSizeSM: 12,
+
+        // ── 线宽 / 阴影（3.3）──
+        lineWidth: 1,
+        boxShadow: '0 4px 16px rgba(15,23,42,0.06)',
       },
+
       components: {
+        // ── 6.1 Button ──
         Button: {
-          borderRadius: 0,
-          borderRadiusLG: 0,
-          borderRadiusSM: 0,
-          fontWeight: 500,
+          borderRadius: 8,
+          controlHeight: 34,
+          controlHeightLG: 40,
+          controlHeightSM: 28,
+          paddingContentHorizontal: 14,
+          primaryColor: '#ffffff',
+          colorPrimary: '#0e7490',
+          colorPrimaryHover: '#0c6b82',
+          colorPrimaryActive: '#0a5c70',
+          defaultBg: 'rgba(15,23,42,0.04)',
+          defaultHoverBg: 'rgba(15,23,42,0.07)',
+          defaultActiveBg: 'rgba(15,23,42,0.06)',
+          defaultBorderColor: 'transparent',
+          defaultColor: '#0f172a',
+          textTextColor: '#475569',
+          textHoverBg: 'rgba(15,23,42,0.04)',
         },
-        Tag: {
-          borderRadiusSM: 0,
-        },
-        Card: {
-          borderRadiusLG: 0,
-        },
-        Input: {
-          borderRadius: 2,
-          borderRadiusLG: 2,
-        },
+
+        // ── 6.2 Menu ──
         Menu: {
-          itemBorderRadius: 6,
-          itemSelectedBg: '#e7e5e4',
-          itemSelectedColor: '#1c1917',
-          itemHoverBg: '#f0efed',
+          itemHeight: 36,
+          itemBorderRadius: 8,
+          itemPaddingInline: 12,
+          itemColor: '#475569',
+          itemHoverBg: 'rgba(15,23,42,0.04)',
+          itemHoverColor: '#0f172a',
+          itemSelectedBg: 'rgba(14,116,144,0.06)',
+          itemSelectedColor: '#0f172a',
+          subMenuItemBg: 'transparent',
+          iconSize: 16,
         },
+
+        // ── 6.3 Card ──
+        Card: {
+          borderRadiusLG: 12,
+          colorBgContainer: '#ffffff',
+          colorBorderSecondary: 'rgba(15,23,42,0.08)',
+          boxShadowTertiary: 'none',
+          paddingLG: 16,
+        },
+
+        // ── 6.4 Input ──
+        Input: {
+          borderRadius: 8,
+          controlHeight: 34,
+          colorBgContainer: 'rgba(15,23,42,0.03)',
+          colorBorder: 'rgba(15,23,42,0.10)',
+          hoverBorderColor: 'rgba(14,116,144,0.25)',
+          activeBorderColor: '#0e7490',
+          activeShadow: '0 0 0 2px rgba(14,116,144,0.12)',
+          colorTextPlaceholder: '#94a3b8',
+        },
+
+        // ── 6.5 Table ──
         Table: {
-          headerBg: '#fafaf9',
-          headerColor: '#78716c',
-          borderColor: '#f5f5f4',
+          headerBg: 'transparent',
+          headerColor: '#475569',
+          headerSplitColor: 'rgba(15,23,42,0.08)',
+          rowHoverBg: 'rgba(15,23,42,0.02)',
+          borderColor: 'rgba(15,23,42,0.05)',
+          cellPaddingBlock: 12,
+          cellPaddingInline: 16,
         },
-        Dropdown: {
-          borderRadiusLG: 10,
+
+        // ── 6.6 Modal / Tooltip / Popover ──
+        Modal: {
+          borderRadiusLG: 12,
+          colorBgElevated: '#ffffff',
+        },
+        Tooltip: {
+          borderRadius: 4,
+          colorBgSpotlight: '#1e293b',
+          fontSize: 12,
+          paddingXS: 8,
+        },
+
+        // ── 6.7 Tag ──
+        Tag: {
+          borderRadiusSM: 4,
+          fontSizeSM: 12,
+          defaultBg: 'rgba(15,23,42,0.05)',
+          defaultColor: '#475569',
+        },
+
+        // ── 7.1 Segmented ──
+        Segmented: {
+          itemColor: '#475569',
+          itemHoverBg: 'rgba(15,23,42,0.04)',
+          itemSelectedBg: '#ffffff',
+          itemSelectedColor: '#0f172a',
+          trackBg: '#e8edf4',
+          trackPadding: 4,
+          borderRadius: 8,
+          borderRadiusSM: 6,
         },
       },
     },
-    button: { classNames: { root: styles.button } },
-    tag: { classNames: { root: styles.tag } },
-    card: { classNames: { root: styles.card } },
-    modal: { classNames: { container: styles.modal } },
   }
 }

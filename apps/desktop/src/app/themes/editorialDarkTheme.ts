@@ -1,95 +1,187 @@
 import { theme as antTheme } from 'antd'
 import type { ConfigProviderProps } from 'antd'
-import { createStyles } from 'antd-style'
 
-const useEditorialDarkStyles = createStyles(({ css }) => ({
-  button: css`
-    border-radius: 0 !important;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  `,
-  tag: css`
-    border-radius: 0 !important;
-  `,
-  card: css`
-    background: transparent;
-    border: 1px solid transparent;
-    box-shadow: none;
-    transition: border-color 0.25s;
-    &:hover {
-      border-color: #b8a898;
-    }
-  `,
-  input: css`
-    border-radius: 2px;
-  `,
-  modal: css`
-    .ant-modal-content {
-      border-radius: 0;
-    }
-  `,
-}))
-
+// 对应 doc/前端设计系统.md 第三节 editorial-dark
+// 关键：显式覆写所有派生 token，不依赖 antd 6 自动派生（避免高饱和青发灰）
 export function useEditorialDarkTheme(): ConfigProviderProps {
-  const { styles } = useEditorialDarkStyles()
-
   return {
     theme: {
       algorithm: antTheme.darkAlgorithm,
       token: {
-        colorPrimary: '#b8a898',
-        colorInfo: '#b8a898',
-        colorBgLayout: '#0c0a09',
-        colorBgContainer: '#1c1917',
-        colorBgElevated: '#292524',
-        colorBorder: '#292524',
-        colorBorderSecondary: '#44403c',
-        colorText: '#fafaf9',
-        colorTextSecondary: '#d6d3d1',
-        colorTextTertiary: '#a8a29e',
-        colorTextQuaternary: '#78716c',
-        colorSuccess: '#4ade80',
-        colorLink: '#93c5fd',
+        // ── 品牌/状态色（3.4）──
+        colorPrimary: '#3AD9FF',
+        colorPrimaryHover: '#5ce1ff',
+        colorPrimaryActive: '#2bc4ea',
+        colorPrimaryBg: 'rgba(58, 217, 255, 0.10)',
+        colorPrimaryBgHover: 'rgba(58, 217, 255, 0.16)',
+        colorPrimaryBorder: 'rgba(58, 217, 255, 0.25)',
+        colorPrimaryBorderHover: 'rgba(58, 217, 255, 0.40)',
+        colorPrimaryText: '#3AD9FF',
+        colorPrimaryTextHover: '#5ce1ff',
+        colorPrimaryTextActive: '#2bc4ea',
 
-        borderRadius: 0,
-        borderRadiusLG: 0,
-        borderRadiusSM: 0,
-        borderRadiusXS: 0,
-        borderRadiusOuter: 0,
+        colorSuccess: '#8BFFE2',
+        colorSuccessBg: 'rgba(139, 255, 226, 0.08)',
+        colorSuccessBorder: 'rgba(139, 255, 226, 0.25)',
+        colorSuccessText: '#8BFFE2',
 
-        fontFamily: "'Inter', -apple-system, sans-serif",
-        fontSize: 13,
+        colorWarning: '#F4D77E',
+        colorWarningBg: 'rgba(244, 215, 126, 0.08)',
+        colorWarningBorder: 'rgba(244, 215, 126, 0.25)',
+        colorWarningText: '#F4D77E',
 
-        lineWidth: 1,
+        colorError: '#ff6b6b',
+        colorErrorBg: 'rgba(255, 107, 107, 0.08)',
+        colorErrorBorder: 'rgba(255, 107, 107, 0.25)',
+        colorErrorText: '#ff6b6b',
+
+        colorInfo: '#3AD9FF',
+        colorInfoBg: 'rgba(58, 217, 255, 0.08)',
+        colorInfoText: '#3AD9FF',
+        colorLink: '#3AD9FF',
+        colorLinkHover: '#5ce1ff',
+        colorLinkActive: '#2bc4ea',
+
+        // ── 背景 / 容器 / 文字（3.2 / 3.5）──
+        colorBgBase: '#0a0f1c',
+        colorBgLayout: '#0a0f1c',
+        colorBgContainer: '#121829',
+        colorBgElevated: '#1b2338',
+        colorBgSpotlight: '#232d45',
+        colorFillSecondary: 'rgba(255,255,255,0.04)',
+        colorFillTertiary: 'rgba(255,255,255,0.03)',
+
+        colorText: 'rgba(255,255,255,0.90)',
+        colorTextSecondary: 'rgba(255,255,255,0.60)',
+        colorTextTertiary: 'rgba(255,255,255,0.35)',
+        colorTextQuaternary: 'rgba(255,255,255,0.20)',
+        colorTextDisabled: 'rgba(255,255,255,0.20)',
+
+        // ── 边框（3.3）──
+        colorBorder: 'rgba(255,255,255,0.06)',
+        colorBorderSecondary: 'rgba(255,255,255,0.04)',
+
+        // ── 圆角 / 间距 / 高度（4）──
+        borderRadius: 8,
+        borderRadiusLG: 12,
+        borderRadiusSM: 4,
+        borderRadiusXS: 4,
+        borderRadiusOuter: 8,
         controlHeight: 34,
+        controlHeightLG: 40,
+        controlHeightSM: 28,
+
+        // ── 字体（5）──
+        fontFamily: "'Inter', 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+        fontFamilyCode: "'JetBrains Mono', 'IBM Plex Mono', Consolas, monospace",
+        fontSize: 13,
+        fontSizeLG: 14,
+        fontSizeSM: 12,
+
+        // ── 线宽 / 阴影（3.3）──
+        lineWidth: 1,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
       },
+
       components: {
+        // ── 6.1 Button ──
         Button: {
-          borderRadius: 0,
-          borderRadiusLG: 0,
-          borderRadiusSM: 0,
-          fontWeight: 500,
+          borderRadius: 8,
+          controlHeight: 34,
+          controlHeightLG: 40,
+          controlHeightSM: 28,
+          paddingContentHorizontal: 14,
+          primaryColor: '#0a0f1c', // 主按钮深字
+          colorPrimary: '#3AD9FF',
+          colorPrimaryHover: '#5ce1ff',
+          colorPrimaryActive: '#2bc4ea',
+          defaultBg: 'rgba(255,255,255,0.06)',
+          defaultHoverBg: 'rgba(255,255,255,0.10)',
+          defaultActiveBg: 'rgba(255,255,255,0.08)',
+          defaultBorderColor: 'transparent',
+          defaultColor: 'rgba(255,255,255,0.90)',
+          textTextColor: 'rgba(255,255,255,0.60)',
+          textHoverBg: 'rgba(255,255,255,0.05)',
         },
-        Tag: { borderRadiusSM: 0 },
-        Card: { borderRadiusLG: 0 },
-        Input: { borderRadius: 2, borderRadiusLG: 2 },
+
+        // ── 6.2 Menu ──
         Menu: {
-          itemBorderRadius: 6,
-          itemSelectedBg: '#292524',
-          itemSelectedColor: '#fafaf9',
-          itemHoverBg: '#292524',
+          itemHeight: 36,
+          itemBorderRadius: 8,
+          itemPaddingInline: 12,
+          itemColor: 'rgba(255,255,255,0.60)',
+          itemHoverBg: 'rgba(255,255,255,0.05)',
+          itemHoverColor: 'rgba(255,255,255,0.90)',
+          itemSelectedBg: 'rgba(58, 217, 255, 0.10)',
+          itemSelectedColor: 'rgba(255,255,255,0.90)',
+          subMenuItemBg: 'transparent',
+          iconSize: 16,
         },
+
+        // ── 6.3 Card ──
+        Card: {
+          borderRadiusLG: 12,
+          colorBgContainer: '#121829',
+          colorBorderSecondary: 'rgba(255,255,255,0.06)',
+          boxShadowTertiary: 'none',
+          paddingLG: 16,
+        },
+
+        // ── 6.4 Input ──
+        Input: {
+          borderRadius: 8,
+          controlHeight: 34,
+          colorBgContainer: 'rgba(255,255,255,0.04)',
+          colorBorder: 'rgba(255,255,255,0.08)',
+          hoverBorderColor: 'rgba(58, 217, 255, 0.25)',
+          activeBorderColor: '#3AD9FF',
+          activeShadow: '0 0 0 2px rgba(58, 217, 255, 0.15)',
+          colorTextPlaceholder: 'rgba(255,255,255,0.35)',
+        },
+
+        // ── 6.5 Table ──
         Table: {
-          headerBg: '#292524',
-          headerColor: '#a8a29e',
-          borderColor: '#292524',
+          headerBg: 'transparent',
+          headerColor: 'rgba(255,255,255,0.60)',
+          headerSplitColor: 'rgba(255,255,255,0.06)',
+          rowHoverBg: 'rgba(255,255,255,0.03)',
+          borderColor: 'rgba(255,255,255,0.04)',
+          cellPaddingBlock: 12,
+          cellPaddingInline: 16,
         },
-        Dropdown: { borderRadiusLG: 10 },
+
+        // ── 6.6 Modal / Tooltip / Popover ──
+        Modal: {
+          borderRadiusLG: 12,
+          colorBgElevated: '#1b2338',
+        },
+        Tooltip: {
+          borderRadius: 4,
+          colorBgSpotlight: '#232d45',
+          fontSize: 12,
+          paddingXS: 8,
+        },
+
+        // ── 6.7 Tag ──
+        Tag: {
+          borderRadiusSM: 4,
+          fontSizeSM: 12,
+          defaultBg: 'rgba(255,255,255,0.06)',
+          defaultColor: 'rgba(255,255,255,0.60)',
+        },
+
+        // ── 7.1 Segmented ──
+        Segmented: {
+          itemColor: 'rgba(255,255,255,0.60)',
+          itemHoverBg: 'rgba(255,255,255,0.05)',
+          itemSelectedBg: '#121829',
+          itemSelectedColor: 'rgba(255,255,255,0.90)',
+          trackBg: '#232d45',
+          trackPadding: 4,
+          borderRadius: 8,
+          borderRadiusSM: 6,
+        },
       },
     },
-    button: { classNames: { root: styles.button } },
-    tag: { classNames: { root: styles.tag } },
-    card: { classNames: { root: styles.card } },
-    modal: { classNames: { container: styles.modal } },
   }
 }
