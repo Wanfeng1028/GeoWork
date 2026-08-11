@@ -11,13 +11,15 @@
 | 版本 | 日期 | 作者 | 变更摘要 |
 |---|---|---|---|
 | v1.0 | 2026-08-11 | qwen | 初稿：三层架构、Agent 工程概念体系、两条链路现状、Agentic Loop 设计、Context/Memory/Skills/MCP/Guardrail 各学科规划、版本路线图 |
-| v1.1 | 2026-08-11 | GLM | 新增第 0.1 节"整体架构设计原则"（设计宪法：6 条哲学 + 18 个学科清单 + 关系图 + 8 条不可妥协约束）；新增第 0.2 节"现状诊断"如实标注代码与文档的 8 处重大偏差；修正第 3/4/5/7/9/10/15/21/22 节中"已有"与"目标"的界限；标注死代码与并发缺陷；补全状态机/工具注册表/Planner 三者不一致问题；第 22 节记录 4 项已拍板决策（D5-D8） |
+| v1.1 | 2026-08-11 | GLM | 新增第 0.1 节"整体架构设计原则"（设计宪法：6 条哲学 + 15 个学科清单 + 关系图 + 8 条不可妥协约束）；新增第 0.2 节"现状诊断"如实标注代码与文档的 8 处重大偏差；修正第 3/4/5/7/9/10/15/21/22 节中"已有"与"目标"的界限；标注死代码与并发缺陷；补全状态机/工具注册表/Planner 三者不一致问题 |
+| v1.2 | 2026-08-11 | GLM | 学科清单补全 15→18（新增 Harness Engineering / Prompt Engineering / Streaming & Event Engineering）；关系图重绘（Harness 提升为最外层外壳）；第 22 节记录 4 项已拍板决策（D5 不合并+统一入口+审批分层 / D6 方案A / D7 修白名单+保留phase约束 / D8 启用 Executor） |
+| v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
 
-> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1 的修正以 > 引用块或 【现状/目标】 标注注入。
+> **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3 的修正以 > 引用块或 【现状/目标】 标注注入。
 
 ---
 
-## 0.1 整体架构设计原则（v1.1 新增）
+## 0.1 整体架构设计原则（v1.1 新增，v1.2 补全学科清单）
 
 > 本节是 GeoWork Agent 系统的"设计宪法"——在展开任何具体模块设计之前，先明确：我们到底要集成哪些工程学科、它们之间是什么关系、有什么不可妥协的约束。后续所有章节（1-23）都必须与本节对齐，不得违背。
 >
@@ -38,7 +40,7 @@
 
 > 下表是 GeoWork Agent 系统**必须集成的全部工程学科**。每个学科对应一个"器官"，缺一不可。"现状"列标注当前代码状态：✅ 已生效 / ⚠️ 已写未接线 / ❌ 未实现。详细的现状诊断见 0.2 节。
 >
-> **v1.1 修正**：初版遗漏了 Harness Engineering / Prompt Engineering / Streaming & Event Engineering 三个学科，现补全为 18 项。
+> **v1.2 修正**：v1.1 初版遗漏了 Harness Engineering / Prompt Engineering / Streaming & Event Engineering 三个学科，现补全为 18 项。
 
 | # | 学科 | 解决什么问题 | GeoWork 对应模块 / 文件 | 文档章节 | 现状 |
 |---|---|---|---|---|---|
@@ -1377,21 +1379,53 @@ workers/geo-python/
 
 > **【GLM 注 — 优先级需重构】**
 >
-> v1.0 的 P0 是"Context Compaction 5 层"和"Hooks"，但这些是在**现有死代码都没接线**的前提下规划的。连基础的 ReAct 循环都没跑通，谈 5 层压缩为时过早。v1.1 调整优先级如下：
+> v1.0 的 P0 是"Context Compaction 5 层"和"Hooks"，但这些是在**现有死代码都没接线**的前提下规划的。连基础的 ReAct 循环都没跑通，谈 5 层压缩为时过早。v1.1 调整优先级如下，v1.3 为每项任务补全了独立详细设计文档。
 
-| 优先级 | 模块 | 原因 |
-| --- | --- | --- |
-| **P0（立即）** | 接线死代码：ContextBuilder/Memory/Executor 接入 executePlan | 不接线，所有上下文工程都是纸上谈兵 |
-| **P0（立即）** | 状态机/工具表/Planner 三者对齐 | 当前 `run_python` 被状态机误杀，链路是断的 |
-| **P0（立即）** | Orchestrator per-run 化 | currentState/currentRunID/memory 改为 per-run，否则并发必崩 |
-| **P0（立即）** | 实现 ReAct 循环（模型驱动工具选择） | 这是"Agent"的定义性特征，没有它就不是 Agent |
-| **P1（本版本）** | SSE 按 run ID 过滤 | 当前全局单通道，前端无法只看自己的 Run |
-| **P1（本版本）** | Checkpoint 在循环中定期保存 | 不是只在结束时存 |
-| **P1（本版本）** | Context Compaction Level 1-2 | 先做工具结果裁剪 + 早期对话摘要，5 层太远 |
-| **P2（下版本）** | Hooks 生命周期钩子 | 需要 Agentic Loop 先跑通才有挂钩点 |
-| **P2（下版本）** | Trajectory 执行轨迹 | 可追溯性是核心卖点 |
-| **P2（下版本）** | Guardian AI 审批 | 规则引擎先做，AI 审批后做 |
-| **P3（远期）** | 推测执行 / Sub-agent / Skills / 5 层压缩 | 基础不牢不碰这些 |
+| 优先级 | 任务编号 | 模块 | 原因 | 详细设计文档 |
+| --- | --- | --- | --- | --- |
+| **P0（立即）** | P0-2 | 状态机/工具表/Planner 三者对齐 | 当前 `run_python` 被状态机误杀，链路是断的 | [`GeoWorkAgent-P0-Detailed-Design.md` §2](./GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-1 | 接线死代码：ContextBuilder/Memory/Executor 接入 executePlan | 不接线，所有上下文工程都是纸上谈兵 | [`GeoWorkAgent-P0-Detailed-Design.md` §3](./GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-3 | Orchestrator per-run 化 | currentState/currentRunID/memory 改为 per-run，否则并发必崩 | [`GeoWorkAgent-P0-Detailed-Design.md` §4](./GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-4 | 实现 ReAct 循环（模型驱动工具选择） | 这是"Agent"的定义性特征，没有它就不是 Agent | [`GeoWorkAgent-P0-Detailed-Design.md` §5](./GeoWorkAgent-P0-Detailed-Design.md) |
+| **P1（本版本）** | P1-1 | Sandbox & Guardrails（Governor + 审批流） | critical 操作必须 Human-in-the-Loop | [`GeoWorkAgent-P1-Detailed-Design.md` §2](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-2 | Observability（Trajectory + Token 审计） | 可追溯性是核心卖点 | [`GeoWorkAgent-P1-Detailed-Design.md` §3](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-3 | SSE per-run 过滤 + 12 种事件 Schema | 当前全局单通道，前端无法只看自己的 Run | [`GeoWorkAgent-P1-Detailed-Design.md` §4](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-4 | Human-in-the-Loop（暂停/恢复/审批集成） | 状态存在但执行路径不触发 | [`GeoWorkAgent-P1-Detailed-Design.md` §5](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-5 | Python Worker 治理（进程池/超时/资源限制） | 防止失控脚本影响系统 | [`GeoWorkAgent-P1-Detailed-Design.md` §6](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-6 | Recovery & Checkpoint（每 5 步保存 + 断点续传） | 不是只在结束时存 | [`GeoWorkAgent-P1-Detailed-Design.md` §7](./GeoWorkAgent-P1-Detailed-Design.md) |
+| **P2（下版本）** | P2-1 | Skills Engineering（技能注册/加载/注入） | 可复用能力的模块化打包 | [`GeoWorkAgent-P2-Detailed-Design.md` §2](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-2 | MCP Integration（标准工具协议） | 标准化连接 QGIS/GEE/Zotero | [`GeoWorkAgent-P2-Detailed-Design.md` §3](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-3 | Hooks & Lifecycle（6 个钩子点） | 需要 Agentic Loop 先跑通才有挂钩点 | [`GeoWorkAgent-P2-Detailed-Design.md` §4](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-4 | Automation（定时任务/事件触发） | 工作流串联与自动恢复 | [`GeoWorkAgent-P2-Detailed-Design.md` §5](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-5 | Model Routing（多 provider 路由 + 降级 + 成本控制） | 规则引擎先做，AI 审批后做 | [`GeoWorkAgent-P2-Detailed-Design.md` §6](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-6 | Eval 评估体系（质量评分 + 回归测试） | 让 Agent 行为可度量可比较 | [`GeoWorkAgent-P2-Detailed-Design.md` §7](./GeoWorkAgent-P2-Detailed-Design.md) |
+| **P3（远期）** | P3-1 | Sub-agent（独立子 Orchestrator + 上下文继承） | 复杂子任务隔离执行 | [`GeoWorkAgent-P3-Detailed-Design.md` §2](./GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-2 | Harness 规则统一（规则引擎 + JSON 配置） | 安全约束集中管理 | [`GeoWorkAgent-P3-Detailed-Design.md` §3](./GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-3 | 推测执行（并行工具路径 + 择优采用） | 独立工具调用并行加速 | [`GeoWorkAgent-P3-Detailed-Design.md` §4](./GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-4 | 5 层压缩完整版（L4 对话摘要 + L5 记忆固化） | 基础不牢不碰这些 | [`GeoWorkAgent-P3-Detailed-Design.md` §5](./GeoWorkAgent-P3-Detailed-Design.md) |
+
+### 21.1 阶段依赖与验收边界（v1.3 新增）
+
+```
+P0（接线+对齐+per-run+ReAct）  ← Agent 的"能跑起来"基线
+  │  验收：ReAct 循环跑通，模型可驱动工具，并发不崩
+  ▼
+P1（安全+可观测+人工介入+恢复）  ← Agent 的"可控可追溯"层
+  │  验收：critical 操作有审批，Trajectory 可回放，可断点续传
+  ▼
+P2（技能+MCP+Hooks+自动化+路由+评估）  ← Agent 的"可扩展可度量"层
+  │  验收：技能可加载，MCP 可连外部工具，Eval 可评分
+  ▼
+P3（子代理+Harness统一+推测执行+5层压缩）  ← Agent 的"高级能力"层
+     验收：子代理可隔离执行，5 层压缩逐级触发
+```
+
+**依赖规则：**
+- P0 四项任务内部有依赖：P0-2（状态机对齐）→ P0-1（接线死代码）→ P0-4（ReAct），P0-3（per-run）可与 P0-1 并行
+- P1 所有任务依赖 P0 完成（ReAct 循环跑通才有挂载点）
+- P2 所有任务依赖 P1 完成（安全约束就位才能扩展外部能力）
+- P3 所有任务依赖 P2 完成（评估体系就位才能验证高级能力的效果）
+- **跨阶段不得跳跃**：例如不能在 P0 未完成时直接做 P2 的 Hooks（没有循环就没有钩子点）
 
 ---
 
@@ -1467,20 +1501,17 @@ workers/geo-python/
    - 在 AI Agent 文件清单后注入执行路径真相表（5 个死代码模块）
    - 在"两条链路共享"后标注"共享不成立"（workflow 绕过 ToolRegistry）
    - 在工具清单后标注状态机与注册表的 8 个不一致工具名
-4. **第 4 节修正**：
+5. **第 4 节修正**：
    - 标注"本节为目标设计，非现状"
    - 新增 4.1.1"实际代码行为"，用伪码展示真实的一次性规划+线性执行
    - 新增目标 vs 现状对比表（5 个维度）
-5. **第 5 节修正**：标注 ContextBuilder/Budget/RepoMap/Summarizer 在执行路径上全部为死代码
-6. **第 7 节修正**：标注 `skills/` 目录不存在，全部为目标；7.4 标题改为"【目标】，非 v0.4.x 现状"
-7. **第 9 节修正**：标注 Memory 只写不读（Summary/Messages 从不调用）
-8. **第 10 节修正**：标注状态机三个致命问题（白名单脱节 / ShellAllowed 永不为 true / 状态在 Run 间共享）；标注 Checkpoint"每 5 次"为目标，实际只在结束时存一次
-9. **第 15 节修正**：标注 StartRunWithMemory 不是真正的 Sub-agent
-10. **第 21 节优先级重构**：P0 从"5 层压缩/Hooks"改为"接线死代码/三者对齐/per-run 化/实现 ReAct"
-10. **第 22 节补充**：对"两条链路是否合并"给出明确意见（不合并但统一工具入口）；新增待决策项 6/7/8（per-run 化 / 状态机降级 / Executor 启用）
-11. **0.1.2 学科清单补全**：初版 15 项遗漏 Harness Engineering / Prompt Engineering / Streaming & Event Engineering 三个学科，补全为 18 项。新增学科边界说明（Context vs Prompt、Observability vs Streaming）
-12. **0.1.3 关系图重绘**：Harness 提升为最外层外壳（元学科），Prompt 作为 Context 的组织层，Streaming 与 Observability 并列为两个出口
-13. **第 22 节决策记录**：4 项影响 P0 的决策经 qwen+GLM 讨论、用户拍板（D5 不合并+统一入口+审批分层 / D6 方案A map[runID]*RunContext / D7 修白名单+保留phase约束 / D8 启用现有 Executor）。D7 修正了 GLM 初稿"降级 advisory"的建议
+6. **第 5 节修正**：标注 ContextBuilder/Budget/RepoMap/Summarizer 在执行路径上全部为死代码
+7. **第 7 节修正**：标注 `skills/` 目录不存在，全部为目标；7.4 标题改为"【目标】，非 v0.4.x 现状"
+8. **第 9 节修正**：标注 Memory 只写不读（Summary/Messages 从不调用）
+9. **第 10 节修正**：标注状态机三个致命问题（白名单脱节 / ShellAllowed 永不为 true / 状态在 Run 间共享）；标注 Checkpoint"每 5 次"为目标，实际只在结束时存一次
+10. **第 15 节修正**：标注 StartRunWithMemory 不是真正的 Sub-agent
+11. **第 21 节优先级重构**：P0 从"5 层压缩/Hooks"改为"接线死代码/三者对齐/per-run 化/实现 ReAct"
+12. **第 22 节补充**：对"两条链路是否合并"给出明确意见（不合并但统一工具入口）；新增待决策项 6/7/8（per-run 化 / 状态机降级 / Executor 启用）
 
 **废弃**
 
@@ -1494,6 +1525,108 @@ workers/geo-python/
 - 第 1/2 节（产品定位、概念体系）：准确，无需改
 - 第 6/8/11/12/13/14/16/17/18/19/20 节：目标设计保留，仅在其触及"现状"声称处加注
 - 第 23 节（文档维护规则）：保留
+
+---
+
+### v1.2（2026-08-11）— GLM 学科补全与决策拍板
+
+**背景**：v1.1 的 0.1.2 学科清单遗漏了 Harness Engineering（用户发现），GLM 做完整缺口审计后又发现 Prompt Engineering 和 Streaming & Event Engineering 也该独立。同时 v1.1 列的 4 项待决策经 qwen+GLM 讨论、用户拍板，需固化为决策记录。
+
+**变更**
+
+1. **0.1.2 学科清单补全（15→18）**：
+   - 新增 #1 **Harness Engineering**（元学科）——v1.1 把它隐含在 0.1.1 哲学里，未作为表中的一行。它是"防止/量测/修正/记录"的约束哲学，贯穿 State Machine/Sandbox/Guardrails/Hooks/Audit
+   - 新增 #4 **Prompt Engineering**——v1.1 把它塞在 §5.4。Context 管"给模型看什么"，Prompt 管"怎么组织"（指令层级/tool 描述格式/few-shot），是独立工程
+   - 新增 #13 **Streaming & Event Engineering**——v1.1 把它隐含在 Observability。SSE 协议/事件 schema/per-run 过滤/前端 adapter 是"事件传输层"，和"度量"是两回事
+   - 新增学科边界说明：Context vs Prompt、Observability vs Streaming
+2. **0.1.3 关系图重绘**：
+   - Harness 提升为最外层外壳（包裹一切的元学科），不再是 Harness 层实体里的一个标签
+   - Prompt 作为 Context 的组织层（Context 决定"给什么"，Prompt 决定"怎么排版"）
+   - Streaming 与 Observability 并列为两个出口（前者管事件传输，后者管度量）
+3. **第 22 节决策记录（D5-D8 拍板）**：
+   - D5 两条链路：**不合并 + 统一工具入口 + 审批分层**（workflow 审批 optional，只强制审计+沙箱）
+   - D6 per-run：**方案 A `map[runID]*RunContext`**（Orchestrator 保持单例，内部 map 隔离）
+   - D7 状态机：**修白名单 + 保留 phase 约束**（修正 v1.1 初稿"降级 advisory"的建议——采纳 qwen 观点，phase 约束 Governor 表达不了）
+   - D8 Executor：**启用现有 `ParseModelResponse`**（P0-4 时接入 Orchestrator）
+   - 新增"决策变更追踪"标注 D7 的修正过程
+
+**废弃**
+
+- v1.1 第 22 节"待决策项 6/7/8"的"待决策"状态 → v1.2 升级为"已决策 D5-D8"
+- v1.1 0.1.2 的"15 个学科是完整器官清单"声称 → 修正为 18 个
+- v1.1 GLM 对状态机"降级为 advisory"的建议 → D7 拍板为"修白名单+保留 phase 约束"
+
+**未改**
+
+- 0.1.1 核心设计哲学、0.1.4 不可妥协约束：v1.1 已定，v1.2 不动
+- 0.2 现状诊断：v1.1 已定，v1.2 不动
+- 第 3-21 节正文：v1.2 不动
+
+---
+
+### v1.3（2026-08-11）— GLM P0-P3 施工方案落地
+
+**背景**：v1.2 拍板了 D5-D8 四项架构决策后，P0 的实施方向已经明确。但 v1.1/v1.2 只在主文档里写了"该做什么"，没写"具体怎么做"——接口签名、数据结构、改动文件清单、验收标准都缺失。直接让工程师照着主文档写代码会再次陷入"各人理解不同、实现各异"的混乱。v1.3 的核心使命是**把 P0-P3 四个阶段的施工方案写成可直接照着写代码的详细设计文档**。
+
+**变更**
+
+1. **新建 4 份独立详细设计文档**（主文档不再膨胀，详细设计拆分到子文档）：
+   - [`GeoWorkAgent-P0-Detailed-Design.md`](./GeoWorkAgent-P0-Detailed-Design.md)（v0.2，1421 行）——P0 四项任务的完整施工方案
+   - [`GeoWorkAgent-P1-Detailed-Design.md`](./GeoWorkAgent-P1-Detailed-Design.md)（v0.1，680 行）——P1 六项任务的完整施工方案
+   - [`GeoWorkAgent-P2-Detailed-Design.md`](./GeoWorkAgent-P2-Detailed-Design.md)（v0.1，941 行）——P2 六项任务的完整施工方案
+   - [`GeoWorkAgent-P3-Detailed-Design.md`](./GeoWorkAgent-P3-Detailed-Design.md)（v0.1，644 行）——P3 四项任务的完整施工方案
+
+2. **P0 详细设计内容**（v0.1+v0.2）：
+   - P0-2 状态机三者对齐：注册表真相源（13 个工具）+ 新状态机白名单表（9 状态 × 工具 × 4 标志）+ 8 个幽灵工具清理 + workflow 接入 ToolRegistry + 审批分层
+   - P0-1 接线死代码：ChatMessage 类型统一（删除 aiagent.ChatMessage）+ ContextBuilder.Build() 接入 executePlan + 三级 token 预算裁剪 + Memory.Summary() 回注 + RepoMap 接入
+   - P0-3 per-run 化：RunContext 结构体 + map 并发保护 + Orchestrator 方法签名改动 + SSE per-run 过滤 + 10 种事件 Schema
+   - P0-4 ReAct 循环：API 请求构建 + System Prompt 模板（5 Mode）+ 流式响应解析（tool_calls delta 增量拼接）+ ReAct 循环伪码 + Executor 接入点 + Prompt Caching 策略
+
+3. **P1 详细设计内容**：
+   - P1-1 Sandbox & Guardrails：Governor 结构体 + 审批流 + 沙箱路径检查
+   - P1-2 Observability：Trajectory 记录器 + Token 用量审计
+   - P1-3 Streaming 完整：12 种 SSE 事件类型 + 前端 adapter 契约
+   - P1-4 Human-in-the-Loop：暂停/恢复 + 审批集成
+   - P1-5 Python Worker 治理：WorkerPool + 超时/资源限制
+   - P1-6 Recovery：Checkpoint 每 5 步保存 + 断点续传
+
+4. **P2 详细设计内容**：
+   - P2-1 Skills Engineering：Skill 结构体 + 注册表 + 加载器 + 5 个内置技能
+   - P2-2 MCP Integration：MCP 客户端 + stdio 传输 + 工具适配器
+   - P2-3 Hooks & Lifecycle：6 个钩子点 + Hook 接口 + 注册机制
+   - P2-4 Automation：定时任务调度器 + 事件触发器
+   - P2-5 Model Routing：多 provider 路由 + 降级 + 成本控制
+   - P2-6 Eval 评估体系：7 个评估指标 + 质量评分器 + 回归测试
+
+5. **P3 详细设计内容**：
+   - P3-1 Sub-agent：SubAgentManager + 独立子 Orchestrator + 上下文继承 + 工具化（spawn_subagent）
+   - P3-2 Harness 规则统一：Harness 规则引擎 + 4 种规则类型 + JSON 配置
+   - P3-3 推测执行：ParallelExecutor + 依赖分析 + 同类型并行 + 不同类型串行
+   - P3-4 5 层压缩完整版：L4 对话摘要（模型生成）+ L5 记忆固化 + 逐级触发流程
+
+6. **第 21 节优先级表重构**（v1.3）：
+   - 原 11 行表格扩展为 20 行，每个任务分配编号（P0-1~P0-4、P1-1~P1-6、P2-1~P2-6、P3-1~P3-4）
+   - 新增"详细设计文档"列，每项任务链接到对应子文档的章节
+   - 新增 §21.1"阶段依赖与验收边界"：明确 P0→P1→P2→P3 串行依赖 + 各阶段验收标准 + 跨阶段不得跳跃规则
+
+**废弃**
+
+- v1.2 第 21 节的 11 行优先级表（无任务编号、无文档引用）→ 替换为 20 行带编号带链接的完整表
+
+**未改**
+
+- 0.1/0.2 节（设计宪法 + 现状诊断）：v1.1/v1.2 已定，v1.3 不动
+- 第 3-20 节正文：v1.3 不动（详细设计在子文档中）
+- 第 22 节决策记录：D5-D8 已拍板，v1.3 不动
+- 第 23 节文档维护规则：保留
+
+**文档结构说明**
+
+v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的层次结构：
+- **主文档**（本文件）：架构宪法 + 现状诊断 + 各学科目标设计 + 优先级与决策记录
+- **P0-P3 子文档**：每个阶段的施工方案（接口签名 + 数据结构 + 改动文件 + 验收标准）
+
+主文档回答"**做什么、为什么**"，子文档回答"**怎么做、做到什么程度**"。代码实现时以子文档为准，主文档作为架构约束的参照。
 
 ---
 
