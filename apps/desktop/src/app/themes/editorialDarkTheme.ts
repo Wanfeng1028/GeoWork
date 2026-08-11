@@ -36,7 +36,7 @@ export function useEditorialDarkTheme(): ConfigProviderProps {
         colorErrorText: '#ff6b6b',
 
         colorInfo: '#3186ff',
-        colorInfoBg: 'rgba(58, 217, 255, 0.08)',
+        colorInfoBg: 'rgba(49, 134, 255, 0.08)',
         colorInfoText: '#3186ff',
         colorLink: '#3186ff',
         colorLinkHover: '#4f9dff',
