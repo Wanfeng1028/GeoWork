@@ -49,7 +49,7 @@ import {
 } from './settingsMockData'
 import styles from './SettingsPage.module.css'
 
-const { Text } = Typography
+const { Title, Text } = Typography
 
 /* ── 常量 ── */
 
