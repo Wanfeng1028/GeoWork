@@ -14,7 +14,7 @@
 | v1.1 | 2026-08-11 | GLM | 新增第 0.1 节"整体架构设计原则"（设计宪法：6 条哲学 + 15 个学科清单 + 关系图 + 8 条不可妥协约束）；新增第 0.2 节"现状诊断"如实标注代码与文档的 8 处重大偏差；修正第 3/4/5/7/9/10/15/21/22 节中"已有"与"目标"的界限；标注死代码与并发缺陷；补全状态机/工具注册表/Planner 三者不一致问题 |
 | v1.2 | 2026-08-11 | GLM | 学科清单补全 15→18（新增 Harness Engineering / Prompt Engineering / Streaming & Event Engineering）；关系图重绘（Harness 提升为最外层外壳）；第 22 节记录 4 项已拍板决策（D5 不合并+统一入口+审批分层 / D6 方案A / D7 修白名单+保留phase约束 / D8 启用 Executor） |
 | v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
-| v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；第 21 节优先级表新增 P2-7 行 |
+| v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；§0.1.2 学科清单 18→19（Browser/Computer Use 作为第 19 个学科，与 Python Worker 同为执行层）；§0.1.3 关系图补入 Browser；第 21 节优先级表新增 P2-7 行 |
 
 > **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4 的修正以 > 引用块或 【现状/目标】 标注注入。
 
@@ -42,6 +42,8 @@
 > 下表是 GeoWork Agent 系统**必须集成的全部工程学科**。每个学科对应一个"器官"，缺一不可。"现状"列标注当前代码状态：✅ 已生效 / ⚠️ 已写未接线 / ❌ 未实现。详细的现状诊断见 0.2 节。
 >
 > **v1.2 修正**：v1.1 初版遗漏了 Harness Engineering / Prompt Engineering / Streaming & Event Engineering 三个学科，现补全为 18 项。
+>
+> **v1.4 修正**：v1.3 补 P2-7 Browser/Computer Use 详细设计时，漏把它作为第 19 个学科加入本清单。现补全为 19 项。Browser/Computer Use 与 #18 Python Worker 是同类——都是执行层能力，有独立工程问题（CDP 协议/会话管理/URL 沙箱/OCR），理应同等对待。
 
 | # | 学科 | 解决什么问题 | GeoWork 对应模块 / 文件 | 文档章节 | 现状 |
 |---|---|---|---|---|---|
@@ -63,9 +65,10 @@
 | 16 | **Hooks & Lifecycle**（生命周期钩子） | 关键节点可扩展：before/after plan/tool/checkpoint | 未实现 | §16 | ❌ 未实现 |
 | 17 | **Automation**（自动化） | 定时任务、工作流串联、自动恢复 | `automation/` + `tasks/scheduler.go` | §17 | ⚠️ 调度器存在，automation 未接 |
 | 18 | **Python Worker**（执行层） | GEE/GDAL/QGIS/论文/报告的实际执行 | `worker/` + `workers/geo-python/` | §18 | ⚠️ 框架存在 |
+| 19 | **Browser/Computer Use**（浏览器/GUI 操控） | Agent 操控浏览器/GUI：会话管理、导航、截图、OCR、网络请求、论文搜索 | `browserbridge/`（6 个 Go 文件已有，但工具未注册） | §6/P2-7 | ⚠️ 代码已有，工具未注册 |
 
 **清单阅读规则：**
-- 上表 18 个学科是 GeoWork Agent 的**完整器官清单**。新增模块必须归入其中一个学科，不得另起炉灶。
+- 上表 19 个学科是 GeoWork Agent 的**完整器官清单**。新增模块必须归入其中一个学科，不得另起炉灶。
 - #1 Harness Engineering 是**元学科**——它不对应单一模块，而是贯穿 #9/#10/#16 的约束哲学（安全规则在代码不在 prompt）。
 - #3 Context 与 #4 Prompt 的边界：Context 管"给模型看**什么**"（预算/压缩/隔离），Prompt 管"这些内容**怎么组织**"（指令层级/格式/few-shot）。
 - #12 Observability 与 #13 Streaming 的边界：Observability 管"**度量** Agent 做对了没"（轨迹/指标/评估），Streaming 管"事件**怎么传输**到前端"（SSE 协议/per-run 过滤/adapter）。
@@ -120,10 +123,19 @@
               ┌──────────────┴──────────────┐
               ▼                             ▼
      ┌──────────────────┐          ┌──────────────────┐
-     │  Observability   │          │ Streaming & Event│
-     │  & Eval (§13)    │          │ Eng (§19/§20)    │
-     │  度量做对了没     │          │ 事件怎么流到前端  │
-     │  Trajectory      │          │ SSE/per-run 过滤 │
+     │ Browser/Computer │          │  Observability   │
+     │ Use (§6/P2-7)    │          │  & Eval (§13)    │
+     │ 浏览器/GUI 操控   │          │  度量做对了没     │
+     │ CDP/会话/截图/OCR│          │  Trajectory      │
+     └──────────────────┘          └──────────────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              ▼                             ▼
+     ┌──────────────────┐          ┌──────────────────┐
+     │  Streaming &     │          │  （回注到 Loop）  │
+     │  Event Eng       │          │  事件→Memory→    │
+     │  (§19/§20)       │          │  下一轮 Context   │
+     │  SSE/per-run     │          │                  │
      └──────────────────┘          └──────────────────┘
 ```
 
@@ -134,6 +146,7 @@
 - **Prompt 是 Context 的组织层**：Context 决定"给什么"，Prompt 决定"怎么排版/分层/注入指令"。
 - **Harness 层（实体）是安全底线**：状态机、沙箱、护栏、审计——不依赖模型自觉，由代码强制。
 - **Observability 与 Streaming 是两个出口**：前者度量"做得对不对"，后者负责"事件怎么传给前端"。两者都是横切层，但职责不同。
+- **Python Worker 与 Browser/Computer Use 是执行层的双支柱**（v1.4 补）：前者执行 Python 代码（GEE/GDAL/QGIS），后者操控浏览器/GUI（CDP/截图/OCR/论文搜索）。两者都是 Agent 调用的外部能力，但工程问题不同——Python Worker 管进程池/超时/资源，Browser 管会话/URL 沙箱/CDP 协议。
 
 ### 0.1.4 设计约束与不可妥协项
 
@@ -1660,13 +1673,23 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
    - 新增 P2-7 行（Browser/Computer Use）
    - P3-3 描述更新：从"并行工具路径 + 择优采用"改为"批次并行 + 流式提前执行 read_only"
 
+4. **§0.1.2 学科清单补全 18→19**（v1.4 修正）：
+   - 新增第 19 行：Browser/Computer Use（浏览器/GUI 操控）
+   - 理由：v1.3 补 P2-7 详细设计时漏把它加入学科清单，违反了 §0.1.2 自己的阅读规则"新增模块必须归入其中一个学科"。Browser/Computer Use 与 #18 Python Worker 是同类——都是执行层能力，有独立工程问题（CDP 协议/会话管理/URL 沙箱/OCR），理应同等对待
+   - 阅读规则 "18 个学科" → "19 个学科"
+   - 新增 v1.4 修正说明（在 v1.2 修正说明下方）
+
+5. **§0.1.3 关系图更新**：
+   - 执行层新增 Browser/Computer Use 节点（与 Observability 并列）
+   - 关系要点新增："Python Worker 与 Browser/Computer Use 是执行层的双支柱"
+
 **废弃**
 
 - 无（v1.3 的内容全部保留，v1.4 是纯增补）
 
 **未改**
 
-- 0.1/0.2 节、第 3-20 节正文、第 22/23 节：v1.4 不动
+- 0.2 节、第 3-20 节正文、第 22/23 节：v1.4 不动
 - P0/P1 详细设计文档：v1.4 不动（P2-7 的状态机白名单对齐是 P0-2 的延伸，但 P0-2 文档不需要改，因为 P2-7 在自己的文档里说明了）
 
 **审查反馈处理记录**
@@ -1677,6 +1700,7 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
 | P3-3 推测执行粗糙 | ⚠️ 缺流式提前执行 | 确认：主文档 §6.6 有描述但 P3-3 没实现 | ✅ §4.5 补全 |
 | P1-2 与 P2-6 关系 | ✅ 清晰 | 确认 | 无需处理 |
 | P3-2 与 P1-1 边界 | ✅ 清晰但需注意版本叠加 | 确认：代码实现时处理 ToolRegistry.Execute 签名叠加 | 代码实现时注意 |
+| Browser/Computer Use 不在学科清单 | （用户审查发现） | 确认：v1.3 补 P2-7 时漏加入 §0.1.2 清单，违反阅读规则 | ✅ §0.1.2 补全 18→19 + 关系图补入 |
 
 ---
 
