@@ -14,6 +14,7 @@ import {
   RollbackOutlined,
   CloudServerOutlined,
   BranchesOutlined,
+  CompassOutlined,
 } from '@ant-design/icons'
 import { theme } from 'antd'
 import styles from './SettingsSidebar.module.css'
@@ -34,11 +35,13 @@ export type SettingsSectionKey =
   | 'workspace'
   | 'safe-workspace'
   | 'experimental'
+  | 'guide'
 
 interface NavItem {
   key: SettingsSectionKey
   label: string
   icon: React.ReactNode
+  badge?: boolean
 }
 
 const NAV_GENERAL: NavItem[] = [
@@ -67,10 +70,16 @@ interface SettingsSidebarProps {
   activeSection: SettingsSectionKey
   onSectionChange: (section: SettingsSectionKey) => void
   onBack: () => void
+  /** 用户是否已进入过引导；为 false 时在"引导"菜单项显示角标 */
+  showGuideBadge?: boolean
 }
 
-export function SettingsSidebar({ activeSection, onSectionChange, onBack }: SettingsSidebarProps) {
+export function SettingsSidebar({ activeSection, onSectionChange, onBack, showGuideBadge }: SettingsSidebarProps) {
   const { token } = theme.useToken()
+
+  const guideItems: NavItem[] = [
+    { key: 'guide', label: '引导', icon: <CompassOutlined />, badge: showGuideBadge },
+  ]
 
   const renderNavGroup = (label: string, items: NavItem[]) => (
     <>
@@ -96,6 +105,13 @@ export function SettingsSidebar({ activeSection, onSectionChange, onBack }: Sett
           >
             <span className={styles.navItemIcon}>{item.icon}</span>
             <span className={styles.navItemLabel}>{item.label}</span>
+            {item.badge && (
+              <span
+                className={styles.navBadge}
+                style={{ background: token.colorPrimary }}
+                title="尚未进入引导"
+              />
+            )}
           </div>
         )
       })}
@@ -119,6 +135,10 @@ export function SettingsSidebar({ activeSection, onSectionChange, onBack }: Sett
       <Divider style={{ margin: '4px 0' }} />
 
       {renderNavGroup('通用', NAV_GENERAL)}
+
+      <Divider className={styles.divider} />
+
+      {renderNavGroup('引导与入门', guideItems)}
 
       <Divider className={styles.divider} />
 

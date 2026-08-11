@@ -18,14 +18,18 @@ import {
   theme,
 } from 'antd'
 import {
+  CompassOutlined,
   CopyOutlined,
   DeleteOutlined,
+  EditOutlined,
+  ExperimentOutlined,
   ExportOutlined,
   FolderOpenOutlined,
   ImportOutlined,
   ReloadOutlined,
   RollbackOutlined,
   SearchOutlined,
+  ShareAltOutlined,
 } from '@ant-design/icons'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import type { Appearance } from '../../shared/stores/appearanceStore'
@@ -58,6 +62,24 @@ const APPEARANCE_OPTIONS = [
 const AVATAR_COLORS = ['#2F80ED', '#52C41A', '#FA8C16', '#F5222D', '#722ED1', '#13C2C2']
 const EMOJI_OPTIONS = ['🌍', '🗺️', '🛰️', '📊', '🏔️', '🌊', '🌿', '🔬']
 
+/* 设置分区合法 key（用于 URL 直达 /settings?section=xxx 校验） */
+const VALID_SECTIONS: SettingsSectionKey[] = [
+  'preferences',
+  'profile',
+  'system',
+  'providers',
+  'git-worktree',
+  'voice',
+  'shortcuts',
+  'memory',
+  'update',
+  'archived',
+  'workspace',
+  'safe-workspace',
+  'experimental',
+  'guide',
+]
+
 /* ══════════════ 主页面 ══════════════ */
 
 export function SettingsPage() {
@@ -67,7 +89,12 @@ export function SettingsPage() {
 
   /* ── 设置状态 ── */
   const [settings, setSettings] = useState<GeoWorkSettings>(loadSettings)
-  const [activeSection, setActiveSection] = useState<SettingsSectionKey>('preferences')
+  const [activeSection, setActiveSection] = useState<SettingsSectionKey>(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('section')
+    return fromUrl && (VALID_SECTIONS as string[]).includes(fromUrl)
+      ? (fromUrl as SettingsSectionKey)
+      : 'preferences'
+  })
 
   /* ── 主题 store ── */
   const { appearance, setAppearance } = useAppearanceStore()
@@ -96,6 +123,18 @@ export function SettingsPage() {
     }
   }, [])
 
+  /* ── 分区 ↔ URL 同步（支持 /settings?section=xxx 直达） ── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (activeSection === 'preferences') {
+      params.delete('section')
+    } else {
+      params.set('section', activeSection)
+    }
+    const next = params.toString()
+    navigate(next ? `/settings?${next}` : '/settings', { replace: true })
+  }, [activeSection, navigate])
+
   /* ── 更新设置 ── */
   const updateSetting = useCallback(<K extends keyof GeoWorkSettings>(
     key: K,
@@ -109,6 +148,13 @@ export function SettingsPage() {
     })
     if (toast) message.success(toast)
   }, [message])
+
+  /* ── 首次进入引导分区时标记已访问，隐藏侧栏角标 ── */
+  useEffect(() => {
+    if (activeSection === 'guide' && !settings.guideVisited) {
+      updateSetting('guideVisited', true)
+    }
+  }, [activeSection, settings.guideVisited, updateSetting])
 
   /* ── 检查更新 ── */
   const handleCheckUpdate = () => {
@@ -140,6 +186,12 @@ export function SettingsPage() {
 
   /* ── 返回应用 ── */
   const handleBack = () => navigate('/new-task')
+
+  /* ── 开始引导：跳转到新任务页并打开工作流引导 Tour ── */
+  const handleStartGuide = () => {
+    if (!settings.guideVisited) updateSetting('guideVisited', true)
+    navigate('/new-task?guide=1')
+  }
 
   /* ══════════════ 分区渲染 ══════════════ */
 
@@ -967,6 +1019,46 @@ export function SettingsPage() {
 
   const renderGitWorktree = () => <GitWorktreeSettings />
 
+  const renderGuide = () => (
+    <SettingsSection title="引导" subtitle="空间分析工作流引导，帮助你快速上手 GeoWork。">
+      <SettingsCard>
+        <div className={styles.guideBody}>
+          <Space size={8}>
+            <ExperimentOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />
+            <Text strong style={{ fontSize: 15 }}>空间分析工作流</Text>
+          </Space>
+
+          <Title level={5} style={{ margin: 0, color: token.colorText }}>
+            从一个空间问题开始
+          </Title>
+
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            导入数据、选择工具、运行分析并导出报告。GeoWork 会把每一步记录为可追溯的工作流。
+          </Text>
+
+          <div className={styles.guideTags}>
+            <Tag color={token.colorPrimary}>Beta</Tag>
+            <Tag color="geekblue">
+              <CompassOutlined /> GIS Workflow
+            </Tag>
+          </div>
+
+          <div className={styles.guideActions}>
+            <Button type="primary" onClick={handleStartGuide}>
+              开始引导
+            </Button>
+            <Button icon={<ShareAltOutlined />} onClick={() => message.info('分享流程功能后续接入')}>
+              分享流程
+            </Button>
+            <Button icon={<EditOutlined />} onClick={() => message.info('编辑模板功能后续接入')}>
+              编辑模板
+            </Button>
+          </div>
+        </div>
+      </SettingsCard>
+    </SettingsSection>
+  )
+
   /* ── 分区路由 ── */
   const sectionMap: Record<SettingsSectionKey, () => React.ReactNode> = {
     preferences: renderPreferences,
@@ -982,6 +1074,7 @@ export function SettingsPage() {
     workspace: renderWorkspace,
     'safe-workspace': renderSafeWorkspace,
     experimental: renderExperimental,
+    guide: renderGuide,
   }
 
   return (
@@ -990,6 +1083,7 @@ export function SettingsPage() {
         activeSection={activeSection}
         onSectionChange={setActiveSection}
         onBack={handleBack}
+        showGuideBadge={!settings.guideVisited}
       />
 
       <div className={styles.content}>

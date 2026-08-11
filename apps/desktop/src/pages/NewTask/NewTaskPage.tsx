@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useSearchParams, useNavigate } from 'react-router'
 import {
   App,
-  BorderBeam,
   Button,
   Dropdown,
   Segmented,
@@ -12,7 +11,6 @@ import {
   theme,
 } from 'antd'
 import { LoadingOutlined, FolderOpenOutlined, ContainerOutlined, CodeOutlined, EnvironmentOutlined } from '@ant-design/icons'
-import { WorkflowGuideCard } from './components/WorkflowGuideCard'
 import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
@@ -22,7 +20,6 @@ import type { ConversationMessage, RunStatus, ToolCallLog, SelectedContextItem, 
 import { createEmptyConversation, getConversation, upsertConversation } from './components/conversationStorage'
 import type { Conversation } from './components/conversationStorage'
 import { apiGet } from '../../shared/api/client'
-import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
 import styles from './NewTaskPage.module.css'
@@ -137,8 +134,6 @@ async function loadConversationFromCore(convId: string): Promise<Conversation | 
 export function NewTaskPage() {
   const { message } = App.useApp()
   const { token } = theme.useToken()
-  const { appearance } = useAppearanceStore()
-  const isLight = appearance === 'light'
   const messageRef = useRef(message)
   messageRef.current = message
 
@@ -366,7 +361,18 @@ export function NewTaskPage() {
   /* ── Tour refs ── */
   const [tourOpen, setTourOpen] = useState(false)
   const composerRef = useRef<HTMLDivElement>(null)
-  const guideCardRef = useRef<HTMLDivElement>(null)
+  const modeSwitcherRef = useRef<HTMLDivElement>(null)
+
+  /* ── 引导入口（设置 → 引导 → 开始引导 携带 ?guide=1 打开工作流引导） ── */
+  useEffect(() => {
+    if (searchParams.get('guide') === '1') {
+      setTourOpen(true)
+      const params = new URLSearchParams(searchParams)
+      params.delete('guide')
+      const next = params.toString()
+      navigate(next ? `/new-task?${next}` : '/new-task', { replace: true })
+    }
+  }, [searchParams, navigate])
 
   /* ── Typewriter ── */
   const heroText = WORK_MODE_COPY[workMode].title
@@ -628,7 +634,7 @@ export function NewTaskPage() {
       */}
 
       {/* Mode Switcher */}
-      <div className={styles.modeSwitcherWrap}>
+      <div ref={modeSwitcherRef} className={styles.modeSwitcherWrap}>
         <Segmented
           options={WORK_MODE_OPTIONS.map((opt) => ({
             value: opt.value,
@@ -697,18 +703,6 @@ export function NewTaskPage() {
           {workDir ? `当前工作目录：${workDir}` : '未选择工作目录'}
         </Text>
       </div>
-
-      {/* Guide Card */}
-      {(() => {
-        const guide = (
-          <div ref={guideCardRef} style={{ marginTop: 48 }}>
-            <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
-          </div>
-        )
-        return isLight ? (
-          <BorderBeam color={token.colorPrimary} outset={0}>{guide}</BorderBeam>
-        ) : guide
-      })()}
     </div>
   )
 
@@ -825,10 +819,10 @@ export function NewTaskPage() {
             placement: 'bottom',
           },
           {
-            target: () => guideCardRef.current!,
-            title: '工作流引导',
-            description: '从这里开始您的空间分析工作流，随时可以点击"开始引导"重新查看。',
-            placement: 'top',
+            target: () => modeSwitcherRef.current!,
+            title: '选择工作模式',
+            description: '根据任务类型在 Work / Code / Map 之间切换，GeoWork 会匹配对应的空间分析工具。',
+            placement: 'bottom',
           },
         ]}
       />

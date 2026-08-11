@@ -43,6 +43,9 @@ export interface GeoWorkSettings {
   generativeUi: boolean
   floatingWorkspace: boolean
   browserContext: boolean
+
+  /* 引导 */
+  guideVisited: boolean
 }
 
 export const DEFAULT_SETTINGS: GeoWorkSettings = {
@@ -72,6 +75,7 @@ export const DEFAULT_SETTINGS: GeoWorkSettings = {
   generativeUi: false,
   floatingWorkspace: false,
   browserContext: false,
+  guideVisited: false,
 }
 
 const STORAGE_KEY = 'geowork.settings.v1'
