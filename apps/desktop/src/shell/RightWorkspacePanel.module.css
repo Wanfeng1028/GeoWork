@@ -48,9 +48,18 @@
 }
 
 /* AntD Tabs 样式覆盖（scoped） */
+.tabsWrap :global(.ant-tabs) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .tabsWrap :global(.ant-tabs-nav) {
   margin-bottom: 0;
   padding-inline: 8px;
+  flex-shrink: 0;
 }
 
 .tabsWrap :global(.ant-tabs-nav::before) {

@@ -1,0 +1,356 @@
+/* ── AssistantChatPanel 辅助对话面板样式 ──
+   风格：简洁克制、扁平化、无圆角气泡卡片式机器人对话
+*/
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-container);
+}
+
+/* ── 消息列表区域 ── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+}
+
+.body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: var(--bg-fill-tertiary);
+  border-radius: 3px;
+}
+
+.body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── 空状态 ── */
+.emptyState {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 8px;
+}
+
+.emptyIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyDesc {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 280px;
+}
+
+.emptyHighlight {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.inheritTag {
+  margin: 4px 0 8px 0 !important;
+  font-size: 11px !important;
+}
+
+/* ── 建议快捷按钮 ── */
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+  margin-top: 8px;
+}
+
+.suggestionBtn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-layout);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.5;
+}
+
+.suggestionBtn:hover {
+  background: var(--bg-fill);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* ── 消息列表 ── */
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── 单条消息容器 ── */
+.message {
+  display: flex;
+  width: 100%;
+}
+
+.messageUser {
+  justify-content: flex-end;
+}
+
+.messageAssistant {
+  justify-content: flex-start;
+}
+
+.messageError {
+  justify-content: center;
+}
+
+/* ── 消息气泡（扁平化，无大圆角） ── */
+.messageBubble {
+  max-width: 88%;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+  border-radius: 6px;
+}
+
+.messageUser .messageBubble {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-bottom-right-radius: 2px;
+}
+
+.messageAssistant .messageBubble {
+  background: var(--bg-fill);
+  color: var(--text);
+  border-bottom-left-radius: 2px;
+}
+
+.messageContentText {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── Markdown 渲染区 ── */
+.messageMarkdown {
+  max-width: 90%;
+  padding: 8px 12px;
+  background: var(--bg-fill);
+  color: var(--text);
+  border-radius: 6px;
+  border-bottom-left-radius: 2px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ── 错误消息 ── */
+.messageErrorContent {
+  max-width: 90%;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--error-text);
+  text-align: center;
+  background: transparent;
+  border: 1px dashed var(--error-text);
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+/* ── 输入中动画 ── */
+.typingDots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.typingDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typingDots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── 输入区域包裹 ── */
+.inputWrap {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-container);
+  padding: 8px 10px 6px;
+}
+
+/* ── 输入框区域 ── */
+.inputArea {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  background: var(--bg-layout);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 6px 4px 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inputArea:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+.textarea {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+  resize: none !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+.textarea :global(.ant-input),
+.textarea :global(textarea) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  resize: none !important;
+}
+
+.textarea :global(.ant-input:focus),
+.textarea :global(textarea:focus) {
+  box-shadow: none !important;
+}
+
+/* ── 输入动作按钮 ── */
+.inputActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+.ctxBtn {
+  color: var(--text-tertiary) !important;
+}
+
+.ctxBtn:hover {
+  color: var(--accent) !important;
+}
+
+.sendBtn {
+  height: 28px !important;
+  min-width: 32px !important;
+  padding-inline: 8px !important;
+  border-radius: 4px !important;
+}
+
+.stopBtn {
+  color: var(--error-text) !important;
+  height: 28px !important;
+}
+
+/* ── 状态栏 ── */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 2px 2px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.statusItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modelTag {
+  margin: 0 !important;
+  font-size: 10px !important;
+  padding: 0 6px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  background: var(--bg-fill) !important;
+  color: var(--text-secondary) !important;
+}
+
+.tokenBar {
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-fill);
+  overflow: hidden;
+  display: inline-block;
+}
+
+.tokenBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.tokenText {
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
