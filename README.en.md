@@ -121,9 +121,9 @@ Submission flow:
 
 ## License
 
-GeoWork is source-available under the [PolyForm Noncommercial License 1.0.0](licenses/LICENSE).
+GeoWork is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE).
 
 - ✅ **Allowed**: Non-commercial evaluation, learning, research, and personal use
 - ❌ **Requires Commercial License**: Commercial use, resale, hosted service operation, paid plugin distribution, enterprise deployment, or embedding into commercial products
 
-See [LICENSE](licenses/LICENSE) and [NOTICE](licenses/NOTICE) for details.
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.

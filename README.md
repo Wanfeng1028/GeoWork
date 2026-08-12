@@ -128,4 +128,4 @@ GeoWork 基于 [PolyForm Noncommercial License 1.0.0](licenses/LICENSE) 提供�
 - ✅ **允许**：非商业评估、学习、研究和个人使用
 - ❌ **需商业许可**：商业用途、转售、托管服务运营、付费插件分发、企业部署或嵌入商业产品
 
-详见 [LICENSE](licenses/LICENSE) 和 [NOTICE](licenses/NOTICE)。
+详见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
