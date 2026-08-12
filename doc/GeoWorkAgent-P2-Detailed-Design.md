@@ -1,7 +1,7 @@
 # GeoWork Agent P2 施工方案
 
 > **文档路径**：`doc/GeoWorkAgent-P2-Detailed-Design.md`
-> **父文档**：`doc/GeoWorkAgent .md`（主文档/宪法）
+> **父文档**：`doc/GeoWorkAgent.md`（主文档/宪法）
 > **前置条件**：P1 六项全部完成并验收通过
 > **文档定位**：P2 阶段——技能体系、MCP 真实运行、生命周期钩子、自动化、模型路由策略、评估体系、浏览器/GUI 操控
 

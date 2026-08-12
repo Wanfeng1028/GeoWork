@@ -85,14 +85,40 @@ React 组件 → api/client.ts → Go Core (:8765)
 - 必须用 `AbortController` 支持中断
 - 新任务开始时，旧 SSE 连接必须先关闭再建新连接，防止状态串线
 
-### 2.3 错误处理
+### 2.3 WebSocket 双向控制信令
+
+> 完整协议规范见 `doc/GeoWork-Communication-Protocol.md`
+
+SSE 负责只读事件流，WebSocket 负责双向控制信令（审批、abort、终端 I/O）。两者并存，不互相替代。
+
+**连接规范**：
+
+- 连接地址：`ws://127.0.0.1:{port}/api/ws?runId={runId}`
+- 消息格式：JSON-RPC 2.0（JSONL 编码，每行一个 JSON 对象）
+- 心跳：客户端每 30s 发 `ping` 通知
+- 断线重连：指数退避 1s → 2s → 4s → 8s → 最大 30s
+
+**文件组织**：
+
+- `src/shared/api/wsClient.ts` — WebSocket 客户端（连接/重连/心跳/消息路由）
+- `src/shared/api/wsProtocol.ts` — JSON-RPC 类型定义 + Method 常量
+- 禁止在组件内直接 `new WebSocket()`，必须通过 `WsClient` 类
+
+**使用规则**：
+
+- WebSocket 只传控制信令（approval、abort、terminal），不传事件流
+- 组件卸载时必须调用 `wsClient.disconnect()`
+- 审批请求通过 `wsClient.on('approval/request', handler)` 监听，通过 `wsClient.respond(id, result)` 回复
+- 禁止在 WebSocket 上发送大量数据（如文件内容），大文件走 HTTP
+
+### 2.4 错误处理
 
 - API 响应非 ok 时，`client.ts` 统一抛 `Error(API Error: ${status})`
 - 组件层用 `try/catch` 捕获后展示用户可读的错误信息（遵循设计系统 §8.3 报错规范）
 - 禁止 `catch(e) {}` 吞错误
 - 禁止在组件里直接 `console.error` 不展示——用户必须看到发生了什么
 
-### 2.4 Mock 与真实 API 切换
+### 2.5 Mock 与真实 API 切换
 
 - 当前无 Mock 层。如需 Mock，在 `src/shared/api/` 下新建 `mock/` 目录
 - 通过 `import.meta.env.VITE_USE_MOCK === 'true'` 切换

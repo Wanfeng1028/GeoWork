@@ -46,7 +46,7 @@
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` + `doc/GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
-| `core/`               | `doc/GeoWorkAgent.md`                                                              | 主宪法 v1.5      |
+| `core/`               | `doc/GeoWorkAgent.md` + `doc/GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
 | `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |
 | `server/`             | 如涉及 Agent 能力，读 `doc/` 下对应设计文档                                        | —                |
@@ -157,14 +157,20 @@
 ## 7. 跨模块通信
 
 ```text
-前端 ←→ Go 核心：HTTP API + SSE（前端通过 /api 代理）
+前端 ←→ Go 核心：HTTP API + SSE（只读事件流） + WebSocket（双向控制信令，/api/ws）
 Go 核心 ←→ Python Worker：HTTP
 Go 核心 ←→ Go 云端：HTTP
 前端 ←→ Go 云端：不直接通信，经过核心层
 
+双通道分工：
+- SSE：Agent → 前端的单向事件流（思考过程、工具日志、状态变更）
+- WebSocket：双向控制信令（审批请求/响应、run/abort、终端 I/O）
+- 协议格式：JSON-RPC 2.0，详见 doc/GeoWork-Communication-Protocol.md
+
 禁止：
 - 前端直接调用 Python Worker
 - Worker 直接向前端推送（必须经过核心层 SSE）
+- 在 WebSocket 上传输事件流（事件流走 SSE，控制信令走 WS）
 ```
 
 ---

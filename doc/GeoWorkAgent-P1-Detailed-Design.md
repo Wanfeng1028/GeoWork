@@ -1,7 +1,7 @@
 # GeoWork Agent P1 施工方案
 
 > **文档路径**：`doc/GeoWorkAgent-P1-Detailed-Design.md`
-> **父文档**：`doc/GeoWorkAgent .md`（主文档/宪法）
+> **父文档**：`doc/GeoWorkAgent.md`（主文档/宪法）
 > **前置条件**：P0 四项全部完成并验收通过
 > **文档定位**：P1 阶段——安全加固、可观测性、人工介入、Worker 治理、恢复机制
 
@@ -11,6 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
+| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流），协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -643,6 +644,31 @@ GET  /api/agent/approvals/{runId}  待审批列表
 POST /api/agent/approvals/{id}/approve  批准
 POST /api/agent/approvals/{id}/reject   拒绝
 ```
+
+### 5.5.1 WebSocket 双向通信（v0.3 新增）
+
+> 完整协议规范见 `doc/GeoWork-Communication-Protocol.md`
+
+HTTP 审批 API 作为降级通道保留。主通道升级为 WebSocket（JSON-RPC 2.0）：
+
+**架构**：SSE 继续负责只读事件流，WebSocket 负责双向控制信令。核心原则——SSE 负责"Agent 告诉你它在干什么"，WebSocket 负责"Agent 问你怎么办"。
+
+**连接**：`ws://127.0.0.1:{port}/api/ws?runId={runId}`
+
+**P1 Method**：
+
+| Method | 方向 | 用途 |
+|---|---|---|
+| `approval/request` | Server → Client | Agent 暂停，请求用户审批 |
+| `approval/response` | Client → Server | 用户回复 allow/deny |
+| `run/abort` | Client → Server | 用户紧急终止当前 Run |
+| `run/status` | Server → Client | 推送 Run 状态变更 |
+
+**后端新增文件**：`core/internal/api/ws_handler.go` + `ws_session.go` + `ws_protocol.go`
+
+**前端新增文件**：`src/shared/api/wsClient.ts` + `wsProtocol.ts`
+
+**Orchestrator 改动**：`StateWaitingForUser` 分支从 HTTP 轮询改为 `wsSession.SendRequestAndWait()` 阻塞等待，超时 5 分钟自动 deny。
 
 ### 5.6 验收标准
 

@@ -463,6 +463,30 @@ GeoWork 全站只有一种整体骨架：
 
 **重试**：页面级 / 块级报错必须带「重试」ghost 按钮；字段级不带按钮，靠重新输入消除。
 
+### 8.4 审批模态框（Agent 请求用户授权）
+
+Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `doc/GeoWork-Communication-Protocol.md`）。
+
+**布局**：
+
+| 元素 | 规格 |
+|---|---|
+| Modal 宽度 | 480px |
+| 标题 | "Agent 请求审批"，16/600 |
+| 关闭按钮 | 无（`closable=false`，`maskClosable=false`，必须用户显式决策） |
+| 风险等级 Tag | `low` → success 色 / `medium` → warning 色 / `high` → error 色 |
+| 工具名 | `Typography.Text code` 样式 |
+| 审批原因 | `Typography.Paragraph`，最多 4 行，超出滚动 |
+| 倒计时 | `Typography.Text type="secondary"`，显示剩余秒数 |
+| 底部按钮 | 左"拒绝"（default）+ 右"允许执行"（primary；`high` 风险时 `danger=true`） |
+
+**交互规则**：
+
+- 收到 `approval/request` 时弹窗，同时播放提示音（可选）
+- 用户点击后通过 WebSocket `approval/response` 回复，弹窗立即关闭
+- 超时（默认 300s）自动 deny，弹窗关闭，toast 提示"审批已超时"
+- 同时只有一个审批（新请求替换旧请求，旧请求自动 deny）
+
 ---
 
 ## 九、GeoWork 专属组件（v1.1 新增）
