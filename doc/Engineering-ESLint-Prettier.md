@@ -128,7 +128,39 @@ CSS 相关检查由 stylelint 负责（设计系统 §17 已定义），oxlint/P
 
 ---
 
-## 7. TODO
+## 7. Import 边界约束
+
+### 7.1 禁止的 import 路径
+
+| 规则 | 说明 |
+|---|---|
+| `src/pages/A/*` 禁止 import `src/pages/B/*` | 页面间隔离——各页面独立，不互相依赖 |
+| `src/shared/*` 禁止 import `src/pages/*` | 共享层不依赖页面层（依赖方向单向：pages → shared） |
+| `src/app/themes/*` 禁止 import 任何业务组件 | 主题层只定义 token 和 ConfigProvider，不知道业务组件的存在 |
+| `src/shell/*` 禁止 import `src/pages/*` | Shell 层不依赖具体页面 |
+
+### 7.2 执行方式
+
+| 阶段 | 方式 | 说明 |
+|---|---|---|
+| 当前 | **Code review 人工检查** | oxlint 暂不支持 `no-restricted-imports` |
+| 目标 | oxlint 或 ESLint 自动化规则 | 当 oxlint 支持或迁移到 ESLint 时配置 |
+| 可选增强 | `dependency-cruiser` | 独立工具，生成依赖图可视化 |
+
+### 7.3 依赖方向
+
+```
+pages/ ──→ shell/ ──→ shared/ ──→ app/
+  │                      │
+  └──────────────────────┘
+        (pages 可直接用 shared)
+
+themes/ ← 被 app/AppProviders 引用，不主动 import 任何业务代码
+```
+
+---
+
+## 8. TODO
 
 | 项目 | 优先级 | 说明 |
 |---|---|---|

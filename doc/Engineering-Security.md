@@ -145,7 +145,9 @@ cd workers/geo-python && pip-audit
 
 ---
 
-## 6. IPC 安全
+## 6. IPC 通信规范
+
+### 6.1 安全规则
 
 Electron IPC 是主进程和渲染进程的通信桥梁，必须做权限控制：
 
@@ -153,6 +155,51 @@ Electron IPC 是主进程和渲染进程的通信桥梁，必须做权限控制�
 - 禁止在 preload 中暴露 `ipcRenderer.invoke` 的通用调用接口
 - 文件操作类 IPC 必须校验路径（防止路径穿越攻击）
 - 命令执行类 IPC 必须走沙箱（`sandbox/`）
+
+### 6.2 IPC 通道命名
+
+格式：`geowork:{domain}:{action}`
+
+| Domain | 示例通道 | 说明 |
+|---|---|---|
+| `window` | `geowork:window:minimize` / `maximize` / `close` | 窗口控制 |
+| `file` | `geowork:file:import` / `export` / `open-dialog` | 文件操作 |
+| `shell` | `geowork:shell:open` | 系统 shell |
+| `shortcut` | `geowork:shortcut:register` / `unregister` | 全局快捷键 |
+| `runtime` | `geowork:runtime:proxy` | Go Core 代理 |
+| `terminal` | `geowork:terminal:create` / `write` / `resize` | PTY 终端 |
+| `browser` | `geowork:browser:navigate` / `screenshot` | 内嵌浏览器 |
+| `clipboard` | `geowork:clipboard:read` / `write` | 剪贴板 |
+| `notification` | `geowork:notification:show` | 系统通知 |
+
+### 6.3 类型共享
+
+在 `apps/desktop/src/shared/ipc/types.ts`（待创建）定义所有 IPC 消息的 TypeScript 接口：
+
+```typescript
+// 每个 IPC 通道对应一个请求/响应类型对
+export interface IpcChannelMap {
+  'geowork:window:minimize': { req: void; res: void }
+  'geowork:file:import': { req: { paths: string[] }; res: { success: boolean; error?: string } }
+  'geowork:terminal:create': { req: { cwd: string }; res: { sessionId: string } }
+  // ...
+}
+```
+
+主进程和渲染进程共同引用此类型文件，**禁止 `any`**。
+
+### 6.4 职责边界
+
+| 操作 | 归属 | 走 IPC？ |
+|---|---|---|
+| 窗口控制（最小化/最大化/关闭） | 主进程 | ✅ |
+| 文件对话框 / 拖入导入 | 主进程 → 渲染 | ✅ |
+| 系统托盘 / 菜单 | 主进程 | ❌ 不暴露给渲染 |
+| 全局快捷键注册 | 主进程 | ✅ |
+| Go Core HTTP 通信 | 渲染进程直连 | ❌ 不走 IPC |
+| 纯 UI 状态（主题/面板开关） | 渲染进程 | ❌ 不走 IPC |
+| node-pty 终端 | 主进程创建，渲染消费 | ✅ |
+| 内嵌浏览器（WebContentsView） | 主进程创建 | ✅ |
 
 ---
 

@@ -197,7 +197,29 @@ git pull / commit / push / reset / checkout / rebase / clean
 | ------ | ------------------------------------- |
 | 前端   | `apps/desktop/package.json`           |
 | Go     | `core/go.mod` / 根目录 `go.mod`       |
-| Python | `workers/geo-python/pyproject.toml` |
+| Python | `workers/geo-python/pyproject.toml`   |
+
+### 9.1 版本锁定策略
+
+- `package.json` 使用 `^`（允许 patch + minor 更新）
+- `package-lock.json` **必须提交**，禁止删除
+- Go `go.sum` 必须提交
+- major 版本升级必须单独 PR + 跑全量测试
+
+### 9.2 依赖更新
+
+- 每月第一个工作日执行 `npm outdated`，评估是否需要升级
+- 安全漏洞（`npm audit` high/critical）48 小时内处理
+- Dependabot / Renovate 暂不启用（当前单人项目，手动管理即可）
+
+### 9.3 重型依赖准入（>50KB gzipped）
+
+新增重型依赖必须：
+
+- 评估 `React.lazy()` 动态导入可行性
+- 说明为什么现有依赖不能满足需求
+- 更新 `Engineering-CI-CD.md` 的 bundle size 基线
+- 在 PR 描述中附 bundle size 影响
 
 ---
 
@@ -373,6 +395,27 @@ Level 3 — 记录（持续追加）
 | 编号 | 标题 | 状态 |
 |---|---|---|
 | ADR-001 | 通信协议采用 SSE + WebSocket 混合架构 | 已接受 |
+
+**ADR 状态流转**：
+
+| 状态 | 含义 | 操作 |
+|---|---|---|
+| 已接受 (Accepted) | 当前有效决策 | — |
+| 已废弃 (Deprecated) | 决策仍有效但不推荐用于新功能 | 标注原因 |
+| 已取代 (Superseded) | 被新 ADR 取代 | 新 ADR 的"背景"中说明取代哪个旧 ADR |
+
+- 旧 ADR **不删除**，只改状态 + 标注取代它的 ADR 编号
+- 每个 ADR 可选添加 `Related: ADR-XXX` 字段链接相关决策
+
+### 15.5 文档新鲜度检查
+
+每个 P 阶段结束时，执行以下检查：
+
+1. `git log --since="上次 P 阶段开始" --name-only | grep -E "\.(ts\|tsx\|go)$" | sort -u` → 得到本阶段改动的代码文件列表
+2. 对照文档中的"文件对应"表（设计系统 §19、工程规范 §2.1 等），检查被改动的文件是否在文档中有描述
+3. 如果代码文件被大幅重构（rename/split/merge），对应文档必须同 PR 更新
+
+违规处理：文档与代码不一致的 PR，review 时打回。
 
 ---
 
