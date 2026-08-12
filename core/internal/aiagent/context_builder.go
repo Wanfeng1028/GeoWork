@@ -3,23 +3,21 @@
 package aiagent
 
 import (
+	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/toolregistry"
 
 	"go.uber.org/zap"
 )
 
-// ToolDef represents a tool definition for LLM function calling.
-type ToolDef struct {
-	Type     string      `json:"type"`
-	Function ToolFunction `json:"function"`
-}
-
-// ToolFunction represents a function tool definition.
-type ToolFunction struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Parameters  map[string]any `json:"parameters"`
-}
+// ToolDef / ToolFunction are aliased to the modelgateway definitions so
+// that ContextBuilder.Build returns []modelgateway.ToolDef directly,
+// avoiding the type-mismatch errors that arise when the orchestrator
+// passes a locally-defined []ToolDef to gateway methods that expect
+// []modelgateway.ToolDef. This mirrors the ChatMessage alias pattern
+// established when the Orchestrator was refactored to depend on the
+// ModelGateway interface.
+type ToolDef = modelgateway.ToolDef
+type ToolFunction = modelgateway.ToolFunction
 
 // ContextBuilder assembles the full context for model calls.
 type ContextBuilder struct {

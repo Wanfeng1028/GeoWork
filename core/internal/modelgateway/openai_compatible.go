@@ -88,6 +88,10 @@ type UsageInfo struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`
+	// CachedTokens is the number of prompt tokens served from the
+	// provider's prompt cache (P1-2 §3.5). 0 when the provider does
+	// not report cache hit information.
+	CachedTokens int `json:"cached_tokens,omitempty"`
 }
 
 // StreamChunk is a single SSE chunk from streaming response.

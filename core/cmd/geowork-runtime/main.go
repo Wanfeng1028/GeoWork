@@ -67,7 +67,15 @@ func main() {
 	if err := toolregistry.RegisterBuiltinTools(toolRegistry); err != nil {
 		logger.Fatal("Failed to register built-in tools", zap.Error(err))
 	}
-	logger.Info("Built-in tools registered", zap.Int("count", len(toolRegistry.List())))
+	// P1-1 §2.4: configure sandbox roots so write/exec tools are confined
+	// to the workspace. Without this, validateSandboxPath is a no-op
+	// (legacy behavior) and a misconfigured model could escape the
+	// workspace boundary.
+	toolRegistry.WithAllowedRoots([]string{app.Workspace()})
+	logger.Info("Built-in tools registered",
+		zap.Int("count", len(toolRegistry.List())),
+		zap.String("sandboxRoot", app.Workspace()),
+	)
 
 	// Dynamically register Python Worker tools into the same registry so
 	// workflow + aiagent calls flow through one governance path (P0-2 D5).

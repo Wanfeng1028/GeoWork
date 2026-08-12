@@ -173,6 +173,21 @@ func (m *Memory) Export() []byte {
 	return data
 }
 
+// ExportMessages returns a copy of the bounded conversation history.
+// P1-6 §7.4: used by saveCheckpointWithReason to snapshot the
+// chatHistory field so ResumeFromCheckpoint can hand it back to the
+// ReAct loop without re-doing the prior turns.
+func (m *Memory) ExportMessages() []ChatMessage {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if len(m.shortHistory) == 0 {
+		return nil
+	}
+	out := make([]ChatMessage, len(m.shortHistory))
+	copy(out, m.shortHistory)
+	return out
+}
+
 // Import loads memory state from JSON.
 func (m *Memory) Import(data []byte) error {
 	m.mu.Lock()

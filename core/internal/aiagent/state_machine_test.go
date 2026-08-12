@@ -174,12 +174,14 @@ func TestStateMachine_RecoverToPlanning(t *testing.T) {
 func TestStateMachine_ToolIsAllowed_Planning(t *testing.T) {
 	sm := NewStateMachine()
 
-	// Planning allows planner and model
-	if !sm.ToolIsAllowed(StatePlanning, "planner") {
-		t.Error("planner should be allowed in planning")
+	// Planning does not call tools — the Planner is an internal
+	// component, not a registered tool. So no tool name should be
+	// allowed in StatePlanning (aligned with builtin_tools.go).
+	if sm.ToolIsAllowed(StatePlanning, "planner") {
+		t.Error("planner is not a registered tool; should NOT be allowed in planning")
 	}
-	if !sm.ToolIsAllowed(StatePlanning, "model") {
-		t.Error("model should be allowed in planning")
+	if sm.ToolIsAllowed(StatePlanning, "model") {
+		t.Error("model is not a registered tool; should NOT be allowed in planning")
 	}
 
 	// Planning should NOT allow write
@@ -198,16 +200,23 @@ func TestStateMachine_ToolIsAllowed_Editing(t *testing.T) {
 		t.Error("read_file should be allowed in editing")
 	}
 
-	// Shell should NOT be allowed in editing
+	// run_shell is NOT in StateEditing's explicit Tools list (only
+	// run_python is). ShellAllowed=true on the AllowedToolSet is
+	// reserved for the permission-category fallback path used when
+	// no explicit Tools list is present.
 	if sm.ToolIsAllowed(StateEditing, "run_shell") {
-		t.Error("run_shell should NOT be allowed in editing")
+		t.Error("run_shell should NOT be allowed in editing (not in explicit Tools list)")
 	}
 }
 
 func TestStateMachine_ToolIsAllowed_Verifying(t *testing.T) {
 	sm := NewStateMachine()
 
-	allowedTools := []string{"test", "build", "lint", "read_file"}
+	// Verifying allows read-only inspection plus shell-based test
+	// execution (run_python / run_shell). Aligned with the real
+	// builtin_tools.go registry — no phantom "test" / "build" / "lint"
+	// tools exist.
+	allowedTools := []string{"read_file", "list_files", "run_python", "run_shell"}
 	for _, tool := range allowedTools {
 		if !sm.ToolIsAllowed(StateVerifying, tool) {
 			t.Errorf("%s should be allowed in verifying", tool)

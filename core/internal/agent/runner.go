@@ -208,9 +208,13 @@ func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 // and (once P1-1 lands) approval flow integration. When the registry is
 // nil (caller has not been wired) or the tool is not registered there, we
 // fall back to the legacy direct worker call to preserve existing behavior.
+//
+// Workflow calls always run in ModeDeterministic: the workflow author has
+// pre-authorized critical operations at design time, so the ApprovalGovernor
+// only audit-logs them rather than blocking on interactive approval.
 func (r *Runner) executeWorkerTool(ctx context.Context, toolName string, payload map[string]any) (map[string]any, error) {
 	if r.registry != nil && r.registry.IsRegistered(toolName) {
-		return r.registry.Execute(ctx, toolName, payload)
+		return r.registry.Execute(ctx, toolName, payload, toolregistry.ModeDeterministic)
 	}
 	if r.worker == nil {
 		return nil, fmt.Errorf("worker client not configured and tool %s not in registry", toolName)
