@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="./assets/geowork-readme-hero.svg" width="700" alt="GeoWork" />
+  <img src="./assets/GeoWork_Logo_Kit_v1.0/01_Master_SVG/geowork-marketing-orbit-horizontal.svg" width="700" alt="GeoWork - Spatial Intelligence Core" />
 </p>
 
-<p align="center"><strong>面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台</strong></p>
+<p align="center">
+  <strong>面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台</strong>
+</p>
 
 <p align="center">
   <a href="README.en.md">English</a> &nbsp;·&nbsp; <strong>简体中文</strong>
