@@ -13,6 +13,7 @@
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
 | v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；Governor 结构体补充 registry 字段；ApprovalDecision 枚举补充 denied/timeout；waitForApproval 接收者统一为 *Orchestrator；PauseRun 加幂等保护；协议规范独立为 `doc/09-GeoWork-Communication-Protocol.md` |
 | v0.4 | 2026-08-12 | — | **编译期契约修复：包循环依赖反转 + 标识符重名避让**。§2.3 执行依赖反转：ExecutionMode + ApprovalDecision + ApprovalRequest + ApprovalResult + **ApprovalGovernor** 接口全部移至 `package toolregistry`；将审批流接口命名为 `ApprovalGovernor`（而非 `Governor`）以避让同包已存在的 `*toolregistry.Governor` 调用限制结构体，Registry 新增字段 `approvalGov ApprovalGovernor` 和 setter `WithApprovalGovernor`；`package aiagent` 保留 `GovernorImpl` 实现体并实现 `toolregistry.ApprovalGovernor` 接口；§2.5 `Registry.Execute` 签名改为同包 `mode ExecutionMode` 并引用 `r.approvalGov`，等待逻辑上移到 Orchestrator 层（新增 `ErrApprovalRequired` 哨兵错误）；§2.5.1 和 §5.4 所有类型引用同步加 `toolregistry.` 前缀；PauseRun 签名加 `reason` 参数并同步新增 `RunContext.PauseReason` 字段；修复 `NewOrchestrator` 同包调用不应加 `aiagent.` 前缀的小问题。|
+| v0.5 | 2026-08-12 | TraeCodeCloud | **P1 阶段实现完成记录**：P1-1 审批流（ApprovalGovernor + GovernorImpl + waitForApproval + 审批 API）✅；P1-2 可观测性（Trajectory + UsageMeter）✅；P1-3 SSE + WebSocket 双向通信 ✅；P1-4 Pause/Resume + 审批集成 ReAct ✅；P1-5 WorkerPool + 资源限制 ✅；P1-6 Checkpoint + ResumeFromCheckpoint ✅。详见文末「实现记录 v0.5」。 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -1061,3 +1062,43 @@ POST /api/agent/checkpoints/{id}/resume  从检查点恢复
 4. P1-4 Human-in-the-Loop：暂停/恢复 + 审批集成 + API
 5. P1-5 Python Worker 治理：WorkerPool + 超时/资源限制
 6. P1-6 Recovery：Checkpoint 每 5 步保存 + 断点续传 + API
+
+---
+
+## 实现记录
+
+### v0.5（2026-08-12）— TraeCodeCloud P1 阶段实现完成
+
+**执行者**：TraeCodeCloud（后端 / Agent 开发工程师）
+**完成时间**：2026-08-12
+**对应提交**：`33883ec feat(core): implement P1 stage — safety, observability, human-in-the-loop, worker pool, recovery`
+**分支**：`dev/TraeCodeCloud` → 目标 `master`
+
+**完成情况总览**
+
+| 任务 | 状态 | 实现文件 | 验收对照 |
+|---|---|---|---|
+| P1-1 审批流 | ✅ 完成 | `toolregistry/governor_types.go`（ExecutionMode/ApprovalGovernor 接口）、`toolregistry/governor.go`（Registry 集成 + ErrApprovalRequired）、`aiagent/governor.go`（GovernorImpl）、`orchestrator.go`（waitForApproval + 5min 超时→暂停）、`api/permission_handler.go`（审批 API） | §2 验收 |
+| P1-2 可观测性 | ✅ 完成 | `aiagent/trajectory.go`（TrajectoryRecorder + TurnRecord + ToolCallRecord）、`modelgateway/usage_meter.go`（UsageMeter + Run 级汇总）、`orchestrator.go`（Record 接入 ReAct + usage SSE 事件） | §3 验收 |
+| P1-3 SSE + WebSocket | ✅ 完成 | `aiagent/event_buffer.go`（环形缓冲 + Last-Event-ID）、`orchestrator.go`（BuildStateSnapshot + GetEventBuffer）、`api/ws_handler.go`/`ws_protocol.go`/`ws_session.go`（JSON-RPC 2.0 双向通信） | §4 验收 |
+| P1-4 Pause/Resume | ✅ 完成 | `orchestrator.go`（PauseRun/ResumeRun + PauseCh + 审批集成 ReAct turn 边界阻塞） | §5 验收 |
+| P1-5 WorkerPool | ✅ 完成 | `worker/pool.go`（WorkerPool + 资源限制 + 超时控制）、`worker/process.go`（进程管理） | §6 验收 |
+| P1-6 Checkpoint | ✅ 完成 | `aiagent/recovery.go`（Checkpoint 补字段 + ResumeFromCheckpoint）、`orchestrator.go`（executePlanFromTurn + 周期性 checkpoint 每 5 turn + API） | §7 验收 |
+
+**实现要点**
+
+1. **P1-1**：依赖反转——`toolregistry.ApprovalGovernor` 接口 + 类型（ExecutionMode/ApprovalDecision/ApprovalRequest/ApprovalResult）定义在 toolregistry 包；`aiagent.GovernorImpl` 实现接口并持有 `pending map[string]*toolregistry.ApprovalRequest`；`NewOrchestrator` 调 `registry.WithApprovalGovernor(governor)` 注入；`waitForApproval` 三路 select（ctx.Done/5min timer/DecisionCh），超时→`PauseRun` 暂停而非失败；审批 API 在 `permission_handler.go`。
+2. **P1-2**：`TrajectoryRecorder.Record` 每个 ReAct turn 记录 InputMessages/ModelResponse/ToolCalls/TokenUsage/Duration；`UsageMeter.Record` 记 Run 级 token 用量 + `estimateCost` 估算成本；orchestrator emit `usage` SSE 事件携带 per-call + runTotal tokens。
+3. **P1-3**：`EventBuffer` 环形缓冲存最近 N 事件 + 自增 seq；SSE handler 用 `Last-Event-ID: {runID}:{seq}` 重连时调 `GetEventBuffer.ReplayFrom(seq)`；`BuildStateSnapshot` 在 buffer 不够时返回当前状态快照；WebSocket 走 JSON-RPC 2.0（`ws_protocol.go` 消息封装、`ws_session.go` 会话管理、`ws_handler.go` 路由审批请求/响应 + run/abort）。
+4. **P1-4**：`PauseRun(runID, reason)` 幂等（已暂停 no-op），创建 `PauseCh`；ReAct 循环每轮开头检查 `rc.Paused` 阻塞 `<-PauseCh`；`ResumeRun` 关闭 `PauseCh` 唤醒；审批集成——工具触发审批时 `waitForApproval` 阻塞，超时则 `PauseRun("approval timeout")`。
+5. **P1-5**：`WorkerPool` 管理多个 Python Worker 进程，资源限制（maxWorkers/memoryLimit）+ 超时控制（per-call timeout）。
+6. **P1-6**：`Checkpoint` 补 `TurnIndex`+`ChatHistory` 字段；`saveCheckpointWithReason` 周期性（每 5 turn）+ 完成时 + 暂停时保存；`ResumeFromCheckpoint` 反序列化→重建 RunContext→`executePlanFromTurn` 从 `startTurn` 继续 ReAct（不重做已记录 turn）。
+
+**构建与测试**：`go build ./...` ✅、`go test ./...` ✅（governor_test 通过）。
+
+**与设计的偏差**
+
+- 审批流接口实现为 `ApprovalGovernor`（避让同包 `*toolregistry.Governor` 结构体），与 v0.4 设计一致。
+- `waitForApproval` 超时改为 `PauseRun` 而非直接 fail，体验更好（用户可 resume）。
+
+**未做事项**：无（P1 六项全部完成）。

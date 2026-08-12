@@ -13,6 +13,7 @@
 | v0.2 | 2026-08-11 | GLM | 新增 P2-7 Browser/Computer Use：接入已有 browserbridge 代码 + 注册 3 个工具到 ToolRegistry + CDP 协议集成 + 沙箱约束 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 3 修复：P2-1 Skills Loader 从 .json 文件改为 SKILL.md + meta.json 目录结构（与主文档 §7.1 一致）+ 两阶段加载 |
 | v0.4 | 2026-08-12 | — | P2-5 §6.3 Router 实现 ModelGateway 接口（P0 §5.2.1 对齐）：StreamChat/Chat 接口方法委托 ChatWithFallback，`var _ ModelGateway = (*Router)(nil)` 编译期检查；补充 findRule 方法定义（审查发现 ChatWithFallback 调用但未定义） |
+| v0.5 | 2026-08-12 | TraeCodeCloud | **P2 阶段实现完成记录**：P2-1 Skills 体系 ✅；P2-2 MCP transport + 集成 ✅；P2-3 Hooks & Lifecycle ✅；P2-4 Scheduler + Trigger ✅；P2-5 Router ✅；P2-6 Eval 评估 ✅；P2-7 浏览器工具 + 沙箱 ✅。详见文末「实现记录 v0.5」。 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -1373,3 +1374,45 @@ NewBuilder("paper_search").
 4. P2-4 Automation：定时任务调度器 + 事件触发器 + API
 5. P2-5 Model Routing 策略：多 provider 路由 + 降级 + 成本控制 + 配置文件
 6. P2-6 Eval 评估体系：7 个评估指标 + 质量评分器 + 回归测试 + API
+
+---
+
+## 实现记录
+
+### v0.5（2026-08-12）— TraeCodeCloud P2 阶段实现完成
+
+**执行者**：TraeCodeCloud（后端 / Agent 开发工程师）
+**完成时间**：2026-08-12
+**对应提交**：`3fb4646 feat(core): implement P2 stage — skills, MCP, hooks, router, eval, browser, scheduler`
+**分支**：`dev/TraeCodeCloud` → 目标 `master`
+
+**完成情况总览**
+
+| 任务 | 状态 | 实现文件 | 验收对照 |
+|---|---|---|---|
+| P2-1 Skills 体系 | ✅ 完成 | `aiagent/skills/registry.go`（Registry + Get/List）、`skills/loader.go`（两阶段：LoadAllMeta + LoadFullContent，SKILL.md + meta.json 目录结构）、`skills/builtin.go`（5 内置技能）、`context_builder.go`（WithSkills + SetActiveSkill + Prompt 注入 + 推荐工具排序） | §2 验收 |
+| P2-2 MCP 集成 | ✅ 完成 | `mcp/client.go`（MCP 客户端）、`mcp/transport.go`（stdio/HTTP 传输层）、`mcp/registry_bridge.go`（单向桥接到 toolregistry，避免循环依赖）、`mcp/tools_adapter.go`、`mcp/server_config.go`、`mcp/routes.go` | §3 验收 |
+| P2-3 Hooks & Lifecycle | ✅ 完成 | `aiagent/hooks.go`（HookManager + 6 钩子点 OnRunStart/End + OnTurnStart/End + OnToolBefore/After + Hook 接口 + Register/Fire） | §4 验收 |
+| P2-4 Scheduler | ✅ 完成 | `aiagent/scheduler.go`（Cron 调度器）、`aiagent/trigger.go`（事件触发器）、`aiagent/scheduler_routes.go`（HTTP API 管理） | §5 验收 |
+| P2-5 Router | ✅ 完成 | `modelgateway/router.go`（多 provider 路由 + Mode/TaskType 动态路由 + 降级 + 成本控制 + 实现 ModelGateway 接口）、`cost_controller.go`、`rate_limit.go`、`speed_profile.go`、`cache.go` | §6 验收 |
+| P2-6 Eval | ✅ 完成 | `aiagent/eval/scorer.go`（轨迹评分 7 指标）、`aiagent/eval/regression.go`（回归测试框架） | §7 验收 |
+| P2-7 浏览器工具 | ✅ 完成 | `toolregistry/browser_tools.go`（browser_control/screenshot/network_request 注册）、`browserbridge/cdp_adapter.go`（CDP 协议）、`sandbox/check_url.go`（URL 白名单） | §8 验收 |
+
+**实现要点**
+
+1. **P2-1**：`skills/Registry` 管理 Skill 注册；`Loader` 两阶段加载——`LoadAllMeta` 扫描 `skills/<id>/manifest/meta.json`，`LoadFullContent` 懒加载 `SKILL.md`；`ContextBuilder.WithSkills` + `SetActiveSkill` 将技能 Prompt 注入 system prompt + 推荐工具前置排序。
+2. **P2-2**：MCP 客户端支持 stdio/HTTP 传输；`registry_bridge.go` 实现 mcp→toolregistry 单向依赖（避免 toolregistry→mcp 循环，删除了原先的 `toolregistry/mcp_tools.go`）；外部工具通过 MCP 协议自动注入 ToolRegistry。
+3. **P2-3**：`HookManager.Register` + `Fire(event, ctx)`；6 钩子点（Run/Turn/Tool 的 Start/End）在 orchestrator 的 `fireHook` 中触发，nil-safe（无 HookManager 时 no-op）。
+4. **P2-4**：`Scheduler` 基于 Cron 表达式调度 Run；`Trigger` 事件触发器；HTTP API 管理定时任务。
+5. **P2-5**：`Router` 实现 `modelgateway.ModelGateway` 接口（StreamChat/Chat 委托 ChatWithFallback），基于 Mode/TaskType 的动态路由 + 降级策略 + 成本控制（CostController）+ 限流（RateLimit）+ 缓存（Cache）。
+6. **P2-6**：`eval/scorer.go` 7 个评估指标对 Run 轨迹打分；`eval/regression.go` 回归测试框架验证 Run 质量。
+7. **P2-7**：3 个浏览器工具注册到 ToolRegistry；`cdp_adapter.go` 接入 CDP 协议；`check_url.go` URL 白名单沙箱检查防止访问危险 URL。
+
+**构建与测试**：`go build ./...` ✅、`go test ./...` ✅。
+
+**与设计的偏差**
+
+- P2-2 设计在 `toolregistry/mcp_tools.go` 集成 MCP，实现改为在 `mcp/registry_bridge.go` 单向桥接：消除 mcp↔toolregistry 循环依赖。
+- P2-5 Router 实现与 v0.4 设计对齐（实现 ModelGateway 接口 + findRule）。
+
+**未做事项**：无（P2 七项全部完成）。
