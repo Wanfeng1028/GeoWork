@@ -13,6 +13,7 @@
 | v0.1 | 2026-08-11 | GLM | 初稿：版本表 + 阅读约定 + 第 1 节任务依赖图 + P0-2 状态机三者对齐完整设计 |
 | v0.2 | 2026-08-11 | GLM | 补全 P0-1 接线死代码 + P0-3 per-run 化 + P0-4 ReAct 循环完整设计；P0 四项施工方案全部完成 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 1/2/4/6 修复：idx 写死→tc.Index + workflow→ToolRegistry 动态注册方案 + ModelGateway interface 定义 + ReAct 状态机转换逻辑补全（inferStateFromTool）|
+| v0.4 | 2026-08-12 | — | 新增 §6 测试方案（Mock ModelGateway + FakeToolRegistry）；新增 §5.4.1.1 指令优先级链；§5.6.1 Verifying 触发改为自动推断（连续只读工具 N 轮）；§4.7.3 StreamEvents 标注 goroutine 泄漏已知问题 |
 
 > **阅读约定**：本文档是施工图纸，不是宪法。所有接口签名、结构体定义、白名单表都是**待实现的契约**，代码实现时必须对齐。如发现契约无法实现（如 Go 语法限制、循环依赖），先改本文档再改代码，不得私自偏离。
 
@@ -886,6 +887,10 @@ func (o *Orchestrator) StreamEventsForRun(runID string) <-chan Event {
 }
 
 // 全局订阅保留（合并所有 run 的事件）
+// ⚠️ v0.4 注意：此实现存在两个已知问题，计划在 P1 阶段修复：
+// 1. 新 Run 启动后不会被已创建的 merged channel 捕获（需要 fan-out 模式）
+// 2. SSE 客户端断开后 merged 无人消费，转发 goroutine 会因 default 分支丢弃事件
+// 当前阶段前端使用 StreamEventsForRun（per-run 订阅），全局订阅仅供调试用
 func (o *Orchestrator) StreamEvents() <-chan Event {
     o.mu.Lock()
     defer o.mu.Unlock()
@@ -1143,6 +1148,30 @@ for _, t := range registry.List() {  // ← List() 返回顺序必须稳定
 [项目结构]
 {repo_map}
 ```
+
+#### 5.4.1.1 指令优先级链（v0.4 新增）
+
+当不同来源的 prompt 片段冲突时，按以下优先级裁决（高优先级不可被低优先级覆盖）：
+
+```
+1. System Safety Constraints（主文档 §0.1.4 不可妥协约束）
+   ↓
+2. Governor / State Machine 规则（沙箱白名单、审批流）
+   ↓
+3. Mode 角色定义（§5.4.2 的能力边界和禁止行为）
+   ↓
+4. Skill Prompt 片段（技能注入的指令）
+   ↓
+5. Memory Summary（记忆回注的上下文）
+   ↓
+6. User Preferences（用户偏好设置）
+```
+
+**实现规则**：
+
+- Skill Prompt 注入时，Harness 检查是否包含与 §1-2 冲突的指令（如"忽略沙箱限制"），如检测到则**丢弃该 Skill 的冲突片段**并记录 warning
+- System Prompt 的拼接顺序严格按 1→6 从上到下，高优先级段落放在 prompt 开头（模型对开头指令的遵从度更高）
+- 用户消息**不参与优先级链**——用户指令通过工具调用来执行，不直接修改 System Prompt
 
 #### 5.4.2 5 Mode 角色定义
 
@@ -1495,7 +1524,36 @@ func (o *Orchestrator) transitionTo(target State, reason string, rc *RunContext)
 | 任何 | 模型声明"验证" | Verifying | 模型在 content 中声明验证完成 |
 | Verifying | 模型声明"完成" | Completed | 模型不再调用工具 |
 
-**模型如何声明验证**：System Prompt 中告知模型"完成任务后，在回复中包含 `<verify>` 标签表示进入验证阶段"。Orchestrator 解析 content 中的 `<verify>` 标签触发 Verifying 状态。
+**Verifying 状态触发机制（v0.4 修正）**：
+
+~~原方案依赖模型在 content 中写 `<verify>` 标签触发 Verifying 状态——不可靠，模型可能忘记写标签，或正常输出中误触发。~~
+
+**新方案**：Verifying 状态由 Harness 根据工具调用模式自动推断：
+
+```go
+// 在 ReAct 循环中，连续 N 轮（默认 N=2）只调用 read_only 工具且无 write 操作时，
+// 自动推断进入 Verifying 状态
+func (o *Orchestrator) checkVerifyingTransition(rc *RunContext, toolCalls []ToolCall) {
+    allReadOnly := true
+    for _, tc := range toolCalls {
+        if o.inferStateFromTool(tc.Function.Name) == StateEditing {
+            allReadOnly = false
+            break
+        }
+    }
+    if allReadOnly {
+        rc.readOnlyStreak++
+    } else {
+        rc.readOnlyStreak = 0
+    }
+    
+    if rc.readOnlyStreak >= 2 && rc.State != StateVerifying {
+        o.transitionTo(rc, StateVerifying, "连续 2 轮只读工具，自动推断验证阶段")
+    }
+}
+```
+
+**Fallback**：如果模型明确输出"任务完成"且不再调用任何工具，ReAct 循环自然结束（`len(toolCalls) == 0`），不经过 Verifying 直接进入 Completed。
 
 ### 5.7 Executor 接入点
 
@@ -1618,6 +1676,137 @@ ReAct 循环开始
 | 8 | 工具失败后模型能自行决策 | 手动测试：read_file 不存在的路径，验证模型下一轮调整策略 |
 | 9 | System Prompt 前 3 段稳定（命中缓存） | 对比两次请求的 system prompt，前缀一致 |
 | 10 | 5 个 Mode 的 System Prompt 正确生成 | 遍历 5 Mode，验证角色定义和工具列表 |
+
+---
+
+## 6. P0 测试方案（v0.4 新增）
+
+### 6.1 目标
+
+ReAct 循环的单元测试不能每次都调真实 LLM。需要提供 Mock 实现，使测试可确定、可重复、不烧钱。
+
+### 6.2 Mock ModelGateway
+
+```go
+// MockModelGateway 实现 ModelGateway 接口，返回预设的 tool_calls
+type MockModelGateway struct {
+    // 预设响应队列：每次 StreamChat 调用按顺序弹出一个
+    responses []MockResponse
+    callIndex int
+    Calls     []StreamChatCall  // 记录每次调用的参数，用于断言
+}
+
+type MockResponse struct {
+    Content   string                      // 文本回复
+    ToolCalls []modelgateway.ToolCall     // 工具调用
+    Err       error                       // 模拟错误
+}
+
+type StreamChatCall struct {
+    Messages []modelgateway.ChatMessage
+    Tools    []modelgateway.ToolDef
+}
+
+func (m *MockModelGateway) StreamChat(ctx context.Context, params modelgateway.StreamChatParams) (<-chan modelgateway.StreamChunk, error) {
+    m.Calls = append(m.Calls, StreamChatCall{Messages: params.Messages, Tools: params.Tools})
+    
+    if m.callIndex >= len(m.responses) {
+        return nil, fmt.Errorf("MockModelGateway: no more预设 responses")
+    }
+    resp := m.responses[m.callIndex]
+    m.callIndex++
+    
+    ch := make(chan modelgateway.StreamChunk, 10)
+    go func() {
+        defer close(ch)
+        if resp.Err != nil {
+            ch <- modelgateway.StreamChunk{Error: resp.Err}
+            return
+        }
+        // 先发文本 chunk
+        if resp.Content != "" {
+            ch <- modelgateway.StreamChunk{Delta: resp.Content}
+        }
+        // 再发 tool_calls
+        for _, tc := range resp.ToolCalls {
+            ch <- modelgateway.StreamChunk{ToolCall: &tc}
+        }
+    }()
+    return ch, nil
+}
+
+func (m *MockModelGateway) Chat(ctx context.Context, params modelgateway.ChatParams) (*modelgateway.ChatCompletionResponse, error) {
+    // 非流式 fallback，类似逻辑
+}
+
+// 确保实现接口
+var _ ModelGateway = (*MockModelGateway)(nil)
+```
+
+### 6.3 FakeToolRegistry
+
+```go
+// FakeToolRegistry 不真正执行工具，返回预设结果
+type FakeToolRegistry struct {
+    results map[string]ToolResult  // toolName → 预设结果
+    Calls   []ToolCall             // 记录调用
+}
+
+func (f *FakeToolRegistry) Execute(ctx context.Context, name string, args map[string]interface{}) (ToolResult, error) {
+    f.Calls = append(f.Calls, ToolCall{Name: name, Args: args})
+    if result, ok := f.results[name]; ok {
+        return result, nil
+    }
+    return ToolResult{Output: fmt.Sprintf("fake result for %s", name)}, nil
+}
+```
+
+### 6.4 测试分层
+
+| 层级 | Mock 程度 | 示例 |
+|---|---|---|
+| 单元测试 | Mock ModelGateway + FakeToolRegistry | ReAct 循环：验证 tool_calls 被执行、状态机转换正确 |
+| 集成测试 | Mock ModelGateway + **真实** ToolRegistry | 验证工具注册表与循环的集成（用沙箱路径） |
+| Smoke 测试 | **真实** ModelGateway + 真实 ToolRegistry | 端到端：发一条消息，验证完整流程（需 API key） |
+
+### 6.5 测试用例组织
+
+```go
+func TestReActLoop_SingleToolCall(t *testing.T) {
+    mockGW := &MockModelGateway{
+        responses: []MockResponse{
+            {ToolCalls: []ToolCall{{Name: "read_file", Args: map[string]any{"path": "/test.txt"}}}},
+            {Content: "文件内容是..."},  // 第二轮：模型总结
+        },
+    }
+    fakeReg := &FakeToolRegistry{
+        results: map[string]ToolResult{
+            "read_file": {Output: "hello world"},
+        },
+    }
+    
+    orch := NewTestOrchestrator(mockGW, fakeReg)
+    run := orch.StartRun(context.Background(), "读一下 test.txt")
+    
+    // 等待完成
+    <-run.Done()
+    
+    // 断言
+    assert.Equal(t, StateCompleted, run.State)
+    assert.Len(t, fakeReg.Calls, 1)
+    assert.Equal(t, "read_file", fakeReg.Calls[0].Name)
+    assert.Len(t, mockGW.Calls, 2)  // 两轮模型调用
+}
+```
+
+### 6.6 验收
+
+| # | 检查项 |
+|---|---|
+| 1 | Mock ModelGateway 实现 ModelGateway 接口（编译通过） |
+| 2 | FakeToolRegistry 实现 ToolRegistry 接口（编译通过） |
+| 3 | 至少 5 个单元测试覆盖 ReAct 循环核心路径 |
+| 4 | 单元测试不依赖网络、不依赖文件系统 |
 
 ---
 

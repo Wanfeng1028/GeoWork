@@ -12,6 +12,7 @@
 | v0.1 | 2026-08-11 | GLM | 初稿：P2 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 新增 P2-7 Browser/Computer Use：接入已有 browserbridge 代码 + 注册 3 个工具到 ToolRegistry + CDP 协议集成 + 沙箱约束 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 3 修复：P2-1 Skills Loader 从 .json 文件改为 SKILL.md + meta.json 目录结构（与主文档 §7.1 一致）+ 两阶段加载 |
+| v0.4 | 2026-08-12 | — | P2-5 §6.3 Router 实现 ModelGateway 接口（P0 §5.2.1 对齐）：StreamChat/Chat 接口方法委托 ChatWithFallback，`var _ ModelGateway = (*Router)(nil)` 编译期检查 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -740,7 +741,7 @@ func (r *Router) Route(mode, taskType string) (*ModelProvider, error) {
     return r.providers["default"], nil
 }
 
-// ChatWithFallback 带降级的聊天
+// ChatWithFallback 带降级的聊天（内部方法，不直接暴露给 Orchestrator）
 func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, messages []ChatMessage, tools []ToolDef) (*ChatCompletionResponse, error) {
     rule := r.findRule(mode, taskType)
 
@@ -767,6 +768,41 @@ func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, me
 
     return resp, err
 }
+
+// ═══ v0.2 修正：Router 实现 ModelGateway 接口（与 P0 §5.2.1 对齐）═══
+//
+// Router 必须实现 ModelGateway 接口，使 Orchestrator 可以无缝从
+// OpenAICompatibleClient 切换到 Router。
+// ChatWithFallback 是内部方法（带 mode/taskType 路由参数），
+// 接口方法 StreamChat/Chat 通过默认路由委托给 ChatWithFallback。
+
+func (r *Router) StreamChat(ctx context.Context, params modelgateway.StreamChatParams) (<-chan modelgateway.StreamChunk, error) {
+    provider, err := r.Route(params.Mode, params.TaskType)
+    if err != nil {
+        return nil, err
+    }
+    client := NewOpenAICompatibleClient(provider, r.log)
+    ch, err := client.StreamChat(ctx, params)
+    
+    // 降级：流式失败时切换到 fallback provider
+    if err != nil {
+        rule := r.findRule(params.Mode, params.TaskType)
+        if rule != nil && rule.FallbackID != "" {
+            fallback := r.providers[rule.FallbackID]
+            fallbackClient := NewOpenAICompatibleClient(fallback, r.log)
+            return fallbackClient.StreamChat(ctx, params)
+        }
+    }
+    return ch, err
+}
+
+func (r *Router) Chat(ctx context.Context, params modelgateway.ChatParams) (*modelgateway.ChatCompletionResponse, error) {
+    resp, err := r.ChatWithFallback(ctx, params.Mode, params.TaskType, params.Messages, params.Tools)
+    return resp, err
+}
+
+// 确保 Router 实现 ModelGateway 接口
+var _ ModelGateway = (*Router)(nil)
 ```
 
 ### 6.4 成本控制

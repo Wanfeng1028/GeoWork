@@ -11,7 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
-| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流），协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
+| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -553,6 +553,76 @@ function handleSSEEvent(event: SSEEvent) {
 | 4 | `usage` 事件携带 token 用量 | 检查 data 字段 |
 | 5 | 前端 adapter 处理所有事件类型 | 代码审查无 default 忽略 |
 
+### 4.5 断线重连与事件恢复（v0.3 新增）
+
+#### 4.5.1 心跳与超时
+
+| 参数 | 值 | 说明 |
+|---|---|---|
+| 服务端 ping 间隔 | 15s | 已有（P0-3 §4.2） |
+| 客户端超时判定 | 45s（3 次 ping 未收到） | 超过则视为断连 |
+| 重连策略 | 指数退避：1s → 2s → 4s → 8s → 最大 30s | 前端 `EventSource` 默认行为 |
+
+#### 4.5.2 Last-Event-ID 机制
+
+每个 SSE 事件携带递增的 `id` 字段（使用 Run 内的序号，非全局）：
+
+```
+event: message
+id: run_abc:42
+data: {"content": "hello", "role": "assistant", "isDelta": true}
+```
+
+前端断线重连时，`EventSource` 自动在请求头带上 `Last-Event-ID: run_abc:42`。
+
+后端收到带 `Last-Event-ID` 的连接请求时：
+
+```go
+func (h *Handler) handleStreamEvents(w http.ResponseWriter, req *http.Request) {
+    lastID := req.Header.Get("Last-Event-ID")
+    if lastID != "" {
+        // 从该 Run 的事件缓冲中重放丢失的事件
+        runID, seq := parseLastEventID(lastID)
+        replayEvents := h.orchestrator.GetEventBuffer(runID, seq+1)
+        for _, e := range replayEvents {
+            fmt.Fprintf(w, "id: %s\nevent: %s\ndata: %s\n\n", e.ID, e.Type, e.Data)
+        }
+        w.(http.Flusher).Flush()
+    }
+    // 然后正常进入 SSE 推送循环
+}
+```
+
+#### 4.5.3 事件缓冲
+
+每个 Run 在 `RunContext` 中维护环形缓冲区（最近 500 个事件）：
+
+```go
+type EventBuffer struct {
+    events []BufferedEvent
+    maxLen int  // 500
+    mu     sync.RWMutex
+}
+
+type BufferedEvent struct {
+    Seq  int    // Run 内递增序号
+    Type string
+    Data string
+}
+```
+
+- 缓冲区满时覆盖最旧的事件
+- Run 结束后缓冲区保留 60s 再清理（给断线重连留窗口）
+- 如果丢失的事件已超出缓冲范围（断线太久），后端发送 `state_snapshot` 事件（当前 Run 状态 + 最近 5 条消息摘要），前端据此重建 UI
+
+#### 4.5.4 重连后状态同步
+
+重连后前端必须：
+
+1. 收到 `state_snapshot`（如果有）→ 重建 Run 状态
+2. 收到 `state_change` → 更新状态指示器
+3. 如果 Run 已完成（`done` 事件在缓冲期内发出）→ 直接显示最终结果
+
 ---
 
 ## 5. P1-4：Human-in-the-Loop
@@ -801,10 +871,27 @@ func (o *Orchestrator) ResumeFromCheckpoint(checkpointID string) error {
     // 恢复 chatHistory
     var chatHistory []modelgateway.ChatMessage = cp.ChatHistory
 
-    // 从 cp.TurnIndex 继续循环
-    go o.executePlanFromTurn(context.Background(), run, rc, chatHistory, cp.TurnIndex)
+    // 从 Checkpoint 的 TurnIndex 处恢复 ReAct 循环
+    return o.executePlanFromTurn(ctx, run, rc, chatHistory, cp.TurnIndex)
+}
 
-    return nil
+// executePlanFromTurn 从指定轮次恢复 ReAct 循环
+// 它是 executePlan 的变体——跳过前 turnIndex 轮的对话历史（已在 chatHistory 中），
+// 从第 turnIndex 轮开始继续执行。
+// 与 executePlan 的区别：
+//   - executePlan 从 turnIndex=0 开始
+//   - executePlanFromTurn 从指定 turnIndex 开始，chatHistory 已包含之前的对话
+func (o *Orchestrator) executePlanFromTurn(
+    ctx context.Context,
+    run *Run,
+    rc *RunContext,
+    chatHistory []modelgateway.ChatMessage,
+    startTurn int,
+) error {
+    rc.TurnIndex = startTurn  // 设置起始轮次
+    // 后续逻辑与 executePlan 完全一致——
+    // ReAct 循环从 startTurn 开始计数，chatHistory 已包含之前所有轮次的对话
+    return o.executePlanInternal(ctx, run, rc, chatHistory)
 }
 ```
 
