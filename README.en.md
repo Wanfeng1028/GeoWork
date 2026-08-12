@@ -1,12 +1,15 @@
+<!-- Top bar: language switch + license entry -->
+<p align="center">
+  <a href="README.md"><strong>English</strong></a> &nbsp;·&nbsp; <a href="README.md">简体中文</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="licenses/LICENSE">License (PolyForm NC 1.0.0)</a>
+</p>
+
+---
+
 <p align="center">
   <img src="./assets/GeoWork_Logo_Kit_v1.0/01_Master_SVG/geowork-marketing-orbit-horizontal.svg" width="700" alt="GeoWork - Spatial Intelligence Core" />
 </p>
 
 <p align="center"><strong>A local-first desktop AI Agent workbench for GIS, remote sensing, and geospatial workflows</strong></p>
-
-<p align="center">
-  <strong>English</strong> &nbsp;·&nbsp; <a href="README.md">简体中文</a>
-</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/QGIS-589632?style=flat-square&logo=qgis&logoColor=white" alt="QGIS">
@@ -19,16 +22,16 @@
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/macOS-arm64-blue?style=flat-square&logo=apple&logoColor=white" alt="macOS arm64">
   <img src="https://img.shields.io/badge/Windows-x64-blue?style=flat-square&logo=windows&logoColor=white" alt="Windows x64">
-  <a href="licenses/LICENSE">
-    <img src="https://img.shields.io/badge/license-PolyForm--NC--1.0.0-yellow?style=flat-square" alt="PolyForm Noncommercial License">
-  </a>
+  <img src="https://img.shields.io/badge/license-PolyForm--NC--1.0.0-yellow?style=flat-square" alt="PolyForm Noncommercial License">
 </p>
 
 ---
 
 ## Current Version Status
 
-> **v0.5.x-dev (Development Preview)** — GeoWork is currently in a development preview stage (v0.1–v0.4 were demo/exploration versions, now archived). **This project has not been officially released yet.** The current code is provided for developers to start locally, test, and continue development. Some capabilities remain in development state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. Please do not treat the current version as production-ready. v1.0.x will be the first official release.
+> **v0.5.x-dev (Development Preview)** — **This project has not been officially released yet.** The current code is provided for developers to start locally, test, and continue development. v0.1–v0.4 were demo/exploration versions (now archived). v0.5 is the development preview, and v1.0.x will be the first official release.
+>
+> Some capabilities remain in development state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. **Please do not treat the current version as production-ready.**
 >
 > See [Dev Version Checklist](doc/DEV_VERSION_CHECKLIST.md) for details.
 
@@ -51,6 +54,8 @@ Tackle complex geospatial and scientific workflows through conversation — empo
 ---
 
 ## How to Use
+
+> **Note: The following instructions apply to the unreleased development preview (v0.5.x-dev).** Project structure and startup procedures may change at any time before the official release.
 
 ### 1. What environment do you need?
 

@@ -1,13 +1,16 @@
+<!-- 顶部栏：语言切换 + 许可入口 -->
+<p align="center">
+  <a href="README.en.md"><strong>English</strong></a> &nbsp;·&nbsp; <a href="README.md"><strong>简体中文</strong></a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="licenses/LICENSE">许可（PolyForm NC 1.0.0）</a>
+</p>
+
+---
+
 <p align="center">
   <img src="./assets/GeoWork_Logo_Kit_v1.0/01_Master_SVG/geowork-marketing-orbit-horizontal.svg" width="700" alt="GeoWork - Spatial Intelligence Core" />
 </p>
 
 <p align="center">
   <strong>面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台</strong>
-</p>
-
-<p align="center">
-  <a href="README.en.md">English</a> &nbsp;·&nbsp; <strong>简体中文</strong>
 </p>
 
 <p align="center">
@@ -21,16 +24,16 @@
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/macOS-arm64-blue?style=flat-square&logo=apple&logoColor=white" alt="macOS arm64">
   <img src="https://img.shields.io/badge/Windows-x64-blue?style=flat-square&logo=windows&logoColor=white" alt="Windows x64">
-  <a href="licenses/LICENSE">
-    <img src="https://img.shields.io/badge/license-PolyForm--NC--1.0.0-yellow?style=flat-square" alt="PolyForm Noncommercial License">
-  </a>
+  <img src="https://img.shields.io/badge/license-PolyForm--NC--1.0.0-yellow?style=flat-square" alt="PolyForm Noncommercial License">
 </p>
 
 ---
 
 ## 当前版本状态
 
-> **v0.5.x-dev（开发预览版）** — GeoWork 当前处于开发预览版阶段（v0.1–v0.4 为 demo 探索版，已封存）。**本项目尚未正式发布**，当前代码仅供开发者本地启动、测试和继续开发。部分能力仍是开发态，包括 Cloud Server in-memory、部分 GIS/GEE/QGIS/GDAL 能力、本地沙箱策略、插件市场、团队协作和计费系统。请不要将当前版本视为生产可用版本。v1.0.x 为正式发布版。
+> **v0.5.x-dev（开发预览版）** — **本项目尚未正式发布。** 当前代码仅供开发者本地启动、测试和继续开发使用。v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0.x 为第一个正式发布版。
+>
+> 部分能力仍处于开发态，包括 Cloud Server in-memory、部分 GIS/GEE/QGIS/GDAL 能力、本地沙箱策略、插件市场、团队协作和计费系统。**请勿将当前版本视为生产可用版本。**
 >
 > 详见 [开发版验收清单](doc/DEV_VERSION_CHECKLIST.md)。
 
@@ -53,6 +56,8 @@
 ---
 
 ## 如何使用
+
+> **注意：以下指引适用于尚未正式发布的开发预览版（v0.5.x-dev）。** 项目结构和启动方式在正式发布前可能随时调整。
 
 ### 1. 需要哪些环境？
 
