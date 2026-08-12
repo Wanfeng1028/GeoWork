@@ -1,0 +1,48 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [master, main, dev-frontend/TraeCodeCloud-SeedCode]
+
+jobs:
+  frontend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm --workspace apps/desktop run lint
+      - run: npm --workspace apps/desktop run typecheck
+      - run: npm --workspace apps/desktop run build
+      - run: npm --workspace apps/desktop test
+
+  core-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - run: cd core && go build ./...
+      - run: cd core && go test ./...
+      - run: cd core && go vet ./...
+
+  worker-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: cd workers/geo-python && pip install -e ".[dev]"
+      - run: cd workers/geo-python && python -m pytest
+
+  doc-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for broken internal links
+        run: echo "Doc link check placeholder"
