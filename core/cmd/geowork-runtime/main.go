@@ -69,6 +69,22 @@ func main() {
 	}
 	logger.Info("Built-in tools registered", zap.Int("count", len(toolRegistry.List())))
 
+	// Dynamically register Python Worker tools into the same registry so
+	// workflow + aiagent calls flow through one governance path (P0-2 D5).
+	// Failure is non-fatal: a missing/unreachable worker leaves only the
+	// builtin tools registered, which is enough for aiagent offline runs.
+	workerClient := worker.NewClient("http://127.0.0.1:8766")
+	if err := toolregistry.RegisterWorkerTools(ctx, toolRegistry, workerClient, logger); err != nil {
+		logger.Warn("Failed to register worker tools", zap.Error(err))
+	}
+
+	// Wire the registry into the workflow engine created by gruntime.New
+	// so workflow callWorker routes through ToolRegistry (P0-2).
+	if app.AgentEngine() != nil {
+		app.AgentEngine().WithRegistry(toolRegistry)
+		logger.Info("Agent workflow engine wired with ToolRegistry")
+	}
+
 	// --- Task Service (DB-backed task persistence) ---
 	taskSvc := tasks.NewService(db)
 	if err := taskSvc.Init(); err != nil {

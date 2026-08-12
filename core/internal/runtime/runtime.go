@@ -206,13 +206,18 @@ func New(workspace string, workerBaseURL string) *App {
 	kbDBPath := filepath.Join(workspace, "state", "knowledge.db")
 	app.knowledgeMgr, _ = knowledge.NewKnowledgeManager(kbLogger, kbDBPath)
 
-	// Initialize agent engine (workflow store)
+	// Initialize agent engine (workflow store).
+	// registry is left nil here; main.go wires the ToolRegistry via
+	// agent.Engine.WithRegistry after both are constructed, so that
+	// workflow calls share governance (audit/permission/sandbox) with
+	// the aiagent ReAct loop. Passing nil preserves the legacy
+	// direct-worker-call behavior for any caller that does not opt in.
 	agentLogger, _ := zap.NewProduction()
 	agentDBPath := filepath.Join(workspace, "state", "workflows.db")
 	agentDB, err := sql.Open("sqlite", agentDBPath)
 	if err == nil {
 		if store, err := agent.NewStore(agentDB); err == nil {
-			app.agentEngine = agent.NewEngine(store, agentLogger, app.worker)
+			app.agentEngine = agent.NewEngine(store, agentLogger, app.worker, nil)
 		}
 	}
 
