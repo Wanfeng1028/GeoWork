@@ -14,6 +14,7 @@
 | v0.2 | 2026-08-11 | GLM | 补全 P0-1 接线死代码 + P0-3 per-run 化 + P0-4 ReAct 循环完整设计；P0 四项施工方案全部完成 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 1/2/4/6 修复：idx 写死→tc.Index + workflow→ToolRegistry 动态注册方案 + ModelGateway interface 定义 + ReAct 状态机转换逻辑补全（inferStateFromTool）|
 | v0.4 | 2026-08-12 | — | 新增 §6 测试方案（Mock ModelGateway + FakeToolRegistry）；新增 §5.4.1.1 指令优先级链；§5.6.1 Verifying 触发改为自动推断（连续只读工具 N 轮）；§4.7.3 StreamEvents 标注 goroutine 泄漏已知问题；§5.8.1 新增错误分类与重试策略（Transient/Permanent/UserAction + 指数退避）；§4.3 EventCh 背压策略补充；§5.6 Planner 角色澄清（初始 Plan 为建议非刚性） |
+| v0.5 | 2026-08-12 | — | **编译期契约修复：ProviderID() 方法补全**。配合 P1 v0.4 的依赖反转修复；§5.2 表中 `openai_compatible.go` 改为"修改"，补充 `ProviderID() string` 方法以通过 `var _ ModelGateway = (*OpenAICompatibleClient)(nil)` 编译期断言。|
 
 > **阅读约定**：本文档是施工图纸，不是宪法。所有接口签名、结构体定义、白名单表都是**待实现的契约**，代码实现时必须对齐。如发现契约无法实现（如 Go 语法限制、循环依赖），先改本文档再改代码，不得私自偏离。
 
@@ -300,7 +301,9 @@ func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 | aiagent（LLM 驱动） | **mandatory**（critical 操作必须 user approval） | mandatory | mandatory |
 | workflow（DAG 驱动） | **optional**（用户设计时已授权，只对 critical 操作审批） | mandatory | mandatory |
 
-> **实现方式**：ToolRegistry 的 `Execute` 方法新增 `ExecutionMode` 参数（`ModeAutonomous` / `ModeDeterministic`），Governor 根据 mode 决定是否强制审批。
+> **实现方式**：ToolRegistry 的 `Execute` 方法新增 `ExecutionMode` 参数（`toolregistry.ModeAutonomous` / `toolregistry.ModeDeterministic`，类型定义见 P1 v0.4 §2.3.1 `package toolregistry`），Governor 根据 mode 决定是否强制审批。
+>
+> **【阶段边界】**：P0 施工时 **不加第 4 个 mode 参数**，保持当前 3 参数签名 `Execute(ctx, name, args)`。因为 P0 阶段 Governor 还未实现（GovernorImpl 是 P1-1 的交付物），mode 参数没有消费方。P1-1 开工时一次性把所有调用方（§2.7.2 `callWorker` / §3.3 `executeStep` / §5.7.2 ReAct 循环）同步升级为 4 参数签名。
 
 #### 2.7.4 Engine 注入 ToolRegistry
 
@@ -1000,10 +1003,10 @@ data: {"type":"done","timestamp":"2026-08-11T12:00:05Z","runId":"run_abc123","da
 
 | 文件 | 改动类型 | 说明 |
 |---|---|---|
-| `core/internal/aiagent/orchestrator.go` | 修改 | `executePlan` 改为 ReAct 循环 |
+| `core/internal/aiagent/orchestrator.go` | 修改 | `executePlan` 改为 ReAct 循环；gateway 字段改为 `ModelGateway` 接口 |
 | `core/internal/aiagent/executor.go` | 不改 | `ParseModelResponse()` / `AppendToolResult()` 已存在 |
 | `core/internal/aiagent/planner.go` | 修改 | `BuildSystemPrompt` 完善 5 Mode 模板 |
-| `core/internal/modelgateway/openai_compatible.go` | 不改 | `StreamChat()` / `Chat()` 已存在 |
+| `core/internal/modelgateway/openai_compatible.go` | **修改** | 补 `ProviderID() string` 方法（v0.5 编译期契约修复） |
 | `core/internal/modelgateway/gateway.go` | **新建** | ModelGateway interface 定义（v0.3 新增） |
 
 ### 5.2.1 ModelGateway 接口定义（v0.3 新增 — 千问审查硬伤 4）
@@ -1032,6 +1035,20 @@ type ModelGateway interface {
 // 确保 OpenAICompatibleClient 实现 ModelGateway 接口
 // （编译期检查：如果接口不匹配会报错）
 var _ ModelGateway = (*OpenAICompatibleClient)(nil)
+```
+
+### 5.2.2 OpenAICompatibleClient 补 ProviderID（v0.5 编译期契约修复）
+
+> **【v0.5 修正 — 编译期契约硬伤】**：§5.2.1 的编译期断言要求 `OpenAICompatibleClient` 实现 `ProviderID() string`。现有 `openai_compatible.go` 只实现了 `Chat` / `StreamChat` / `ModelList` / `TestConnection`，缺少 `ProviderID` 会导致 `gateway.go` 的 `var _ ModelGateway = (*OpenAICompatibleClient)(nil)` 编译失败。P0 开工第一件事补齐。
+
+```go
+// core/internal/modelgateway/openai_compatible.go — 追加 3 行
+
+// ProviderID 返回当前 provider 的标识，实现 ModelGateway 接口。
+// 用于审计日志和 P2-5 Router 的路由追踪。
+func (c *OpenAICompatibleClient) ProviderID() string {
+    return c.provider.ID
+}
 ```
 
 **Orchestrator 改动**：

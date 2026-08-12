@@ -12,6 +12,7 @@
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
 | v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；Governor 结构体补充 registry 字段；ApprovalDecision 枚举补充 denied/timeout；waitForApproval 接收者统一为 *Orchestrator；PauseRun 加幂等保护；协议规范独立为 `doc/09-GeoWork-Communication-Protocol.md` |
+| v0.4 | 2026-08-12 | — | **编译期契约修复：包循环依赖反转 + 标识符重名避让**。§2.3 执行依赖反转：ExecutionMode + ApprovalDecision + ApprovalRequest + ApprovalResult + **ApprovalGovernor** 接口全部移至 `package toolregistry`；将审批流接口命名为 `ApprovalGovernor`（而非 `Governor`）以避让同包已存在的 `*toolregistry.Governor` 调用限制结构体，Registry 新增字段 `approvalGov ApprovalGovernor` 和 setter `WithApprovalGovernor`；`package aiagent` 保留 `GovernorImpl` 实现体并实现 `toolregistry.ApprovalGovernor` 接口；§2.5 `Registry.Execute` 签名改为同包 `mode ExecutionMode` 并引用 `r.approvalGov`，等待逻辑上移到 Orchestrator 层（新增 `ErrApprovalRequired` 哨兵错误）；§2.5.1 和 §5.4 所有类型引用同步加 `toolregistry.` 前缀；PauseRun 签名加 `reason` 参数并同步新增 `RunContext.PauseReason` 字段；修复 `NewOrchestrator` 同包调用不应加 `aiagent.` 前缀的小问题。|
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -40,14 +41,25 @@
 
 | 文件 | 改动类型 | 说明 |
 |---|---|---|
-| `core/internal/toolregistry/registry.go` | 修改 | `Execute` 新增 `ExecutionMode` 参数 + Governor 审批 |
-| `core/internal/aiagent/governor.go` | 新建 | Governor 实现 |
+| `core/internal/toolregistry/registry.go` | 修改 | `Execute` 新增 `ExecutionMode` 参数 + ApprovalGovernor 接口字段（依赖反转，避让同名 Governor struct） |
+| `core/internal/toolregistry/governor_types.go` | **新建** | ExecutionMode + ApprovalDecision + ApprovalRequest + ApprovalResult + ApprovalGovernor 接口定义（toolregistry 包侧） |
+| `core/internal/aiagent/governor.go` | 新建 | `GovernorImpl` 实现体，实现 `toolregistry.ApprovalGovernor` 接口 |
 | `core/internal/toolregistry/builtin_tools.go` | 修改 | `write_file`/`run_shell`/`run_python` 加沙箱路径检查 |
 
-### 2.3 Governor 结构体
+### 2.3 Governor 依赖反转（v0.4 编译期契约修复 — 避免 toolregistry ↔ aiagent 循环依赖）
+
+> **【v0.4 修正 — 编译期契约硬伤】**：v0.3 将 `ExecutionMode` / `Governor` 定义在 `aiagent` 包，同时 `Registry.Execute` 引用 `aiagent.ExecutionMode` 且 `Registry` 结构体持有 `*aiagent.Governor`。因为 `aiagent.Orchestrator` 已导入 `toolregistry.Registry`，这构成 **双向导入环**，Go 编译器直接拒绝。v0.4 执行依赖反转（消费方定义接口）：**类型/接口定义在被消费方（toolregistry），实现方（aiagent）实现接口**，依赖图变为单向 `aiagent → toolregistry`。
+
+#### 2.3.1 toolregistry 包：类型与接口定义（消费方契约）
 
 ```go
-package aiagent
+// core/internal/toolregistry/governor_types.go（新建）
+
+package toolregistry
+
+import "time"
+
+// ═══ 执行模式类型 ═══
 
 // ExecutionMode 区分自主执行和确定性执行
 type ExecutionMode int
@@ -57,40 +69,128 @@ const (
     ModeDeterministic                       // workflow 驱动，只审计
 )
 
-// Governor 管理工具执行权限和审批
-type Governor struct {
-    log         *zap.Logger
-    registry    *toolregistry.Registry     // v0.4 修正：补充 registry 字段（审查发现缺失）
-    pendingApps map[string]*ApprovalRequest  // runID → 待审批请求
-    mu          sync.Mutex
-}
+// ═══ 审批相关伴生类型 ═══
 
-// ApprovalRequest 代表一个待审批的操作
-type ApprovalRequest struct {
-    ID        string
-    RunID     string
-    ToolName  string
-    Args      map[string]any
-    RiskLevel string
-    CreatedAt time.Time
-    Decision  ApprovalDecision  // pending / approved / rejected
-    Reason    string
-}
-
+// ApprovalDecision 审批决策状态
 type ApprovalDecision string
 
 const (
     ApprovalPending  ApprovalDecision = "pending"
     ApprovalApproved ApprovalDecision = "approved"
     ApprovalRejected ApprovalDecision = "rejected"
-    ApprovalDenied   ApprovalDecision = "denied"    // v0.4 补充：用户主动拒绝
-    ApprovalTimeout  ApprovalDecision = "timeout"   // v0.4 补充：超时自动拒绝
+    ApprovalDenied   ApprovalDecision = "denied"    // 用户主动拒绝
+    ApprovalTimeout  ApprovalDecision = "timeout"   // 超时自动拒绝
 )
 
-// CheckPermission 检查工具是否允许执行
-func (g *Governor) CheckPermission(runID, toolName string, args map[string]any, mode ExecutionMode) (*ApprovalRequest, error) {
-    tool := g.registry.Get(toolName)
-    if tool == nil {
+// ApprovalRequest 代表一个待审批的操作
+type ApprovalRequest struct {
+    ID          string
+    RunID       string
+    ToolName    string
+    Args        map[string]any
+    RiskLevel   string
+    CreatedAt   time.Time
+    Decision    ApprovalDecision  // pending/approved/denied/timeout
+    Reason      string
+    DecisionCh  chan ApprovalResult  // 用户决策通过此 channel 传递
+}
+
+// ApprovalResult 封装一次用户审批决策
+type ApprovalResult struct {
+    Decision   ApprovalDecision
+    Reason     string
+    ResolvedBy string  // user ID
+}
+
+// ═══ ApprovalGovernor 接口（依赖反转：Registry 持有此接口，不持有具体实现）═══
+//
+// 【v0.4 命名说明】：本接口不命名为 Governor，因为 `toolregistry` 包
+// 已有 `type Governor struct`（调用次数限制/策略管理器，见 governor.go），
+// 同名会导致 Go 编译期标识符冲突。两者职责正交：
+//   · Governor（已存在）：调用频率/额度/策略检查（RecordCall/CheckBeforeCall）
+//   · ApprovalGovernor（新增）：用户审批流检查/等待/解除（CheckPermission/ResolveApproval）
+
+// ApprovalGovernor 管理 critical 工具执行的人工审批流。
+// 具体实现由 aiagent 包的 GovernorImpl 提供，通过编译期断言
+// var _ toolregistry.ApprovalGovernor = (*aiagent.GovernorImpl)(nil) 对齐。
+type ApprovalGovernor interface {
+    // CheckPermission 检查工具是否允许执行
+    // 返回非 nil ApprovalRequest 表示需要等待用户审批
+    CheckPermission(runID, toolName string, args map[string]any, mode ExecutionMode) (*ApprovalRequest, error)
+
+    // ResolveApproval 处理用户审批决策（approve/reject/timeout）
+    ResolveApproval(reqID string, decision ApprovalDecision, reason string) error
+}
+```
+
+**Registry 结构体同步更新（新增 approvalGov 接口字段，与已存在的调用限制 Governor 并存）**：
+
+```go
+// core/internal/toolregistry/registry.go — Registry 结构体改动
+
+type Registry struct {
+    mu         sync.RWMutex
+    tools      map[string]Tool
+    log        *zap.Logger
+    governor   *Governor      // 已存在：调用次数/策略管理器（toolregistry.Governor struct）
+    approvalGov ApprovalGovernor // ← v0.4 新增：审批流接口（aiagent.GovernorImpl 实现），命名区分避免冲突
+    auditLog   *AuditLog
+    policies   map[string]*GovernorPolicy
+    // allowedRoots 等沙箱字段 ...
+}
+
+// WithApprovalGovernor 向 Registry 注入审批流实现（接口依赖，不与 aiagent 耦合）
+func (r *Registry) WithApprovalGovernor(ag ApprovalGovernor) *Registry {
+    r.mu.Lock()
+    r.approvalGov = ag
+    r.mu.Unlock()
+    return r
+}
+```
+
+#### 2.3.2 aiagent 包：GovernorImpl 实现体
+
+```go
+// core/internal/aiagent/governor.go（新建）
+
+package aiagent
+
+import (
+    "fmt"
+    "sync"
+    "time"
+
+    "geowork/core/internal/idgen"
+    "geowork/core/internal/toolregistry"  // 单向依赖：aiagent → toolregistry
+    "go.uber.org/zap"
+)
+
+// GovernorImpl 是 toolregistry.ApprovalGovernor 接口的具体实现。
+// 注意：不与 toolregistry 构成循环，因为 toolregistry 只引用接口 ApprovalGovernor，
+// 不引用本具体结构体 GovernorImpl。同时 toolregistry 包内已有 `Governor` struct（调用限制），
+// 这里命名为 GovernorImpl 以区分职责。
+type GovernorImpl struct {
+    log         *zap.Logger
+    registry    *toolregistry.Registry  // 反向引用只读：查工具 RiskLevel 等元信息
+    pendingApps map[string]*toolregistry.ApprovalRequest  // reqID → 待审批请求
+    mu          sync.Mutex
+}
+
+// 编译期断言：确保实现 toolregistry.ApprovalGovernor 接口对齐
+var _ toolregistry.ApprovalGovernor = (*GovernorImpl)(nil)
+
+func NewGovernorImpl(log *zap.Logger, registry *toolregistry.Registry) *GovernorImpl {
+    return &GovernorImpl{
+        log:         log,
+        registry:    registry,
+        pendingApps: make(map[string]*toolregistry.ApprovalRequest),
+    }
+}
+
+// CheckPermission 实现 toolregistry.Governor 接口
+func (g *GovernorImpl) CheckPermission(runID, toolName string, args map[string]any, mode toolregistry.ExecutionMode) (*toolregistry.ApprovalRequest, error) {
+    tool, ok := g.registry.Get(toolName)
+    if !ok {
         return nil, fmt.Errorf("tool %q not registered", toolName)
     }
 
@@ -100,7 +200,7 @@ func (g *Governor) CheckPermission(runID, toolName string, args map[string]any, 
     }
 
     // critical 操作
-    if mode == ModeDeterministic {
+    if mode == toolregistry.ModeDeterministic {
         // workflow 链路：只记录审计，不强制审批
         g.log.Info("critical tool in deterministic mode, audit only",
             zap.String("tool", toolName),
@@ -110,14 +210,15 @@ func (g *Governor) CheckPermission(runID, toolName string, args map[string]any, 
     }
 
     // autonomous 链路：critical 必须审批
-    req := &ApprovalRequest{
-        ID:        idgen.NewPrefixed("apr_"),
-        RunID:     runID,
-        ToolName:  toolName,
-        Args:      args,
-        RiskLevel: tool.RiskLevel(),
-        CreatedAt: time.Now(),
-        Decision:  ApprovalPending,
+    req := &toolregistry.ApprovalRequest{
+        ID:         idgen.NewPrefixed("apr_"),
+        RunID:      runID,
+        ToolName:   toolName,
+        Args:       args,
+        RiskLevel:  tool.RiskLevel(),
+        CreatedAt:  time.Now(),
+        Decision:   toolregistry.ApprovalPending,
+        DecisionCh: make(chan toolregistry.ApprovalResult, 1),  // 缓冲 1，非阻塞写
     }
 
     g.mu.Lock()
@@ -127,8 +228,8 @@ func (g *Governor) CheckPermission(runID, toolName string, args map[string]any, 
     return req, nil  // 返回审批请求，调用方等待
 }
 
-// ResolveApproval 处理审批决策
-func (g *Governor) ResolveApproval(reqID string, decision ApprovalDecision, reason string) error {
+// ResolveApproval 实现 toolregistry.Governor 接口
+func (g *GovernorImpl) ResolveApproval(reqID string, decision toolregistry.ApprovalDecision, reason string) error {
     g.mu.Lock()
     defer g.mu.Unlock()
 
@@ -139,7 +240,36 @@ func (g *Governor) ResolveApproval(reqID string, decision ApprovalDecision, reas
 
     req.Decision = decision
     req.Reason = reason
+
+    // 非阻塞推送到 DecisionCh，通知 waitForApproval 循环
+    select {
+    case req.DecisionCh <- toolregistry.ApprovalResult{
+        Decision:   decision,
+        Reason:     reason,
+        ResolvedBy: "system",  // 调用方（API handler）可覆盖
+    }:
+    default:
+        // channel 已有决策，丢弃本次重复 resolve（幂等）
+    }
+
     return nil
+}
+```
+
+#### 2.3.3 注入时机（aiagent 包）
+
+```go
+// orchestrator.go 初始化时注入（package aiagent 内，同包无需 aiagent. 前缀）
+func NewOrchestrator(registry *toolregistry.Registry, gateway modelgateway.ModelGateway, log *zap.Logger, ...) *Orchestrator {
+    governorImpl := NewGovernorImpl(log, registry)
+    registry.WithApprovalGovernor(governorImpl)  // ← 注入接口字段 approvalGov（Registry 侧仅知 ApprovalGovernor，不知 aiagent.GovernorImpl）
+    o := &Orchestrator{
+        // ...
+        registry: registry,
+        governor: governorImpl,  // Orchestrator 侧持有具体实现，用于 CheckPermission/ResolveApproval 直调
+        // ...
+    }
+    return o
 }
 ```
 
@@ -167,15 +297,17 @@ func validateSandboxPath(path string, allowedRoots []string) error {
 ### 2.5 ToolRegistry.Execute 改动
 
 ```go
-// 修改后：新增 ExecutionMode 参数
-func (r *Registry) Execute(ctx context.Context, toolName string, args map[string]any, mode aiagent.ExecutionMode) (map[string]any, error) {
+// 修改后：新增 ExecutionMode 参数（同包类型，无需包前缀）
+// v0.4：审批流通过 r.approvalGov（toolregistry.ApprovalGovernor 接口）调用，
+//       与已存在的 r.governor（*toolregistry.Governor 调用限制管理器）职责正交。
+func (r *Registry) Execute(ctx context.Context, toolName string, args map[string]any, mode ExecutionMode) (map[string]any, error) {
     tool, ok := r.tools[toolName]
     if !ok {
         return nil, fmt.Errorf("tool %q not found", toolName)
     }
 
     // 1. 沙箱路径检查（对涉及路径的工具）
-    if tool.Sandbox() {
+    if tool.SandboxRequired() {
         if pathArg, ok := args["path"].(string); ok {
             if err := validateSandboxPath(pathArg, r.allowedRoots); err != nil {
                 return nil, err
@@ -183,29 +315,41 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
         }
     }
 
-    // 2. Governor 权限检查
-    approvalReq, err := r.governor.CheckPermission(
-        ctx.Value("runID").(string),
-        toolName, args, mode,
-    )
-    if err != nil {
-        return nil, err
-    }
+    // 2. 已存在的调用限制 Governor 检查（频率/额度/策略）
+    //    （现有代码路径：r.governor.RecordCall / CheckBeforeCall，保持不变）
 
-    // 3. 如果需要审批，等待
-    if approvalReq != nil {
-        if err := r.waitForApproval(ctx, approvalReq); err != nil {
-            return nil, fmt.Errorf("approval denied: %w", err)
+    // 3. 审批流 ApprovalGovernor 检查（P1-1 新增接口字段 approvalGov）
+    var approvalReq *ApprovalRequest
+    var err error
+    if r.approvalGov != nil {
+        runID, _ := ctx.Value(runIDKey{}).(string)
+        approvalReq, err = r.approvalGov.CheckPermission(runID, toolName, args, mode)
+        if err != nil {
+            return nil, err
         }
     }
 
-    // 4. 执行工具
+    // 4. 如果需要审批，返回错误由上层 Orchestrator.waitForApproval 处理
+    // （Registry 层不阻塞等待用户，否则会引入对 aiagent 的反向依赖）
+    if approvalReq != nil {
+        return nil, &ErrApprovalRequired{Req: approvalReq}
+    }
+
+    // 5. 执行工具
     result, err := tool.Execute(ctx, args)
 
-    // 5. 审计日志
+    // 6. 审计日志
     r.auditLog(ctx, toolName, args, result, err)
 
     return result, err
+}
+
+// ErrApprovalRequired 由 Execute 返回，表示需要先审批再执行
+type ErrApprovalRequired struct {
+    Req *ApprovalRequest
+}
+func (e *ErrApprovalRequired) Error() string {
+    return fmt.Sprintf("approval required for tool %s (req %s)", e.Req.ToolName, e.Req.ID)
 }
 ```
 
@@ -215,11 +359,12 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 
 ```go
 // waitForApproval 等待用户审批，带超时和自动暂停
-// v0.4 修正：接收者统一为 *Orchestrator（审查发现原文 Runner/Registry 不一致）
-// Orchestrator 持有 Governor 和 RunContext，是唯一合理的接收者
-func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest) error {
+// v0.4：接收者统一为 *Orchestrator；所有类型引用加 toolregistry. 前缀；
+//       配合 §2.5 的 ErrApprovalRequired，调用链是：
+//       Execute → ErrApprovalRequired → Orchestrator.waitForApproval → 重试 Execute（此时 Governor 不再挂起）
+func (o *Orchestrator) waitForApproval(ctx context.Context, req *toolregistry.ApprovalRequest) error {
     // 1. 发送审批请求事件给前端
-    r.emitEvent(Event{
+    o.emitEvent(Event{
         Type:      "approval_request",
         Timestamp: time.Now(),
         RunID:     req.RunID,
@@ -241,13 +386,13 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest
         select {
         case <-ctx.Done():
             // 上下文取消（如 Run 被主动停止）
-            r.governor.ResolveApproval(req.ID, ApprovalDenied, "context cancelled")
+            o.governor.ResolveApproval(req.ID, toolregistry.ApprovalDenied, "context cancelled")
             return fmt.Errorf("approval cancelled: %w", ctx.Err())
 
         case <-timer.C:
             // 超时：自动暂停 Run（主文档 §14.3）
-            r.governor.ResolveApproval(req.ID, ApprovalTimeout, "5min timeout")
-            r.emitEvent(Event{
+            o.governor.ResolveApproval(req.ID, toolregistry.ApprovalTimeout, "5min timeout")
+            o.emitEvent(Event{
                 Type:      "approval_timeout",
                 Timestamp: time.Now(),
                 RunID:     req.RunID,
@@ -258,14 +403,14 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest
                 },
             })
             // 将 Run 状态改为 Paused，等待用户恢复
-            r.pauseRun(req.RunID, "approval timeout for "+req.ToolName)
+            o.PauseRun(req.RunID, "approval timeout for "+req.ToolName)
             return fmt.Errorf("approval timeout after %s for tool %s", timeout, req.ToolName)
 
         case decision := <-req.DecisionCh:
             // 用户做出了决策
             switch decision.Decision {
-            case ApprovalApproved:
-                r.emitEvent(Event{
+            case toolregistry.ApprovalApproved:
+                o.emitEvent(Event{
                     Type:      "approval_resolved",
                     Timestamp: time.Now(),
                     RunID:     req.RunID,
@@ -276,8 +421,8 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest
                 })
                 return nil
 
-            case ApprovalDenied:
-                r.emitEvent(Event{
+            case toolregistry.ApprovalDenied:
+                o.emitEvent(Event{
                     Type:      "approval_resolved",
                     Timestamp: time.Now(),
                     RunID:     req.RunID,
@@ -295,44 +440,9 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest
         }
     }
 }
-
-// pauseRun 将 Run 暂停（等待用户恢复）
-func (r *Runner) pauseRun(runID, reason string) {
-    r.mu.Lock()
-    defer r.mu.Unlock()
-    if run, ok := r.runs[runID]; ok {
-        run.Status = StatusPaused
-        run.UpdatedAt = time.Now()
-        r.emitEvent(Event{
-            Type:      "run_paused",
-            Timestamp: time.Now(),
-            RunID:     runID,
-            Data:      map[string]any{"reason": reason},
-        })
-    }
-}
 ```
 
-**ApprovalRequest 结构体补充**（v0.2 新增 DecisionCh）：
-
-```go
-type ApprovalRequest struct {
-    ID          string
-    RunID       string
-    ToolName    string
-    Args        map[string]any
-    RiskLevel   string
-    CreatedAt   time.Time
-    Decision    ApprovalDecision  // pending/approved/denied/timeout
-    DecisionCh  chan ApprovalResult  // ← v0.2 新增：用户决策通过此 channel 传递
-}
-
-type ApprovalResult struct {
-    Decision  ApprovalDecision
-    Reason    string
-    ResolvedBy string  // user ID
-}
-```
+> **【v0.4 删除冗余】**：v0.3 版本 `ApprovalRequest 结构体补充（DecisionCh）` 代码块已合并至 §2.3.1 `toolregistry` 包的 `ApprovalRequest` / `ApprovalResult` 定义中，此处不再重复。DecisionCh 字段与 ResolveApproval 的非阻塞推送（select+default）构成完整的幂等决策通道。
 
 **超时行为表**：
 
@@ -644,10 +754,11 @@ type RunContext struct {
     // ... 已有字段
     Paused      bool
     PauseCh     chan struct{}  // 暂停时阻塞，恢复时 close 重开
+    PauseReason string         // 暂停原因（用于事件展示）
 }
 
 // PauseRun 暂停指定 Run
-func (o *Orchestrator) PauseRun(runID string) error {
+func (o *Orchestrator) PauseRun(runID string, reason string) error {
     rc := o.getRunContext(runID)
     if rc == nil {
         return fmt.Errorf("run %q not found", runID)
@@ -657,8 +768,15 @@ func (o *Orchestrator) PauseRun(runID string) error {
         return nil  // 已经暂停，幂等返回
     }
     rc.Paused = true
+    rc.PauseReason = reason
     rc.PauseCh = make(chan struct{})
-    o.transitionState(MachineEventSystemPause, "user paused", rc)
+    o.transitionState(MachineEventSystemPause, reason, rc)
+    o.emitEvent(rc, Event{
+        Type:      "run_paused",
+        Timestamp: time.Now(),
+        RunID:     runID,
+        Data:      map[string]any{"reason": reason},
+    })
     return nil
 }
 
@@ -687,11 +805,11 @@ if rc.Paused {
 
 ### 5.4 审批集成
 
-审批已在 P1-1 的 Governor 中实现，这里补充 ReAct 循环的集成：
+审批接口已在 P1-1 §2.3 的 `toolregistry.ApprovalGovernor` 中定义（aiagent 包通过 `GovernorImpl` 实现），这里补充 ReAct 循环的集成：
 
 ```go
 // 工具执行前检查审批
-approvalReq, err := o.governor.CheckPermission(rc.Run.ID, toolName, args, ModeAutonomous)
+approvalReq, err := o.governor.CheckPermission(rc.Run.ID, toolName, args, toolregistry.ModeAutonomous)
 if approvalReq != nil {
     // 发送审批请求事件给前端
     o.emitEvent(rc, Event{
