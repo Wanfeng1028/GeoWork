@@ -60,6 +60,70 @@ src/shared/stores/
 | 跨路由 / 跨面板共享 | Zustand Store |
 | 需要持久化到 localStorage | Zustand Store + 手动 persist |
 
+### 1.6 异步状态三态模式
+
+Store 中的异步数据必须管理 `loading` / `error` / `data` 三个状态：
+
+```typescript
+interface AsyncState<T> {
+  data: T | null
+  loading: boolean
+  error: string | null
+}
+```
+
+- 请求开始时：`loading = true, error = null`
+- 请求成功时：`data = result, loading = false`
+- 请求失败时：`error = message, loading = false`
+- 禁止只有 `data` 没有 `loading` 和 `error`（无法区分"还没加载"和"加载完是空"）
+
+### 1.7 竞态条件处理
+
+用户快速切换任务时，旧请求可能在新请求之后返回，导致状态被旧数据覆盖。
+
+**规则**：
+
+- 使用 `AbortController` 取消旧请求——新请求发出时，先 abort 上一个
+- 如果无法 abort（如 WebSocket），用请求序号对比——只有最新序号的响应才更新状态
+
+```typescript
+// 示例：请求序号防竞态
+let requestId = 0
+
+async function fetchConversation(convId: string) {
+  const thisRequestId = ++requestId
+  const data = await apiGet(`/api/conversations/${convId}`)
+  // 只有最新请求才更新状态
+  if (thisRequestId === requestId) {
+    set({ messages: data.messages, loading: false })
+  }
+}
+```
+
+### 1.8 乐观更新
+
+对于用户操作（如删除任务、标记完成），可以先更新 UI 再发请求，失败时回滚：
+
+```typescript
+function deleteTask(taskId: string) {
+  const previousTasks = get().tasks
+  // 乐观更新
+  set({ tasks: previousTasks.filter(t => t.id !== taskId) })
+  
+  apiDelete(`/api/tasks/${taskId}`).catch(() => {
+    // 失败回滚
+    set({ tasks: previousTasks })
+    message.error('删除失败，已恢复')
+  })
+}
+```
+
+**规则**：
+
+- 乐观更新只用于**高置信度**的操作（删除、标记完成）
+- 创建操作不用乐观更新（服务端可能生成不同的 ID / 时间戳）
+- 回滚时必须通知用户
+
 ---
 
 ## 2. 数据层 / API 适配层

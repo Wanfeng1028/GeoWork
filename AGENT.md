@@ -45,6 +45,7 @@
 
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
+| **全局工程规范**      | `doc/Engineering-Git-Workflow.md` · `Engineering-CI-CD.md` · `Engineering-Security.md` · `Engineering-TypeScript.md` · `Engineering-ESLint-Prettier.md` · `Engineering-API-Contract.md` · `Engineering-Testing.md` · `Engineering-Release.md` · `Engineering-Monitoring.md` | 全部 v1.0 |
 | `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` + `doc/GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
 | `core/`               | `doc/GeoWorkAgent.md` + `doc/GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
