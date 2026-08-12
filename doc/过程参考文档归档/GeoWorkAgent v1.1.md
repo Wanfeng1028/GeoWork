@@ -1,3 +1,5 @@
+> **⚠️ 本文档已归档（v1.1 快照），仅供历史比对。活文档为 `doc/GeoWorkAgent.md`（当前 v1.6）。**
+
 ## 一、GeoWork 现有 Agent 架构总览
 
 GeoWork 的 Agent 系统已有多层实现，并非从零开始规划。根据代码现状，存在两条并行的 Agent 链路：

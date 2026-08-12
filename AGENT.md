@@ -19,6 +19,7 @@
 | 定位     | 面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台   |
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.4.x-dev                                                   |
+| 当前阶段 | P0 详细设计完成（`doc/GeoWorkAgent-P0-Detailed-Design.md`），待施工 |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---

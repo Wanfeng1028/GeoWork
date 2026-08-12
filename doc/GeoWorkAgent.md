@@ -16,7 +16,7 @@
 | v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
 | v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；§0.1.2 学科清单 18→19（Browser/Computer Use 作为第 19 个学科，与 Python Worker 同为执行层）；§0.1.3 关系图补入 Browser；第 21 节优先级表新增 P2-7 行 |
 | v1.5 | 2026-08-11 | GLM | 千问审查 6 处硬伤 + 4 处软伤修复：P0 v0.3（idx 写死/工具名映射/ModelGateway interface/状态机转换）；P1 v0.2（审批超时/CachedTokens）；P2 v0.3（Skills 格式统一 SKILL.md）；主文档 §3.3 工具数 12→13 修正 |
-| v1.6 | 2026-08-12 | — | 修正 skills/ 相关事实错误：§0.1.2 #6 从 ❌ 改为 ⚠️（骨架已立）；§0.2.2 偏差 #8 更正（目录已存在）；§7 GLM 注替换为 v1.2 修正说明；§7.1 目录结构对齐实际扁平结构（SKILL.md + manifest.json）；§7.4 技能名对齐实际目录名 |
+| v1.6 | 2026-08-12 | Qwen | 修正 skills/ 相关事实错误：§0.1.2 #6 从 ❌ 改为 ⚠️（骨架已立）；§0.2.2 偏差 #8 更正（目录已存在）；§7 GLM 注替换为 v1.2 修正说明；§7.1 目录结构对齐实际扁平结构（SKILL.md + manifest.json）；§7.4 技能名对齐实际目录名 |
 
 > **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4/v1.5 的修正以 > 引用块或 【现状/目标】 标注注入。
 
