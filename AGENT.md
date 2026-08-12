@@ -45,7 +45,7 @@
 
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
-| `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` | 活文档 v1.5.1    |
+| `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` + `doc/GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
 | `core/`               | `doc/GeoWorkAgent.md`                                                              | 主宪法 v1.5      |
 | `core/` 施工          | `doc/GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
 | `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |

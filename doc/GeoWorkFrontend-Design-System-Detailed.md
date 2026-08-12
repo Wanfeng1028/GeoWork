@@ -95,11 +95,11 @@ F0-4（stylelint）───┘                                         │
 
 > 目标：把"不够工程化"的三件事——图标混用、空/加载/报错散装、样式文件味重——回收到设计系统的单一出处。
 
-### F1-1 Lucide 图标全站替换（39 处违规）
+### F1-1 Lucide 图标全站替换（`@ant-design/icons` 全量替换）
 
 | 范围 | 内容 |
 |---|---|
-| 违规清单 | `pages/` 下 39 个文件使用 `@ant-design/icons`，全部为孤例（16px 用 `MessageOutlined` 级联、20px 用 `SettingOutlined` 级联） |
+| 违规清单 | `pages/` 下所有使用 `@ant-design/icons` 的文件（执行 `grep -r '@ant-design/icons' src/` 获取实时清单），全部为孤例（16px 用 `MessageOutlined` 级联、20px 用 `SettingOutlined` 级联） |
 | 落地动作 | ① 全部替换为 `lucide-react` 同名/近似图标，尺寸对应 16→18px（设置图标）/ 16→20px（默认图标）；② 全局 CSS 统一 `.lucide` 类名清除默认 stroke，对齐设计系统 §16.1；③ `AppShell.tsx` 里的菜单图标从 `SunOutlined/MoonOutlined` 换成 `Lucide.Sun` / `Lucide.Moon` |
 | 验收标准 | `npm run build` 后 `dist/` 里不再有 `@ant-design/icons` 的 chunk；页面截图对比无回流（F0-1 基线） |
 
@@ -213,7 +213,7 @@ F0-4（stylelint）───┘                                         │
 | 版本 | 立项日期 | 关键动作 | 关联文档版本 |
 |---|---|---|---|
 | F0 v0.1 | 2026-08-11 | 立线、主题收敛、胶囊四件套、stylelint | 设计系统 v1.5.0 |
-| F1 v0.1 | 2026-08-11 | Lucide 39 处替换、三件套产品化、去残留 | 设计系统 v1.5.0 |
+| F1 v0.1 | 2026-08-11 | Lucide 全量替换 `@ant-design/icons`、三件套产品化、去残留 | 设计系统 v1.5.0 |
 | F2 v0.1 | 2026-08-11 | 三段式布局、8 路由架构对齐、6 主题下线 | 设计系统 v1.5.0 |
 | FP3 v0.1 | 2026-08-11 | Welcome/About 品牌化、CSS 收敛、5 主题稳定 | 设计系统 v1.5.0 |
 
