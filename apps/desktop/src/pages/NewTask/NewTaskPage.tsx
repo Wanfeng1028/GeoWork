@@ -4,7 +4,6 @@ import {
   App,
   Button,
   Dropdown,
-  Segmented,
   Tag,
   Tour,
   Typography,
@@ -22,6 +21,9 @@ import type { Conversation } from './components/conversationStorage'
 import { apiGet } from '../../shared/api/client'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
+import { CapsuleTabs } from '../../shell/components/CapsuleTabs'
+import { CapsuleTag } from '../../shell/components/CapsuleTag'
+import { CapsuleButton } from '../../shell/components/CapsuleButton'
 import styles from './NewTaskPage.module.css'
 // 主界面大 logo 已注释，暂不需要该资源
 // import logoAnimated from '../../assets/brand/geowork-logo-horizontal-gradient.svg'
@@ -633,9 +635,9 @@ export function NewTaskPage() {
       <img className={styles.logoAnimated} src={logoAnimated} alt="GeoWork" />
       */}
 
-      {/* Mode Switcher */}
+      {/* Mode Switcher —— 使用 CapsuleTabs 胶囊组件 */}
       <div ref={modeSwitcherRef} className={styles.modeSwitcherWrap}>
-        <Segmented
+        <CapsuleTabs
           options={WORK_MODE_OPTIONS.map((opt) => ({
             value: opt.value,
             icon: opt.icon,
@@ -720,24 +722,24 @@ export function NewTaskPage() {
             {model} · {workDir ?? '未选择目录'}
           </Text>
           {isStreaming && (
-            <Tag icon={<LoadingOutlined />} color="processing">
+            <CapsuleTag color="processing" icon={<LoadingOutlined />}>
               {runStatus === 'thinking' ? '理解任务' : runStatus === 'planning' ? '生成计划' : '思考中'}
-            </Tag>
+            </CapsuleTag>
           )}
           {!isStreaming && runStatus === 'waiting-confirmation' && (
-            <Tag color="warning">等待确认</Tag>
+            <CapsuleTag color="warning">等待确认</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'running' && (
-            <Tag icon={<LoadingOutlined />} color="processing">执行中</Tag>
+            <CapsuleTag color="processing" icon={<LoadingOutlined />}>执行中</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'completed' && (
-            <Tag color="success">已完成</Tag>
+            <CapsuleTag color="success">已完成</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'stopped' && (
-            <Tag>已停止</Tag>
+            <CapsuleTag>已停止</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'failed' && (
-            <Tag color="error">失败</Tag>
+            <CapsuleTag color="error">失败</CapsuleTag>
           )}
         </div>
       </div>

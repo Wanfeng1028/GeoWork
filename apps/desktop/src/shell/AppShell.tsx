@@ -11,7 +11,6 @@ import {
   Input,
   Menu,
   Modal,
-  Segmented,
   Space,
   Tag,
   Tooltip,
@@ -63,6 +62,9 @@ import { UserMenu } from './UserMenu'
 import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
 import { TitleBar } from './TitleBar'
+import { CapsuleButton } from './components/CapsuleButton'
+import { CapsuleTabs } from './components/CapsuleTabs'
+import { CapsuleTag } from './components/CapsuleTag'
 import styles from './AppShell.module.css'
 
 type SidebarSegment = 'tasks' | 'channels'
@@ -645,31 +647,18 @@ export function AppShell() {
               )}
             </div>
 
-            {/* Segmented 切换区 */}
+            {/* Segmented 切换区 —— 使用 CapsuleTabs 胶囊组件 */}
             <div className={styles.sidebarSegmented}>
-              <ConfigProvider
-                theme={{
-                  components: {
-                    Segmented: {
-                      itemSelectedColor: token.colorPrimary,
-                      itemSelectedBg: token.colorPrimaryBg,
-                      borderRadius: 999,
-                      borderRadiusSM: 999,
-                    },
-                  },
-                }}
-              >
-                <Segmented
-                  block
-                  value={segment}
-                  onChange={(value) => setSegment(value as SidebarSegment)}
-                  options={[
-                    { label: '任务', value: 'tasks', icon: <UnorderedListOutlined /> },
-                    { label: '移动端控制', value: 'channels', icon: <MobileOutlined /> },
-                  ]}
-                  size="small"
-                />
-              </ConfigProvider>
+              <CapsuleTabs
+                block
+                value={segment}
+                onChange={(value) => setSegment(value as SidebarSegment)}
+                options={[
+                  { label: '任务', value: 'tasks', icon: <UnorderedListOutlined /> },
+                  { label: '移动端控制', value: 'channels', icon: <MobileOutlined /> },
+                ]}
+                size="small"
+              />
             </div>
 
             {/* 内容区：任务列表或空状态 */}
@@ -753,11 +742,11 @@ export function AppShell() {
                                   </span>
                                 </div>
                                 <div className={styles.taskItemMeta}>
-                                  {task.status === 'streaming' && <Tag color="processing" style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px' }}>进行中</Tag>}
-                                  {task.status === 'completed' && <Tag color="success" style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px' }}>完成</Tag>}
-                                  {task.status === 'stopped' && <Tag style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px' }}>已停止</Tag>}
-                                  {task.status === 'failed' && <Tag color="error" style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px' }}>失败</Tag>}
-                                  {task.status === 'idle' && <Tag style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px' }}>空闲</Tag>}
+                                  {task.status === 'streaming' && <CapsuleTag color="processing">进行中</CapsuleTag>}
+                                  {task.status === 'completed' && <CapsuleTag color="success">完成</CapsuleTag>}
+                                  {task.status === 'stopped' && <CapsuleTag>已停止</CapsuleTag>}
+                                  {task.status === 'failed' && <CapsuleTag color="error">失败</CapsuleTag>}
+                                  {task.status === 'idle' && <CapsuleTag>空闲</CapsuleTag>}
                                   <Text type="secondary" style={{ fontSize: 11 }}>
                                     {new Date(task.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                   </Text>
@@ -776,22 +765,22 @@ export function AppShell() {
                   >
                     {isLight ? (
                       <BorderBeam color={token.colorPrimary} outset={0}>
-                        <Button
+                        <CapsuleButton
                           type="primary"
                           size="small"
                           onClick={handleCreateTask}
                         >
                           创建任务
-                        </Button>
+                        </CapsuleButton>
                       </BorderBeam>
                     ) : (
-                      <Button
+                      <CapsuleButton
                         type="primary"
                         size="small"
                         onClick={handleCreateTask}
                       >
                         创建任务
-                      </Button>
+                      </CapsuleButton>
                     )}
                   </Empty>
                 )

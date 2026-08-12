@@ -10,6 +10,9 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "lint": "oxlint",
+    "lint:styles": "npx stylelint \"src/**/*.{css,module.css}\"",
+    "format": "prettier --write src/",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
     "rebuild": "electron-rebuild -f -w node-pty",
     "dist:win": "electron-builder --win nsis --x64"
