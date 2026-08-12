@@ -1,9 +1,5 @@
-<!-- Top bar: language switch + license entry -->
-<p align="center">
-  <a href="README.md"><strong>English</strong></a> &nbsp;·&nbsp; <a href="README.md">简体中文</a> &nbsp;&nbsp;|&nbsp;&nbsp; <a href="licenses/LICENSE">License (PolyForm NC 1.0.0)</a>
-</p>
-
----
+<!-- language: en -->
+<!-- license: PolyForm NC 1.0.0 -->
 
 <p align="center">
   <img src="./assets/GeoWork_Logo_Kit_v1.0/01_Master_SVG/geowork-marketing-orbit-horizontal.svg" width="700" alt="GeoWork - Spatial Intelligence Core" />
