@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"geowork/core/internal/modelgateway"
 )
 
-// ChatMessage represents a message sent to or received from an LLM.
-type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
+// ChatMessage is an alias to modelgateway.ChatMessage for backward compatibility
+// within the aiagent package. All new code should use modelgateway.ChatMessage directly.
+type ChatMessage = modelgateway.ChatMessage
 
 // Executor handles parsing model responses and dispatching tool calls.
 type Executor struct{}

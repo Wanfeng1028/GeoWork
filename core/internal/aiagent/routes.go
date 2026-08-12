@@ -79,7 +79,16 @@ func (r *Routes) handleStreamEvents(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	ch := r.orchestrator.StreamEvents()
+	// Support per-run filtering via ?run_id= query parameter
+	runID := req.URL.Query().Get("run_id")
+
+	var ch <-chan Event
+	if runID != "" {
+		ch = r.orchestrator.StreamEventsForRun(runID)
+	} else {
+		ch = r.orchestrator.StreamEvents()
+	}
+
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 

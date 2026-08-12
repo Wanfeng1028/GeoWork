@@ -21,7 +21,10 @@ type ChatMessage struct {
 }
 
 // ToolCall represents a tool call from the model.
+// In streaming responses, Index identifies which tool_call delta this belongs to
+// (OpenAI streaming protocol: multiple tool_calls can be returned incrementally).
 type ToolCall struct {
+	Index    int              `json:"index,omitempty"`
 	ID       string           `json:"id"`
 	Type     string           `json:"type"`
 	Function ToolFunctionCall `json:"function"`
@@ -209,6 +212,12 @@ func (c *OpenAICompatibleClient) ModelList(ctx context.Context) ([]map[string]st
 func (c *OpenAICompatibleClient) TestConnection(ctx context.Context) error {
 	_, err := c.ModelList(ctx)
 	return err
+}
+
+// ProviderID returns the current provider's identifier, implementing ModelGateway interface.
+// Used for audit logs and P2-5 Router routing tracking.
+func (c *OpenAICompatibleClient) ProviderID() string {
+	return c.provider.ID
 }
 
 func (c *OpenAICompatibleClient) doChat(ctx context.Context, reqBody ChatCompletionRequest) (*ChatCompletionResponse, error) {
