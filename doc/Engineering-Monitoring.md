@@ -44,6 +44,10 @@ Sentry.init({
 })
 ```
 
+**Sentry DSN 存放位置**：`.env.production` 中设置 `VITE_SENTRY_DSN=...`，`.env.development` 中**不设置**（开发环境不上报）。
+
+**开发环境行为**：`VITE_APP_MODE === 'dev'` 时 Sentry 不初始化，错误走 `console.error`。
+
 ### 1.3 错误分级
 
 | 级别 | 含义 | 上报？ | 示例 |
@@ -112,14 +116,18 @@ Go Core 使用标准 `log/slog` 包，分级输出：
 
 ## 3. 性能监控
 
-### 3.1 Web Vitals（待实现）
+### 3.1 Electron 特有指标
+
+Web Vitals（FCP/LCP/CLS）对 Electron 本地加载意义有限。改为监控以下桌面应用特有指标：
 
 | 指标 | 目标值 | 测量方式 |
 |---|---|---|
-| FCP（首次内容绘制） | < 1s | Electron 本地加载，应很快 |
-| LCP（最大内容绘制） | < 2.5s | 对话页消息流渲染 |
-| CLS（累积布局偏移） | < 0.1 | 避免布局抖动 |
-| INP（交互到绘制） | < 200ms | 按钮点击响应 |
+| 窗口首次渲染 | < 1.5s | `BrowserWindow` 的 `ready-to-show` 事件时间戳 - `createWindow` 时间戳 |
+| 主进程阻塞 | < 50ms/次 | `process.monitorEventLoopDelay`（Node.js 内置） |
+| 渲染进程内存 | < 500MB | `process.memoryUsage().rss` |
+| Go Core 内存 | < 1GB | 运行时 `runtime.MemStats` |
+| Python Worker 内存 | < 2GB | GIS 处理可能吃内存，超过时记录 warning |
+| CPU 占用 | < 80%（持续 30s） | 超过时记录 warning |
 
 ### 3.2 Electron 进程监控
 

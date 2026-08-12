@@ -158,3 +158,34 @@ export function createConversation(overrides?: Partial<Conversation>): Conversat
 - 禁止测试间共享可变状态
 - 禁止 `@ts-ignore` 绕过测试里的类型错误
 - 禁止用 `setTimeout` 等待异步操作——用 `waitFor` / `findBy` 查询
+
+---
+
+## 8. 跨平台测试
+
+Electron 跑在 Windows / macOS / Linux 上。以下维度需要跨平台验证。
+
+### 8.1 CI 平台矩阵
+
+| 平台 | CI 跑？ | 说明 |
+|---|---|---|
+| Windows | **必须** | 主要开发和使用环境 |
+| macOS | P2 | 用户量较小，但字体渲染差异大 |
+| Linux | P3 | 开发环境偶尔用 |
+
+当前 CI 只跑 Ubuntu（GitHub Actions 默认）。Windows 测试由开发者本地验证。
+
+### 8.2 平台敏感点
+
+| 维度 | 风险 | 处理方式 |
+|---|---|---|
+| 字体 | `PingFang SC` 仅 macOS，Windows 回退 `Microsoft YaHei`，行高可能不同 | CSS 字体栈写明回退链：`'Microsoft YaHei', 'PingFang SC', sans-serif` |
+| 路径分隔符 | `\` vs `/` | 代码中统一用 `path.join()` / `path.resolve()`，禁止字符串拼接路径 |
+| 快捷键 | `Cmd` vs `Ctrl` | Electron 的 `accelerator` 自动处理（`CmdOrCtrl+K`） |
+| 行尾符 | CRLF vs LF | `.gitattributes` 统一 `* text=auto`（待创建） |
+| node-pty | 编译依赖平台原生模块 | `electron-rebuild` 在目标平台执行 |
+
+### 8.3 视觉验收
+
+- 明暗模式截图验收**至少在 Windows 上跑一遍**（主要用户环境）
+- 字体渲染差异允许 1-2px 的行高偏差，不允许布局错位

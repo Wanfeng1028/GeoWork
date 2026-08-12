@@ -24,6 +24,20 @@
 
 oxlint 是 Rust 编写的高性能 linter，兼容大部分 ESLint 规则。当前用 oxlint 替代 ESLint 做 JS/TS lint。
 
+### 1.1 oxlint 定位
+
+**oxlint 是当前阶段的最终选择**，不是过渡方案。理由：
+
+- oxlint 速度是 ESLint 的 50-100 倍，适合大项目
+- 覆盖了 ESLint 推荐规则集的 80%+
+- 不覆盖的规则（如 React Hooks 规则）通过其他方式补充（见 §7 TODO）
+
+**迁移到 ESLint 的触发条件**（满足任一即评估迁移）：
+
+- oxlint 连续 3 个月未支持项目需要的关键规则
+- 团队扩展后需要与外部贡献者的 ESLint 配置兼容
+- 需要 ESLint 生态特有的插件（如 `eslint-plugin-security`）
+
 ---
 
 ## 2. oxlint 规则

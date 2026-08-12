@@ -140,7 +140,52 @@ npm --workspace apps/desktop run dist:win
 
 ---
 
-## 6. 发布检查清单
+## 6. Feature Flags
+
+### 6.1 机制
+
+使用 localStorage 作为 feature flag 存储（最简单，不需要远程配置服务）：
+
+```typescript
+// src/shared/featureFlags.ts（待创建）
+const FF_PREFIX = 'geowork.ff.'
+
+export function isFeatureEnabled(flag: string): boolean {
+  try {
+    return localStorage.getItem(`${FF_PREFIX}${flag}`) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function setFeatureFlag(flag: string, enabled: boolean): void {
+  localStorage.setItem(`${FF_PREFIX}${flag}`, String(enabled))
+}
+```
+
+### 6.2 命名规范
+
+- key 格式：`geowork.ff.<feature-name>`
+- 默认全部关闭（opt-in），除非文档标注为"默认开启"
+- 示例：`geowork.ff.websocket-control`、`geowork.ff.virtual-scroll`
+
+### 6.3 使用场景
+
+| 场景 | 做法 |
+|---|---|
+| 实验性功能 | Feature flag 保护，未完成时用户看不到 |
+| 灰度发布 | 通过安装包内嵌默认 flag 值控制 |
+| 紧急回滚 | 用户手动在 DevTools 里 `localStorage.setItem('geowork.ff.xxx', 'false')` |
+
+### 6.4 规则
+
+- Feature flag **只控制功能开关**，不控制配置值
+- 功能稳定后（上线 2 个版本无问题），**必须移除 flag** 和对应的死代码
+- Settings 页面提供"实验性功能"区域，列出所有可用 flag（仅 dev 模式显示）
+
+---
+
+## 7. 发布检查清单
 
 发布前对照：
 

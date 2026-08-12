@@ -783,6 +783,12 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 | 字号检查 | font-size 只允许 12 / 13 / 14 / 16 / 20 |
 | `!important` | 默认禁止；如需覆盖 antd 深层样式，须在该行加注释说明原因 |
 
+**stylelint 可行性说明**：
+
+- 间距/圆角/字号检查需要自定义 stylelint 插件（`stylelint-declaration-strict-value` 不够用），当前为**目标规则**，待插件开发后启用
+- stylelint 只检查 `.module.css` 文件中的声明值，不检查 inline style 和 antd token 引用（`token.colorXxx`）
+- 如果项目大部分样式走 antd token，stylelint 实际检查的范围很小——这是预期行为，说明样式已经通过 token 系统收敛
+
 ### 17.3 新组件准入
 
 新增任何组件前，按顺序自问：

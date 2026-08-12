@@ -307,6 +307,75 @@ doc/ 下相关文档是否需要同步更新：□ 是（哪份哪节） □ 否
 
 ---
 
+## 15. 文档治理
+
+### 15.1 文档层级
+
+```
+Level 0 — 宪法（极少改动）
+├── AGENT.md                              ← 全局约束 + 路由表
+└── doc/GeoWorkFrontend-Design-System.md  ← 视觉宪法
+
+Level 1 — 规范（按阶段更新）
+├── doc/Engineering-*.md × 9              ← 各领域工程规范
+├── doc/GeoWorkFrontend-Engineering-Standards.md  ← 前端代码规范
+└── doc/GeoWork-Communication-Protocol.md ← 通信协议
+
+Level 2 — 施工图（每个 P 阶段更新）
+├── doc/GeoWorkFrontend-Design-System-Detailed.md     ← 视觉施工
+├── doc/GeoWorkAgent-P0~P3-Detailed-Design.md         ← 后端施工
+└── doc/Engineering-Implementation-Plan.md             ← 工程化施工
+
+Level 3 — 记录（持续追加）
+├── CHANGELOG.md
+└── doc/ADR/                              ← 架构决策记录
+```
+
+### 15.2 文档 Owner
+
+| 文档 | Owner | Review 频率 |
+|---|---|---|
+| AGENT.md | 项目负责人 | 每个 P 阶段结束 |
+| 设计系统 | 前端 | 每个 P 阶段结束 |
+| Engineering-*.md | 前端 | 每个 P 阶段结束 |
+| GeoWorkAgent.md + P0-P3 | 后端 | 每个 P 阶段结束 |
+| Communication-Protocol | 全栈 | 协议变更时 |
+| ADR/* | 决策发起者 | 不变（只追加） |
+
+### 15.3 文档变更规则
+
+- 代码 PR 涉及接口/行为变更时，**必须同步更新对应文档**（汇报模板已有"doc 同步检查"项）
+- 纯文档 PR 的门槛：至少一人 review（可以是 AI 辅助 review）
+- 文档 PR 必须附"影响的代码文件列表"（如果有的话）
+- 每个 P 阶段结束时，Owner 检查所负责文档与代码的一致性，过期内容标记 `[已过时 — 待更新]`
+
+### 15.4 ADR（Architecture Decision Records）
+
+重大架构决策记录在 `doc/ADR/` 目录下，格式：
+
+```markdown
+# ADR-NNN: 标题
+
+## 状态：已接受 / 已废弃 / 已取代 (日期)
+
+## 背景
+为什么需要做这个决策？
+
+## 决策
+做了什么选择？
+
+## 后果
+这个选择带来什么影响？
+```
+
+已记录的 ADR：
+
+| 编号 | 标题 | 状态 |
+|---|---|---|
+| ADR-001 | 通信协议采用 SSE + WebSocket 混合架构 | 已接受 |
+
+---
+
 ## 14. 最后原则
 
 ```text
