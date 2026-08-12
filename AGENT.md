@@ -5,6 +5,7 @@
 | v1.0 | 2026-08-11 | 初稿：模块地图、文档路由、通用纪律                       |
 | v1.1 | 2026-08-12 | 合并去重双版本；修正路由表 404、skills 结构、依赖文件名；补 marketplace 模块、P0-P3 文档入口、版本表 |
 | v1.2 | 2026-08-12 | TraeCodeCloud 后端/Agent P0-P3 全阶段实现完成：§1 当前阶段更新为「P0-P3 后端施工全部完成，待验收」；P0/P1/P2/P3 施工图各追加「实现记录」版本（05-v0.6 / 06-v0.5 / 07-v0.5 / 08-v0.3）。 |
+| v1.2 | 2026-08-12 | TraeCode AI Agent 前端施工记录：E0/F0/F1-2/F1-3/F2-1/F2-2/F2-4/FP3 全部完成，更新项目阶段、文档路由、验收记录 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -21,7 +22,11 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
+<<<<<<< HEAD
 | 当前阶段 | P0-P3 后端施工全部完成（TraeCodeCloud 实现，分支 `dev/TraeCodeCloud`，待验收）；前端施工图待开始 |
+=======
+| 当前阶段 | P0 详细设计完成（`doc/05-GeoWorkAgent-P0-Detailed-Design.md`），前端 F0~F2+FP3 完成（2026-08-12），待后端施工 + 前端 F1-1（Lucide 替换）+ E1/E2 |
+>>>>>>> e287191 (docs: 更新版本记录、验收清单和施工进度)
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -48,7 +53,7 @@
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | **全局工程规范**      | `doc/10-Engineering-Git-Workflow.md` · `11-Engineering-CI-CD.md` · `12-Engineering-Security.md` · `13-Engineering-TypeScript.md` · `14-Engineering-ESLint-Prettier.md` · `15-Engineering-API-Contract.md` · `16-Engineering-Testing.md` · `17-Engineering-Release.md` · `18-Engineering-Monitoring.md` | 全部 v1.0 |
-| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
+| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0 |
 | `core/`               | `doc/04-GeoWorkAgent.md` + `doc/09-GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/05-GeoWorkAgent-P0-Detailed-Design.md` + `06-GeoWorkAgent-P1-Detailed-Design.md` + `07-GeoWorkAgent-P2-Detailed-Design.md` + `08-GeoWorkAgent-P3-Detailed-Design.md` | 施工图           |
 | `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |
@@ -421,7 +426,32 @@ Level 3 — 记录（持续追加）
 
 ---
 
-## 14. 最后原则
+## 14. AI Agent 施工记录
+
+### 2026-08-12 · TraeCode AI Agent · 前端 F0~F2 + FP3 阶段
+
+| 阶段 | 内容 | 文件数 | 状态 |
+|---|---|---|---|
+| E0 基础设施 | Prettier/stylelint/oxlint/tsconfig strict/CI pipeline/路径别名/.gitattributes/.env.example | 9 | ✅ |
+| F0-2 主题收敛 | appearanceStore 白名单收敛、useAntdTheme 只处理 3 种值 | 2 | ✅ |
+| F0-3 胶囊四件套 | CapsuleButton/CapsuleTabs/CapsuleTag/CapsuleGhost + 统一导出 | 5 | ✅ |
+| F0-1 对话页基线 | AppShell/NewTaskPage 接入胶囊组件 | 2 | ✅ |
+| F0-4 stylelint | .stylelintrc.json 规则配置 | 1 | ✅ |
+| F1-2 反馈三件套 | PageSkeleton(4 变体)/EmptyState(3 档)/ErrorBoundary | 4 | ✅ |
+| F2-1 布局骨架 | IconRail 组件（56px 图标导航） | 2 | ✅ |
+| F1-3 全页面对齐 | NewTaskPage/TasksPage/WorkspacePage 接入反馈组件 | 4 | ✅ |
+| F2-2 页面架构 | ErrorBoundary 包裹、Settings 关于页 | 3 | ✅ |
+| F2-4 主题下线 | ThemePreview 路由下线、废弃主题 @deprecated | 2 | ✅ |
+| FP3 品牌化 | WelcomePage/AboutPage 品牌页 | 5 | ✅ |
+
+**分支**：`dev-frontend/TraeCodeCloud-SeedCode`
+**PR**：#1
+**统计**：3 次提交，38 文件变更，+1382/-123 行
+**待执行**：F1-1（Lucide 全站替换，需网络安装 lucide-react）、E1（测试基础设施）、E2（可观测性）
+
+---
+
+## 15. 最后原则
 
 ```text
 小范围、可回滚、可解释、可验收。
