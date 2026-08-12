@@ -78,6 +78,7 @@ const VALID_SECTIONS: SettingsSectionKey[] = [
   'safe-workspace',
   'experimental',
   'guide',
+  'about',
 ]
 
 /* ══════════════ 主页面 ══════════════ */
@@ -1059,6 +1060,13 @@ export function SettingsPage() {
     </SettingsSection>
   )
 
+  const renderAbout = () => {
+    useEffect(() => {
+      navigate('/about', { replace: true })
+    }, [navigate])
+    return null
+  }
+
   /* ── 分区路由 ── */
   const sectionMap: Record<SettingsSectionKey, () => React.ReactNode> = {
     preferences: renderPreferences,
@@ -1075,6 +1083,7 @@ export function SettingsPage() {
     'safe-workspace': renderSafeWorkspace,
     experimental: renderExperimental,
     guide: renderGuide,
+    about: renderAbout,
   }
 
   return (

@@ -55,6 +55,7 @@ import {
 } from '../shared/stores/taskSidebarStore'
 import type { SidebarTaskItem, SidebarWorkspaceMeta } from '../shared/stores/taskSidebarStore'
 import { getConversation, upsertConversation } from '../pages/NewTask/components/conversationStorage'
+import { ErrorBoundary } from '../shell/feedback'
 import { ShortcutsModal } from './ShortcutsModal'
 import { FeedbackModal } from './FeedbackModal'
 import { UsageModal } from './UsageModal'
@@ -844,7 +845,7 @@ export function AppShell() {
           background: token.colorBgLayout,
         }}
       >
-        <Outlet />
+        <ErrorBoundary><Outlet /></ErrorBoundary>
       </main>
 
       {/* ── 拖拽分隔条 ── */}

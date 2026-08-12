@@ -1,6 +1,14 @@
 import type { ConfigProviderProps } from 'antd'
 import { useEditorialTheme } from './editorialTheme'
 import { useEditorialDarkTheme } from './editorialDarkTheme'
+/** @deprecated 已下线，代码保留待复活 */
+import { useBootstrapTheme } from './bootstrapTheme'
+/** @deprecated 已下线，代码保留待复活 */
+import { useIllustrationTheme } from './illustrationTheme'
+/** @deprecated 已下线，代码保留待复活 */
+import { useGlassTheme } from './glassTheme'
+/** @deprecated 已下线，代码保留待复活 */
+import { darkTheme } from './darkTheme'
 import type { Appearance, ResolvedAppearance } from '../../shared/stores/appearanceStore'
 
 /*
@@ -13,6 +21,15 @@ export {
   useEditorialTheme,
   useEditorialDarkTheme,
 }
+
+/** @deprecated 已下线，代码保留待复活 */
+export { useBootstrapTheme }
+/** @deprecated 已下线，代码保留待复活 */
+export { useIllustrationTheme }
+/** @deprecated 已下线，代码保留待复活 */
+export { useGlassTheme }
+/** @deprecated 已下线，代码保留待复活 */
+export { darkTheme }
 
 export function useAntdTheme(
   appearance: Appearance,
