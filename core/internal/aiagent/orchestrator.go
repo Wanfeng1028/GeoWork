@@ -43,6 +43,12 @@ type Run struct {
 	StepIndex  int       `json:"stepIndex,omitempty"`
 	Checkpoint []byte    `json:"checkpoint,omitempty"`
 
+	// Result holds the final assistant output once the run reaches a
+	// terminal state. Populated by executePlan's teardown from the last
+	// assistant message so callers (e.g. SubAgentManager) can collect
+	// the outcome without reaching into the (already-removed) RunContext.
+	Result string `json:"result,omitempty"`
+
 	// parentMemory carries the inherited parent conversation context for
 	// floating-assistant sub-conversations. It is injected into the system
 	// prompt at execution time. Unexported, so never serialized.
@@ -126,6 +132,12 @@ type RunContext struct {
 	Paused      bool
 	PauseCh     chan struct{}
 	PauseReason string
+
+	// P3-3: per-turn speculative executor. Created at the start of each
+	// turn, shared with streamModelCall so read-only tools start during
+	// streaming, and consulted by the tool-execution loop to reuse
+	// cached results. Cleaned up at turn end.
+	specExec *SpeculativeExecutor
 }
 
 // Orchestrator is the main agent loop controller with budget-aware context and bounded memory.
@@ -147,6 +159,8 @@ type Orchestrator struct {
 	usageMeter    *modelgateway.UsageMeter // P1-2: token usage audit (nil = disabled)
 	hooks         *HookManager // P2-3: lifecycle hooks (nil = disabled)
 	skillsReg     *skills.Registry // P2-1: skills registry (nil = skill-less mode)
+	harness       *Harness // P3-2: unified rule engine (nil = bypass)
+	policy        *toolregistry.PolicyTable // P3-3: tool risk/ReadOnly lookup (nil = no speculative)
 
 	mu            sync.Mutex
 	runs          map[string]*Run
@@ -185,6 +199,44 @@ func NewOrchestrator(
 		budget:       DefaultContextBudget(),
 		maxTurns:     50,
 		governor:     governor,
+	}
+	o.contextBld = NewContextBuilder(log, registry)
+	o.contextBld.WithBudget(o.budget)
+	return o
+}
+
+// NewChildOrchestrator builds a child orchestrator that shares the
+// parent's registry, gateway, provider, and approval governor, but has
+// its own Memory, state machine, run map, and run-context map. P3-1 §2.3.
+//
+// Unlike NewOrchestrator, this does NOT call registry.WithApprovalGovernor
+// again — the shared registry already has the parent's governor wired,
+// and overriding it would break the parent's approval flow.
+func NewChildOrchestrator(
+	registry *toolregistry.Registry,
+	gateway modelgateway.ModelGateway,
+	provider *modelgateway.ModelProvider,
+	parentGovernor *GovernorImpl,
+	log *zap.Logger,
+) *Orchestrator {
+	o := &Orchestrator{
+		registry:     registry,
+		gateway:      gateway,
+		providerID:   provider.ID,
+		provider:     provider,
+		planner:      NewPlanner(log, nil),
+		recovery:     NewRecovery(log),
+		stateMachine: NewStateMachine(),
+		log:          log,
+		runs:         make(map[string]*Run),
+		running:      make(map[string]bool),
+		runContexts:  make(map[string]*RunContext),
+		budget:       DefaultContextBudget(),
+		maxTurns:     50,
+		// Reuse the parent's governor so approvals from child runs are
+		// visible via the same PendingApprovals(runID) API. The governor
+		// is keyed by runID, so there's no collision.
+		governor: parentGovernor,
 	}
 	o.contextBld = NewContextBuilder(log, registry)
 	o.contextBld.WithBudget(o.budget)
@@ -233,6 +285,36 @@ func (o *Orchestrator) WithSkills(reg *skills.Registry) *Orchestrator {
 	o.skillsReg = reg
 	if o.contextBld != nil {
 		o.contextBld.WithSkills(reg)
+	}
+	return o
+}
+
+// WithHarness attaches the unified rule engine (P3-2). When non-nil,
+// every tool call is evaluated against the Harness rules before
+// execution. A deny rule short-circuits the call; an approve rule
+// skips interactive approval. Pass nil to disable (legacy behavior).
+func (o *Orchestrator) WithHarness(h *Harness) *Orchestrator {
+	o.harness = h
+	return o
+}
+
+// Harness returns the attached Harness, if any.
+func (o *Orchestrator) Harness() *Harness { return o.harness }
+
+// WithPolicyTable attaches the tool policy table (P3-3). When non-nil,
+// read-only tools are speculatively executed during model streaming.
+func (o *Orchestrator) WithPolicyTable(pt *toolregistry.PolicyTable) *Orchestrator {
+	o.policy = pt
+	return o
+}
+
+// WithSummarizer attaches the conversation summarizer (P3-4 L4). When
+// non-nil, BuildWithMessages will generate a model-based summary when
+// L1-L3 trimming is insufficient. The orchestrator also uses it for
+// L5 memory solidification.
+func (o *Orchestrator) WithSummarizer(s *Summarizer) *Orchestrator {
+	if o.contextBld != nil {
+		o.contextBld.WithSummarizer(s)
 	}
 	return o
 }
@@ -404,6 +486,16 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 	}()
 
 	defer func() {
+		// P3-1: capture the final assistant message as run.Result so
+		// sub-agent callers can collect the outcome via CollectSubAgentResult
+		// after the RunContext has been torn down. Prefer the last assistant
+		// message; fall back to the memory summary.
+		if rc.Memory != nil {
+			run.Result = rc.Memory.LastAssistantMessage()
+		}
+		if run.Result == "" {
+			run.Result = rc.Memory.Summary(2000)
+		}
 		run.Status = StatusCompleted
 		run.UpdatedAt = time.Now()
 		o.mu.Lock()
@@ -467,6 +559,29 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		)
 		messages := budgetResult.Messages
 		tools := budgetResult.Tools
+
+		// P3-4 L5: if L4 summarization was applied but the prompt is
+		// still over budget, solidify the summary to Memory and clear
+		// chatHistory so the next turn starts from the memory summary.
+		if budgetResult.Summary != "" {
+			var msgContent strings.Builder
+			for _, m := range budgetResult.Messages {
+				msgContent.WriteString(m.Content)
+			}
+			if EstimateTokens(msgContent.String()) > o.budget.MaxPromptTokens-o.budget.ReservedOutputTokens {
+				o.SolidifyMemory(rc, budgetResult.Summary)
+				chatHistory = nil
+				memorySummary = rc.Memory.Summary(2000)
+				if run.parentMemory != "" {
+					memorySummary = run.parentMemory + "\n\n" + memorySummary
+				}
+				budgetResult = o.contextBld.BuildWithMessages(
+					run.Mode, run.Prompt, memorySummary, nil,
+				)
+				messages = budgetResult.Messages
+				tools = budgetResult.Tools
+			}
+		}
 
 		// P1-4 §5.3: at the start of each turn, if the run was paused
 		// (manually or by an approval timeout), block until the user
@@ -600,7 +715,36 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 				ToolArgs:  args,
 				Cancel:    rc.Cancel,
 			})
-			result, execErr := o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
+			// P3-2 §3.5: evaluate Harness rules before execution. A deny
+			// rule short-circuits the call; an approve rule switches the
+			// execution mode to Deterministic so critical tools skip
+			// interactive approval.
+			execMode, harnessErr := o.evaluateHarness(rc, tc.Function.Name, args)
+			var result map[string]any
+			var execErr error
+			if harnessErr != nil {
+				result = nil
+				execErr = harnessErr
+			} else if rc.specExec != nil && rc.specExec.HasResult(tc.ID) {
+				// P3-3 §4.5: reuse speculative result from streaming.
+				// The read-only tool already ran during model output;
+				// skip re-execution and use the cached result.
+				specResult, _ := rc.specExec.GetResult(tc.ID)
+				if specResult != nil {
+					result = specResult.Result
+					execErr = specResult.Error
+					if o.log != nil {
+						o.log.Info("tool executed speculatively",
+							zap.String("tool", tc.Function.Name),
+							zap.String("toolCallId", tc.ID),
+						)
+					}
+				} else {
+					result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
+				}
+			} else {
+				result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
+			}
 			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
 				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
 				if waitErr == nil {
@@ -841,6 +985,14 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 		}
 	}()
 	defer func() {
+		// P3-1: capture the final assistant message as run.Result (same
+		// as executePlan) so resumed runs also expose their outcome.
+		if rc.Memory != nil {
+			run.Result = rc.Memory.LastAssistantMessage()
+		}
+		if run.Result == "" {
+			run.Result = rc.Memory.Summary(2000)
+		}
 		run.Status = StatusCompleted
 		run.UpdatedAt = time.Now()
 		o.mu.Lock()
@@ -883,6 +1035,29 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 		)
 		messages := budgetResult.Messages
 		tools := budgetResult.Tools
+
+		// P3-4 L5: if L4 summarization was applied but the prompt is
+		// still over budget, solidify the summary to Memory and clear
+		// chatHistory so the next turn starts from the memory summary.
+		if budgetResult.Summary != "" {
+			var msgContent strings.Builder
+			for _, m := range budgetResult.Messages {
+				msgContent.WriteString(m.Content)
+			}
+			if EstimateTokens(msgContent.String()) > o.budget.MaxPromptTokens-o.budget.ReservedOutputTokens {
+				o.SolidifyMemory(rc, budgetResult.Summary)
+				chatHistory = nil
+				memorySummary = rc.Memory.Summary(2000)
+				if run.parentMemory != "" {
+					memorySummary = run.parentMemory + "\n\n" + memorySummary
+				}
+				budgetResult = o.contextBld.BuildWithMessages(
+					run.Mode, run.Prompt, memorySummary, nil,
+				)
+				messages = budgetResult.Messages
+				tools = budgetResult.Tools
+			}
+		}
 
 		if rc.Paused {
 			o.emitEvent(rc, Event{
@@ -992,7 +1167,33 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 				ToolArgs:  args,
 				Cancel:    rc.Cancel,
 			})
-			result, execErr := o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
+			// P3-2 §3.5: evaluate Harness rules before execution.
+			execMode, harnessErr := o.evaluateHarness(rc, tc.Function.Name, args)
+			var result map[string]any
+			var execErr error
+			if harnessErr != nil {
+				result = nil
+				execErr = harnessErr
+			} else if rc.specExec != nil && rc.specExec.HasResult(tc.ID) {
+				// P3-3 §4.5: reuse speculative result from streaming.
+				// The read-only tool already ran during model output;
+				// skip re-execution and use the cached result.
+				specResult, _ := rc.specExec.GetResult(tc.ID)
+				if specResult != nil {
+					result = specResult.Result
+					execErr = specResult.Error
+					if o.log != nil {
+						o.log.Info("tool executed speculatively",
+							zap.String("tool", tc.Function.Name),
+							zap.String("toolCallId", tc.ID),
+						)
+					}
+				} else {
+					result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
+				}
+			} else {
+				result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
+			}
 			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
 				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
 				if waitErr == nil {
@@ -1141,6 +1342,15 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 	var usage *modelgateway.UsageInfo
 	toolCallMap := map[int]*modelgateway.ToolCall{} // incremental assembly by index
 
+	// P3-3 §4.5: create a per-turn speculative executor so read-only
+	// tools start during streaming. The executor is stored on rc so
+	// the tool-execution loop can reuse cached results. Cleaned up
+	// after the stream completes.
+	if o.policy != nil {
+		rc.specExec = NewSpeculativeExecutor(o.registry, o.policy, o.log)
+		defer rc.specExec.Cleanup()
+	}
+
 	for chunk := range ch {
 		if chunk.IsDone {
 			// Final chunk carries Usage (when provider reports it).
@@ -1166,6 +1376,12 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 			idx := tc.Index
 			if existing, ok := toolCallMap[idx]; ok {
 				existing.Function.Arguments += tc.Function.Arguments
+				// P3-3 §4.5.4: when arguments JSON is complete, start
+				// speculative execution for read-only tools. This
+				// overlaps tool I/O with remaining model generation.
+				if rc.specExec != nil && IsJSONComplete(existing.Function.Arguments) {
+					rc.specExec.TryExecuteInStream(ctx, existing.ID, existing.Function.Name, existing.Function.Arguments)
+				}
 			} else {
 				toolCallMap[idx] = &modelgateway.ToolCall{
 					ID:   tc.ID,
@@ -1174,6 +1390,12 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 						Name:      tc.Function.Name,
 						Arguments: tc.Function.Arguments,
 					},
+				}
+				// Try speculative execution on the first chunk too —
+				// some providers send complete args in one delta.
+				newTC := toolCallMap[idx]
+				if rc.specExec != nil && IsJSONComplete(newTC.Function.Arguments) {
+					rc.specExec.TryExecuteInStream(ctx, newTC.ID, newTC.Function.Name, newTC.Function.Arguments)
 				}
 			}
 		}
@@ -1231,6 +1453,10 @@ func (o *Orchestrator) inferStateFromTool(toolName string) State {
 		"create_artifact",
 		"browser_control", "network_request":
 		return StateEditing
+
+	// Orchestration tools — no state change (delegation, not direct action)
+	case "spawn_subagent":
+		return StateIdle
 
 	default:
 		// Dynamically registered Python Worker tools
@@ -1451,6 +1677,46 @@ func (o *Orchestrator) ResumeRun(runID string) error {
 		Data:      map[string]any{"reason": "user resumed"},
 	})
 	return nil
+}
+
+// evaluateHarness runs the Harness rule engine against a pending tool
+// call. Returns the execution mode to use (ModeDeterministic when
+// auto-approved, ModeAutonomous otherwise) and an error when the call
+// is denied. When no Harness is attached, returns (ModeAutonomous, nil)
+// — the legacy behavior.
+// P3-2 §3.5.
+func (o *Orchestrator) evaluateHarness(rc *RunContext, toolName string, args map[string]any) (toolregistry.ExecutionMode, error) {
+	if o.harness == nil {
+		return toolregistry.ModeAutonomous, nil
+	}
+
+	// Extract FilePath from args for sandbox-conditioned rules.
+	filePath := ""
+	if p, ok := args["path"].(string); ok {
+		filePath = p
+	}
+	riskLevel := ""
+	if tool, ok := o.registry.Get(toolName); ok {
+		riskLevel = tool.RiskLevel()
+	}
+
+	evalCtx := &EvaluationContext{
+		RunID:     rc.Run.ID,
+		ToolName:  toolName,
+		Args:      args,
+		State:     rc.State,
+		Mode:      toolregistry.ModeAutonomous.String(),
+		RiskLevel: riskLevel,
+		FilePath:  filePath,
+	}
+	result := o.harness.Evaluate(evalCtx)
+	if !result.Allowed {
+		return toolregistry.ModeAutonomous, fmt.Errorf("harness: %s", result.Reason)
+	}
+	if result.AutoApproved {
+		return toolregistry.ModeDeterministic, nil
+	}
+	return toolregistry.ModeAutonomous, nil
 }
 
 // waitForApproval blocks until the user resolves the request, the timeout

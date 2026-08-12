@@ -3,6 +3,8 @@
 package aiagent
 
 import (
+	"context"
+
 	"geowork/core/internal/aiagent/skills"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/toolregistry"
@@ -28,6 +30,9 @@ type ContextBuilder struct {
 	budget     ContextBudget
 	summarizer *ToolResultSummarizer
 	skills     *skills.Registry
+	// convSummarizer (P3-4) generates L4 conversation summaries when
+	// L1-L3 trimming is insufficient. nil = L4 disabled (degrade to L3).
+	convSummarizer *Summarizer
 	// skillLoader is used to lazily load a skill's SKILL.md body when
 	// SetActiveSkill selects a skill that hasn't been phase-2 loaded yet.
 	skillLoader *skills.Loader
@@ -72,6 +77,14 @@ func (cb *ContextBuilder) WithSkills(reg *skills.Registry) *ContextBuilder {
 // contribute an empty prompt (meta-only).
 func (cb *ContextBuilder) WithSkillLoader(l *skills.Loader) *ContextBuilder {
 	cb.skillLoader = l
+	return cb
+}
+
+// WithSummarizer attaches the conversation summarizer (P3-4 L4). When
+// non-nil, BuildWithMessages will generate a model-based summary of
+// the conversation history when L1-L3 trimming is insufficient.
+func (cb *ContextBuilder) WithSummarizer(s *Summarizer) *ContextBuilder {
+	cb.convSummarizer = s
 	return cb
 }
 
@@ -162,6 +175,9 @@ func (cb *ContextBuilder) reorderTools(all []toolregistry.Tool, recommended []st
 }
 
 // BuildWithMessages assembles context and applies budget constraints.
+// L1-L3 are handled by BudgetAwareBuilder.Enforce. L4 (conversation
+// summarization via the model) is applied here when L3 is insufficient
+// and a Summarizer is attached. P3-4 §5.5.
 func (cb *ContextBuilder) BuildWithMessages(
 	mode, prompt, memory string,
 	existingMessages []ChatMessage,
@@ -174,7 +190,33 @@ func (cb *ContextBuilder) BuildWithMessages(
 	}
 
 	bab := NewBudgetAwareBuilder(cb, cb.budget)
-	return bab.Enforce(baseMsgs, tools)
+	result := bab.Enforce(baseMsgs, tools)
+
+	// P3-4 L4: if L1-L3 still leave us over budget, generate a
+	// conversation summary via the model and replace the history.
+	// This collapses the conversation to [system, user, summary].
+	tokenEstimate := EstimateTokens(bab.estimateMessageContent(result.Messages))
+	overBudget := cb.budget.MaxPromptTokens > 0 &&
+		tokenEstimate > cb.budget.MaxPromptTokens-cb.budget.ReservedOutputTokens
+
+	if overBudget && result.Truncated && cb.convSummarizer != nil && len(result.Messages) > 2 {
+		ctx := context.Background()
+		summary, err := cb.convSummarizer.SummarizeConversation(ctx, result.Messages)
+		if err == nil && summary != "" {
+			// Replace the conversation with system + user + summary.
+			// Keep the original system prompt and user prompt so the
+			// agent's task context is preserved.
+			result.Messages = []ChatMessage{
+				result.Messages[0], // system
+				result.Messages[1], // user prompt
+				{Role: "system", Content: "对话历史摘要：\n" + summary},
+			}
+			result.Summary = summary
+			result.Truncated = true
+		}
+	}
+
+	return result
 }
 
 // SummarizeToolOutput is a convenience wrapper around SummarizeToolResult.

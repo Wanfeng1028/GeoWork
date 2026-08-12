@@ -130,6 +130,41 @@ func main() {
 	// --- Agent Orchestrator ---
 	orchestrator := aiagent.NewOrchestrator(toolRegistry, gateway, provider, logger)
 
+	// P3-2 §3.5: attach the Harness rule engine so every tool call is
+	// evaluated against declarative security rules before execution.
+	// Rules load from config/harness_rules.json when present; otherwise
+	// the built-in defaults (no-delete-in-verifying, auto-approve-low, …)
+	// apply.
+	harness := aiagent.NewHarness(logger)
+	harnessConfig := filepath.Join(app.Workspace(), "config", "harness_rules.json")
+	if err := harness.LoadFromFile(harnessConfig); err != nil {
+		logger.Warn("Failed to load harness rules config", zap.Error(err))
+	}
+	orchestrator.WithHarness(harness)
+
+	// P3-3 §4.5.2: attach the tool policy table so read-only tools are
+	// speculatively executed during model streaming. The policy table
+	// is seeded with DefaultToolPolicies (read_file, list_files, etc.
+	// marked ReadOnly=true).
+	orchestrator.WithPolicyTable(toolregistry.DefaultPolicyTable())
+
+	// P3-4 §5.3: attach the conversation summarizer so L4 (model-based
+	// conversation summary) and L5 (memory solidification) are available
+	// when L1-L3 trimming is insufficient. Only attach when a gateway
+	// is configured (nil gateway → L4 disabled, degrade to L3).
+	if gateway != nil {
+		orchestrator.WithSummarizer(aiagent.NewSummarizer(gateway, logger))
+	}
+
+	// P3-1 §2.3: register the spawn_subagent tool so the model can
+	// delegate sub-tasks to independent child orchestrators. The manager
+	// shares the parent's registry/gateway/provider/governor; each child
+	// gets its own Memory, state machine, and run-context map.
+	subAgentMgr := aiagent.NewSubAgentManager(orchestrator, logger)
+	if err := subAgentMgr.RegisterSubAgentTool(); err != nil {
+		logger.Warn("Failed to register spawn_subagent tool", zap.Error(err))
+	}
+
 	// --- Task Scheduler ---
 	scheduler := tasks.NewScheduler(taskSvc, 3, logger)
 	if err := scheduler.Start(); err != nil {

@@ -85,18 +85,18 @@ func NewStateMachine() *StateMachine {
 		ShellAllowed: false,
 	}
 	sm.allowed[StateInspecting] = AllowedToolSet{
-		Tools:         []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search"},
+		Tools:         []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search", "spawn_subagent"},
 		ReadAllowed:   true,
 		NetworkAllowed: true,
 	}
 	sm.allowed[StateEditing] = AllowedToolSet{
-		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "git_commit", "run_git_add"},
+		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "git_commit", "run_git_add", "spawn_subagent"},
 		ReadAllowed:  true,
 		WriteAllowed: true,
 		ShellAllowed: true,
 	}
 	sm.allowed[StateVerifying] = AllowedToolSet{
-		Tools:        []string{"read_file", "list_files", "run_python", "run_shell"},
+		Tools:        []string{"read_file", "list_files", "run_python", "run_shell", "spawn_subagent"},
 		ReadAllowed:  true,
 		ShellAllowed: true,
 	}

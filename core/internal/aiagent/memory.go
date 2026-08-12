@@ -188,6 +188,21 @@ func (m *Memory) ExportMessages() []ChatMessage {
 	return out
 }
 
+// LastAssistantMessage returns the content of the most recent assistant
+// message in the bounded history, or "" if there is none. P3-1: used by
+// executePlan's teardown to populate Run.Result so SubAgentManager can
+// collect the sub-agent's final output after its RunContext is gone.
+func (m *Memory) LastAssistantMessage() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for i := len(m.shortHistory) - 1; i >= 0; i-- {
+		if m.shortHistory[i].Role == "assistant" {
+			return m.shortHistory[i].Content
+		}
+	}
+	return ""
+}
+
 // Import loads memory state from JSON.
 func (m *Memory) Import(data []byte) error {
 	m.mu.Lock()
