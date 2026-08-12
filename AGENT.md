@@ -83,7 +83,7 @@
 - 路由
 - AppShell
 - 主题系统
-- NewTaskPage / TasksPage / MobileControlPage / ExpertsPage
+- Page页面文件
 - package.json
 - 设计文档
 - 已经完成的功能模块

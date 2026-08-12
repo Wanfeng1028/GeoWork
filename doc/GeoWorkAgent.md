@@ -1,10 +1,10 @@
 # GeoWork Agent 架构规范
 
-> **文档路径**：`doc/GeoWorkAgent .md`
+> **文档路径**：`doc/GeoWorkAgent.md`
 > **适用对象**：所有参与 GeoWork 后端开发的工程师、AI 编程助手、代码审查者
 > **文档定位**：Agent 系统架构规范——定义 GeoWork 的 Agent Runtime 如何设计、运行和演进
 > **核心公式**：**Agent = Model + Harness**
-> **最后更新**：2026-08-11
+> **最后更新**：2026-08-12
 
 ## 版本表
 
@@ -16,6 +16,7 @@
 | v1.3 | 2026-08-11 | GLM | P0-P3 四阶段施工方案落地为独立详细设计文档（`GeoWorkAgent-P0/P1/P2/P3-Detailed-Design.md`）；第 21 节优先级表补全详细设计文档引用；新增 P0-P3 任务-学科-文档对照表；明确 P0→P1→P2→P3 串行依赖与各阶段验收边界 |
 | v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；§0.1.2 学科清单 18→19（Browser/Computer Use 作为第 19 个学科，与 Python Worker 同为执行层）；§0.1.3 关系图补入 Browser；第 21 节优先级表新增 P2-7 行 |
 | v1.5 | 2026-08-11 | GLM | 千问审查 6 处硬伤 + 4 处软伤修复：P0 v0.3（idx 写死/工具名映射/ModelGateway interface/状态机转换）；P1 v0.2（审批超时/CachedTokens）；P2 v0.3（Skills 格式统一 SKILL.md）；主文档 §3.3 工具数 12→13 修正 |
+| v1.6 | 2026-08-12 | — | 修正 skills/ 相关事实错误：§0.1.2 #6 从 ❌ 改为 ⚠️（骨架已立）；§0.2.2 偏差 #8 更正（目录已存在）；§7 GLM 注替换为 v1.2 修正说明；§7.1 目录结构对齐实际扁平结构（SKILL.md + manifest.json）；§7.4 技能名对齐实际目录名 |
 
 > **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4/v1.5 的修正以 > 引用块或 【现状/目标】 标注注入。
 
@@ -53,7 +54,7 @@
 | 3 | **Context Engineering**（上下文工程） | 每一步该给模型看**什么**：预算分配、压缩、隔离 | `context_builder.go` + `context_budget.go` + `repo_map.go` | §5 | ⚠️ 已写未接线 |
 | 4 | **Prompt Engineering**（提示工程） | 上下文内容该**怎么组织**：指令层级、system prompt 装配、tool 描述格式、few-shot | `context_builder.go` 的 system prompt 装配 + §5.4 | §5.4 | ⚠️ 装配逻辑存在但未走 ContextBuilder |
 | 5 | **Tool Use & Governance**（工具使用与治理） | Agent 如何安全调用外部工具：注册、权限、审计、沙箱 | `toolregistry/` + `sandbox/` + `permissions/` | §6 | ⚠️ aiagent 链路已接，workflow 链路绕过 |
-| 6 | **Skills Engineering**（技能工程） | 可复用能力的模块化打包：技能加载、注入、隔离 | `skills/`（目录不存在） | §7 | ❌ 未实现 |
+| 6 | **Skills Engineering**（技能工程） | 可复用能力的模块化打包：技能加载、注入、隔离 | `skills/`（12 个技能目录已存在） | §7 | ⚠️ 骨架已立，加载器/注入器未实现 |
 | 7 | **MCP Integration**（标准工具协议） | 标准化连接外部工具服务：QGIS/GEE/Zotero | `mcp/` | §8 | ⚠️ 框架存在，未真实运行 |
 | 8 | **Memory Engineering**（记忆工程） | 跨步骤、跨会话的信息持久化与检索 | `aiagent/memory.go` + `conversation/` + `server/` | §9 | ⚠️ 只写不读 |
 | 9 | **State Machine & Recovery**（状态机与恢复） | Agent 生命周期管理：状态转换、检查点、崩溃恢复 | `aiagent/state_machine.go` + `recovery.go` | §10 | ❌ 状态机白名单脱节，checkpoint 只在结束存 |
@@ -185,7 +186,7 @@
 | 5 | Memory 管理短期对话历史 + 工具结果摘要 + 重要文件追踪 | `Append`/`AppendToolResult` 有调用，但 `Summary()` 从不调用 → 记忆**只写不读**，永不回注上下文 | 🟠 严重 |
 | 6 | 两条链路"共享 ToolRegistry" | `agent/` workflow 直接调 `worker.Client`，**不走 ToolRegistry/Governor/状态机**；两条链路完全割裂 | 🟠 严重 |
 | 7 | Checkpoint"每 5 次工具调用后"持久化 | `saveCheckpoint` 只在 `executePlan` 的 defer 里调一次（结束时），中途失败无检查点可恢复 | 🟠 严重 |
-| 8 | "官方技能清单（v0.4.x）"列了 12 个技能 | `skills/` 目录在仓库中**不存在** | 🟡 中等 |
+| 8 | "官方技能清单（v0.4.x）"列了 12 个技能 | `skills/` 目录已存在（12 个技能），但加载器/注入器未实现，清单命名与实际目录半数不一致 | 🟡 中等 |
 
 ### 0.2.3 死代码清单（v1.1 标注）
 
@@ -748,21 +749,19 @@ write：write_file, run_python, run_shell, delete_file
 
 ## 7. Skills Engineering（技能体系）
 
-> **【GLM 注 — skills/ 目录不存在】**
+> **【v1.2 修正 — skills/ 目录已存在】**
 >
-> v1.0 本节描述的技能结构、加载规则、官方技能清单（7.4）对应 `skills/` 目录，但该目录在仓库中**不存在**。本节全部内容为 **【目标】**，不是已有实现。7.4 的"官方技能清单（v0.4.x）"标注有误——当前版本没有这些技能。
+> `skills/` 目录已存在，包含 12 个技能子目录 + `official-skills.json` 索引。目录结构为**扁平式**（`SKILL.md` + `manifest.json` 直接放在技能目录下），与 v1.0 描述的双层结构不同。至少 `ndvi-timeseries` 的 SKILL.md 有实质内容，其余为骨架。加载器/注入器（Go 侧）未实现。
 
-### 7.1 技能结构（【目标】）
+### 7.1 技能结构（v1.2 修正：对齐实际扁平结构）
 
 ```
 skills/<skill-id>/
-├── manifest/
-│   ├── README.md       # 面向人类的技能描述
-│   └── meta.json       # 元数据：版本/描述/作者/标签/依赖
-└── skill/
-    ├── SKILL.md        # 核心提示（LLM 导向，含 frontmatter）
-    └── <dir>/          # 参考资料、模板、脚本
+├── SKILL.md            # 核心提示（LLM 导向，含 frontmatter）
+└── manifest.json       # 元数据：id/name/version/tags/required_tools/permissions/parameters
 ```
+
+另有 `skills/official-skills.json` 作为全量技能索引。
 
 ### 7.2 技能加载规则
 
@@ -782,21 +781,21 @@ skills/<skill-id>/
 目的：避免 12 个技能全量注入导致上下文膨胀
 ```
 
-### 7.4 官方技能清单（【目标】，非 v0.4.x 现状）
+### 7.4 官方技能清单（v1.2 修正：对齐实际目录名）
 
 ```
-ndvi-timeseries        # NDVI 时间序列分析
-sentinel2-composite    # Sentinel-2 无云合成
-landsat-lst            # Landsat 地表温度反演
-land-cover-classify    # 土地覆盖分类
-urban-expansion        # 城市扩展分析
-ndwi-water-extract     # 水体提取
-dem-terrain-analysis   # DEM 地形分析
-paper-reading-geo      # 论文阅读（地理学）
-literature-review-rs   # 文献综述（遥感）
-undergrad-lab-report   # 本科实验报告
-grad-thesis-outline    # 研究生论文大纲
-map-layout-export      # 地图布局与导出
+ndvi-timeseries                        # NDVI 时间序列分析
+gee-sentinel2-cloudfree-composite      # Sentinel-2 无云合成
+landsat-lst-retrieval                  # Landsat 地表温度反演
+land-cover-classification              # 土地覆盖分类
+urban-expansion-analysis               # 城市扩展分析
+water-extraction-ndwi                  # 水体提取
+dem-terrain-analysis                   # DEM 地形分析
+paper-reading-geography                # 论文阅读（地理学）
+literature-review-remote-sensing       # 文献综述（遥感）
+undergraduate-experiment-report        # 本科实验报告
+graduate-thesis-outline                # 研究生论文大纲
+map-layout-export                      # 地图布局与导出
 ```
 
 ---
