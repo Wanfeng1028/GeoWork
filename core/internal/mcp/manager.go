@@ -136,7 +136,16 @@ func (m *Manager) ListTools(ctx context.Context, serverID string) ([]map[string]
 		return nil, fmt.Errorf("server %s not connected", serverID)
 	}
 
-	return client.ListTools(ctx)
+	tools := client.Tools()
+	out := make([]map[string]any, 0, len(tools))
+	for _, t := range tools {
+		out = append(out, map[string]any{
+			"name":        t.Name,
+			"description": t.Description,
+			"inputSchema": t.InputSchema,
+		})
+	}
+	return out, nil
 }
 
 // CallTool invokes a tool on a connected server.

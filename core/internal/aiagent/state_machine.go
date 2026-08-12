@@ -85,8 +85,9 @@ func NewStateMachine() *StateMachine {
 		ShellAllowed: false,
 	}
 	sm.allowed[StateInspecting] = AllowedToolSet{
-		Tools:       []string{"read_file", "list_files", "search_workspace", "scan_folder"},
-		ReadAllowed: true,
+		Tools:         []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search"},
+		ReadAllowed:   true,
+		NetworkAllowed: true,
 	}
 	sm.allowed[StateEditing] = AllowedToolSet{
 		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "git_commit", "run_git_add"},
@@ -204,7 +205,7 @@ func (sm *StateMachine) ToolIsAllowed(state State, toolName string) bool {
 
 	// If no explicit list, check permissions by category
 	switch toolName {
-	case "read_file", "list_files", "search_workspace", "scan_folder":
+	case "read_file", "list_files", "search_workspace", "scan_folder", "paper_search":
 		return tools.ReadAllowed
 	case "write_file", "create_artifact", "delete_file":
 		return tools.WriteAllowed
@@ -214,6 +215,10 @@ func (sm *StateMachine) ToolIsAllowed(state State, toolName string) bool {
 		return tools.ShellAllowed
 	case "network_request", "browser_control":
 		return tools.NetworkAllowed
+	case "screenshot":
+		// Screenshot is read-like; treat as ReadAllowed unless NetworkAllowed
+		// is set (state machine enforces via Tools list above).
+		return tools.ReadAllowed
 	}
 	return false
 }

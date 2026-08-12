@@ -17,6 +17,8 @@ import (
 type Routes struct {
 	orchestrator *Orchestrator
 	log          *zap.Logger
+	scheduler    *Scheduler       // P2-4 §5.5
+	triggers     *TriggerManager  // P2-4 §5.5
 }
 
 func NewRoutes(orchestrator *Orchestrator, log *zap.Logger) *Routes {
@@ -57,6 +59,11 @@ func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agent/trajectory", r.handleListTrajectories)
 	mux.HandleFunc("GET /api/agent/usage/summary", r.handleUsageSummary)
 	mux.HandleFunc("GET /api/agent/usage/{runId}", r.handleRunUsage)
+
+	// P2-4 §5.5: schedule + trigger APIs. Endpoints return 503 when
+	// their dependency is not wired (caller did not call WithScheduler /
+	// WithTriggerManager on Routes).
+	r.registerSchedulerRoutes(mux)
 }
 
 // handleGetTrajectory returns the persisted trajectory for one run.

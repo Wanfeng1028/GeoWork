@@ -12,7 +12,9 @@ import (
 
 	"geowork/core/internal/aiagent"
 	"geowork/core/internal/api"
+	"geowork/core/internal/browserbridge"
 	"geowork/core/internal/conversation"
+	"geowork/core/internal/mcp"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
@@ -86,6 +88,26 @@ func main() {
 		logger.Warn("Failed to register worker tools", zap.Error(err))
 	}
 
+	// P2-7 §8.4: register browser tools (browser_control / screenshot /
+	// network_request / paper_search) against the browserbridge controller.
+	// The controller is shared across runs — sessions are tracked per Run
+	// via sessionId. The CDP adapter is created in stub mode (no real
+	// browser); CaptureScreenshot falls back to page metadata until chromedp
+	// is added.
+	browserCtrl := browserbridge.NewController(logger)
+	if err := toolregistry.RegisterBrowserTools(toolRegistry, browserCtrl, logger); err != nil {
+		logger.Warn("Failed to register browser tools", zap.Error(err))
+	}
+
+	// P2-2 §3.5: register MCP tools. The Manager ships with two default
+	// servers (filesystem, git) marked BuiltIn=true but Enabled=false — they
+	// only connect when the user opts in via the HTTP API or flips Enabled.
+	// RegisterAllTools is non-fatal on per-server failure.
+	mcpManager := mcp.NewManager(logger)
+	if err := mcp.RegisterAllTools(ctx, mcpManager, toolRegistry, logger); err != nil {
+		logger.Warn("Failed to register MCP tools", zap.Error(err))
+	}
+
 	// Wire the registry into the workflow engine created by gruntime.New
 	// so workflow callWorker routes through ToolRegistry (P0-2).
 	if app.AgentEngine() != nil {
@@ -115,18 +137,29 @@ func main() {
 	}
 	defer scheduler.Stop()
 
+	// P2-4 §5.3: Agent scheduler (cron-driven recurring Agent runs) + event
+	// triggers. Both are wired to the orchestrator so they kick off runs
+	// through the same governance path (audit + sandbox + approval) as
+	// interactive runs.
+	agentScheduler := aiagent.NewScheduler(orchestrator, logger)
+	agentScheduler.Start()
+	defer agentScheduler.Stop()
+	triggerManager := aiagent.NewTriggerManager(orchestrator, logger)
+
 	logDir := filepath.Join(app.Workspace(), "logs")
 
 	r := api.NewRouter(api.RouterDeps{
-		App:          app,
-		LogDir:       logDir,
-		WorkspaceSvc: wsSvc,
-		PermEngine:   permEngine,
-		SandboxSvc:   sbSvc,
-		TaskSvc:      taskSvc,
-		Scheduler:    scheduler,
-		Orchestrator: orchestrator,
-		ConvStore:    convStore,
+		App:            app,
+		LogDir:         logDir,
+		WorkspaceSvc:   wsSvc,
+		PermEngine:     permEngine,
+		SandboxSvc:     sbSvc,
+		TaskSvc:        taskSvc,
+		Scheduler:      scheduler,
+		Orchestrator:   orchestrator,
+		ConvStore:      convStore,
+		AgentScheduler: agentScheduler,
+		TriggerManager: triggerManager,
 	})
 	logger.Info("GeoWork runtime listening on http://127.0.0.1:8765")
 	server := &http.Server{Addr: "127.0.0.1:8765", Handler: r}

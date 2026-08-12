@@ -28,15 +28,17 @@ import (
 
 // RouterDeps holds all dependencies needed to build the API router.
 type RouterDeps struct {
-	App          *gruntime.App
-	LogDir       string
-	WorkspaceSvc *workspace.Service
-	PermEngine   *permissions.Engine
-	SandboxSvc   *sandbox.Service
-	TaskSvc      *tasks.Service
-	Scheduler    *tasks.Scheduler
-	Orchestrator *aiagent.Orchestrator
-	ConvStore    *conversation.Store
+	App            *gruntime.App
+	LogDir         string
+	WorkspaceSvc   *workspace.Service
+	PermEngine     *permissions.Engine
+	SandboxSvc     *sandbox.Service
+	TaskSvc        *tasks.Service
+	Scheduler      *tasks.Scheduler
+	Orchestrator   *aiagent.Orchestrator
+	ConvStore      *conversation.Store
+	AgentScheduler *aiagent.Scheduler      // P2-4 §5.5: cron-style agent runs
+	TriggerManager *aiagent.TriggerManager  // P2-4 §5.5: event-driven agent runs
 }
 
 // Router wraps http.Handler and holds resources that need explicit cleanup.
@@ -137,7 +139,10 @@ func NewRouter(deps RouterDeps) *Router {
 	// small adapter that satisfies aiagent.EventSink.
 	if deps.Orchestrator != nil {
 		deps.Orchestrator.SetEventSink(agentEventSink{bridge: bridge})
-		aiagent.NewRoutes(deps.Orchestrator, logger).Register(mux)
+		agentRoutes := aiagent.NewRoutes(deps.Orchestrator, logger).
+			WithScheduler(deps.AgentScheduler).
+			WithTriggerManager(deps.TriggerManager)
+		agentRoutes.Register(mux)
 
 		// P1-3 §5.5.1: WebSocket bidirectional channel for approval
 		// flow + run abort. SSE stays the read-only event stream; the

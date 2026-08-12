@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"geowork/core/internal/aiagent/skills"
 	"geowork/core/internal/idgen"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/toolregistry"
@@ -144,6 +145,8 @@ type Orchestrator struct {
 	governor      *GovernorImpl // P1-1: interactive approval for critical tools
 	trajectory    *TrajectoryRecorder // P1-2: per-run execution trace recorder (nil = disabled)
 	usageMeter    *modelgateway.UsageMeter // P1-2: token usage audit (nil = disabled)
+	hooks         *HookManager // P2-3: lifecycle hooks (nil = disabled)
+	skillsReg     *skills.Registry // P2-1: skills registry (nil = skill-less mode)
 
 	mu            sync.Mutex
 	runs          map[string]*Run
@@ -216,6 +219,34 @@ func (o *Orchestrator) WithUsageMeter(m *modelgateway.UsageMeter) *Orchestrator 
 	return o
 }
 
+// WithHooks attaches a HookManager (P2-3). When non-nil, the ReAct
+// loop fires hooks at run/turn/tool boundaries. Pass nil to disable.
+func (o *Orchestrator) WithHooks(hm *HookManager) *Orchestrator {
+	o.hooks = hm
+	return o
+}
+
+// WithSkills attaches the skills registry (P2-1). When non-nil, runs
+// can call SetActiveSkill to inject a skill's prompt + recommended
+// tools into the context builder.
+func (o *Orchestrator) WithSkills(reg *skills.Registry) *Orchestrator {
+	o.skillsReg = reg
+	if o.contextBld != nil {
+		o.contextBld.WithSkills(reg)
+	}
+	return o
+}
+
+// RegisterHook adds a single hook to the attached HookManager. If no
+// HookManager is attached yet, one is created. Convenience for
+// programmatic registration from main.go wiring.
+func (o *Orchestrator) RegisterHook(h Hook) {
+	if o.hooks == nil {
+		o.hooks = NewHookManager(o.log)
+	}
+	o.hooks.Register(h)
+}
+
 // Trajectory returns the attached TrajectoryRecorder, if any.
 // Exposed for the GET /api/agent/trajectory/{runId} API.
 func (o *Orchestrator) Trajectory() *TrajectoryRecorder { return o.trajectory }
@@ -223,6 +254,22 @@ func (o *Orchestrator) Trajectory() *TrajectoryRecorder { return o.trajectory }
 // UsageMeter returns the attached UsageMeter, if any.
 // Exposed for the GET /api/agent/usage/{runId} / summary APIs.
 func (o *Orchestrator) UsageMeter() *modelgateway.UsageMeter { return o.usageMeter }
+
+// Hooks returns the attached HookManager, if any. Exposed so callers
+// can register hooks via the orchestrator's accessor.
+func (o *Orchestrator) Hooks() *HookManager { return o.hooks }
+
+// Skills returns the attached skills registry, if any.
+func (o *Orchestrator) Skills() *skills.Registry { return o.skillsReg }
+
+// fireHook is a nil-safe helper that dispatches an event to the
+// HookManager. No-op when no hooks are attached.
+func (o *Orchestrator) fireHook(event HookEvent, hctx *HookContext) {
+	if o.hooks == nil || !o.hooks.HasHooks() {
+		return
+	}
+	o.hooks.Fire(event, hctx)
+}
 
 // SetEventSink wires an external event sink (e.g. the API layer's
 // EventBridge) so that orchestrator events are forwarded to SSE
@@ -336,6 +383,26 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		}
 	}()
 
+	// P2-3: fire OnRunStart once the run context is live. rc.Cancel
+	// is the same cancel wired into ctx, so a hook calling Cancel()
+	// aborts the run at the next turn boundary.
+	o.fireHook(HookOnRunStart, &HookContext{
+		RunID:  run.ID,
+		Run:    run,
+		RunCtx: rc,
+		Cancel: rc.Cancel,
+	})
+	defer func() {
+		// P2-3: fire OnRunEnd after the loop exits (covers normal
+		// completion, ctx cancel, and panic-recovered failure).
+		o.fireHook(HookOnRunEnd, &HookContext{
+			RunID:  run.ID,
+			Run:    run,
+			RunCtx: rc,
+			Cancel: rc.Cancel,
+		})
+	}()
+
 	defer func() {
 		run.Status = StatusCompleted
 		run.UpdatedAt = time.Now()
@@ -383,6 +450,16 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		// TurnRecord captures the full picture, not just the model reply.
 		turnStart := time.Now()
 		var toolCallRecords []ToolCallRecord
+
+		// P2-3: fire OnTurnStart before the model call so hooks can
+		// inspect budget / apply per-turn limits.
+		o.fireHook(HookOnTurnStart, &HookContext{
+			RunID:     run.ID,
+			Run:       run,
+			RunCtx:    rc,
+			TurnIndex: turnCount,
+			Cancel:    rc.Cancel,
+		})
 
 		// 2.2 Assemble context with budget enforcement
 		budgetResult := o.contextBld.BuildWithMessages(
@@ -513,6 +590,16 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			// retry once the user approves (or surface the denial
 			// to the model so it can react).
 			toolCtx := toolregistry.WithRunID(ctx, run.ID)
+			// P2-3: fire OnToolBefore so hooks can audit/log/inspect.
+			o.fireHook(HookOnToolBefore, &HookContext{
+				RunID:     run.ID,
+				Run:       run,
+				RunCtx:    rc,
+				TurnIndex: turnCount,
+				ToolName:  tc.Function.Name,
+				ToolArgs:  args,
+				Cancel:    rc.Cancel,
+			})
 			result, execErr := o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
 			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
 				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
@@ -527,6 +614,19 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 					execErr = waitErr
 				}
 			}
+			// P2-3: fire OnToolAfter so hooks can post-process the
+			// result or log failures.
+			o.fireHook(HookOnToolAfter, &HookContext{
+				RunID:       run.ID,
+				Run:         run,
+				RunCtx:      rc,
+				TurnIndex:   turnCount,
+				ToolName:    tc.Function.Name,
+				ToolArgs:    args,
+				ToolResult:  result,
+				ToolError:   execErr,
+				Cancel:      rc.Cancel,
+			})
 
 			// 2.7.6 Build tool result content
 			toolContent := ""
@@ -626,6 +726,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		if turnCount > 0 && turnCount%checkpointInterval == 0 {
 			o.saveCheckpointWithReason(run, rc, "periodic")
 		}
+
+		// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
+		o.fireHook(HookOnTurnEnd, &HookContext{
+			RunID:     run.ID,
+			Run:       run,
+			RunCtx:    rc,
+			TurnIndex: turnCount,
+			Cancel:    rc.Cancel,
+		})
 
 		turnCount++
 	}
@@ -871,6 +980,18 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 			})
 
 			toolCtx := toolregistry.WithRunID(ctx, run.ID)
+			// P2-3: fire OnToolBefore/OnToolAfter around the second
+			// executePlan loop (executePlanFromTurn resumes reuse the
+			// same path, so hooks fire consistently on resume).
+			o.fireHook(HookOnToolBefore, &HookContext{
+				RunID:     run.ID,
+				Run:       run,
+				RunCtx:    rc,
+				TurnIndex: turnCount,
+				ToolName:  tc.Function.Name,
+				ToolArgs:  args,
+				Cancel:    rc.Cancel,
+			})
 			result, execErr := o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
 			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
 				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
@@ -882,6 +1003,17 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 					execErr = waitErr
 				}
 			}
+			o.fireHook(HookOnToolAfter, &HookContext{
+				RunID:      run.ID,
+				Run:        run,
+				RunCtx:     rc,
+				TurnIndex:  turnCount,
+				ToolName:   tc.Function.Name,
+				ToolArgs:   args,
+				ToolResult: result,
+				ToolError:  execErr,
+				Cancel:     rc.Cancel,
+			})
 
 			toolContent := ""
 			if execErr != nil {
@@ -961,6 +1093,15 @@ func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *Ru
 		if turnCount > 0 && turnCount%checkpointInterval == 0 {
 			o.saveCheckpointWithReason(run, rc, "periodic")
 		}
+
+		// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
+		o.fireHook(HookOnTurnEnd, &HookContext{
+			RunID:     run.ID,
+			Run:       run,
+			RunCtx:    rc,
+			TurnIndex: turnCount,
+			Cancel:    rc.Cancel,
+		})
 
 		turnCount++
 	}
