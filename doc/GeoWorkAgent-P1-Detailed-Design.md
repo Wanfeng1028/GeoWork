@@ -11,7 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
-| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
+| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；Governor 结构体补充 registry 字段；ApprovalDecision 枚举补充 denied/timeout；waitForApproval 接收者统一为 *Orchestrator；PauseRun 加幂等保护；协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -60,6 +60,7 @@ const (
 // Governor 管理工具执行权限和审批
 type Governor struct {
     log         *zap.Logger
+    registry    *toolregistry.Registry     // v0.4 修正：补充 registry 字段（审查发现缺失）
     pendingApps map[string]*ApprovalRequest  // runID → 待审批请求
     mu          sync.Mutex
 }
@@ -82,6 +83,8 @@ const (
     ApprovalPending  ApprovalDecision = "pending"
     ApprovalApproved ApprovalDecision = "approved"
     ApprovalRejected ApprovalDecision = "rejected"
+    ApprovalDenied   ApprovalDecision = "denied"    // v0.4 补充：用户主动拒绝
+    ApprovalTimeout  ApprovalDecision = "timeout"   // v0.4 补充：超时自动拒绝
 )
 
 // CheckPermission 检查工具是否允许执行
@@ -212,7 +215,9 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 
 ```go
 // waitForApproval 等待用户审批，带超时和自动暂停
-func (r *Runner) waitForApproval(ctx context.Context, req *ApprovalRequest) error {
+// v0.4 修正：接收者统一为 *Orchestrator（审查发现原文 Runner/Registry 不一致）
+// Orchestrator 持有 Governor 和 RunContext，是唯一合理的接收者
+func (o *Orchestrator) waitForApproval(ctx context.Context, req *ApprovalRequest) error {
     // 1. 发送审批请求事件给前端
     r.emitEvent(Event{
         Type:      "approval_request",
@@ -646,6 +651,10 @@ func (o *Orchestrator) PauseRun(runID string) error {
     rc := o.getRunContext(runID)
     if rc == nil {
         return fmt.Errorf("run %q not found", runID)
+    }
+    // v0.4 修正：防止连续调用覆盖 PauseCh（审查发现并发安全问题）
+    if rc.Paused {
+        return nil  // 已经暂停，幂等返回
     }
     rc.Paused = true
     rc.PauseCh = make(chan struct{})

@@ -17,6 +17,7 @@
 | v1.4 | 2026-08-11 | GLM | 豆包-code 审查反馈补全：P2 新增 P2-7 Browser/Computer Use（已有 browserbridge 代码接入 ToolRegistry + CDP 适配器 + 沙箱约束）；P3-3 补充 §4.5 流式提前执行（SpeculativeExecutor + ReadOnly 标记 + streamModelCall 集成）；§0.1.2 学科清单 18→19（Browser/Computer Use 作为第 19 个学科，与 Python Worker 同为执行层）；§0.1.3 关系图补入 Browser；第 21 节优先级表新增 P2-7 行 |
 | v1.5 | 2026-08-11 | GLM | 千问审查 6 处硬伤 + 4 处软伤修复：P0 v0.3（idx 写死/工具名映射/ModelGateway interface/状态机转换）；P1 v0.2（审批超时/CachedTokens）；P2 v0.3（Skills 格式统一 SKILL.md）；主文档 §3.3 工具数 12→13 修正 |
 | v1.6 | 2026-08-12 | Qwen | 修正 skills/ 相关事实错误：§0.1.2 #6 从 ❌ 改为 ⚠️（骨架已立）；§0.2.2 偏差 #8 更正（目录已存在）；§7 GLM 注替换为 v1.2 修正说明；§7.1 目录结构对齐实际扁平结构（SKILL.md + manifest.json）；§7.4 技能名对齐实际目录名 |
+| v1.7 | 2026-08-12 | — | 新增 §24 持久化层设计（SQLite 选型 + schema + 迁移策略）；新增 §25 API 认证模型（当前无认证 + AuthMiddleware 预留）；新增 §26 配置管理（config.yaml + 环境变量 + 默认值三层覆盖） |
 
 > **阅读约定**：本文档严格区分 **【现状】**（代码中已实现）与 **【目标】**（规划中、未实现）。凡标注 【目标】 的内容不得在代码审查时作为"已有功能"引用。qwen v1.0 的原始叙述保留在正文，GLM v1.1/v1.2/v1.3/v1.4/v1.5 的修正以 > 引用块或 【现状/目标】 标注注入。
 
@@ -1489,6 +1490,205 @@ P3（子代理+Harness统一+推测执行+5层压缩）  ← Agent 的"高级能
 - 具体文件的修改提醒
 
 短期任务、bug 修复、下一步计划写在 issue 或单独的任务文档中。
+
+---
+
+## 24. 持久化层设计（v1.7 新增）
+
+### 24.1 存储选型
+
+采用 **SQLite** 作为本地持久化引擎（单文件、无外部依赖、Go 生态成熟）。
+
+| 数据 | 存储位置 | 说明 |
+|---|---|---|
+| Run 历史 | SQLite `runs` 表 | 重启后可查历史 |
+| Trajectory | SQLite `trajectories` 表 | 每步工具调用的完整记录 |
+| Checkpoint | SQLite `checkpoints` 表 | 断点续传数据 |
+| UsageRecord | SQLite `usage_records` 表 | Token 用量审计 |
+| Conversation | SQLite `conversations` 表 | 对话历史 |
+
+### 24.2 Schema（核心表）
+
+```sql
+CREATE TABLE runs (
+    id TEXT PRIMARY KEY,
+    prompt TEXT NOT NULL,
+    mode TEXT NOT NULL,           -- work/code/paper/analysis/write
+    state TEXT NOT NULL,          -- running/completed/failed/paused
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total_tokens INTEGER DEFAULT 0,
+    metadata JSON                 -- 扩展字段
+);
+
+CREATE TABLE trajectories (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES runs(id),
+    turn_index INTEGER NOT NULL,
+    tool_name TEXT,
+    tool_args JSON,
+    tool_result JSON,
+    model_input JSON,             -- 该轮的 messages 快照
+    model_output JSON,            -- 该轮的 model response
+    duration_ms INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE checkpoints (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES runs(id),
+    turn_index INTEGER NOT NULL,
+    state TEXT NOT NULL,
+    chat_history JSON NOT NULL,
+    memory_snapshot JSON,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE usage_records (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES runs(id),
+    prompt_tokens INTEGER NOT NULL,
+    completion_tokens INTEGER NOT NULL,
+    cached_tokens INTEGER DEFAULT 0,
+    model_id TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 24.3 迁移策略
+
+- Schema 版本管理：`schema_version` 表记录当前版本号
+- 每次 schema 变更通过 migration 文件（`migrations/001_initial.sql`）递增
+- 启动时检查版本，自动执行未应用的 migration
+
+### 24.4 文件位置
+
+SQLite 数据库文件位于用户数据目录：
+
+| OS | 路径 |
+|---|---|
+| Windows | `%APPDATA%/GeoWork/geowork.db` |
+| macOS | `~/Library/Application Support/GeoWork/geowork.db` |
+| Linux | `~/.local/share/GeoWork/geowork.db` |
+
+---
+
+## 25. API 认证模型（v1.7 新增）
+
+### 25.1 当前阶段
+
+**无认证**。所有 API 端点仅限本地访问（`127.0.0.1`）。
+
+理由：GeoWork 是桌面应用，Go Core 只监听 localhost，不暴露到网络。同一台机器上的进程都可以调用 API，这与本地开发工具（如 Docker Desktop、VS Code Server）的行为一致。
+
+### 25.2 安全边界
+
+- Go Core 绑定 `127.0.0.1:8765`，**禁止**绑定 `0.0.0.0`
+- Electron 的 `contextIsolation: true` + `nodeIntegration: false` 确保渲染进程不能直接访问 Go Core
+- 所有前端请求通过 preload 暴露的 `api` 命名空间中转
+
+### 25.3 未来演进（团队协作时）
+
+当支持多用户协作时，引入 token-based 认证：
+
+```go
+// AuthMiddleware 预留接口（当前为空实现）
+func AuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // 当前阶段：直接放行
+        // 未来：从 Authorization header 提取 token，验证后注入 user context
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
+所有 API handler 通过 `AuthMiddleware` 包装，未来启用认证只需改中间件实现。
+
+---
+
+## 26. 配置管理（v1.7 新增）
+
+### 26.1 配置层级
+
+```
+代码常量（编译时确定）
+  ↓ 被覆盖
+配置文件 config.yaml（部署时确定）
+  ↓ 被覆盖
+环境变量（运行时确定）
+```
+
+优先级：环境变量 > 配置文件 > 代码默认值
+
+### 26.2 配置文件
+
+`config.yaml`（位于用户数据目录，与 SQLite 同目录）：
+
+```yaml
+# GeoWork 配置
+
+# 模型网关
+model:
+  default_provider: "openai"
+  max_prompt_tokens: 32000
+  max_messages: 20
+  prompt_cache_ttl: 300  # 秒
+
+# Agent 行为
+agent:
+  max_turns: 50
+  max_consecutive_failures: 3
+  approval_timeout: 300  # 秒
+
+# Worker
+worker:
+  base_url: "http://127.0.0.1:8766"
+  timeout: 30            # 秒
+  memory_limit_mb: 512
+
+# SSE
+sse:
+  heartbeat_interval: 15  # 秒
+  event_buffer_size: 500
+
+# 沙箱
+sandbox:
+  root_dir: ""  # 空 = 使用系统临时目录
+  allow_network: false
+```
+
+### 26.3 Go 侧配置加载
+
+```go
+type Config struct {
+    Model   ModelConfig   `yaml:"model"`
+    Agent   AgentConfig   `yaml:"agent"`
+    Worker  WorkerConfig  `yaml:"worker"`
+    SSE     SSEConfig     `yaml:"sse"`
+    Sandbox SandboxConfig `yaml:"sandbox"`
+}
+
+func LoadConfig() (*Config, error) {
+    cfg := defaultConfig()  // 代码默认值
+    
+    // 尝试读取 config.yaml
+    configPath := getConfigPath()
+    if data, err := os.ReadFile(configPath); err == nil {
+        yaml.Unmarshal(data, cfg)
+    }
+    
+    // 环境变量覆盖（GEOWORK_MODEL_MAX_TOKENS 等）
+    applyEnvOverrides(cfg)
+    
+    return cfg, nil
+}
+```
+
+### 26.4 环境变量命名
+
+格式：`GEOWORK_{SECTION}_{KEY}`，全大写，下划线分隔。
+
+示例：`GEOWORK_MODEL_MAX_PROMPT_TOKENS=64000`、`GEOWORK_AGENT_MAX_TURNS=100`
 
 ---
 

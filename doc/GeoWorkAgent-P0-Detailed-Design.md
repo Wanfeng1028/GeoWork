@@ -13,7 +13,7 @@
 | v0.1 | 2026-08-11 | GLM | 初稿：版本表 + 阅读约定 + 第 1 节任务依赖图 + P0-2 状态机三者对齐完整设计 |
 | v0.2 | 2026-08-11 | GLM | 补全 P0-1 接线死代码 + P0-3 per-run 化 + P0-4 ReAct 循环完整设计；P0 四项施工方案全部完成 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 1/2/4/6 修复：idx 写死→tc.Index + workflow→ToolRegistry 动态注册方案 + ModelGateway interface 定义 + ReAct 状态机转换逻辑补全（inferStateFromTool）|
-| v0.4 | 2026-08-12 | — | 新增 §6 测试方案（Mock ModelGateway + FakeToolRegistry）；新增 §5.4.1.1 指令优先级链；§5.6.1 Verifying 触发改为自动推断（连续只读工具 N 轮）；§4.7.3 StreamEvents 标注 goroutine 泄漏已知问题 |
+| v0.4 | 2026-08-12 | — | 新增 §6 测试方案（Mock ModelGateway + FakeToolRegistry）；新增 §5.4.1.1 指令优先级链；§5.6.1 Verifying 触发改为自动推断（连续只读工具 N 轮）；§4.7.3 StreamEvents 标注 goroutine 泄漏已知问题；§5.8.1 新增错误分类与重试策略（Transient/Permanent/UserAction + 指数退避）；§4.3 EventCh 背压策略补充；§5.6 Planner 角色澄清（初始 Plan 为建议非刚性） |
 
 > **阅读约定**：本文档是施工图纸，不是宪法。所有接口签名、结构体定义、白名单表都是**待实现的契约**，代码实现时必须对齐。如发现契约无法实现（如 Go 语法限制、循环依赖），先改本文档再改代码，不得私自偏离。
 
@@ -672,6 +672,12 @@ type RunContext struct {
     Cancel      context.CancelFunc  // 用于停止该 Run
 }
 
+// ⚠️ v0.4 EventCh 背压策略（审查补充）：
+// EventCh 缓冲为 128。如果 SSE 客户端断开或消费慢，缓冲满后 emitEvent 不能阻塞 ReAct 循环。
+// 策略：非阻塞写入 + 丢弃最旧事件（环形覆盖）。
+// 实现：emitEvent 使用 select + default 分支，满时从头部弹出旧事件再写入。
+// P1 §4.5 的 EventBuffer（500 事件环形缓冲）提供更完整的方案，此处为最小可行实现。
+
 // Orchestrator 结构体改动
 type Orchestrator struct {
     registry      *toolregistry.Registry
@@ -778,6 +784,12 @@ func (o *Orchestrator) StartRunWithMemory(ctx context.Context, mode, prompt, par
         o.removeRunContext(run.ID)
         close(run.done)
         return run, err
+    }
+    // v0.4 澄清：Planner.Plan() 在 ReAct 模式下的角色（审查补充）
+    // 初始 Plan 不作为刚性执行计划，而是作为"建议"注入 system prompt 的
+    // [项目结构] 段之后，帮助模型理解任务方向。模型在 ReAct 循环中
+    // 每轮自主决策调用什么工具，可以完全忽略初始 Plan。
+    // 如果 Planner 返回 error，不阻塞 Run——降级为无 Plan 模式。
     }
 
     run.Plan = plan
@@ -1603,7 +1615,46 @@ chatHistory = executor.AppendToolResult(chatHistory, ToolCall{
 | `turnCount >= maxTurns` | 循环结束，标记 completed | 防止无限循环 |
 | `ctx.Err() != nil` | 循环结束 | 用户取消 / 超时 |
 | 模型返回 `finish_reason: "stop"` | 循环结束 | 模型主动停止 |
-| 连续 3 次工具调用失败 | 循环结束，标记 failed | 防止反复失败 |
+| 连续 3 次工具调用失败 | 循环结束，标记 failed | 防止反复失败（见 §5.8.1 错误分类） |
+
+### 5.8.1 错误分类与重试策略（v0.4 新增）
+
+"连续 3 次工具调用失败"指**同一工具**连续失败 3 次（不同工具各失败一次不计入）。
+
+#### 错误分类
+
+| 类型 | 含义 | 处理策略 | 示例 |
+|---|---|---|---|
+| `Transient` | 暂时性错误，重试可能成功 | 指数退避重试（最多 3 次） | 网络超时、429 限流、Worker 暂时不可用 |
+| `Permanent` | 永久性错误，重试无意义 | 立即失败，通知用户 | 余额不足、权限永久拒绝、工具不存在 |
+| `UserAction` | 需要用户介入 | 暂停 Run，等待用户操作 | 审批拒绝、文件冲突需用户决策 |
+
+#### 重试退避策略
+
+```go
+// exponential backoff with jitter
+func retryBackoff(attempt int) time.Duration {
+    base := time.Second
+    maxDelay := 30 * time.Second
+    delay := base * time.Duration(math.Pow(2, float64(attempt)))
+    if delay > maxDelay {
+        delay = maxDelay
+    }
+    // 加 jitter：±25%
+    jitter := time.Duration(rand.Int63n(int64(delay) / 2))
+    return delay - time.Duration(int64(delay)/4) + jitter
+}
+```
+
+#### 模型调用错误分类
+
+| HTTP 状态码 | 错误类型 | 处理 |
+|---|---|---|
+| 429 | Transient | 退避重试 |
+| 500/502/503 | Transient | 退避重试，3 次后切换 fallback provider |
+| 401/403 | Permanent | 立即失败 |
+| 400 | Permanent | 立即失败（请求格式错误） |
+| 网络超时 | Transient | 退避重试 |
 
 ### 5.9 Replan 触发
 

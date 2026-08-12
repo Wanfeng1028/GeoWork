@@ -12,7 +12,7 @@
 | v0.1 | 2026-08-11 | GLM | 初稿：P2 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 新增 P2-7 Browser/Computer Use：接入已有 browserbridge 代码 + 注册 3 个工具到 ToolRegistry + CDP 协议集成 + 沙箱约束 |
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 3 修复：P2-1 Skills Loader 从 .json 文件改为 SKILL.md + meta.json 目录结构（与主文档 §7.1 一致）+ 两阶段加载 |
-| v0.4 | 2026-08-12 | — | P2-5 §6.3 Router 实现 ModelGateway 接口（P0 §5.2.1 对齐）：StreamChat/Chat 接口方法委托 ChatWithFallback，`var _ ModelGateway = (*Router)(nil)` 编译期检查 |
+| v0.4 | 2026-08-12 | — | P2-5 §6.3 Router 实现 ModelGateway 接口（P0 §5.2.1 对齐）：StreamChat/Chat 接口方法委托 ChatWithFallback，`var _ ModelGateway = (*Router)(nil)` 编译期检查；补充 findRule 方法定义（审查发现 ChatWithFallback 调用但未定义） |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -739,6 +739,17 @@ func (r *Router) Route(mode, taskType string) (*ModelProvider, error) {
     }
     // 默认 provider
     return r.providers["default"], nil
+}
+
+// findRule 返回匹配的路由规则（内部方法，供 ChatWithFallback 使用）
+// v0.4 补充（审查发现 ChatWithFallback 调用了 findRule 但从未定义）
+func (r *Router) findRule(mode, taskType string) *RoutingRule {
+    for i := range r.rules {
+        if r.rules[i].Mode == mode && r.rules[i].TaskType == taskType {
+            return &r.rules[i]
+        }
+    }
+    return nil  // 无匹配规则，使用默认 provider
 }
 
 // ChatWithFallback 带降级的聊天（内部方法，不直接暴露给 Orchestrator）
