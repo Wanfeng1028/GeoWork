@@ -1,5 +1,10 @@
 # AGENT.md
 
+| 版本 | 日期       | 变更摘要                                                 |
+| ---- | ---------- | -------------------------------------------------------- |
+| v1.0 | 2026-08-11 | 初稿：模块地图、文档路由、通用纪律                       |
+| v1.1 | 2026-08-12 | 合并去重双版本；修正路由表 404、skills 结构、依赖文件名；补 marketplace 模块、P0-P3 文档入口、版本表 |
+
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
 > 本文件不重复各模块的具体规范，只做路由和通用纪律。
@@ -29,6 +34,7 @@
 | 技能          | `skills/`             | Markdown + JSON                        | AI 技能包                                       |
 | 插件          | `plugins/`            | —                                      | 本地插件市场                                    |
 | MCP           | `mcp/`                | —                                      | MCP 连接器                                      |
+| 市场索引      | `marketplace/`        | JSON                                   | 技能 / 插件市场索引                             |
 
 ---
 
@@ -36,15 +42,17 @@
 
 **这是本文件最核心的一节。**
 
-| 你要改的模块          | 必须先读的文档                                                         |
-| --------------------- | ---------------------------------------------------------------------- |
-| `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` |
-| `core/`               | `doc/GeoWorkAgent.md` + `doc/Agent 架构对比与模块规划.md`              |
-| `server/`             | 如涉及 Agent 能力，读 `doc/` 下对应设计文档                            |
-| `workers/geo-python/` | 对应技能的 `SKILL.md`                                                  |
-| `skills/`             | 目标技能的 `manifest/meta.json` + `skill/SKILL.md`                     |
-| `plugins/`            | 目标插件的权限声明                                                     |
-| 跨模块联调            | 涉及的所有模块文档                                                     |
+| 你要改的模块          | 必须先读的文档                                                                     | 状态             |
+| --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
+| `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` | 活文档 v1.5.1    |
+| `core/`               | `doc/GeoWorkAgent.md`                                                              | 主宪法 v1.5      |
+| `core/` 施工          | `doc/GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
+| `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |
+| `server/`             | 如涉及 Agent 能力，读 `doc/` 下对应设计文档                                        | —                |
+| `workers/geo-python/` | 对应技能的 `SKILL.md`                                                              | —                |
+| `skills/`             | 目标技能的 `manifest.json` + `SKILL.md`（扁平结构，无子目录）                       | 骨架已立         |
+| `plugins/`            | 目标插件的权限声明                                                                 | —                |
+| 跨模块联调            | 涉及的所有模块文档                                                                 | —                |
 
 规则：
 
@@ -181,7 +189,7 @@ git pull / commit / push / reset / checkout / rebase / clean
 | ------ | ------------------------------------- |
 | 前端   | `apps/desktop/package.json`           |
 | Go     | `core/go.mod` / 根目录 `go.mod`       |
-| Python | `workers/geo-python/requirements.txt` |
+| Python | `workers/geo-python/pyproject.toml` |
 
 ---
 
@@ -285,6 +293,7 @@ GeoWork 是空间智能 / GIS / 遥感 / 数据工作流工具。页面文案应
 是否影响已有页面：
 是否安装新依赖：
 build 结果：
+doc/ 下相关文档是否需要同步更新：□ 是（哪份哪节） □ 否
 需要用户重点验收的地方：
 ```
 
