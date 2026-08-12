@@ -1,7 +1,7 @@
 # GeoWork 前端工程规范
 
-> **文档路径**：`doc/GeoWorkFrontend-Engineering-Standards.md`
-> **关联文档**：`doc/GeoWorkFrontend-Design-System.md`（视觉宪法）/ `doc/GeoWorkFrontend-Design-System-Detailed.md`（施工图）/ `AGENT.md`（全局约束）
+> **文档路径**：`doc/03-GeoWorkFrontend-Engineering-Standards.md`
+> **关联文档**：`doc/01-GeoWorkFrontend-Design-System.md`（视觉宪法）/ `doc/02-GeoWorkFrontend-Design-System-Detailed.md`（施工图）/ `AGENT.md`（全局约束）
 > **适用对象**：参与 GeoWork 前端开发的工程师、AI 编程助手
 > **文档定位**：设计系统管"长什么样"，本文档管"代码怎么写"
 > **最后更新**：2026-08-12
@@ -151,7 +151,7 @@ React 组件 → api/client.ts → Go Core (:8765)
 
 ### 2.3 WebSocket 双向控制信令
 
-> 完整协议规范见 `doc/GeoWork-Communication-Protocol.md`
+> 完整协议规范见 `doc/09-GeoWork-Communication-Protocol.md`
 
 SSE 负责只读事件流，WebSocket 负责双向控制信令（审批、abort、终端 I/O）。两者并存，不互相替代。
 
@@ -419,7 +419,7 @@ minHeight: 640
 
 ### 11.1 当前状态
 
-设计 Token 定义在 `doc/GeoWorkFrontend-Design-System.md` 的 Markdown 表格里，代码中通过 `src/app/themes/*.ts` 手动同步。
+设计 Token 定义在 `doc/01-GeoWorkFrontend-Design-System.md` 的 Markdown 表格里，代码中通过 `src/app/themes/*.ts` 手动同步。
 
 ### 11.2 规则
 

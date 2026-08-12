@@ -1,7 +1,7 @@
 # GeoWork CI/CD 规范
 
-> **文档路径**：`doc/Engineering-CI-CD.md`
-> **关联文档**：`AGENT.md`（构建命令 §6）/ `Engineering-Git-Workflow.md`（分支策略）
+> **文档路径**：`doc/11-Engineering-CI-CD.md`
+> **关联文档**：`AGENT.md`（构建命令 §6）/ `10-Engineering-Git-Workflow.md`（分支策略）
 > **适用对象**：所有贡献者 + CI 系统
 > **最后更新**：2026-08-12
 
@@ -148,4 +148,4 @@ npm run test:worker   # Python Worker
 | Bundle size 检查 | P2 | `size-limit` 或 `bundlesize` 集成到 CI |
 | 文档链接检查脚本 | P2 | `scripts/check_doc_links.py` 扫描 md 文件内部引用 |
 | Pre-commit hooks | P2 | `husky` + `lint-staged` 本地拦截 |
-| 部署流水线 | P3 | electron-builder 自动打包 + GitHub Release（见 `Engineering-Release.md`） |
+| 部署流水线 | P3 | electron-builder 自动打包 + GitHub Release（见 `17-Engineering-Release.md`） |

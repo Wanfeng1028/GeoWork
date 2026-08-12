@@ -1,4 +1,4 @@
-> **⚠️ 本文档已归档（v1.1 快照），仅供历史比对。活文档为 `doc/GeoWorkAgent.md`（当前 v1.6）。**
+> **⚠️ 本文档已归档（v1.1 快照），仅供历史比对。活文档为 `doc/04-GeoWorkAgent.md`（当前 v1.6）。**
 
 ## 一、GeoWork 现有 Agent 架构总览
 

@@ -23,7 +23,7 @@
 
 ## 当前版本状态
 
-> **v0.4.x-dev** — GeoWork 当前处于开发版阶段，适合开发者本地启动、测试和继续开发。部分能力仍是开发态，包括 Cloud Server in-memory、部分 GIS/GEE/QGIS/GDAL 能力、本地沙箱策略、插件市场、团队协作和计费系统。请不要将当前版本视为生产可用版本。
+> **v0.5.x-dev（开发预览版）** — GeoWork 当前处于开发预览版阶段（v0.1–v0.4 为 demo 探索版，已封存）。适合开发者本地启动、测试和继续开发。部分能力仍是开发态，包括 Cloud Server in-memory、部分 GIS/GEE/QGIS/GDAL 能力、本地沙箱策略、插件市场、团队协作和计费系统。请不要将当前版本视为生产可用版本。v1.0.x 为正式发布版。
 >
 > 详见 [开发版验收清单](docs/DEV_VERSION_CHECKLIST.md)。
 

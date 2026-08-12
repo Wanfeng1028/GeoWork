@@ -41,5 +41,5 @@ GeoWork Agent 系统需要前端（Electron + React）与后端（Go Core）之�
 - 后端需维护两种连接类型（SSE handler + WebSocket handler），增加约 230 行新代码
 - 前端需同时管理 SSE 和 WS 生命周期（`streamAdapters.ts` 不变，新增 `wsClient.ts`）
 - P1 阶段必须完成 WS 基础设施（连接管理、心跳、重连、审批弹窗）
-- 协议规范独立为 `doc/GeoWork-Communication-Protocol.md`
+- 协议规范独立为 `doc/09-GeoWork-Communication-Protocol.md`
 - HTTP 审批 API 作为降级通道保留（WS 断连时回退到 HTTP POST）

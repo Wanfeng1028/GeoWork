@@ -1,7 +1,7 @@
 # GeoWork Agent P1 施工方案
 
-> **文档路径**：`doc/GeoWorkAgent-P1-Detailed-Design.md`
-> **父文档**：`doc/GeoWorkAgent.md`（主文档/宪法）
+> **文档路径**：`doc/06-GeoWorkAgent-P1-Detailed-Design.md`
+> **父文档**：`doc/04-GeoWorkAgent.md`（主文档/宪法）
 > **前置条件**：P0 四项全部完成并验收通过
 > **文档定位**：P1 阶段——安全加固、可观测性、人工介入、Worker 治理、恢复机制
 
@@ -11,7 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P1 六项施工方案 |
 | v0.2 | 2026-08-11 | GLM | 千问审查硬伤 5 修复 + 软伤 1 修复：waitForApproval 超时逻辑补全 + UsageRecord 新增 CachedTokens |
-| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；Governor 结构体补充 registry 字段；ApprovalDecision 枚举补充 denied/timeout；waitForApproval 接收者统一为 *Orchestrator；PauseRun 加幂等保护；协议规范独立为 `doc/GeoWork-Communication-Protocol.md` |
+| v0.3 | 2026-08-12 | — | P1-4 新增 §5.5.1 WebSocket 双向通信（JSON-RPC 2.0 审批流）；P1-3 新增 §4.5 SSE 断线重连与事件恢复（Last-Event-ID + 环形缓冲 + state_snapshot）；P1-6 §7.5 定义 executePlanFromTurn 签名和行为；Governor 结构体补充 registry 字段；ApprovalDecision 枚举补充 denied/timeout；waitForApproval 接收者统一为 *Orchestrator；PauseRun 加幂等保护；协议规范独立为 `doc/09-GeoWork-Communication-Protocol.md` |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -726,7 +726,7 @@ POST /api/agent/approvals/{id}/reject   拒绝
 
 ### 5.5.1 WebSocket 双向通信（v0.3 新增）
 
-> 完整协议规范见 `doc/GeoWork-Communication-Protocol.md`
+> 完整协议规范见 `doc/09-GeoWork-Communication-Protocol.md`
 
 HTTP 审批 API 作为降级通道保留。主通道升级为 WebSocket（JSON-RPC 2.0）：
 

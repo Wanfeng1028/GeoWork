@@ -1,7 +1,7 @@
 # GeoWork 安全规范
 
-> **文档路径**：`doc/Engineering-Security.md`
-> **关联文档**：`AGENT.md`（全局禁止 §10）/ `GeoWork-Communication-Protocol.md`（通信协议）
+> **文档路径**：`doc/12-Engineering-Security.md`
+> **关联文档**：`AGENT.md`（全局禁止 §10）/ `09-GeoWork-Communication-Protocol.md`（通信协议）
 > **适用对象**：所有贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

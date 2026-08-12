@@ -1,7 +1,7 @@
 # GeoWork 发布与版本管理规范
 
-> **文档路径**：`doc/Engineering-Release.md`
-> **关联文档**：`AGENT.md`（项目身份 §1）/ `Engineering-CI-CD.md`
+> **文档路径**：`doc/17-Engineering-Release.md`
+> **关联文档**：`AGENT.md`（项目身份 §1）/ `11-Engineering-CI-CD.md`
 > **适用对象**：所有贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 
@@ -30,7 +30,7 @@ MAJOR.MINOR.PATCH[-pre.N]
 
 ### 1.2 当前阶段
 
-项目处于 **v0.4.x-dev**，属于预发布阶段。v0.x 允许 breaking change。
+项目处于 **v0.5.x-dev**（开发预览版），属于预发布阶段。v0.x 允许 breaking change。v0.1–v0.4 为 demo 探索版（已封存），v0.5 起进入正式开发轨道。
 
 进入 v1.0 的条件：
 

@@ -1,7 +1,7 @@
 # GeoWork 错误监控与可观测性规范
 
-> **文档路径**：`doc/Engineering-Monitoring.md`
-> **关联文档**：`Engineering-CI-CD.md` / `GeoWorkAgent-P1-Detailed-Design.md`（P1-2 Observability）
+> **文档路径**：`doc/18-Engineering-Monitoring.md`
+> **关联文档**：`11-Engineering-CI-CD.md` / `06-GeoWorkAgent-P1-Detailed-Design.md`（P1-2 Observability）
 > **适用对象**：所有贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

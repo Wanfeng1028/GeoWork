@@ -1,7 +1,7 @@
 # GeoWork TypeScript 规范
 
-> **文档路径**：`doc/Engineering-TypeScript.md`
-> **关联文档**：`GeoWorkFrontend-Engineering-Standards.md`（前端工程规范 §12）
+> **文档路径**：`doc/13-Engineering-TypeScript.md`
+> **关联文档**：`03-GeoWorkFrontend-Engineering-Standards.md`（前端工程规范 §12）
 > **适用对象**：前端贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

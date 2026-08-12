@@ -465,7 +465,7 @@ GeoWork 全站只有一种整体骨架：
 
 ### 8.4 审批模态框（Agent 请求用户授权）
 
-Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `doc/GeoWork-Communication-Protocol.md`）。
+Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `doc/09-GeoWork-Communication-Protocol.md`）。
 
 **布局**：
 
@@ -962,12 +962,12 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 
 **影响**
 - 全站 `Button type="primary"` 落到页面即为胶囊形态（通过主题级覆写实现），不再是"可选启用"；验收以"grep 不到非胶囊族的 `9999px`"为硬线。
-- 埋点：全局品牌色拟切换为 Gemini 蓝渐变（炸弹 1），由独立提案 `doc/brand-kit-Gemini蓝提案 v0.1.md` 承载，**提案未拍板前，本文档色板保持 dark `#3186ff` / light `#1d4ed8` 不变**。
+- 埋点：全局品牌色拟切换为 Gemini 蓝渐变（炸弹 1），由独立提案 `doc/20-brand-kit-Gemini蓝提案 v0.1.md` 承载，**提案未拍板前，本文档色板保持 dark `#3186ff` / light `#1d4ed8` 不变**。
 
 ### v1.5.0（2026-08-11）— 全局品牌色切换：深空冷色系 → Gemini 蓝系
 
 **变更**
-1. 品牌主色由深海军蓝 `#071225` 派生系切换为 Google Gemini 官方蓝渐变系；提案经 `doc/brand-kit-Gemini蓝提案 v0.1.md` 评审通过（三个决策点全部确认）；
+1. 品牌主色由深海军蓝 `#071225` 派生系切换为 Google Gemini 官方蓝渐变系；提案经 `doc/20-brand-kit-Gemini蓝提案 v0.1.md` 评审通过（三个决策点全部确认）；
 2. 深色主题主色：`#3AD9FF` → `#3186ff`（锚点）；hover `#4f9dff`；active `#2673e6`；胶囊主按钮启用渐变 `linear-gradient(89.58deg, #3186ff→#4ea0ff)`；
 3. 亮色主题主色：`#0e7490` → `#1d4ed8`（锚点）；hover `#3b82f6`；active `#1e40af`；胶囊主按钮启用渐变 `linear-gradient(89.58deg, #1d4ed8→#3b82f6)`；
 4. 代码同步：`editorialDarkTheme.ts` + `editorialTheme.ts` 共 23 处 token 显式覆写（防 antd 6 自动派生翻车）；

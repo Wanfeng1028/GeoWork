@@ -1,7 +1,7 @@
 # GeoWork 通信协议规范
 
-> **文档路径**：`doc/GeoWork-Communication-Protocol.md`
-> **关联文档**：`doc/GeoWorkAgent.md`（Agent 架构宪法）/ `doc/GeoWorkAgent-P1-Detailed-Design.md`（P1 施工）/ `doc/GeoWorkFrontend-Engineering-Standards.md`（前端工程规范）
+> **文档路径**：`doc/09-GeoWork-Communication-Protocol.md`
+> **关联文档**：`doc/04-04-GeoWorkAgent.md`（Agent 架构宪法）/ `doc/06-GeoWorkAgent-P1-Detailed-Design.md`（P1 施工）/ `doc/03-GeoWorkFrontend-Engineering-Standards.md`（前端工程规范）
 > **协议定义权**：后端（Go Core）主导协议设计，前端按协议实现消费端
 > **最后更新**：2026-08-12
 

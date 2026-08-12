@@ -1,6 +1,6 @@
 # GeoWork Agent 架构规范
 
-> **文档路径**：`doc/GeoWorkAgent.md`
+> **文档路径**：`doc/04-GeoWorkAgent.md`
 > **适用对象**：所有参与 GeoWork 后端开发的工程师、AI 编程助手、代码审查者
 > **文档定位**：Agent 系统架构规范——定义 GeoWork 的 Agent Runtime 如何设计、运行和演进
 > **核心公式**：**Agent = Model + Harness**
@@ -1367,7 +1367,7 @@ workers/geo-python/
 ### 19.3 Mock 优先原则
 
 ```
-当前阶段（v0.4.x-dev）：
+当前阶段（v0.5.x-dev，开发预览版）：
 - 前端使用 mock 数据，标记为 DevBadge
 - 不发送假 API 请求
 - 需要真实接口时，先设计 adapter 层
@@ -1383,7 +1383,8 @@ workers/geo-python/
 
 | 版本 | 重点 |
 | --- | --- |
-| v0.4.x-dev（当前） | Agentic Loop 基础、State Machine、Context Budget 初版、Sandbox dev 策略、悬浮辅助对话、会话云端同步 |
+| v0.1–v0.4（已封存） | demo 探索版：基础架构搭建、原型验证 |
+| v0.5.x-dev（当前） | 开发预览版：Agentic Loop 基础、State Machine、Context Budget 初版、Sandbox dev 策略、悬浮辅助对话、会话云端同步 |
 | v0.5.0 | 完整 5 层 Compaction、Hooks 事件系统、MCP 真实运行、MapLibre 接入、Eval 基础 |
 | v0.6.0 | Memory 持久化、Sub-agent 成熟、工作流串联、定时任务、Trajectory 记录 |
 | v1.0 | 生产级安全隔离、Guardian AI、完整计费、团队协作、多模型路由成熟、可观测性平台 |
@@ -1398,27 +1399,27 @@ workers/geo-python/
 
 | 优先级 | 任务编号 | 模块 | 原因 | 详细设计文档 |
 | --- | --- | --- | --- | --- |
-| **P0（立即）** | P0-2 | 状态机/工具表/Planner 三者对齐 | 当前 `run_python` 被状态机误杀，链路是断的 | [`GeoWorkAgent-P0-Detailed-Design.md` §2](./GeoWorkAgent-P0-Detailed-Design.md) |
-| **P0（立即）** | P0-1 | 接线死代码：ContextBuilder/Memory/Executor 接入 executePlan | 不接线，所有上下文工程都是纸上谈兵 | [`GeoWorkAgent-P0-Detailed-Design.md` §3](./GeoWorkAgent-P0-Detailed-Design.md) |
-| **P0（立即）** | P0-3 | Orchestrator per-run 化 | currentState/currentRunID/memory 改为 per-run，否则并发必崩 | [`GeoWorkAgent-P0-Detailed-Design.md` §4](./GeoWorkAgent-P0-Detailed-Design.md) |
-| **P0（立即）** | P0-4 | 实现 ReAct 循环（模型驱动工具选择） | 这是"Agent"的定义性特征，没有它就不是 Agent | [`GeoWorkAgent-P0-Detailed-Design.md` §5](./GeoWorkAgent-P0-Detailed-Design.md) |
-| **P1（本版本）** | P1-1 | Sandbox & Guardrails（Governor + 审批流） | critical 操作必须 Human-in-the-Loop | [`GeoWorkAgent-P1-Detailed-Design.md` §2](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P1（本版本）** | P1-2 | Observability（Trajectory + Token 审计） | 可追溯性是核心卖点 | [`GeoWorkAgent-P1-Detailed-Design.md` §3](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P1（本版本）** | P1-3 | SSE per-run 过滤 + 12 种事件 Schema | 当前全局单通道，前端无法只看自己的 Run | [`GeoWorkAgent-P1-Detailed-Design.md` §4](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P1（本版本）** | P1-4 | Human-in-the-Loop（暂停/恢复/审批集成） | 状态存在但执行路径不触发 | [`GeoWorkAgent-P1-Detailed-Design.md` §5](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P1（本版本）** | P1-5 | Python Worker 治理（进程池/超时/资源限制） | 防止失控脚本影响系统 | [`GeoWorkAgent-P1-Detailed-Design.md` §6](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P1（本版本）** | P1-6 | Recovery & Checkpoint（每 5 步保存 + 断点续传） | 不是只在结束时存 | [`GeoWorkAgent-P1-Detailed-Design.md` §7](./GeoWorkAgent-P1-Detailed-Design.md) |
-| **P2（下版本）** | P2-1 | Skills Engineering（技能注册/加载/注入） | 可复用能力的模块化打包 | [`GeoWorkAgent-P2-Detailed-Design.md` §2](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-2 | MCP Integration（标准工具协议） | 标准化连接 QGIS/GEE/Zotero | [`GeoWorkAgent-P2-Detailed-Design.md` §3](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-3 | Hooks & Lifecycle（6 个钩子点） | 需要 Agentic Loop 先跑通才有挂钩点 | [`GeoWorkAgent-P2-Detailed-Design.md` §4](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-4 | Automation（定时任务/事件触发） | 工作流串联与自动恢复 | [`GeoWorkAgent-P2-Detailed-Design.md` §5](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-5 | Model Routing（多 provider 路由 + 降级 + 成本控制） | 规则引擎先做，AI 审批后做 | [`GeoWorkAgent-P2-Detailed-Design.md` §6](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-6 | Eval 评估体系（质量评分 + 回归测试） | 让 Agent 行为可度量可比较 | [`GeoWorkAgent-P2-Detailed-Design.md` §7](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P2（下版本）** | P2-7 | Browser/Computer Use（接入已有 browserbridge + CDP + 沙箱） | 已有代码但未注册为工具，又是死代码 | [`GeoWorkAgent-P2-Detailed-Design.md` §8](./GeoWorkAgent-P2-Detailed-Design.md) |
-| **P3（远期）** | P3-1 | Sub-agent（独立子 Orchestrator + 上下文继承） | 复杂子任务隔离执行 | [`GeoWorkAgent-P3-Detailed-Design.md` §2](./GeoWorkAgent-P3-Detailed-Design.md) |
-| **P3（远期）** | P3-2 | Harness 规则统一（规则引擎 + JSON 配置） | 安全约束集中管理 | [`GeoWorkAgent-P3-Detailed-Design.md` §3](./GeoWorkAgent-P3-Detailed-Design.md) |
-| **P3（远期）** | P3-3 | 推测执行（批次并行 + 流式提前执行 read_only） | 独立工具调用并行加速 + 流式中提前执行减少等待 | [`GeoWorkAgent-P3-Detailed-Design.md` §4](./GeoWorkAgent-P3-Detailed-Design.md) |
-| **P3（远期）** | P3-4 | 5 层压缩完整版（L4 对话摘要 + L5 记忆固化） | 基础不牢不碰这些 | [`GeoWorkAgent-P3-Detailed-Design.md` §5](./GeoWorkAgent-P3-Detailed-Design.md) |
+| **P0（立即）** | P0-2 | 状态机/工具表/Planner 三者对齐 | 当前 `run_python` 被状态机误杀，链路是断的 | [`05-GeoWorkAgent-P0-Detailed-Design.md` §2](./05-GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-1 | 接线死代码：ContextBuilder/Memory/Executor 接入 executePlan | 不接线，所有上下文工程都是纸上谈兵 | [`05-GeoWorkAgent-P0-Detailed-Design.md` §3](./05-GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-3 | Orchestrator per-run 化 | currentState/currentRunID/memory 改为 per-run，否则并发必崩 | [`05-GeoWorkAgent-P0-Detailed-Design.md` §4](./05-GeoWorkAgent-P0-Detailed-Design.md) |
+| **P0（立即）** | P0-4 | 实现 ReAct 循环（模型驱动工具选择） | 这是"Agent"的定义性特征，没有它就不是 Agent | [`05-GeoWorkAgent-P0-Detailed-Design.md` §5](./05-GeoWorkAgent-P0-Detailed-Design.md) |
+| **P1（本版本）** | P1-1 | Sandbox & Guardrails（Governor + 审批流） | critical 操作必须 Human-in-the-Loop | [`06-GeoWorkAgent-P1-Detailed-Design.md` §2](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-2 | Observability（Trajectory + Token 审计） | 可追溯性是核心卖点 | [`06-GeoWorkAgent-P1-Detailed-Design.md` §3](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-3 | SSE per-run 过滤 + 12 种事件 Schema | 当前全局单通道，前端无法只看自己的 Run | [`06-GeoWorkAgent-P1-Detailed-Design.md` §4](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-4 | Human-in-the-Loop（暂停/恢复/审批集成） | 状态存在但执行路径不触发 | [`06-GeoWorkAgent-P1-Detailed-Design.md` §5](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-5 | Python Worker 治理（进程池/超时/资源限制） | 防止失控脚本影响系统 | [`06-GeoWorkAgent-P1-Detailed-Design.md` §6](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P1（本版本）** | P1-6 | Recovery & Checkpoint（每 5 步保存 + 断点续传） | 不是只在结束时存 | [`06-GeoWorkAgent-P1-Detailed-Design.md` §7](./06-GeoWorkAgent-P1-Detailed-Design.md) |
+| **P2（下版本）** | P2-1 | Skills Engineering（技能注册/加载/注入） | 可复用能力的模块化打包 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §2](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-2 | MCP Integration（标准工具协议） | 标准化连接 QGIS/GEE/Zotero | [`07-GeoWorkAgent-P2-Detailed-Design.md` §3](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-3 | Hooks & Lifecycle（6 个钩子点） | 需要 Agentic Loop 先跑通才有挂钩点 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §4](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-4 | Automation（定时任务/事件触发） | 工作流串联与自动恢复 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §5](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-5 | Model Routing（多 provider 路由 + 降级 + 成本控制） | 规则引擎先做，AI 审批后做 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §6](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-6 | Eval 评估体系（质量评分 + 回归测试） | 让 Agent 行为可度量可比较 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §7](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P2（下版本）** | P2-7 | Browser/Computer Use（接入已有 browserbridge + CDP + 沙箱） | 已有代码但未注册为工具，又是死代码 | [`07-GeoWorkAgent-P2-Detailed-Design.md` §8](./07-GeoWorkAgent-P2-Detailed-Design.md) |
+| **P3（远期）** | P3-1 | Sub-agent（独立子 Orchestrator + 上下文继承） | 复杂子任务隔离执行 | [`08-GeoWorkAgent-P3-Detailed-Design.md` §2](./08-GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-2 | Harness 规则统一（规则引擎 + JSON 配置） | 安全约束集中管理 | [`08-GeoWorkAgent-P3-Detailed-Design.md` §3](./08-GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-3 | 推测执行（批次并行 + 流式提前执行 read_only） | 独立工具调用并行加速 + 流式中提前执行减少等待 | [`08-GeoWorkAgent-P3-Detailed-Design.md` §4](./08-GeoWorkAgent-P3-Detailed-Design.md) |
+| **P3（远期）** | P3-4 | 5 层压缩完整版（L4 对话摘要 + L5 记忆固化） | 基础不牢不碰这些 | [`08-GeoWorkAgent-P3-Detailed-Design.md` §5](./08-GeoWorkAgent-P3-Detailed-Design.md) |
 
 ### 21.1 阶段依赖与验收边界（v1.3 新增）
 
@@ -1786,10 +1787,10 @@ func LoadConfig() (*Config, error) {
 **变更**
 
 1. **新建 4 份独立详细设计文档**（主文档不再膨胀，详细设计拆分到子文档）：
-   - [`GeoWorkAgent-P0-Detailed-Design.md`](./GeoWorkAgent-P0-Detailed-Design.md)（v0.2，1421 行）——P0 四项任务的完整施工方案
-   - [`GeoWorkAgent-P1-Detailed-Design.md`](./GeoWorkAgent-P1-Detailed-Design.md)（v0.1，680 行）——P1 六项任务的完整施工方案
-   - [`GeoWorkAgent-P2-Detailed-Design.md`](./GeoWorkAgent-P2-Detailed-Design.md)（v0.1，941 行）——P2 六项任务的完整施工方案
-   - [`GeoWorkAgent-P3-Detailed-Design.md`](./GeoWorkAgent-P3-Detailed-Design.md)（v0.1，644 行）——P3 四项任务的完整施工方案
+   - [`05-GeoWorkAgent-P0-Detailed-Design.md`](./05-GeoWorkAgent-P0-Detailed-Design.md)（v0.2，1421 行）——P0 四项任务的完整施工方案
+   - [`06-GeoWorkAgent-P1-Detailed-Design.md`](./06-GeoWorkAgent-P1-Detailed-Design.md)（v0.1，680 行）——P1 六项任务的完整施工方案
+   - [`07-GeoWorkAgent-P2-Detailed-Design.md`](./07-GeoWorkAgent-P2-Detailed-Design.md)（v0.1，941 行）——P2 六项任务的完整施工方案
+   - [`08-GeoWorkAgent-P3-Detailed-Design.md`](./08-GeoWorkAgent-P3-Detailed-Design.md)（v0.1，644 行）——P3 四项任务的完整施工方案
 
 2. **P0 详细设计内容**（v0.1+v0.2）：
    - P0-2 状态机三者对齐：注册表真相源（13 个工具）+ 新状态机白名单表（9 状态 × 工具 × 4 标志）+ 8 个幽灵工具清理 + workflow 接入 ToolRegistry + 审批分层
@@ -1851,7 +1852,7 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
 
 **变更**
 
-1. **P2 新增 P2-7 Browser/Computer Use**（`GeoWorkAgent-P2-Detailed-Design.md` v0.2）：
+1. **P2 新增 P2-7 Browser/Computer Use**（`07-GeoWorkAgent-P2-Detailed-Design.md` v0.2）：
    - 现状诊断：`browserbridge/` 已有 6 个 Go 文件 + `tool_policy.go` 已有 3 个工具策略定义，但 `builtin_tools.go` 未注册——又是死代码
    - 3 个工具注册：`browser_control`(High/需审批) + `screenshot`(Medium/无需审批) + `network_request`(High/需审批)
    - 可选第 4 个工具 `paper_search`(Low/无需审批，已有 OpenAlexSearch 函数)
@@ -1860,7 +1861,7 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
    - 状态机白名单对齐（StateInspecting/StateExecuting 新增 3 个工具）
    - 数据流 + 10 条验收标准
 
-2. **P3-3 补充 §4.5 流式提前执行**（`GeoWorkAgent-P3-Detailed-Design.md` v0.2）：
+2. **P3-3 补充 §4.5 流式提前执行**（`08-GeoWorkAgent-P3-Detailed-Design.md` v0.2）：
    - `SpeculativeExecutor` 结构体：`TryExecuteInStream`/`GetResult`/`Cleanup`
    - `tool_policy.go` 新增 `ReadOnly` 标记（6 个 read_only 工具：read_file/list_files/search_workspace/scan_folder/screenshot/paper_search）
    - `streamModelCall` 集成：chunk 解析到 JSON 闭合的 tool_call 时触发提前执行 + 模型输出完毕后从缓存拿结果
@@ -1963,4 +1964,4 @@ v1.3 后，GeoWork Agent 架构文档体系形成"主文档 + 4 份子文档"的
 
 ### v1.0（2026-08-11）— qwen 初稿
 
-原始版本，见版本表。整合了远端 GeoWorkAgent.md 的代码现状分析、AGENT.MD 架构规范、Agent 架构对比与模块规划的优先级排序，新增了 Hooks/Guardian AI/Trajectory/推测执行等目标模块。
+原始版本，见版本表。整合了远端 04-GeoWorkAgent.md 的代码现状分析、AGENT.MD 架构规范、Agent 架构对比与模块规划的优先级排序，新增了 Hooks/Guardian AI/Trajectory/推测执行等目标模块。

@@ -18,8 +18,9 @@
 | 产品名   | GeoWork                                                      |
 | 定位     | 面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台   |
 | 仓库结构 | Monorepo                                                     |
-| 当前版本 | v0.4.x-dev                                                   |
-| 当前阶段 | P0 详细设计完成（`doc/GeoWorkAgent-P0-Detailed-Design.md`），待施工 |
+| 当前版本 | v0.5.x-dev（开发预览版）                                    |
+| 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
+| 当前阶段 | P0 详细设计完成（`doc/05-GeoWorkAgent-P0-Detailed-Design.md`），待施工 |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -45,10 +46,10 @@
 
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
-| **全局工程规范**      | `doc/Engineering-Git-Workflow.md` · `Engineering-CI-CD.md` · `Engineering-Security.md` · `Engineering-TypeScript.md` · `Engineering-ESLint-Prettier.md` · `Engineering-API-Contract.md` · `Engineering-Testing.md` · `Engineering-Release.md` · `Engineering-Monitoring.md` | 全部 v1.0 |
-| `apps/desktop/`       | `doc/GeoWorkFrontend-Design-System.md` + `doc/GeoWorkFrontend-Design-System-Detailed.md` + `doc/GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
-| `core/`               | `doc/GeoWorkAgent.md` + `doc/GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
-| `core/` 施工          | `doc/GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
+| **全局工程规范**      | `doc/10-Engineering-Git-Workflow.md` · `11-Engineering-CI-CD.md` · `12-Engineering-Security.md` · `13-Engineering-TypeScript.md` · `14-Engineering-ESLint-Prettier.md` · `15-Engineering-API-Contract.md` · `16-Engineering-Testing.md` · `17-Engineering-Release.md` · `18-Engineering-Monitoring.md` | 全部 v1.0 |
+| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.1 / 工程规范 v1.0 |
+| `core/`               | `doc/04-GeoWorkAgent.md` + `doc/09-GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
+| `core/` 施工          | `doc/05-GeoWorkAgent-P0-Detailed-Design.md` ~ `P3-Detailed-Design.md`                 | 施工图           |
 | `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |
 | `server/`             | 如涉及 Agent 能力，读 `doc/` 下对应设计文档                                        | —                |
 | `workers/geo-python/` | 对应技能的 `SKILL.md`                                                              | —                |
@@ -166,7 +167,7 @@ Go 核心 ←→ Go 云端：HTTP
 双通道分工：
 - SSE：Agent → 前端的单向事件流（思考过程、工具日志、状态变更）
 - WebSocket：双向控制信令（审批请求/响应、run/abort、终端 I/O）
-- 协议格式：JSON-RPC 2.0，详见 doc/GeoWork-Communication-Protocol.md
+- 协议格式：JSON-RPC 2.0，详见 doc/09-GeoWork-Communication-Protocol.md
 
 禁止：
 - 前端直接调用 Python Worker
@@ -218,7 +219,7 @@ git pull / commit / push / reset / checkout / rebase / clean
 
 - 评估 `React.lazy()` 动态导入可行性
 - 说明为什么现有依赖不能满足需求
-- 更新 `Engineering-CI-CD.md` 的 bundle size 基线
+- 更新 `11-Engineering-CI-CD.md` 的 bundle size 基线
 - 在 PR 描述中附 bundle size 影响
 
 ---
@@ -336,17 +337,17 @@ doc/ 下相关文档是否需要同步更新：□ 是（哪份哪节） □ 否
 ```
 Level 0 — 宪法（极少改动）
 ├── AGENT.md                              ← 全局约束 + 路由表
-└── doc/GeoWorkFrontend-Design-System.md  ← 视觉宪法
+└── doc/01-GeoWorkFrontend-Design-System.md  ← 视觉宪法
 
 Level 1 — 规范（按阶段更新）
-├── doc/Engineering-*.md × 9              ← 各领域工程规范
-├── doc/GeoWorkFrontend-Engineering-Standards.md  ← 前端代码规范
-└── doc/GeoWork-Communication-Protocol.md ← 通信协议
+├── doc/10~19-Engineering-*.md              ← 各领域工程规范
+├── doc/03-GeoWorkFrontend-Engineering-Standards.md  ← 前端代码规范
+└── doc/09-GeoWork-Communication-Protocol.md ← 通信协议
 
 Level 2 — 施工图（每个 P 阶段更新）
-├── doc/GeoWorkFrontend-Design-System-Detailed.md     ← 视觉施工
-├── doc/GeoWorkAgent-P0~P3-Detailed-Design.md         ← 后端施工
-└── doc/Engineering-Implementation-Plan.md             ← 工程化施工
+├── doc/02-GeoWorkFrontend-Design-System-Detailed.md     ← 视觉施工
+├── doc/05~08-GeoWorkAgent-P0~P3-Detailed-Design.md    ← 后端施工
+└── doc/19-Engineering-Implementation-Plan.md             ← 工程化施工
 
 Level 3 — 记录（持续追加）
 ├── CHANGELOG.md
@@ -360,7 +361,7 @@ Level 3 — 记录（持续追加）
 | AGENT.md | 项目负责人 | 每个 P 阶段结束 |
 | 设计系统 | 前端 | 每个 P 阶段结束 |
 | Engineering-*.md | 前端 | 每个 P 阶段结束 |
-| GeoWorkAgent.md + P0-P3 | 后端 | 每个 P 阶段结束 |
+| 04-GeoWorkAgent.md + P0-P3 | 后端 | 每个 P 阶段结束 |
 | Communication-Protocol | 全栈 | 协议变更时 |
 | ADR/* | 决策发起者 | 不变（只追加） |
 

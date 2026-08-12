@@ -1,7 +1,7 @@
 # GeoWork 前后端 API 契约规范
 
-> **文档路径**：`doc/Engineering-API-Contract.md`
-> **关联文档**：`GeoWork-Communication-Protocol.md`（WebSocket 协议）/ `GeoWorkFrontend-Engineering-Standards.md`（数据层 §2）
+> **文档路径**：`doc/15-Engineering-API-Contract.md`
+> **关联文档**：`09-GeoWork-Communication-Protocol.md`（WebSocket 协议）/ `03-GeoWorkFrontend-Engineering-Standards.md`（数据层 §2）
 > **适用对象**：前后端贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

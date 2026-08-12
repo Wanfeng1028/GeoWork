@@ -1,7 +1,7 @@
 # GeoWork Agent P3 施工方案
 
-> **文档路径**：`doc/GeoWorkAgent-P3-Detailed-Design.md`
-> **父文档**：`doc/GeoWorkAgent.md`（主文档/宪法）
+> **文档路径**：`doc/08-GeoWorkAgent-P3-Detailed-Design.md`
+> **父文档**：`doc/04-GeoWorkAgent.md`（主文档/宪法）
 > **前置条件**：P2 六项全部完成并验收通过
 > **文档定位**：P3 阶段——子代理、Harness 规则统一、推测执行、5 层压缩完整版
 

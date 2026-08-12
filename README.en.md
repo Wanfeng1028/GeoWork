@@ -23,7 +23,7 @@
 
 ## Current Version Status
 
-> **v0.4.x-dev** — GeoWork is currently in a development release stage, suitable for developers to start locally, test, and continue development. Some capabilities remain in dev state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. Please do not treat the current version as production-ready.
+> **v0.5.x-dev (Development Preview)** — GeoWork is currently in a development preview stage (v0.1–v0.4 were demo/exploration versions, now archived). Suitable for developers to start locally, test and continue development. Some capabilities remain in dev state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. Please do not treat the current version as production-ready. v1.0.x will be the first official release.
 >
 > See [Dev Version Checklist](docs/DEV_VERSION_CHECKLIST.md) for details.
 

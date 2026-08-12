@@ -1,7 +1,7 @@
 # GeoWork 测试规范
 
-> **文档路径**：`doc/Engineering-Testing.md`
-> **关联文档**：`GeoWorkFrontend-Engineering-Standards.md`（测试策略 §3）/ `Engineering-CI-CD.md`（CI 门禁）
+> **文档路径**：`doc/16-Engineering-Testing.md`
+> **关联文档**：`03-GeoWorkFrontend-Engineering-Standards.md`（测试策略 §3）/ `11-Engineering-CI-CD.md`（CI 门禁）
 > **适用对象**：所有贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

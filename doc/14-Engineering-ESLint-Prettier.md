@@ -1,7 +1,7 @@
 # GeoWork Lint 与格式化规范
 
-> **文档路径**：`doc/Engineering-ESLint-Prettier.md`
-> **关联文档**：`GeoWorkFrontend-Design-System.md`（stylelint §17）/ `Engineering-TypeScript.md`
+> **文档路径**：`doc/14-Engineering-ESLint-Prettier.md`
+> **关联文档**：`01-GeoWorkFrontend-Design-System.md`（stylelint §17）/ `13-Engineering-TypeScript.md`
 > **适用对象**：前端贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
 

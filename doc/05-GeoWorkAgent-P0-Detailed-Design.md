@@ -1,7 +1,7 @@
 # GeoWork Agent P0 施工方案
 
-> **文档路径**：`doc/GeoWorkAgent-P0-Detailed-Design.md`
-> **父文档**：`doc/GeoWorkAgent.md`（主文档/宪法）
+> **文档路径**：`doc/05-GeoWorkAgent-P0-Detailed-Design.md`
+> **父文档**：`doc/04-GeoWorkAgent.md`（主文档/宪法）
 > **适用对象**：参与 GeoWork 后端 P0 阶段开发的工程师、AI 编程助手
 > **文档定位**：P0 四项任务的施工级设计——接口签名、数据结构、白名单表、循环伪码、验收标准
 > **核心原则**：某个任务的设计没写完（接口+数据流+验收三样），不能动那个任务的代码

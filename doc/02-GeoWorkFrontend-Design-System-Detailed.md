@@ -1,7 +1,7 @@
 # GeoWork 前端施工计划
 
-> **文档路径**：`doc/GeoWorkFrontend-Design-System-Detailed.md`
-> **父文档**：`doc/GeoWorkFrontend-Design-System.md`（视觉宪法，现版本 v1.5.0）
+> **文档路径**：`doc/02-GeoWorkFrontend-Design-System-Detailed.md`
+> **父文档**：`doc/01-GeoWorkFrontend-Design-System.md`（视觉宪法，现版本 v1.5.0）
 > **适用对象**：参与 GeoWork 前端开发的工程师、AI 编程助手
 > **文档定位**：设计系统 → 代码的分阶段施工图——依赖关系、每一步的改动范围、验收标准
 > **核心原则**：某个阶段的接口签名和验收标准没写清，不能动那个阶段的代码；施工顺序必须按依赖图走，禁止跨阶段提前批需求
@@ -12,7 +12,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：F0~F3 四阶段划分 + 任务依赖图 + 各阶段验收标准，基于前端设计系统 v1.5.0 与代码现状摸底 |
 
-> **阅读约定**：本文档是施工图纸，不是宪法。设计系统里的色值/圆角/组件规格以 `doc/GeoWorkFrontend-Design-System.md` 为准，本计划只规定"什么时候做哪一段、做完怎么算数"。
+> **阅读约定**：本文档是施工图纸，不是宪法。设计系统里的色值/圆角/组件规格以 `doc/01-GeoWorkFrontend-Design-System.md` 为准，本计划只规定"什么时候做哪一段、做完怎么算数"。
 
 ---
 
@@ -203,7 +203,7 @@ F0-4（stylelint）───┘                                         │
 ### FP3-4 README / 对外品牌资产更新
 
 - 把 README 里的老 Logo 和配色图替换为 Gemini 蓝版
-- 对齐 `doc/GeoWorkFrontend-Design-System.md` §3.1 新的品牌色板
+- 对齐 `doc/01-GeoWorkFrontend-Design-System.md` §3.1 新的品牌色板
 - 添加"Design Tokens" 章节，列 token 表 + 链接到设计系统
 
 ---

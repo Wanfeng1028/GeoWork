@@ -1,6 +1,6 @@
 # GeoWork Brand-Kit 提案 v0.1：Gemini 蓝渐变切换
 
-> **关联文档**：`doc/GeoWorkFrontend-Design-System.md` v1.4.1 §10.1.3 / §10.1.5
+> **关联文档**：`doc/01-GeoWorkFrontend-Design-System.md` v1.4.1 §10.1.3 / §10.1.5
 > **状态**：已拍板执行。Gemini 蓝已在设计系统 v1.5.0 落地，本文档保留为决策记录。
 
 ---
@@ -123,7 +123,7 @@
 
 ## 五、受影响清单（精确到文件 + token 数）
 
-### 5.1 设计系统文档 `doc/GeoWorkFrontend-Design-System.md`
+### 5.1 设计系统文档 `doc/01-GeoWorkFrontend-Design-System.md`
 
 | 位置 | 当前内容 | 需替换为 | 改动次数 |
 |---|---|---|---|
@@ -197,7 +197,7 @@ colorPrimaryTextActive: '#ffffff',
 1. **用户拍板**：确认采用本提案（选项 B：全局切换）。
 2. **代码先行**：改 `editorialDarkTheme.ts` + `editorialTheme.ts` 两个主题文件，跑起来看视觉效果。
 3. **对比验收**：用 WebAIM checker 实测关键组件对比度，不合格则微调渐变末段色值。
-4. **文档收口**：确认色值后，把 `GeoWorkFrontend-Design-System.md` 中 25 处 `#3AD9FF` / `#0e7490` 引用全部替换为新值，更新版本表为 v1.5.0。
+4. **文档收口**：确认色值后，把 `01-GeoWorkFrontend-Design-System.md` 中 25 处 `#3AD9FF` / `#0e7490` 引用全部替换为新值，更新版本表为 v1.5.0。
 5. **stylelint 白名单**：同步更新 §17.3 的圆角例外白名单和 §17.4 的颜色白名单。
 
 ---

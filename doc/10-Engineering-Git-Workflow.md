@@ -1,6 +1,6 @@
 # GeoWork Git 工作流规范
 
-> **文档路径**：`doc/Engineering-Git-Workflow.md`
+> **文档路径**：`doc/10-Engineering-Git-Workflow.md`
 > **关联文档**：`AGENT.md`（全局约束 §8）
 > **适用对象**：所有贡献者（含 AI 编程助手）
 > **最后更新**：2026-08-12
@@ -29,7 +29,7 @@
 
 - 禁止直接在 `main` 上 push（通过 branch protection 强制）
 - 短期分支合入后立即删除，不留僵尸分支
-- 不使用 `release/x.x` 分支（版本号通过 tag 管理，见 `Engineering-Release.md`）
+- 不使用 `release/x.x` 分支（版本号通过 tag 管理，见 `17-Engineering-Release.md`）
 - 不使用 `develop` 分支（trunk-based 不需要）
 
 ---
