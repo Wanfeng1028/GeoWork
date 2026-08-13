@@ -1061,9 +1061,6 @@ export function SettingsPage() {
   )
 
   const renderAbout = () => {
-    useEffect(() => {
-      navigate('/about', { replace: true })
-    }, [navigate])
     return null
   }
 

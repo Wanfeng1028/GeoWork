@@ -65,7 +65,7 @@ function registerScreenshot(mainWindow: BrowserWindow) {
       try {
         const { desktopCapturer, screen } = require("electron");
         const allScreens = screen.getAllDisplays();
-        let offsetX = 0;
+        const offsetX = 0;
         let offsetY = 0;
 
         for (const display of allScreens) {
