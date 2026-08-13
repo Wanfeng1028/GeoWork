@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { App, Modal, Typography, Upload, theme } from 'antd'
-import { InboxOutlined } from '@ant-design/icons'
+import { Inbox } from 'lucide-react'
 import type { UploadFile } from 'antd'
 import styles from './SkillUploadModal.module.css'
 
@@ -58,7 +58,7 @@ export function SkillUploadModal({ open, onClose, onInstall }: SkillUploadModalP
         className={styles.dragger}
       >
         <p className="ant-upload-drag-icon">
-          <InboxOutlined style={{ color: token.colorPrimary }} />
+          <Inbox style={{ color: token.colorPrimary }} />
         </p>
         <Text>拖放 .zip 或 SKILL.md 文件，或点击选择</Text>
       </Dragger>

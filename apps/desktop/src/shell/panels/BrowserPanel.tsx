@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button, Input, Space, Spin, Tooltip, Typography, theme } from 'antd'
 import {
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  ReloadOutlined,
-  GlobalOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons'
+  ArrowLeft,
+  ArrowRight,
+  RotateCw,
+  Globe,
+  Loader2,
+} from 'lucide-react'
 import styles from './panels.module.css'
 
 const { Text } = Typography
@@ -153,20 +153,20 @@ export function BrowserPanel({ active }: BrowserPanelProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', borderBottom: `1px solid ${border}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <Tooltip title="后退">
-            <Button type="text" size="small" icon={<ArrowLeftOutlined />} onClick={handleBack} />
+            <Button type="text" size="small" icon={<ArrowLeft />} onClick={handleBack} />
           </Tooltip>
           <Tooltip title="前进">
-            <Button type="text" size="small" icon={<ArrowRightOutlined />} onClick={handleForward} />
+            <Button type="text" size="small" icon={<ArrowRight />} onClick={handleForward} />
           </Tooltip>
           <Tooltip title="刷新">
-            <Button type="text" size="small" icon={loading ? <LoadingOutlined /> : <ReloadOutlined />} onClick={handleReload} />
+            <Button type="text" size="small" icon={loading ? <Loader2 /> : <RotateCw />} onClick={handleReload} />
           </Tooltip>
           <Input
             size="small"
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
             onPressEnter={() => handleNavigate(inputUrl)}
-            prefix={<GlobalOutlined style={{ color: token.colorTextTertiary }} />}
+            prefix={<Globe style={{ color: token.colorTextTertiary }} />}
             placeholder="输入网址或搜索"
             style={{ flex: 1, fontFamily: "'SF Mono', 'Cascadia Code', monospace", fontSize: 12 }}
           />

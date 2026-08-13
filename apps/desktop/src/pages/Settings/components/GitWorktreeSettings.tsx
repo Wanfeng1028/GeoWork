@@ -10,11 +10,11 @@ import {
   theme,
 } from 'antd'
 import {
-  BranchesOutlined,
-  FolderOpenOutlined,
-  ReloadOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons'
+  GitBranch,
+  FolderOpen,
+  RotateCw,
+  Trash2,
+} from 'lucide-react'
 import { SettingsSection, SettingsCard } from './SettingsSection'
 import styles from './GitWorktreeSettings.module.css'
 
@@ -116,9 +116,9 @@ export function GitWorktreeSettings() {
             placeholder="例如 E:\code\javascript\project\GeoFrontend2.0"
             value={data.worktreePath}
             onChange={(e) => update({ worktreePath: e.target.value })}
-            prefix={<BranchesOutlined style={{ color: token.colorTextSecondary }} />}
+            prefix={<GitBranch style={{ color: token.colorTextSecondary }} />}
           />
-          <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
+          <Button icon={<RotateCw />} onClick={handleRefresh}>
             刷新
           </Button>
         </div>
@@ -173,13 +173,13 @@ export function GitWorktreeSettings() {
 
         <div className={styles.btnRow}>
           <Button
-            icon={<FolderOpenOutlined />}
+            icon={<FolderOpen />}
             onClick={() => message.info('打开文件夹功能后续接入')}
           >
             打开所在文件夹
           </Button>
           <Button
-            icon={<DeleteOutlined />}
+            icon={<Trash2 />}
             danger
             onClick={handleClear}
           >

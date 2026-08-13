@@ -1,9 +1,9 @@
 import { Avatar, Button, Card, Space, Tag, Typography, theme } from 'antd'
 import {
-  PlusOutlined,
-  CheckOutlined,
-  ApiOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Check,
+  Cable,
+} from 'lucide-react'
 import type { McpServerItem } from '../mcpMockData'
 import styles from './McpServerCard.module.css'
 
@@ -40,7 +40,7 @@ export function McpServerCard({ server, onConnect }: McpServerCardProps) {
           <Avatar
             size={32}
             style={{ background: token.colorPrimary }}
-            icon={<ApiOutlined />}
+            icon={<Cable />}
           />
           <div className={styles.nameBlock}>
             <Text strong className={styles.name}>{server.name}</Text>
@@ -49,12 +49,12 @@ export function McpServerCard({ server, onConnect }: McpServerCardProps) {
         </div>
         <div className={styles.headerRight}>
           {server.connected ? (
-            <Tag icon={<CheckOutlined />} color="success">已连接</Tag>
+            <Tag icon={<Check />} color="success">已连接</Tag>
           ) : (
             <Button
               type="text"
               size="small"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={handleAction}
             />
           )}

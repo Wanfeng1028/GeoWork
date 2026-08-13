@@ -8,7 +8,7 @@ import {
   Typography,
   theme,
 } from 'antd'
-import { LoadingOutlined, FolderOpenOutlined, ContainerOutlined, CodeOutlined, EnvironmentOutlined } from '@ant-design/icons'
+import { Loader2, FolderOpen, Boxes, Code, MapPin } from 'lucide-react'
 import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
@@ -49,9 +49,9 @@ const WORK_MODE_COPY: Record<WorkMode, { title: string; subtitle: string; placeh
 }
 
 const WORK_MODE_OPTIONS = [
-  { value: 'work', icon: <ContainerOutlined />, label: 'Work' },
-  { value: 'code', icon: <CodeOutlined />, label: 'Code' },
-  { value: 'map', icon: <EnvironmentOutlined />, label: 'Map' },
+  { value: 'work', icon: <Boxes />, label: 'Work' },
+  { value: 'code', icon: <Code />, label: 'Code' },
+  { value: 'map', icon: <MapPin />, label: 'Map' },
 ] as const
 
 /* ── Core API 响应类型 ── */
@@ -607,7 +607,7 @@ export function NewTaskPage() {
         type: 'group' as const,
         label: '选择目录',
         children: [
-          { key: 'choose-folder', icon: <FolderOpenOutlined />, label: '选择目录', onClick: handlePickDirectory },
+          { key: 'choose-folder', icon: <FolderOpen />, label: '选择目录', onClick: handlePickDirectory },
         ],
       },
       {
@@ -695,7 +695,7 @@ export function NewTaskPage() {
       {/* Work Dir */}
       <div className={styles.workDirRow}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
-          <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round">
+          <Button type="text" size="small" icon={<FolderOpen />} shape="round">
             {workDir ? workDir : '选择工作目录'}
           </Button>
         </Dropdown>
@@ -720,7 +720,7 @@ export function NewTaskPage() {
             {model} · {workDir ?? '未选择目录'}
           </Text>
           {isStreaming && (
-            <CapsuleTag color="processing" icon={<LoadingOutlined />}>
+            <CapsuleTag color="processing" icon={<Loader2 />}>
               {runStatus === 'thinking' ? '理解任务' : runStatus === 'planning' ? '生成计划' : '思考中'}
             </CapsuleTag>
           )}
@@ -728,7 +728,7 @@ export function NewTaskPage() {
             <CapsuleTag color="warning">等待确认</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'running' && (
-            <CapsuleTag color="processing" icon={<LoadingOutlined />}>执行中</CapsuleTag>
+            <CapsuleTag color="processing" icon={<Loader2 />}>执行中</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'completed' && (
             <CapsuleTag color="success">已完成</CapsuleTag>
@@ -769,7 +769,7 @@ export function NewTaskPage() {
       {/* Work Dir Row */}
       <div className={styles.workDirRowConv}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
-          <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round">
+          <Button type="text" size="small" icon={<FolderOpen />} shape="round">
             {workDir ? workDir : '选择工作目录'}
           </Button>
         </Dropdown>

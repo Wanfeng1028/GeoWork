@@ -13,10 +13,10 @@ import {
   theme,
 } from 'antd'
 import {
-  CheckOutlined,
-  ThunderboltOutlined,
-  SettingOutlined,
-} from '@ant-design/icons'
+  Check,
+  Zap,
+  Settings,
+} from 'lucide-react'
 import styles from './ModelPicker.module.css'
 import {
   getEnabledModels,
@@ -35,13 +35,13 @@ interface ModelOption {
 }
 
 const MODELS: ModelOption[] = [
-  { key: 'auto', name: 'Auto', icon: <ThunderboltOutlined />, tag: '推荐', tagColor: 'blue', rate: '0.5x' },
-  { key: 'qwen37-max', name: 'Qwen3.7-Max', icon: <ThunderboltOutlined />, rate: '0.25x' },
-  { key: 'qwen37-plus', name: 'Qwen3.7-Plus', icon: <ThunderboltOutlined />, rate: '0.1x' },
-  { key: 'qwen36-flash', name: 'Qwen3.6-Flash', icon: <ThunderboltOutlined />, rate: '0.1x' },
-  { key: 'deepseek-v4-pro', name: 'DeepSeek-V4-Pro', icon: <ThunderboltOutlined />, rate: '0.5x' },
-  { key: 'deepseek-v4-flash', name: 'DeepSeek-V4-Flash', icon: <ThunderboltOutlined />, rate: '0.1x' },
-  { key: 'glm-52', name: 'GLM-5.2', icon: <ThunderboltOutlined />, rate: '0.6x' },
+  { key: 'auto', name: 'Auto', icon: <Zap />, tag: '推荐', tagColor: 'blue', rate: '0.5x' },
+  { key: 'qwen37-max', name: 'Qwen3.7-Max', icon: <Zap />, rate: '0.25x' },
+  { key: 'qwen37-plus', name: 'Qwen3.7-Plus', icon: <Zap />, rate: '0.1x' },
+  { key: 'qwen36-flash', name: 'Qwen3.6-Flash', icon: <Zap />, rate: '0.1x' },
+  { key: 'deepseek-v4-pro', name: 'DeepSeek-V4-Pro', icon: <Zap />, rate: '0.5x' },
+  { key: 'deepseek-v4-flash', name: 'DeepSeek-V4-Flash', icon: <Zap />, rate: '0.1x' },
+  { key: 'glm-52', name: 'GLM-5.2', icon: <Zap />, rate: '0.6x' },
 ]
 
 interface ModelPickerProps {
@@ -165,7 +165,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
                 <Space size={4}>
                   {m.tag && <Tag color={m.tagColor} style={{ margin: 0, fontSize: 11 }}>{m.tag}</Tag>}
                   {m.rate && <Text type="secondary" style={{ fontSize: 11 }}>{m.rate}</Text>}
-                  {isSelected && <CheckOutlined style={{ color: token.colorPrimary }} />}
+                  {isSelected && <Check style={{ color: token.colorPrimary }} />}
                 </Space>
               </span>
             </div>
@@ -200,7 +200,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
                   }}
                 >
                   <span className={styles.modelItemIcon} style={{ color: token.colorTextSecondary }}>
-                    <ThunderboltOutlined />
+                    <Zap />
                   </span>
                   <span className={styles.modelItemName}>
                     <Text style={{ color: token.colorText, fontSize: 13 }}>{cm.displayName}</Text>
@@ -212,7 +212,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
                   <span className={styles.modelItemMeta}>
                     <Space size={4}>
                       <Tag style={{ margin: 0, fontSize: 11 }}>自定义</Tag>
-                      {isSelected && <CheckOutlined style={{ color: token.colorPrimary }} />}
+                      {isSelected && <Check style={{ color: token.colorPrimary }} />}
                     </Space>
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
       >
         <Button
           type="text"
-          icon={<SettingOutlined />}
+          icon={<Settings />}
           block
           onClick={handleOpenSettings}
         >
@@ -250,7 +250,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
       >
         <Button color="primary" variant="solid" size="small" shape="round" className={styles.modelButton}>
           <Space size={4}>
-            <ThunderboltOutlined />
+            <Zap />
             {resolveDisplayName(model)}
           </Space>
         </Button>

@@ -13,12 +13,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Input, Tag, Tooltip, theme } from 'antd'
 import {
-  SendOutlined,
-  LinkOutlined,
-  PlusOutlined,
-  StopOutlined,
-  BulbOutlined,
-} from '@ant-design/icons'
+  Send,
+  Link,
+  Plus,
+  Square,
+  Lightbulb,
+} from 'lucide-react'
 import { getCoreConversationId } from '../../pages/NewTask/components/streamAdapters'
 import { getConversation } from '../../pages/NewTask/components/conversationStorage'
 import { MarkdownLite } from '../../pages/NewTask/components/MarkdownLite'
@@ -302,7 +302,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
         {messages.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
-              <BulbOutlined />
+              <Lightbulb />
             </div>
             <div className={styles.emptyTitle}>
               有什么可以帮你的？
@@ -318,7 +318,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
               )}
             </div>
             {inheritable && (
-              <Tag icon={<LinkOutlined />} color="processing" className={styles.inheritTag}>
+              <Tag icon={<Link />} color="processing" className={styles.inheritTag}>
                 已继承上下文
               </Tag>
             )}
@@ -406,7 +406,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
               <Button
                 type="text"
                 size="small"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 className={styles.ctxBtn}
                 disabled={sending}
               />
@@ -416,7 +416,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
                 <Button
                   type="text"
                   size="small"
-                  icon={<StopOutlined />}
+                  icon={<Square />}
                   onClick={handleStop}
                   className={styles.stopBtn}
                 />
@@ -426,7 +426,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
                 <Button
                   type="primary"
                   size="small"
-                  icon={<SendOutlined />}
+                  icon={<Send />}
                   onClick={handleSend}
                   disabled={!input.trim()}
                   className={styles.sendBtn}

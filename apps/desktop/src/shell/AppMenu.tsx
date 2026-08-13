@@ -1,6 +1,6 @@
 import { App, Dropdown, theme } from 'antd'
 import type { MenuProps } from 'antd'
-import { CheckOutlined } from '@ant-design/icons'
+import { Check } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
@@ -30,7 +30,7 @@ function themeLabel(text: string, checked: boolean): React.ReactNode {
   return (
     <span className={styles.itemRow}>
       <span>{text}</span>
-      {checked && <CheckOutlined style={{ fontSize: 12, opacity: 0.85 }} />}
+      {checked && <Check style={{ fontSize: 12, opacity: 0.85 }} />}
     </span>
   )
 }

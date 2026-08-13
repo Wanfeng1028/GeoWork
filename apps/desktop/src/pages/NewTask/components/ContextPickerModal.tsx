@@ -20,10 +20,10 @@ import {
   theme,
 } from 'antd'
 import {
-  ThunderboltOutlined,
-  RobotOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons'
+  Zap,
+  Bot,
+  Globe,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import type { SelectedContextItem } from './conversationStorage'
 import { loadSkillsStore } from '../../Extensions/skillsStorage'
@@ -71,7 +71,7 @@ const TYPE_CONFIG: Record<ContextPickerType, {
   skill: {
     title: '选择技能',
     searchPlaceholder: '搜索已安装技能...',
-    icon: <ThunderboltOutlined />,
+    icon: <Zap />,
     emptyDesc: '暂无可用技能，请先前往技能页面安装或启用技能。',
     emptyBtnLabel: '去技能页面',
     emptyRoute: '/extensions/skills',
@@ -79,7 +79,7 @@ const TYPE_CONFIG: Record<ContextPickerType, {
   expert: {
     title: '选择专家',
     searchPlaceholder: '搜索已安装专家...',
-    icon: <RobotOutlined />,
+    icon: <Bot />,
     emptyDesc: '暂无可用专家，请先前往专家页面安装专家套件。',
     emptyBtnLabel: '去专家页面',
     emptyRoute: '/extensions/experts',
@@ -87,7 +87,7 @@ const TYPE_CONFIG: Record<ContextPickerType, {
   mcp: {
     title: '连接 MCP',
     searchPlaceholder: '搜索已连接 MCP...',
-    icon: <GlobalOutlined />,
+    icon: <Globe />,
     emptyDesc: '暂无已连接 MCP，请先前往 MCP 页面连接服务。',
     emptyBtnLabel: '去 MCP 页面',
     emptyRoute: '/extensions/mcp',

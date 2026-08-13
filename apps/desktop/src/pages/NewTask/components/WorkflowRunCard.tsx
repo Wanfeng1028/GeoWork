@@ -10,11 +10,11 @@ import {
   theme,
 } from 'antd'
 import {
-  CheckCircleOutlined,
-  PauseCircleOutlined,
-  CloseCircleOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons'
+  CheckCircle2,
+  PauseCircle,
+  XCircle,
+  Loader2,
+} from 'lucide-react'
 import type { RunStatus, WorkflowStep } from './conversationStorage'
 import styles from './WorkflowRunCard.module.css'
 
@@ -107,7 +107,7 @@ export function WorkflowRunCard({
 
         {runStatus === 'running' && (
           <Space size={6}>
-            <Spin size="small" indicator={<LoadingOutlined spin />} />
+            <Spin size="small" indicator={<Loader2 style={{ animation: 'spin 1s linear infinite' }} />} />
             <Text type="secondary" style={{ fontSize: 12 }}>
               正在执行工作流，请稍候……
             </Text>
@@ -118,7 +118,7 @@ export function WorkflowRunCard({
           <Alert
             type="success"
             showIcon
-            icon={<CheckCircleOutlined />}
+            icon={<CheckCircle2 />}
             title="工作流已完成前端模拟执行"
             style={{ fontSize: 12 }}
           />
@@ -128,7 +128,7 @@ export function WorkflowRunCard({
           <Alert
             type="info"
             showIcon
-            icon={<PauseCircleOutlined />}
+            icon={<PauseCircle />}
             title="工作流已停止"
             style={{ fontSize: 12 }}
           />
@@ -138,7 +138,7 @@ export function WorkflowRunCard({
           <Alert
             type="error"
             showIcon
-            icon={<CloseCircleOutlined />}
+            icon={<XCircle />}
             title="工作流执行失败"
             style={{ fontSize: 12 }}
           />

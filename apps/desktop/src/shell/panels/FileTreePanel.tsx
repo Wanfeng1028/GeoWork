@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Empty, Spin, Tooltip, Typography, theme } from 'antd'
 import type { DataNode } from 'antd/es/tree'
 import {
-  FolderOutlined,
-  FileTextOutlined,
-  FolderOpenOutlined,
-  ReloadOutlined,
-  LeftOutlined,
-  ArrowLeftOutlined,
-} from '@ant-design/icons'
+  Folder,
+  FileText,
+  FolderOpen,
+  RotateCw,
+  ChevronLeft,
+  ArrowLeft,
+} from 'lucide-react'
 import Tree from 'antd/es/tree'
 import styles from './panels.module.css'
 
@@ -41,7 +41,7 @@ function toTreeData(nodes: FileTreeNode[]): DataNode[] {
   return nodes.map((n) => ({
     key: n.path,
     title: n.name,
-    icon: n.is_dir ? <FolderOutlined /> : <FileTextOutlined />,
+    icon: n.is_dir ? <Folder /> : <FileText />,
     isLeaf: !n.is_dir,
     children: n.children && n.children.length > 0 ? toTreeData(n.children) : undefined,
   }))
@@ -135,7 +135,7 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
               </Text>
             }
           >
-            <Button type="primary" icon={<FolderOpenOutlined />} onClick={handleChooseFolder}>
+            <Button type="primary" icon={<FolderOpen />} onClick={handleChooseFolder}>
               选择工作目录
             </Button>
           </Empty>
@@ -154,7 +154,7 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
             <Button
               type="text"
               size="small"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeft />}
               onClick={() => setSelectedFile(null)}
             />
           </Tooltip>
@@ -174,7 +174,7 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
     <div className={styles.panel} style={{ background: token.colorBgContainer }}>
       <div className={styles.toolbar} style={{ borderBottom: `1px solid ${border}` }}>
         <Tooltip title="返回上级/重选目录">
-          <Button type="text" size="small" icon={<LeftOutlined />} onClick={handleChooseFolder} />
+          <Button type="text" size="small" icon={<ChevronLeft />} onClick={handleChooseFolder} />
         </Tooltip>
         <Text
           type="secondary"
@@ -184,7 +184,7 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
           {root}
         </Text>
         <Tooltip title="刷新">
-          <Button type="text" size="small" icon={<ReloadOutlined />} onClick={() => loadTree(root)} />
+          <Button type="text" size="small" icon={<RotateCw />} onClick={() => loadTree(root)} />
         </Tooltip>
       </div>
       <div className={styles.content}>

@@ -1,5 +1,5 @@
 import { Button, Switch, Tag, Typography } from 'antd'
-import { CloudServerOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Server, Trash2 } from 'lucide-react'
 import { theme } from 'antd'
 import type { ModelProvider } from '../../../shared/stores/modelProviderStore'
 import styles from './ProviderCard.module.css'
@@ -34,7 +34,7 @@ export function ProviderCard({ provider, isSelected, onSelect, onToggleEnabled, 
     >
       <div className={styles.header}>
         <span className={styles.name}>
-          <CloudServerOutlined style={{ marginRight: 6, color: token.colorTextSecondary }} />
+          <Server style={{ marginRight: 6, color: token.colorTextSecondary }} />
           <Text style={{ fontSize: 13 }}>{provider.name}</Text>
         </span>
         <span className={styles.tags}>
@@ -54,7 +54,7 @@ export function ProviderCard({ provider, isSelected, onSelect, onToggleEnabled, 
             type="text"
             size="small"
             danger
-            icon={<DeleteOutlined style={{ fontSize: 12 }} />}
+            icon={<Trash2 style={{ fontSize: 12 }} />}
             onClick={(e) => { e.stopPropagation(); onDelete(provider.id) }}
             style={{ width: 20, height: 20, minWidth: 20, padding: 0 }}
           />

@@ -22,7 +22,7 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import { DownOutlined } from '@ant-design/icons'
+import { ChevronDown } from 'lucide-react'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import type { Appearance } from '../../shared/stores/appearanceStore'
 import styles from './ThemePreviewPage.module.css'
@@ -220,7 +220,7 @@ export function ThemePreviewPage() {
             </Text>
             <Dropdown menu={{ items: dropdownItems }}>
               <Button>
-                Hover me <DownOutlined />
+                Hover me <ChevronDown />
               </Button>
             </Dropdown>
           </div>

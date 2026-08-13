@@ -1,17 +1,17 @@
 import { Avatar, Button, Card, Space, Tag, Typography, theme } from 'antd'
 import {
-  PlusOutlined,
-  CheckOutlined,
-  RadarChartOutlined,
-  BookOutlined,
-  SettingOutlined,
-  AimOutlined,
-  DatabaseOutlined,
-  PieChartOutlined,
-  WarningOutlined,
-  CodeOutlined,
-  EditOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Check,
+  Network,
+  BookOpen,
+  Settings,
+  Target,
+  Database,
+  PieChart,
+  AlertTriangle,
+  Code,
+  Pencil,
+} from 'lucide-react'
 import type { ExpertSuite } from '../expertMockData'
 import styles from './ExpertSuiteCard.module.css'
 
@@ -25,14 +25,14 @@ type ExpertSuiteCardProps = {
 }
 
 const categoryIconMap: Record<string, React.ReactNode> = {
-  '总控管理': <SettingOutlined />,
-  '空间分析': <AimOutlined />,
-  '遥感解译': <RadarChartOutlined />,
-  '数据处理': <DatabaseOutlined />,
-  '专题制图': <PieChartOutlined />,
-  '灾害评估': <WarningOutlined />,
-  '工程开发': <CodeOutlined />,
-  '学术写作': <EditOutlined />,
+  '总控管理': <Settings />,
+  '空间分析': <Target />,
+  '遥感解译': <Network />,
+  '数据处理': <Database />,
+  '专题制图': <PieChart />,
+  '灾害评估': <AlertTriangle />,
+  '工程开发': <Code />,
+  '学术写作': <Pencil />,
 }
 
 export function ExpertSuiteCard({
@@ -77,12 +77,12 @@ export function ExpertSuiteCard({
         </div>
         <div className={styles.headerRight}>
           {suite.installed ? (
-            <Tag icon={<CheckOutlined />} color="success">已安装</Tag>
+            <Tag icon={<Check />} color="success">已安装</Tag>
           ) : (
             <Button
               type="text"
               size="small"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={handleInstallClick}
             />
           )}
@@ -102,10 +102,10 @@ export function ExpertSuiteCard({
       <div className={styles.footer}>
         <Space size="small">
           <Tag style={{ margin: 0 }}>
-            <RadarChartOutlined /> {suite.commandCount} 个命令
+            <Network /> {suite.commandCount} 个命令
           </Tag>
           <Tag style={{ margin: 0 }}>
-            <BookOutlined /> {suite.knowledgeCount} 个知识
+            <BookOpen /> {suite.knowledgeCount} 个知识
           </Tag>
         </Space>
         <Text type="secondary" style={{ fontSize: 11 }}>{suite.version}</Text>

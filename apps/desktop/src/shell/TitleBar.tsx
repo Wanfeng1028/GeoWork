@@ -5,14 +5,14 @@ import {
   theme,
 } from 'antd'
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LayoutOutlined,
-  SearchOutlined,
-  BarChartOutlined,
-  MacCommandOutlined,
-  MessageOutlined,
-} from '@ant-design/icons'
+  PanelLeftClose,
+  PanelLeftOpen,
+  LayoutDashboard,
+  Search,
+  BarChart3,
+  Command,
+  MessageSquare,
+} from 'lucide-react'
 import styles from './TitleBar.module.css'
 import { AppMenu } from './AppMenu'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
@@ -56,25 +56,25 @@ export function TitleBar({
           <Button
             type="text"
             size="small"
-            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={sidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
             onClick={onToggleSidebar}
           />
         </Tooltip>
         <Tooltip title="面板">
-          <Button type="text" size="small" icon={<LayoutOutlined />} />
+          <Button type="text" size="small" icon={<LayoutDashboard />} />
         </Tooltip>
         <Tooltip title="搜索">
-          <Button type="text" size="small" icon={<SearchOutlined />} onClick={onOpenSearch} />
+          <Button type="text" size="small" icon={<Search />} onClick={onOpenSearch} />
         </Tooltip>
         <span className={styles.divider} />
         <Tooltip title="用量反馈">
-          <Button type="text" size="small" icon={<BarChartOutlined />} onClick={() => onOpenModal('usage')} />
+          <Button type="text" size="small" icon={<BarChart3 />} onClick={() => onOpenModal('usage')} />
         </Tooltip>
         <Tooltip title="快捷键指引">
-          <Button type="text" size="small" icon={<MacCommandOutlined />} onClick={() => onOpenModal('shortcuts')} />
+          <Button type="text" size="small" icon={<Command />} onClick={() => onOpenModal('shortcuts')} />
         </Tooltip>
         <Tooltip title="问题反馈">
-          <Button type="text" size="small" icon={<MessageOutlined />} onClick={() => onOpenModal('feedback')} />
+          <Button type="text" size="small" icon={<MessageSquare />} onClick={() => onOpenModal('feedback')} />
         </Tooltip>
       </div>
     </div>

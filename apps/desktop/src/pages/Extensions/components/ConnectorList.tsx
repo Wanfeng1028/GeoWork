@@ -1,18 +1,18 @@
 import { App, Avatar, Button, Switch, Tag, Typography, theme } from 'antd'
 import {
-  CloudOutlined,
-  ApiOutlined,
-  HomeOutlined,
-  GlobalOutlined,
-  CloudServerOutlined,
-  DatabaseOutlined,
-  MessageOutlined,
-  LinkOutlined,
-  SettingOutlined,
-  DisconnectOutlined,
-  ReloadOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons'
+  Cloud,
+  Cable,
+  Home,
+  Globe,
+  Server,
+  Database,
+  MessageSquare,
+  Link,
+  Settings,
+  Unlink,
+  RotateCw,
+  FileText,
+} from 'lucide-react'
 import type { ConnectorItem, ConnectorStatus } from '../connectorsMockData'
 import { AUTH_TYPE_LABELS } from '../connectorsMockData'
 import styles from './ConnectorList.module.css'
@@ -20,22 +20,22 @@ import styles from './ConnectorList.module.css'
 const { Text } = Typography
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  'google-workspace': <CloudOutlined />,
-  'microsoft-365': <ApiOutlined />,
-  'geowork-internal': <HomeOutlined />,
-  'browser-context': <GlobalOutlined />,
-  'arcgis-online': <CloudServerOutlined />,
-  geoserver: <CloudServerOutlined />,
-  'postgis-database': <DatabaseOutlined />,
-  'google-earth-engine': <CloudOutlined />,
-  'amap-open-platform': <GlobalOutlined />,
-  wecom: <MessageOutlined />,
-  lark: <MessageOutlined />,
-  dingtalk: <MessageOutlined />,
-  'geowork-workdir': <HomeOutlined />,
-  'geowork-datacenter': <DatabaseOutlined />,
-  'geowork-map-context': <GlobalOutlined />,
-  'geowork-task-center': <LinkOutlined />,
+  'google-workspace': <Cloud />,
+  'microsoft-365': <Cable />,
+  'geowork-internal': <Home />,
+  'browser-context': <Globe />,
+  'arcgis-online': <Server />,
+  geoserver: <Server />,
+  'postgis-database': <Database />,
+  'google-earth-engine': <Cloud />,
+  'amap-open-platform': <Globe />,
+  wecom: <MessageSquare />,
+  lark: <MessageSquare />,
+  dingtalk: <MessageSquare />,
+  'geowork-workdir': <Home />,
+  'geowork-datacenter': <Database />,
+  'geowork-map-context': <Globe />,
+  'geowork-task-center': <Link />,
 }
 
 const STATUS_MAP: Record<ConnectorStatus, { label: string; color: string }> = {
@@ -94,7 +94,7 @@ export function ConnectorList({
                   color: c.connected ? token.colorSuccess : token.colorTextSecondary,
                 }}
               >
-                {ICON_MAP[c.slug] ?? <LinkOutlined />}
+                {ICON_MAP[c.slug] ?? <Link />}
               </Avatar>
               <div className={styles.rowInfo}>
                 <Text strong className={styles.rowName}>{c.name}</Text>
@@ -125,7 +125,7 @@ export function ConnectorList({
                     <Button
                       type="text"
                       size="small"
-                      icon={<SettingOutlined />}
+                      icon={<Settings />}
                       onClick={() => onConfig(c.id)}
                     />
                     {!isBuiltIn && (
@@ -133,20 +133,20 @@ export function ConnectorList({
                         type="text"
                         size="small"
                         danger
-                        icon={<DisconnectOutlined />}
+                        icon={<Unlink />}
                         onClick={() => onDisconnect(c.id)}
                       />
                     )}
                     <Button
                       type="text"
                       size="small"
-                      icon={<ReloadOutlined />}
+                      icon={<RotateCw />}
                       onClick={() => onReset(c.id)}
                     />
                     <Button
                       type="text"
                       size="small"
-                      icon={<FileTextOutlined />}
+                      icon={<FileText />}
                       onClick={() => message.info(`${c.name} 说明功能后续接入`)}
                     />
                   </div>
@@ -173,7 +173,7 @@ export function ConnectorList({
                   <Button
                     type="text"
                     size="small"
-                    icon={<FileTextOutlined />}
+                    icon={<FileText />}
                     onClick={() => message.info(`${c.name} 说明功能后续接入`)}
                   />
                 </>

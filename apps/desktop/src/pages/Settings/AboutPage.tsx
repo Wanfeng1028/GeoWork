@@ -1,5 +1,5 @@
 import { Card, Tag, Typography, theme } from 'antd'
-import { GithubOutlined, FileTextOutlined } from '@ant-design/icons'
+import { Github, FileText } from 'lucide-react'
 import styles from './AboutPage.module.css'
 
 const { Title, Text, Link } = Typography
@@ -86,7 +86,7 @@ export function AboutPage() {
                 rel="noreferrer"
                 className={styles.link}
               >
-                <GithubOutlined /> 仓库地址
+                <Github /> 仓库地址
               </Link>
             </div>
             <div className={styles.infoRow}>
@@ -95,7 +95,7 @@ export function AboutPage() {
                 disabled
                 className={styles.link}
               >
-                <FileTextOutlined /> 文档中心（即将上线）
+                <FileText /> 文档中心（即将上线）
               </Link>
             </div>
           </div>

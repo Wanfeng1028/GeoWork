@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router'
 import { Button, Card, Grid, Typography, theme } from 'antd'
 import {
-  MessageOutlined,
-  DatabaseOutlined,
-  FundProjectionScreenOutlined,
-  ApartmentOutlined,
-  TeamOutlined,
-  EnvironmentOutlined,
-  ArrowRightOutlined,
-  PlayCircleOutlined,
-} from '@ant-design/icons'
+  MessageSquare,
+  Database,
+  TrendingUp,
+  Building2,
+  Users,
+  MapPin,
+  ArrowRight,
+  PlayCircle,
+} from 'lucide-react'
 import styles from './WelcomePage.module.css'
 
 const { Title, Paragraph } = Typography
@@ -18,37 +18,37 @@ const { useBreakpoint } = Grid
 const features = [
   {
     key: 'chat',
-    icon: <MessageOutlined style={{ fontSize: 20 }} />,
+    icon: <MessageSquare style={{ fontSize: 20 }} />,
     title: '智能对话',
     desc: '自然语言交互, AI Agent 自动编排地理任务',
   },
   {
     key: 'data',
-    icon: <DatabaseOutlined style={{ fontSize: 20 }} />,
+    icon: <Database style={{ fontSize: 20 }} />,
     title: '多源数据',
     desc: '遥感/GEE/本地文件, 统一数据管理',
   },
   {
     key: 'viz',
-    icon: <FundProjectionScreenOutlined style={{ fontSize: 20 }} />,
+    icon: <TrendingUp style={{ fontSize: 20 }} />,
     title: '可视化工作台',
     desc: '地图/代码/报告, 所见即所得',
   },
   {
     key: 'workflow',
-    icon: <ApartmentOutlined style={{ fontSize: 20 }} />,
+    icon: <Building2 style={{ fontSize: 20 }} />,
     title: '工作流编排',
     desc: 'ReAct 循环, 自动规划与执行',
   },
   {
     key: 'team',
-    icon: <TeamOutlined style={{ fontSize: 20 }} />,
+    icon: <Users style={{ fontSize: 20 }} />,
     title: '团队协作',
     desc: '任务追踪, 上下文共享',
   },
   {
     key: 'local',
-    icon: <EnvironmentOutlined style={{ fontSize: 20 }} />,
+    icon: <MapPin style={{ fontSize: 20 }} />,
     title: '本地优先',
     desc: '数据隐私, 离线可用',
   },
@@ -110,14 +110,14 @@ export function WelcomePage() {
           <Button
             type="primary"
             size="large"
-            icon={<ArrowRightOutlined />}
+            icon={<ArrowRight />}
             onClick={() => navigate('/new-task')}
           >
             开始新任务
           </Button>
           <Button
             size="large"
-            icon={<PlayCircleOutlined />}
+            icon={<PlayCircle />}
             disabled
           >
             查看示例

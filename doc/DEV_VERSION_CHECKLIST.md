@@ -11,7 +11,7 @@
 |---|---|---|---|
 | E0 基础设施 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | F0 基础落地 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
-| F1-1 Lucide 全站替换 | ⏳ 待执行（需网络安装 lucide-react） | — | — |
+| F1-1 Lucide 全站替换 | ✅ 完成 | 2026-08-13 | TraeCode AI Agent |
 | F1-2 反馈三件套 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | F1-3 全页面对齐 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | F2-1 布局骨架 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
@@ -34,7 +34,7 @@
 ### F1 验收
 
 - [ ] 页面截图对比 F0-1 基线，视觉无回流 — ⏳ 待截图对比
-- [ ] 全局 grep `@ant-design/icons` 命中 0 — ⏳ 待 F1-1 执行
+- [x] 全局 grep `@ant-design/icons` 命中 0 — ✅ F1-1 已完成（2026-08-13）
 - [x] 骨架屏复用在 4 个以上页面调用（NewTaskPage/WorkspacePage + 预留扩展点）
 - [x] stylelint 规则已配置
 

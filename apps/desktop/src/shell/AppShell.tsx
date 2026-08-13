@@ -16,30 +16,29 @@ import {
   theme,
 } from 'antd'
 import {
-  PlusOutlined,
-  AppstoreOutlined,
-  ClockCircleOutlined,
-  UnorderedListOutlined,
-  MobileOutlined,
-  SunOutlined,
-  MoonOutlined,
-  DesktopOutlined,
-  SettingOutlined,
-  CheckOutlined,
-  DownOutlined,
-  RightOutlined,
-  UserSwitchOutlined,
-  ToolOutlined,
-  ApiOutlined,
-  LinkOutlined,
-  FolderOutlined,
-  EllipsisOutlined,
-  PushpinOutlined,
-  PushpinFilled,
-  EditOutlined,
-  ExportOutlined,
-  InboxOutlined,
-} from '@ant-design/icons'
+  Plus,
+  LayoutGrid,
+  Clock,
+  List,
+  Smartphone,
+  Sun,
+  Moon,
+  Monitor,
+  Settings,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  UserCog,
+  Wrench,
+  Cable,
+  Link,
+  Folder,
+  MoreHorizontal,
+  Pin,
+  Pencil,
+  Upload,
+  Inbox,
+} from 'lucide-react'
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
@@ -72,9 +71,9 @@ const { Text } = Typography
 
 /* ── 主功能入口数据 ── */
 const navItems = [
-  { key: '/new-task', icon: <PlusOutlined />, label: '新任务' },
-  { key: '/tasks', icon: <ClockCircleOutlined />, label: '定时任务' },
-  { key: '/mobile-control', icon: <MobileOutlined />, label: '移动端控制' },
+  { key: '/new-task', icon: <Plus />, label: '新任务' },
+  { key: '/tasks', icon: <Clock />, label: '定时任务' },
+  { key: '/mobile-control', icon: <Smartphone />, label: '移动端控制' },
 ]
 
 /* 路由 → 已在当前页时的提示文案 */
@@ -89,10 +88,10 @@ const alreadyHereMap: Record<string, string> = {
 
 /* 扩展子项数据 */
 const extChildren = [
-  { key: 'experts', label: '专家', icon: <UserSwitchOutlined />, route: '/extensions/experts' },
-  { key: 'skills', label: '技能', icon: <ToolOutlined />, route: '/extensions/skills' },
-  { key: 'mcp', label: 'MCP', icon: <ApiOutlined />, route: '/extensions/mcp' },
-  { key: 'connectors', label: '连接器', icon: <LinkOutlined />, route: '/extensions/connectors' },
+  { key: 'experts', label: '专家', icon: <UserCog />, route: '/extensions/experts' },
+  { key: 'skills', label: '技能', icon: <Wrench />, route: '/extensions/skills' },
+  { key: 'mcp', label: 'MCP', icon: <Cable />, route: '/extensions/mcp' },
+  { key: 'connectors', label: '连接器', icon: <Link />, route: '/extensions/connectors' },
 ]
 
 const extRoutes = extChildren.map((c) => c.route)
@@ -384,11 +383,11 @@ export function AppShell() {
 
   const getTaskDropdownItems = useCallback((task: SidebarTaskItem) => ({
     items: [
-      { key: 'rename', icon: <EditOutlined />, label: '重命名' },
-      { key: 'pin', icon: task.pinned ? <PushpinFilled /> : <PushpinOutlined />, label: task.pinned ? '取消置顶' : '置顶' },
-      { key: 'export', icon: <ExportOutlined />, label: '导出对话记录' },
+      { key: 'rename', icon: <Pencil />, label: '重命名' },
+      { key: 'pin', icon: task.pinned ? <Pin /> : <Pin />, label: task.pinned ? '取消置顶' : '置顶' },
+      { key: 'export', icon: <Upload />, label: '导出对话记录' },
       { type: 'divider' as const },
-      { key: 'archive', icon: <InboxOutlined />, label: '归档', danger: true },
+      { key: 'archive', icon: <Inbox />, label: '归档', danger: true },
     ],
     onClick: ({ key }: { key: string }) => {
       switch (key) {
@@ -443,10 +442,10 @@ export function AppShell() {
     const isPinned = meta?.pinned ?? false
     return {
       items: [
-        { key: 'pin', icon: isPinned ? <PushpinFilled /> : <PushpinOutlined />, label: isPinned ? '取消置顶' : '置顶' },
-        { key: 'open-folder', icon: <FolderOutlined />, label: '在文件夹中打开' },
+        { key: 'pin', icon: isPinned ? <Pin /> : <Pin />, label: isPinned ? '取消置顶' : '置顶' },
+        { key: 'open-folder', icon: <Folder />, label: '在文件夹中打开' },
         { type: 'divider' as const },
-        { key: 'archive-all', icon: <InboxOutlined />, label: '归档整组对话', danger: true },
+        { key: 'archive-all', icon: <Inbox />, label: '归档整组对话', danger: true },
       ],
       onClick: ({ key }: { key: string }) => {
         switch (key) {
@@ -471,31 +470,31 @@ export function AppShell() {
   const themeMenuItems = [
     {
       key: 'editorial',
-      icon: <SunOutlined />,
+      icon: <Sun />,
       label: (
         <Space>
           亮色
-          {appearance === 'editorial' && <CheckOutlined />}
+          {appearance === 'editorial' && <Check />}
         </Space>
       ),
     },
     {
       key: 'editorial-dark',
-      icon: <MoonOutlined />,
+      icon: <Moon />,
       label: (
         <Space>
           暗色
-          {appearance === 'editorial-dark' && <CheckOutlined />}
+          {appearance === 'editorial-dark' && <Check />}
         </Space>
       ),
     },
     {
       key: 'mode-system',
-      icon: <DesktopOutlined />,
+      icon: <Monitor />,
       label: (
         <Space>
           跟随系统
-          {appearance === 'system' && <CheckOutlined />}
+          {appearance === 'system' && <Check />}
         </Space>
       ),
     },
@@ -567,7 +566,7 @@ export function AppShell() {
               <Tooltip title="扩展" placement="right">
                 <Button
                   type={isOnExtension ? 'primary' : 'text'}
-                  icon={<AppstoreOutlined />}
+                  icon={<LayoutGrid />}
                   style={{
                     width: 40,
                     height: 40,
@@ -605,7 +604,7 @@ export function AppShell() {
                 }}
                 onClick={() => setExtOpen((v) => !v)}
               >
-                <AppstoreOutlined />
+                <LayoutGrid />
                 <span style={{ flex: 1 }}>扩展</span>
                 <span
                   style={{
@@ -615,7 +614,7 @@ export function AppShell() {
                     transition: 'opacity 0.15s ease',
                   }}
                 >
-                  {extOpen ? <DownOutlined /> : <RightOutlined />}
+                  {extOpen ? <ChevronDown /> : <ChevronRight />}
                 </span>
               </div>
               {extOpen && (
@@ -653,8 +652,8 @@ export function AppShell() {
                 value={segment}
                 onChange={(value) => setSegment(value as SidebarSegment)}
                 options={[
-                  { label: '任务', value: 'tasks', icon: <UnorderedListOutlined /> },
-                  { label: '移动端控制', value: 'channels', icon: <MobileOutlined /> },
+                  { label: '任务', value: 'tasks', icon: <List /> },
+                  { label: '移动端控制', value: 'channels', icon: <Smartphone /> },
                 ]}
                 size="small"
               />
@@ -675,7 +674,7 @@ export function AppShell() {
                             '--hover-bg': token.colorFillSecondary,
                           } as React.CSSProperties}
                         >
-                          <FolderOutlined style={{ fontSize: 12, flexShrink: 0 }} />
+                          <Folder style={{ fontSize: 12, flexShrink: 0 }} />
                           <span className={styles.workspaceHeaderName}>{group.workspaceName}</span>
                           <span className={styles.workspaceHeaderActions}>
                             <Dropdown
@@ -686,7 +685,7 @@ export function AppShell() {
                               <Button
                                 type="text"
                                 size="small"
-                                icon={<EllipsisOutlined />}
+                                icon={<MoreHorizontal />}
                                 style={{ width: 20, height: 20, minWidth: 20, fontSize: 10 }}
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -695,7 +694,7 @@ export function AppShell() {
                               <Button
                                 type="text"
                                 size="small"
-                                icon={<PlusOutlined />}
+                                icon={<Plus />}
                                 style={{ width: 20, height: 20, minWidth: 20, fontSize: 10 }}
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -720,7 +719,7 @@ export function AppShell() {
                                 onClick={() => navigate(`/new-task?conversationId=${encodeURIComponent(task.id)}`)}
                               >
                                 <div className={styles.taskItemTitle}>
-                                  {task.pinned && <PushpinFilled style={{ fontSize: 10, color: token.colorPrimary, flexShrink: 0 }} />}
+                                  {task.pinned && <Pin style={{ fontSize: 10, color: token.colorPrimary, flexShrink: 0 }} />}
                                   <span className={styles.taskItemTitleText}>
                                     <Text ellipsis style={{ fontSize: 13 }}>{task.title}</Text>
                                   </span>
@@ -733,7 +732,7 @@ export function AppShell() {
                                       <Button
                                         type="text"
                                         size="small"
-                                        icon={<EllipsisOutlined />}
+                                        icon={<MoreHorizontal />}
                                         style={{ width: 20, height: 20, minWidth: 20, fontSize: 10 }}
                                         onClick={(e) => e.stopPropagation()}
                                       />
@@ -810,7 +809,7 @@ export function AppShell() {
           >
             <Button
               type="text"
-              icon={<SettingOutlined />}
+              icon={<Settings />}
               size={sidebarCollapsed ? 'middle' : 'small'}
               onClick={handleSettingsClick}
             />
@@ -830,7 +829,7 @@ export function AppShell() {
               title="切换主题"
               placement={sidebarCollapsed ? 'right' : undefined}
             >
-              <Button type="text" icon={<SunOutlined />} size={sidebarCollapsed ? 'middle' : 'small'} />
+              <Button type="text" icon={<Sun />} size={sidebarCollapsed ? 'middle' : 'small'} />
             </Tooltip>
           </Dropdown>
         </Beam>

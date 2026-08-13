@@ -13,32 +13,32 @@ import {
   App,
 } from 'antd'
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ExportOutlined,
-  BookOutlined,
-  DatabaseOutlined,
-  RadarChartOutlined,
-  SettingOutlined,
-  AimOutlined,
-  PieChartOutlined,
-  WarningOutlined,
-  CodeOutlined,
-} from '@ant-design/icons'
+  ArrowLeft,
+  Pencil,
+  Upload,
+  BookOpen,
+  Database,
+  Network,
+  Settings,
+  Target,
+  PieChart,
+  AlertTriangle,
+  Code,
+} from 'lucide-react'
 import type { ExpertSuite } from '../expertMockData'
 import styles from './ExpertSuiteDetail.module.css'
 
 const { Title, Text, Paragraph } = Typography
 
 const categoryIconMap: Record<string, React.ReactNode> = {
-  '总控管理': <SettingOutlined />,
-  '空间分析': <AimOutlined />,
-  '遥感解译': <RadarChartOutlined />,
-  '数据处理': <DatabaseOutlined />,
-  '专题制图': <PieChartOutlined />,
-  '灾害评估': <WarningOutlined />,
-  '工程开发': <CodeOutlined />,
-  '学术写作': <EditOutlined />,
+  '总控管理': <Settings />,
+  '空间分析': <Target />,
+  '遥感解译': <Network />,
+  '数据处理': <Database />,
+  '专题制图': <PieChart />,
+  '灾害评估': <AlertTriangle />,
+  '工程开发': <Code />,
+  '学术写作': <Pencil />,
 }
 
 type ExpertSuiteDetailProps = {
@@ -70,20 +70,20 @@ export function ExpertSuiteDetail({
       >
         <Button
           type="text"
-          icon={<ArrowLeftOutlined />}
+          icon={<ArrowLeft />}
           onClick={onBack}
         >
           返回列表
         </Button>
         <Space>
           <Button
-            icon={<EditOutlined />}
+            icon={<Pencil />}
             onClick={() => message.info('专家编辑功能后续接入')}
           >
             编辑
           </Button>
           <Button
-            icon={<ExportOutlined />}
+            icon={<Upload />}
             onClick={() => message.info('专家套件导出功能后续接入')}
           >
             导出 ZIP
@@ -108,7 +108,7 @@ export function ExpertSuiteDetail({
             <Avatar
               size={56}
               style={{ background: token.colorPrimary }}
-              icon={categoryIconMap[suite.category] ?? <RadarChartOutlined />}
+              icon={categoryIconMap[suite.category] ?? <Network />}
             />
             <div className={styles.infoMeta}>
               <Title level={4} style={{ margin: 0, color: token.colorText }}>
@@ -161,7 +161,7 @@ export function ExpertSuiteDetail({
             renderItem={(conn) => (
               <List.Item>
                 <div className={styles.connectionRow}>
-                  <DatabaseOutlined style={{ marginRight: 8, color: token.colorTextSecondary }} />
+                  <Database style={{ marginRight: 8, color: token.colorTextSecondary }} />
                   <div className={styles.connectionInfo}>
                     <Text>{conn.name}</Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
@@ -190,7 +190,7 @@ export function ExpertSuiteDetail({
             renderItem={(mod) => (
               <List.Item>
                 <div className={styles.knowledgeRow}>
-                  <BookOutlined style={{ marginRight: 8, color: token.colorTextSecondary }} />
+                  <BookOpen style={{ marginRight: 8, color: token.colorTextSecondary }} />
                   <div className={styles.knowledgeInfo}>
                     <Text>{mod.title}</Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>

@@ -1,6 +1,6 @@
 import { useCallback, type ReactNode } from 'react'
 import { App, Button, Typography, theme } from 'antd'
-import { CopyOutlined } from '@ant-design/icons'
+import { Copy } from 'lucide-react'
 import styles from './MarkdownLite.module.css'
 
 const { Text } = Typography
@@ -94,7 +94,7 @@ function CodeBlock({
         <Button
           type="text"
           size="small"
-          icon={<CopyOutlined />}
+          icon={<Copy />}
           onClick={handleCopy}
         >
           复制

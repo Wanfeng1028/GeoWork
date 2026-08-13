@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { App, Avatar, Button, Modal, QRCode, Typography, theme } from 'antd'
-import { ReloadOutlined, SettingOutlined, CheckOutlined } from '@ant-design/icons'
+import { RotateCw, Settings, Check } from 'lucide-react'
 import type { MobileChannel } from './MobileChannelCard'
 import styles from './MobileBindModal.module.css'
 
@@ -108,20 +108,20 @@ export function MobileBindModal({ open, channel, onClose, onDone }: MobileBindMo
         {/* 操作按钮 */}
         <div className={styles.footerActions}>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<RotateCw />}
             onClick={handleRefresh}
           >
             刷新二维码
           </Button>
           <Button
-            icon={<SettingOutlined />}
+            icon={<Settings />}
             onClick={handleManual}
           >
             手动配置
           </Button>
           <Button
             type="primary"
-            icon={<CheckOutlined />}
+            icon={<Check />}
             onClick={handleDone}
           >
             完成
