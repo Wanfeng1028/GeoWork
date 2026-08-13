@@ -13,10 +13,10 @@ html, body, #root {
 }
 
 /* 全局统一蓝色主按钮为 Gemini 胶囊渐变风格，排除圆形按钮 */
-.ant-btn-primary:not(.ant-btn-circle),
-.ant-btn-primary:not(.ant-btn-circle):hover,
-.ant-btn-primary:not(.ant-btn-circle):active,
-.ant-btn-primary:not(.ant-btn-circle):focus {
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle),
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle):hover,
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle):active,
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle):focus {
   border-radius: 9999px !important;
   background-color: transparent !important;
   background-image: linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
@@ -25,7 +25,7 @@ html, body, #root {
   box-shadow: none !important;
 }
 
-.ant-btn-primary:not(.ant-btn-circle):hover,
-.ant-btn-primary:not(.ant-btn-circle):focus {
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle):hover,
+button.ant-btn.ant-btn-primary:not(.ant-btn-circle):focus {
   background-image: linear-gradient(89.58deg, #4f9dff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
 }
