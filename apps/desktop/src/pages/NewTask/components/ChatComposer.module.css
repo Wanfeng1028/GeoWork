@@ -21,13 +21,13 @@
 /* ── 主输入行 ── */
 .composerRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex-wrap: nowrap;
   min-height: 40px;
   background: rgba(15,23,42,0.03);
-  border-radius: 9999px;
-  padding: 6px 8px;
+  border-radius: 12px;
+  padding: 8px 12px;
 }
 
 /* ── TextArea ── */
@@ -39,7 +39,8 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  padding: 4px 8px;
+  padding: 2px 4px;
+  resize: none;
 }
 
 .textArea::-webkit-scrollbar {
@@ -80,12 +81,14 @@
   border-radius: 9999px;
 }
 
-/* ── 右侧操作区不换行 ── */
+/* ── 右侧操作区 ── */
 .actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  margin-top: auto;
+  align-self: flex-end;
 }
 
 /* ── Mode Card Dropdown ── */

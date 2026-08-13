@@ -394,53 +394,55 @@ export function ChatComposer({
           }}
         />
 
-        <Dropdown
-          popupRender={modeDropdownRender}
-          trigger={['click']}
-          placement="topLeft"
-          open={modeDropdownOpen}
-          onOpenChange={setModeDropdownOpen}
-        >
-          <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
-            <Space size={4}>
-              <Zap />
-              {mode}
-            </Space>
-          </Button>
-        </Dropdown>
+        <div className={styles.actions}>
+          <Dropdown
+            popupRender={modeDropdownRender}
+            trigger={['click']}
+            placement="topLeft"
+            open={modeDropdownOpen}
+            onOpenChange={setModeDropdownOpen}
+          >
+            <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
+              <Space size={4}>
+                <Zap />
+                {mode}
+              </Space>
+            </Button>
+          </Dropdown>
 
-        <ModelPicker model={model} onModelChange={onModelChange} />
+          <ModelPicker model={model} onModelChange={onModelChange} />
 
-        <Tooltip title={recording ? '停止录音' : '语音输入'}>
-          <Button
-            color={recording ? 'danger' : 'green'}
-            variant="filled"
-            shape="round"
-            icon={<AudioLines />}
-            className={styles.iconBtn}
-            onClick={toggleVoiceInput}
-          />
-        </Tooltip>
+          <Tooltip title={recording ? '停止录音' : '语音输入'}>
+            <Button
+              color={recording ? 'danger' : 'green'}
+              variant="filled"
+              shape="round"
+              icon={<AudioLines />}
+              className={styles.iconBtn}
+              onClick={toggleVoiceInput}
+            />
+          </Tooltip>
 
-        {isStreaming ? (
-          <Button
-            danger
-            shape="round"
-            icon={<Square />}
-            className={styles.iconBtn}
-            onClick={onStop}
-          />
-        ) : (
-          <Button
-            color="primary"
-            variant="solid"
-            shape="round"
-            icon={<Send />}
-            className={styles.iconBtn}
-            onClick={handleSend}
-            disabled={!prompt.trim()}
-          />
-        )}
+          {isStreaming ? (
+            <Button
+              danger
+              shape="round"
+              icon={<Square />}
+              className={styles.iconBtn}
+              onClick={onStop}
+            />
+          ) : (
+            <Button
+              color="primary"
+              variant="solid"
+              shape="round"
+              icon={<Send />}
+              className={styles.iconBtn}
+              onClick={handleSend}
+              disabled={!prompt.trim()}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

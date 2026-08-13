@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Modal, Progress, Segmented, Typography, theme } from 'antd'
+import { Modal, Progress, Typography, theme } from 'antd'
 import {
   Link,
   RotateCw,
@@ -10,6 +10,7 @@ import {
   Gift,
 } from 'lucide-react'
 import { useLocation } from 'react-router'
+import { CapsuleTabs } from './components/CapsuleTabs'
 import styles from './UsageModal.module.css'
 
 interface Props {
@@ -150,7 +151,7 @@ export function UsageModal({ open, onClose }: Props) {
       width={560}
     >
       <div className={styles.switcher}>
-        <Segmented
+        <CapsuleTabs
           value={modelType}
           onChange={(v) => setModelType(v as ModelType)}
           options={[
