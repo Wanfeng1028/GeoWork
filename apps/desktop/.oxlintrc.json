@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "oxc"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
@@ -9,16 +14,16 @@
     "no-alert": "error",
     "no-var": "error",
     "prefer-const": "error",
-    "no-unused-vars": "error",
     "eqeqeq": ["error", "always"],
     "no-eval": "error",
     "no-implied-eval": "error",
-    "no-undef": "error",
     "no-redeclare": "error",
     "no-dupe-keys": "error",
     "no-fallthrough": "error",
     "no-constant-condition": "error",
     "no-empty": "warn",
-    "no-irregular-whitespace": "warn"
+    "no-irregular-whitespace": "warn",
+    "eslint/no-undef": "off",
+    "eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
   }
 }
