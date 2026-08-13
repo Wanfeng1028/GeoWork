@@ -15,11 +15,11 @@ html, body, #root {
 /* 全局统一蓝色主按钮为 Gemini 胶囊渐变风格，排除圆形按钮 */
 .ant-btn-primary:not(.ant-btn-circle) {
   border-radius: 9999px !important;
-  background-image: linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
+  background: linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
   border: none !important;
   box-shadow: none !important;
 }
 
 .ant-btn-primary:not(.ant-btn-circle):hover {
-  background-image: linear-gradient(89.58deg, #3b82f6 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
+  background: linear-gradient(89.58deg, #4f9dff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%) !important;
 }
