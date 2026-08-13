@@ -18,12 +18,14 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@shell/*": ["./src/shell/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@app/*": ["./src/app/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["src/shared/*"],
+      "@shell/*": ["src/shell/*"],
+      "@pages/*": ["src/pages/*"],
+      "@app/*": ["src/app/*"]
     },
 
     /* Linting */

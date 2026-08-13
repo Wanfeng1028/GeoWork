@@ -20,5 +20,5 @@ export function CapsuleTabs(props: SegmentedProps) {
     [token.colorPrimary],
   )
 
-  return <Segmented {...props} style={{ ...capsuleStyle, ...props.style }} />
+  return <Segmented {...props} style={{ ...capsuleStyle, ...props.style } as React.CSSProperties} />
 }

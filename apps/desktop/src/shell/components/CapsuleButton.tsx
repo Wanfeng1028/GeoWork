@@ -22,14 +22,12 @@ export function CapsuleButton({
       borderRadius: 9999,
       ...(type === 'primary'
         ? {
-            background: token.colorPrimary,
-            borderColor: token.colorPrimary,
-            color: '#ffffff',
+            color: token.colorTextLightSolid,
           }
         : {}),
       ...style,
     }),
-    [token.colorPrimary, type, style],
+    [token.colorTextLightSolid, type, style],
   )
 
   return (

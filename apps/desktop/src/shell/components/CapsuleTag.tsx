@@ -16,7 +16,7 @@ export function CapsuleTag({ color, style, children, ...rest }: TagProps) {
       height: 22,
       lineHeight: '20px',
       paddingInline: 8,
-      ...(color && typeof color === 'string'
+      ...(typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)
         ? { backgroundColor: `${color}1F`, borderColor: `${color}33`, color }
         : {}),
       ...style,
