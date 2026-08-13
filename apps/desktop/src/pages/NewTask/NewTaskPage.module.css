@@ -70,16 +70,6 @@
   max-width: 480px;
 }
 
-/* ── Typewriter Cursor ── */
-@keyframes cursorBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.typewriterCursor {
-  animation: cursorBlink 0.8s step-end infinite;
-  margin-left: 1px;
-}
 
 /* ── Home Composer Wrapper ── */
 .homeComposerWrap {
@@ -176,8 +166,3 @@
   flex-shrink: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .typewriterCursor {
-    animation: none;
-  }
-}

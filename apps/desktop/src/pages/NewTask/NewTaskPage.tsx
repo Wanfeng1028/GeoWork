@@ -374,26 +374,8 @@ export function NewTaskPage() {
     }
   }, [searchParams, navigate])
 
-  /* ── Typewriter ── */
+  /* ── Hero 文案 ── */
   const heroText = WORK_MODE_COPY[workMode].title
-  const [typedIndex, setTypedIndex] = useState(0)
-  const [loop, setLoop] = useState(0)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) { setTypedIndex(heroText.length); return }
-    if (typedIndex >= heroText.length) {
-      const pause = setTimeout(() => { setTypedIndex(0); setLoop((l) => l + 1) }, 2000)
-      return () => clearTimeout(pause)
-    }
-    const timer = setTimeout(() => setTypedIndex((prev) => prev + 1), 100)
-    return () => clearTimeout(timer)
-  }, [typedIndex, heroText.length, loop])
-
-  /* workMode 切换时重置打字机 */
-  useEffect(() => {
-    setTypedIndex(0)
-    setLoop((l) => l + 1)
-  }, [workMode])
 
   /* ── 上下文管理 ── */
   const handleOpenContextPicker = (type: ContextPickerType) => {
@@ -663,8 +645,7 @@ export function NewTaskPage() {
         </svg>
         */}
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
-          {heroText.slice(0, typedIndex)}
-          <span className={styles.typewriterCursor} style={{ color: token.colorPrimary, fontWeight: 400 }}>▎</span>
+          {heroText}
         </Title>
         <Text type="secondary" className={styles.heroSubtitle}>
           {WORK_MODE_COPY[workMode].subtitle}
