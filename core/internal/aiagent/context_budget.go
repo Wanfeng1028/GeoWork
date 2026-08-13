@@ -56,6 +56,10 @@ type BudgetResult struct {
 	Truncated bool
 	// ToolCallsThisTurn is the number of tool calls included.
 	ToolCallsThisTurn int
+	// Summary (P3-4 L4): when L4 conversation summarization was applied,
+	// this carries the generated summary. The orchestrator checks this
+	// to decide whether L5 (memory solidification) is needed.
+	Summary string
 }
 
 // EstimateTokens is a rough token estimator.

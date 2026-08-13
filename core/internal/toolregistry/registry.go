@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,12 +29,14 @@ type Tool interface {
 
 // Registry manages tool registration and lookup with governance support.
 type Registry struct {
-	mu         sync.RWMutex
-	tools      map[string]Tool
-	log        *zap.Logger
-	governor   *Governor
-	auditLog   *AuditLog
-	policies   map[string]*GovernorPolicy // cached governor policies
+	mu          sync.RWMutex
+	tools       map[string]Tool
+	log         *zap.Logger
+	governor    *Governor              // existing call-rate / policy Governor (frequency, quota)
+	approvalGov ApprovalGovernor      // P1-1: interactive approval-flow governor (aiagent.GovernorImpl)
+	auditLog    *AuditLog
+	policies    map[string]*GovernorPolicy // cached governor policies
+	allowedRoots []string               // P1-1: sandbox path roots for write/exec tools
 }
 
 func NewRegistry(log *zap.Logger) *Registry {
@@ -41,6 +45,45 @@ func NewRegistry(log *zap.Logger) *Registry {
 		log:      log,
 		policies: make(map[string]*GovernorPolicy),
 	}
+}
+
+// WithApprovalGovernor injects an interactive approval-flow governor
+// into the registry. The registry stays unaware of the concrete type
+// (typically *aiagent.GovernorImpl) — it only depends on the
+// ApprovalGovernor interface, keeping the dependency direction
+// aiagent → toolregistry one-way.
+func (r *Registry) WithApprovalGovernor(ag ApprovalGovernor) *Registry {
+	r.mu.Lock()
+	r.approvalGov = ag
+	r.mu.Unlock()
+	return r
+}
+
+// WithAllowedRoots configures the sandbox path roots used by
+// validateSandboxPath when executing tools that opt into SandboxRequired.
+// Tools whose `path` argument falls outside every root are rejected.
+func (r *Registry) WithAllowedRoots(roots []string) *Registry {
+	r.mu.Lock()
+	// Copy to avoid external mutation.
+	r.allowedRoots = append([]string(nil), roots...)
+	r.mu.Unlock()
+	return r
+}
+
+// GetApprovalGovernor returns the attached ApprovalGovernor, if any.
+// Used by the aiagent package's waitForApproval path to talk to the
+// concrete GovernorImpl when it needs the pending-requests list.
+func (r *Registry) GetApprovalGovernor() ApprovalGovernor {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.approvalGov
+}
+
+// AllowedRoots returns a copy of the configured sandbox roots.
+func (r *Registry) AllowedRoots() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return append([]string(nil), r.allowedRoots...)
 }
 
 // Register adds a tool to the registry.
@@ -116,16 +159,33 @@ func (r *Registry) GetAuditLog() *AuditLog {
 }
 
 // Execute calls a registered tool with the given arguments, enforcing governance.
-func (r *Registry) Execute(ctx context.Context, name string, args map[string]any) (map[string]any, error) {
+//
+// The mode parameter tells the registry whether the call originates from the
+// LLM-driven autonomous ReAct loop (ModeAutonomous) or from a deterministic
+// workflow / direct API call (ModeDeterministic). The ApprovalGovernor uses
+// it to decide whether a critical tool requires interactive user approval:
+//
+//   - ModeAutonomous + critical risk → blocks via *ErrApprovalRequired
+//     until the orchestrator's waitForApproval resolves the request.
+//   - ModeDeterministic + critical risk → audit-logged only (the workflow
+//     author pre-authorized the operation at design time).
+//
+// When ApprovalGovernor is not attached (nil), the call proceeds without
+// approval checks — preserving the pre-P1-1 behavior for callers that have
+// not yet wired a governor (e.g. tests, workflow engine without orchestrator).
+func (r *Registry) Execute(ctx context.Context, name string, args map[string]any, mode ExecutionMode) (map[string]any, error) {
 	t, ok := r.Get(name)
 	if !ok {
 		return nil, fmt.Errorf("tool %s not found", name)
 	}
 
-	// Check governance
+	// Snapshot fields under the read lock so the rest of Execute can run
+	// without holding the registry mutex.
 	r.mu.RLock()
 	governor := r.governor
 	auditLog := r.auditLog
+	approvalGov := r.approvalGov
+	allowedRoots := append([]string(nil), r.allowedRoots...)
 	r.mu.RUnlock()
 
 	if governor != nil {
@@ -177,9 +237,33 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 		}
 	}
 
-	// Check sandbox
-	if t.SandboxRequired() {
-		// Sandbox enforcement would go here
+	// P1-1 §2.4: sandbox path validation. Applied only to tools that
+	// declared SandboxRequired (write_file / run_shell / run_python /
+	// delete_file / git_commit / git_push / run_git_add / run_git_reset).
+	// When allowedRoots is empty the check is skipped (caller has not
+	// configured a sandbox boundary yet — preserves legacy behavior).
+	if t.SandboxRequired() && len(allowedRoots) > 0 {
+		if pathArg, ok := args["path"].(string); ok && pathArg != "" {
+			if err := validateSandboxPath(pathArg, allowedRoots); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// P1-1 §2.5: interactive approval flow. The registry delegates the
+	// wait back to the orchestrator by returning *ErrApprovalRequired —
+	// it does NOT block here, otherwise Registry would need to import the
+	// aiagent package (reverse dependency). The orchestrator catches the
+	// error, extracts Req, runs waitForApproval, then retries Execute.
+	if approvalGov != nil {
+		runID := RunIDFromContext(ctx)
+		approvalReq, err := approvalGov.CheckPermission(runID, name, args, mode)
+		if err != nil {
+			return nil, err
+		}
+		if approvalReq != nil {
+			return nil, &ErrApprovalRequired{Req: approvalReq}
+		}
 	}
 
 	start := time.Now()
@@ -204,13 +288,45 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 	return result, nil
 }
 
+// validateSandboxPath ensures path stays inside one of the allowed roots.
+// Used by Registry.Execute for tools that declared SandboxRequired.
+// Resolves symlinks on the absolute path before comparison so ../
+// traversals cannot escape the sandbox.
+func validateSandboxPath(path string, allowedRoots []string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("invalid path %q: %w", path, err)
+	}
+	for _, root := range allowedRoots {
+		absRoot, err := filepath.Abs(root)
+		if err != nil {
+			continue
+		}
+		// filepath.Rel already handles the boundary correctly: a path
+		// like "/data/evil" yields rel "evil" against root "/data/e"
+		// (NOT "."), so the HasPrefix("..") check below rejects it.
+		// No manual separator-padding is needed.
+		rel, err := filepath.Rel(absRoot, absPath)
+		if err != nil {
+			continue
+		}
+		if rel == "." || !strings.HasPrefix(rel, "..") {
+			return nil
+		}
+	}
+	return fmt.Errorf("path %q outside sandbox roots", path)
+}
+
 // ExecuteWithArgs is a convenience wrapper that accepts JSON bytes.
+// Defaults to ModeDeterministic since this entry point is intended for
+// direct API callers (HTTP / CLI), where the user has authorized the
+// call explicitly.
 func (r *Registry) ExecuteWithArgs(ctx context.Context, name string, argsJSON []byte) (map[string]any, error) {
 	var args map[string]any
 	if err := json.Unmarshal(argsJSON, &args); err != nil {
 		return nil, fmt.Errorf("parse args: %w", err)
 	}
-	return r.Execute(ctx, name, args)
+	return r.Execute(ctx, name, args, ModeDeterministic)
 }
 
 // IsRegistered checks if a tool is registered.

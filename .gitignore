@@ -24,6 +24,9 @@ __pycache__/
 .atomcode/
 .workbuddy/
 .qoder/
+# Trae 云开发环境内部产物（HTML 预览/分享包），不入库
+.trae-html-preview-packages/
+.trae-html-share-packages/
 
 # Logs
 logs/

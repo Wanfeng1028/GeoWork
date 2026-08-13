@@ -82,7 +82,7 @@ func (r *Routes) handleExecute(w http.ResponseWriter, req *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	result, err := r.registry.Execute(req.Context(), reqBody.Name, reqBody.Args)
+	result, err := r.registry.Execute(req.Context(), reqBody.Name, reqBody.Args, ModeDeterministic)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return

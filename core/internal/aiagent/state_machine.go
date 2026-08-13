@@ -73,24 +73,32 @@ func NewStateMachine() *StateMachine {
 		transitions: make(map[State]map[MachineEvent]State),
 	}
 
-	// Define allowed tool sets per state
-	sm.allowed[StateIdle] = AllowedToolSet{ReadAllowed: false}
+	// Define allowed tool sets per state (aligned with builtin_tools.go registry)
+	// Registry truth source: read_file, write_file, list_files, search_workspace,
+	// run_python, run_shell, create_artifact, delete_file, git_commit, git_push,
+	// run_git_add, run_git_reset, scan_folder
+	sm.allowed[StateIdle] = AllowedToolSet{}
 	sm.allowed[StatePlanning] = AllowedToolSet{
-		Tools:       []string{"planner", "model"},
-		ReadAllowed: true,
+		// Planning does not call tools; Planner is an internal component
+		ReadAllowed:  false,
+		WriteAllowed: false,
+		ShellAllowed: false,
 	}
 	sm.allowed[StateInspecting] = AllowedToolSet{
-		Tools:       []string{"read_file", "list_files", "search_workspace"},
-		ReadAllowed: true,
+		Tools:         []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search", "spawn_subagent"},
+		ReadAllowed:   true,
+		NetworkAllowed: true,
 	}
 	sm.allowed[StateEditing] = AllowedToolSet{
-		Tools:        []string{"apply_patch", "write_file", "edit_by_anchor", "edit_by_range", "read_file"},
+		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "git_commit", "run_git_add", "spawn_subagent"},
 		ReadAllowed:  true,
 		WriteAllowed: true,
+		ShellAllowed: true,
 	}
 	sm.allowed[StateVerifying] = AllowedToolSet{
-		Tools:       []string{"test", "build", "lint", "read_file"},
-		ReadAllowed: true,
+		Tools:        []string{"read_file", "list_files", "run_python", "run_shell", "spawn_subagent"},
+		ReadAllowed:  true,
+		ShellAllowed: true,
 	}
 	sm.allowed[StateWaitingForUser] = AllowedToolSet{}
 	sm.allowed[StateRecovering] = AllowedToolSet{
@@ -195,16 +203,22 @@ func (sm *StateMachine) ToolIsAllowed(state State, toolName string) bool {
 		return false
 	}
 
-	// If no explicit list, check permissions
+	// If no explicit list, check permissions by category
 	switch toolName {
-	case "read_file", "list_files", "search_workspace":
+	case "read_file", "list_files", "search_workspace", "scan_folder", "paper_search":
 		return tools.ReadAllowed
-	case "write_file", "apply_patch", "edit_by_anchor", "edit_by_range", "delete_file":
+	case "write_file", "create_artifact", "delete_file":
 		return tools.WriteAllowed
-	case "run_shell", "run_python":
+	case "run_python", "run_shell":
+		return tools.ShellAllowed
+	case "git_commit", "git_push", "run_git_add", "run_git_reset":
 		return tools.ShellAllowed
 	case "network_request", "browser_control":
 		return tools.NetworkAllowed
+	case "screenshot":
+		// Screenshot is read-like; treat as ReadAllowed unless NetworkAllowed
+		// is set (state machine enforces via Tools list above).
+		return tools.ReadAllowed
 	}
 	return false
 }

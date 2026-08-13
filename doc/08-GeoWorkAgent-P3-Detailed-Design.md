@@ -11,6 +11,7 @@
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：P3 四项施工方案 |
 | v0.2 | 2026-08-11 | GLM | P3-3 补充 §4.5 流式提前执行：SpeculativeExecutor + ReadOnly 标记 + 集成到 streamModelCall + 时序对比 + 安全约束 + 7 条验收标准 |
+| v0.3 | 2026-08-12 | TraeCodeCloud | **P3 阶段实现完成记录**：P3-1 子代理（SubAgentManager + NewChildOrchestrator + spawn_subagent 工具 + Run.Result 结果回注）✅；P3-2 Harness 统一规则引擎（Evaluate + deny/approve/audit + 集成到 evaluateHarness）✅；P3-3 推测执行（SpeculativeExecutor + TryExecuteInStream + 流中 JSON 闭合检测 + 结果复用）✅；P3-4 5 层压缩 L4/L5（Summarizer.SummarizeConversation + SolidifyMemory + BuildWithMessages 接入）✅。详见文末「实现记录 v0.3」。 |
 
 > **阅读约定**：同 P0 文档。接口签名是待实现契约，先改文档再改代码。
 
@@ -986,3 +987,57 @@ func (cb *ContextBuilder) BuildWithMessages(mode, prompt, memory string, existin
 2. P3-2 Harness 规则统一：Harness 规则引擎 + 4 种规则类型 + JSON 配置 + 集成到 ToolRegistry
 3. P3-3 推测执行：ParallelExecutor + 依赖分析 + 同类型并行 + 不同类型串行
 4. P3-4 5 层压缩完整版：L4 对话摘要（模型生成）+ L5 记忆固化 + 逐级触发流程
+
+---
+
+## 实现记录
+
+### v0.3（2026-08-12）— TraeCodeCloud P3 阶段实现完成
+
+**执行者**：TraeCodeCloud（后端 / Agent 开发工程师）
+**完成时间**：2026-08-12
+**对应提交**：`cc69658 feat(core): implement P3 stage — sub-agent, harness, speculative execution, 5-layer compression`
+**分支**：`dev/TraeCodeCloud` → 目标 `master`
+
+**完成情况总览**
+
+| 任务 | 状态 | 实现文件 | 验收对照 |
+|---|---|---|---|
+| P3-1 Sub-agent | ✅ 完成 | `core/internal/aiagent/subagent.go`（新建）、`orchestrator.go`（NewChildOrchestrator + Run.Result + RunContext.parentMemory）、`state_machine.go`（spawn_subagent 白名单） | §2.5 验收 1-6 |
+| P3-2 Harness 规则统一 | ✅ 完成 | `core/internal/aiagent/harness.go`（新建）、`orchestrator.go`（evaluateHarness 集成） | §3.6 验收 1-6 |
+| P3-3 推测执行 | ✅ 完成 | `core/internal/aiagent/speculative_executor.go`（新建）、`parallel_executor.go`（新建）、`toolregistry/tool_policy.go`（ReadOnly 标记）、`orchestrator.go`（streamModelCall + 结果复用） | §4.5.7 验收 1-7 |
+| P3-4 5 层压缩完整版 | ✅ 完成 | `core/internal/aiagent/summarizer.go`（新建）、`context_builder.go`（BuildWithMessages L4）、`context_budget.go`（BudgetResult.Summary）、`orchestrator.go`（SolidifyMemory L5）、`memory.go`（SetTaskSummary）、`main.go`（注册 Summarizer） | §5.6 验收 1-7 |
+
+**实现要点**
+
+1. **P3-1 子代理**：实现 `SubAgentManager`（`subagent.go`），通过 `NewChildOrchestrator` 创建共享父 `registry/gateway/provider/governor` 但独立 `Memory/stateMachine/runs` 的子 Orchestrator；父上下文以 `parentMemory`（Memory.Summary 4000 字符）注入子 Run 的 system prompt；`spawn_subagent` 作为工具注册（白名单见 `state_machine.go`）；子 Run 完成后 `executePlan` 的 deferred 从 `rc.Memory.LastAssistantMessage()` 抽取结果写入 `Run.Result`，`CollectSubAgentResult` 可读取。新增 `parentOf map[string]string` 路由 `subagent_done` 事件回父 Run。
+
+2. **P3-2 Harness**：`harness.go` 定义 `Harness`/`HarnessRule`/`EvaluationContext`/`EvaluationResult`，`Evaluate` 按 `Enabled`+`matchCondition` 匹配后执行 `ActionDeny`（短路返回错误）/`ActionApprove`（置 `AutoApproved`，执行模式切到 `ModeDeterministic` 跳过交互审批）/`ActionAudit`（写审计日志）。`orchestrator.evaluateHarness` 在每次工具执行前调用，无 Harness 时回退到 `(ModeAutonomous, nil)` 的旧行为。
+
+3. **P3-3 推测执行**：`speculative_executor.go` 的 `TryExecuteInStream` 检查 `PolicyTable.Get(name).ReadOnly`，命中则在 goroutine 中提前执行只读工具并缓存到 `sync.Map`；`streamModelCall` 在每个 chunk 拼接 tool_call arguments 后用 `IsJSONComplete` 检测闭合，闭合即触发提前执行；工具执行循环通过 `rc.specExec.HasResult(tc.ID)` 复用缓存结果，避免重复执行。`tool_policy.go` 为 6 个只读工具打上 `ReadOnly: true`。
+
+4. **P3-4 5 层压缩 L4/L5**：`summarizer.go` 的 `Summarizer.SummarizeConversation` 调用模型 gateway 将对话历史压缩为保留「核心需求/已完成操作/未完成任务/重要路径」的摘要（30s 超时兜底）；`ContextBuilder.BuildWithMessages` 在 L1-L3（`Enforce`）后若仍超预算且 `convSummarizer != nil`，生成摘要并替换为 `[system, user, summary]` 三条消息；`Orchestrator.SolidifyMemory`（L5）在 L4 后仍超预算时将摘要写入 `Memory.SetTaskSummary`、清空 `chatHistory`、用 `Memory.Summary` 重建上下文。`main.go` 在 gateway 非空时 `orchestrator.WithSummarizer(NewSummarizer(gateway, logger))` 接线。L1-L3 在 P0 已接线，本次补齐 L4/L5，5 层链路完整。
+
+**构建与测试**
+
+- `cd core && GOTOOLCHAIN=local go build ./...` ✅ 通过
+- `cd core && GOTOOLCHAIN=local go vet ./...` ✅ 无警告（修复了 `orchestrator.go:1708` 的 `ExecutionMode` int→string 转换警告，改用 `.String()`）
+- `cd core && GOTOOLCHAIN=local go test ./...` ✅ 全部通过（aiagent/api/agent/conversation/runtime/sandbox/toolregistry/tools/worker）
+
+**与设计的偏差（已记录）**
+
+- §2.3 设计用 `NewOrchestrator` 创建子代理，实现改为 `NewChildOrchestrator`：原设计会让子代理 `registry.WithApprovalGovernor` 覆盖父 Governor 导致审批流混乱，`NewChildOrchestrator` 显式复用父 `parentGovernor`，行为更安全。已在代码注释说明。
+- §4.5.3 设计中 `TryExecuteInStream(tc ToolCall)`，实现签名改为 `(ctx, toolCallID, toolName, arguments string)` 以匹配流式增量拼接（先拿到 ID+name，arguments 逐步拼接），并新增 `HasResult` 非阻塞检查。
+- §3.5 设计中 `ToolRegistry.Execute` 内嵌 Harness 评估，实现改为在 Orchestrator 层 `evaluateHarness` 调用：避免 toolregistry→aiagent 反向依赖（Harness 类型在 aiagent 包），保持单向依赖。
+
+**未做事项**
+
+- JSON 规则配置文件 `config/harness_rules.json` 尚未落地，当前规则通过代码内置（`Harness.AddRule` 编程式注册）。运行时配置化留待后续。
+- 推测执行的并发度限制（§4.5.6 第 5 条「最多 3 个并发」）未加信号量，当前依赖 `sync.Map` 自然并发。后续可补 semaphore。
+
+**需要用户重点验收的地方**
+
+- 子代理结果回注：调用 `spawn_subagent` 后父 Run 的 chatHistory 是否包含子代理输出。
+- Harness deny 规则是否真的短路（构造 `state==verifying && tool==delete_file` 验证）。
+- 推测执行节省时间（3 个 read_file + 1 个 write_file 的总耗时对比）。
+- L4/L5 触发：构造超长对话（>27904 token）验证摘要生成与记忆固化事件 `memory_solidified`。

@@ -4,6 +4,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 	gruntime "geowork/core/internal/runtime"
 	"geowork/core/internal/sandbox"
 	"geowork/core/internal/tasks"
+	"geowork/core/internal/toolregistry"
 	"geowork/core/internal/workspace"
 
 	"go.uber.org/zap"
@@ -26,15 +28,17 @@ import (
 
 // RouterDeps holds all dependencies needed to build the API router.
 type RouterDeps struct {
-	App          *gruntime.App
-	LogDir       string
-	WorkspaceSvc *workspace.Service
-	PermEngine   *permissions.Engine
-	SandboxSvc   *sandbox.Service
-	TaskSvc      *tasks.Service
-	Scheduler    *tasks.Scheduler
-	Orchestrator *aiagent.Orchestrator
-	ConvStore    *conversation.Store
+	App            *gruntime.App
+	LogDir         string
+	WorkspaceSvc   *workspace.Service
+	PermEngine     *permissions.Engine
+	SandboxSvc     *sandbox.Service
+	TaskSvc        *tasks.Service
+	Scheduler      *tasks.Scheduler
+	Orchestrator   *aiagent.Orchestrator
+	ConvStore      *conversation.Store
+	AgentScheduler *aiagent.Scheduler      // P2-4 §5.5: cron-style agent runs
+	TriggerManager *aiagent.TriggerManager  // P2-4 §5.5: event-driven agent runs
 }
 
 // Router wraps http.Handler and holds resources that need explicit cleanup.
@@ -135,7 +139,34 @@ func NewRouter(deps RouterDeps) *Router {
 	// small adapter that satisfies aiagent.EventSink.
 	if deps.Orchestrator != nil {
 		deps.Orchestrator.SetEventSink(agentEventSink{bridge: bridge})
-		aiagent.NewRoutes(deps.Orchestrator, logger).Register(mux)
+		agentRoutes := aiagent.NewRoutes(deps.Orchestrator, logger).
+			WithScheduler(deps.AgentScheduler).
+			WithTriggerManager(deps.TriggerManager)
+		agentRoutes.Register(mux)
+
+		// P1-3 §5.5.1: WebSocket bidirectional channel for approval
+		// flow + run abort. SSE stays the read-only event stream; the
+		// WebSocket carries control signaling (Agent asks UI for
+		// decisions, UI tells Agent to abort).
+		//
+		// The WsHandler delegates approval resolution to the
+		// orchestrator's Governor via closures — this keeps api →
+		// aiagent a one-way import (no cycle) and lets both the HTTP
+		// approval API and the WebSocket path share the same resolver.
+		wsManager := NewWsSessionManager(logger)
+		wsHandler := NewWsHandler(wsManager, logger)
+		wsHandler.SetApprovalResolver(func(approvalID, decision, reason string) error {
+			gov := deps.Orchestrator.Governor()
+			if gov == nil {
+				return fmt.Errorf("approval governor not configured")
+			}
+			return gov.ResolveApproval(approvalID, toolregistry.ApprovalDecision(decision), reason)
+		})
+		wsHandler.SetRunAborter(func(runID, reason string) error {
+			deps.Orchestrator.StopRun(runID)
+			return nil
+		})
+		mux.Handle("GET /api/ws", wsHandler)
 	}
 
 	// --- DB-backed task API + scheduler -> orchestrator bridge ---

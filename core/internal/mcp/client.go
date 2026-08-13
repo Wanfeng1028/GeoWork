@@ -1,224 +1,240 @@
-// GeoWork Go Core - MCP Client
+// GeoWork Go Core - MCP Client (P2-2 §3.3)
+//
+// MCPClient connects to an MCP server via a Transport (stdio or http),
+// performs the JSON-RPC 2.0 initialize handshake, discovers the server's
+// tool catalog, and exposes CallTool for downstream adapters.
 
 package mcp
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os/exec"
-	"sync"
 	"sync/atomic"
+	"time"
 
 	"go.uber.org/zap"
 )
 
-// MCPClient manages communication with an MCP server via stdio.
-type MCPClient struct {
-	config     *ServerConfig
-	cmd        *exec.Cmd
-	stdin      io.WriteCloser
-	stdout     *bufio.Reader
-	log        *zap.Logger
-	mu         sync.Mutex
-	nextID     atomic.Int64
-	runs       map[int64]*pendingRequest
-	serverInfo map[string]string
+// MCPTool describes a tool exposed by an MCP server.
+type MCPTool struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	InputSchema map[string]any `json:"inputSchema,omitempty"`
 }
 
-type pendingRequest struct {
-	cancel context.CancelFunc
-	result chan<- MCPResponse
+// ServerInfo captures the initialize handshake response.
+type ServerInfo struct {
+	Name            string    `json:"name"`
+	Version         string    `json:"version"`
+	ProtocolVersion string    `json:"protocolVersion,omitempty"`
+	Tools           []MCPTool `json:"tools,omitempty"`
 }
 
+// MCPResponse is the parsed result of a tools/call request. Either Result
+// or Error is populated.
 type MCPResponse struct {
-	Result json.RawMessage `json:"result"`
-	Error  *MCPError       `json:"error,omitempty"`
+	Result json.RawMessage  `json:"result,omitempty"`
+	Error  *JSONRPCError    `json:"error,omitempty"`
 }
 
-type MCPError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+// MCPClient is a connected MCP client. It is safe for concurrent CallTool use.
+type MCPClient struct {
+	transport Transport
+	info      *ServerInfo
+	tools     []MCPTool
+	log       *zap.Logger
+	nextID    int64
+	timeout   time.Duration
 }
 
-func NewMCPClient(config *ServerConfig, log *zap.Logger) *MCPClient {
-	return &MCPClient{
-		config:     config,
-		log:        log,
-		runs:       make(map[int64]*pendingRequest),
-		serverInfo: make(map[string]string),
+// NewMCPClient builds a client from a ServerConfig — the constructor used
+// by Manager.Connect. The transport is chosen from the config (stdio if
+// Command is set, http otherwise).
+func NewMCPClient(cfg *ServerConfig, log *zap.Logger) *MCPClient {
+	var transport Transport
+	if cfg.IsStdio() {
+		transport = NewStdioTransport(cfg.Command, cfg.Args, cfg.Env, log)
+	} else {
+		transport = NewHTTPTransport(cfg.Command, nil, log) // cfg.Command holds the endpoint URL when not stdio
 	}
+	timeout := cfg.Timeout
+	if timeout == 0 {
+		timeout = 30 * time.Second
+	}
+	return &MCPClient{transport: transport, log: log, timeout: timeout}
 }
 
-// Connect starts the MCP server process and initializes the connection.
+// NewClient returns a client bound to the given transport. The transport
+// is not connected — call Connect() to perform the handshake.
+func NewClient(transport Transport, log *zap.Logger) *MCPClient {
+	return &MCPClient{transport: transport, log: log, timeout: 30 * time.Second}
+}
+
+// Connect performs the transport connect + initialize handshake and
+// populates the tool list.
 func (c *MCPClient) Connect(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, c.config.Command, c.config.Args...)
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return fmt.Errorf("stdin pipe: %w", err)
+	if c.transport == nil {
+		return fmt.Errorf("mcp: nil transport")
 	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("stdout pipe: %w", err)
+	if err := c.transport.Connect(); err != nil {
+		return fmt.Errorf("mcp: transport connect: %w", err)
 	}
 
-	c.cmd = cmd
-	c.stdin = stdin
-	c.stdout = bufio.NewReader(stdout)
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start process: %w", err)
-	}
-
-	// Initialize with JSON-RPC initialize request
-	resp, err := c.sendRequest(ctx, map[string]any{
-		"jsonrpc": "2.0",
-		"method":  "initialize",
-		"params": map[string]any{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]any{},
-			"clientInfo":      map[string]any{"name": "geowork", "version": "0.3.0"},
+	// initialize
+	resp, err := c.sendRequest("initialize", map[string]any{
+		"protocolVersion": "2024-11-05",
+		"capabilities":    map[string]any{},
+		"clientInfo": map[string]any{
+			"name":    "GeoWork",
+			"version": "1.0",
 		},
-		"id": c.nextID.Add(1),
 	})
 	if err != nil {
-		return fmt.Errorf("initialize: %w", err)
+		return fmt.Errorf("mcp: initialize: %w", err)
 	}
-	if resp.Error != nil {
-		return fmt.Errorf("initialize error: %s", resp.Error.Message)
+	var initResp struct {
+		Result struct {
+			ProtocolVersion string `json:"protocolVersion"`
+			ServerInfo      struct {
+				Name    string `json:"name"`
+				Version string `json:"version"`
+			} `json:"serverInfo"`
+		} `json:"result"`
+		Error *JSONRPCError `json:"error"`
+	}
+	if err := json.Unmarshal(resp, &initResp); err != nil {
+		return fmt.Errorf("mcp: parse initialize response: %w", err)
+	}
+	if initResp.Error != nil {
+		return fmt.Errorf("mcp: initialize rpc error: %w", initResp.Error)
 	}
 
-	// Send initialized notification
-	_ = c.sendNotification("notifications/initialized", map[string]any{})
+	info := &ServerInfo{
+		Name:            initResp.Result.ServerInfo.Name,
+		Version:         initResp.Result.ServerInfo.Version,
+		ProtocolVersion: initResp.Result.ProtocolVersion,
+	}
+	c.info = info
 
-	c.serverInfo["version"] = "2024-11-05"
+	// Send initialized notification (no response expected).
+	_, _ = c.sendRequest("notifications/initialized", nil)
+
+	// Discover tools.
+	toolsResp, err := c.sendRequest("tools/list", map[string]any{})
+	if err != nil {
+		// Some servers don't expose tools/list — leave empty.
+		if c.log != nil {
+			c.log.Warn("mcp: tools/list failed; assuming no tools",
+				zap.String("server", info.Name),
+				zap.Error(err),
+			)
+		}
+		c.tools = []MCPTool{}
+		return nil
+	}
+	var toolsPayload struct {
+		Result struct {
+			Tools []MCPTool `json:"tools"`
+		} `json:"result"`
+		Error *JSONRPCError `json:"error"`
+	}
+	if err := json.Unmarshal(toolsResp, &toolsPayload); err != nil {
+		return fmt.Errorf("mcp: parse tools/list response: %w", err)
+	}
+	if toolsPayload.Error != nil {
+		return fmt.Errorf("mcp: tools/list rpc error: %w", toolsPayload.Error)
+	}
+	c.tools = toolsPayload.Result.Tools
+	if c.tools == nil {
+		c.tools = []MCPTool{}
+	}
+	if c.log != nil {
+		c.log.Info("mcp client connected",
+			zap.String("server", info.Name),
+			zap.String("version", info.Version),
+			zap.Int("tools", len(c.tools)),
+		)
+	}
 	return nil
 }
 
-// IsConnected checks if the client is connected.
-func (c *MCPClient) IsConnected() bool {
-	return c.cmd != nil && c.cmd.Process != nil
-}
-
-// ListTools fetches available tools from the MCP server.
-func (c *MCPClient) ListTools(ctx context.Context) ([]map[string]any, error) {
-	resp, err := c.sendRequest(ctx, map[string]any{
-		"jsonrpc": "2.0",
-		"method":  "tools/list",
-		"id":      c.nextID.Add(1),
-	})
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, fmt.Errorf("tools/list error: %s", resp.Error.Message)
-	}
-
-	var result struct {
-		Tools []map[string]any `json:"tools"`
-	}
-	if err := json.Unmarshal(resp.Result, &result); err != nil {
-		return nil, err
-	}
-	return result.Tools, nil
-}
-
-// CallTool invokes an MCP tool.
+// CallTool invokes `name` with `args` on the connected MCP server.
+// Returns a parsed MCPResponse.
 func (c *MCPClient) CallTool(ctx context.Context, name string, args map[string]any) (*MCPResponse, error) {
-	return c.sendRequest(ctx, map[string]any{
-		"jsonrpc": "2.0",
-		"method":  "tools/call",
-		"params": map[string]any{
-			"name":      name,
-			"arguments": args,
-		},
-		"id": c.nextID.Add(1),
+	resp, err := c.sendRequest("tools/call", map[string]any{
+		"name":      name,
+		"arguments": args,
 	})
-}
-
-// Close stops the MCP server process.
-func (c *MCPClient) Close() error {
-	if c.cmd != nil && c.cmd.Process != nil {
-		return c.cmd.Process.Kill()
-	}
-	return nil
-}
-
-// sendRequest sends a JSON-RPC request and waits for the response.
-func (c *MCPClient) sendRequest(ctx context.Context, req map[string]any) (*MCPResponse, error) {
-	reqData, _ := json.Marshal(req)
-
-	ch := make(chan MCPResponse, 1)
-	id := req["id"].(int64)
-	cancel := context.CancelFunc(func() {})
-	ctx, cancel = context.WithCancel(ctx)
-	defer cancel()
-
-	c.mu.Lock()
-	c.runs[id] = &pendingRequest{cancel: cancel, result: ch}
-	c.mu.Unlock()
-
-	_, err := c.stdin.Write(append(reqData, '\n'))
 	if err != nil {
-		c.mu.Lock()
-		delete(c.runs, id)
-		c.mu.Unlock()
-		return nil, fmt.Errorf("write request: %w", err)
+		return nil, fmt.Errorf("mcp: call %s: %w", name, err)
 	}
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case resp := <-ch:
-		return &resp, nil
+	var payload MCPResponse
+	if err := json.Unmarshal(resp, &payload); err != nil {
+		return nil, fmt.Errorf("mcp: parse call response: %w", err)
 	}
+	return &payload, nil
 }
 
-// sendNotification sends a notification (no response expected).
-func (c *MCPClient) sendNotification(method string, params map[string]any) error {
-	req := map[string]any{
-		"jsonrpc": "2.0",
-		"method":  method,
-		"params":  params,
-	}
-	data, _ := json.Marshal(req)
-	_, err := c.stdin.Write(append(data, '\n'))
-	return err
-}
-
-// ReadResponse reads a single JSON-RPC response from the server.
-func (c *MCPClient) ReadResponse() error {
-	line, err := c.stdout.ReadString('\n')
+// CallToolRaw invokes `name` and returns the raw result map. Convenience
+// for adapters that want a map[string]any directly (e.g. the toolregistry
+// Tool adapter uses this so its Execute signature matches the registry).
+func (c *MCPClient) CallToolRaw(ctx context.Context, name string, args map[string]any) (map[string]any, error) {
+	resp, err := c.CallTool(ctx, name, args)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	var resp struct {
-		JSONRPC string          `json:"jsonrpc"`
-		ID      json.Number     `json:"id,omitempty"`
-		Method  string          `json:"method,omitempty"`
-		Result  json.RawMessage `json:"result,omitempty"`
-		Error   *MCPError       `json:"error,omitempty"`
+	if resp.Error != nil {
+		return nil, fmt.Errorf("mcp: call %s rpc error: %w", name, resp.Error)
 	}
-	if err := json.Unmarshal([]byte(line), &resp); err != nil {
-		return err
-	}
-
-	if resp.ID != "" {
-		id, _ := resp.ID.Int64()
-		c.mu.Lock()
-		pending, ok := c.runs[id]
-		c.mu.Unlock()
-		if ok {
-			pending.result <- MCPResponse{Result: resp.Result, Error: resp.Error}
-			c.mu.Lock()
-			delete(c.runs, id)
-			c.mu.Unlock()
+	var out map[string]any
+	if len(resp.Result) > 0 {
+		if err := json.Unmarshal(resp.Result, &out); err != nil {
+			// Result might be a scalar; wrap it.
+			out = map[string]any{"result": string(resp.Result)}
 		}
 	}
+	if out == nil {
+		out = map[string]any{}
+	}
+	return out, nil
+}
 
-	return nil
+// Tools returns the discovered tool catalog. Available after Connect.
+func (c *MCPClient) Tools() []MCPTool {
+	return c.tools
+}
+
+// ServerInfo returns the server identity captured during initialize.
+func (c *MCPClient) ServerInfo() *ServerInfo { return c.info }
+
+// Close closes the underlying transport.
+func (c *MCPClient) Close() error {
+	if c.transport == nil {
+		return nil
+	}
+	return c.transport.Close()
+}
+
+// sendRequest builds a JSON-RPC 2.0 envelope, sends it, and returns the
+// raw response bytes.
+func (c *MCPClient) sendRequest(method string, params any) ([]byte, error) {
+	id := atomic.AddInt64(&c.nextID, 1)
+	envelope := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"method":  method,
+	}
+	if params != nil {
+		envelope["params"] = params
+	}
+	body, err := json.Marshal(envelope)
+	if err != nil {
+		return nil, fmt.Errorf("marshal %s: %w", method, err)
+	}
+	resp, err := c.transport.Send(body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

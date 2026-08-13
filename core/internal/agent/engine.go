@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"geowork/core/internal/idgen"
+	"geowork/core/internal/toolregistry"
 	"geowork/core/internal/worker"
 
 	"go.uber.org/zap"
@@ -17,22 +18,43 @@ const maxLogEntries = 1000
 
 // Engine orchestrates workflow CRUD and execution.
 type Engine struct {
-	db     *Store
-	logger *zap.Logger
-	runner *Runner
+	db       *Store
+	logger   *zap.Logger
+	runner   *Runner
+	registry *toolregistry.Registry
 	// activeRuns tracks in-flight runs for cancellation.
 	activeRuns   map[string]*atomic.Bool
 	activeRunsMu sync.RWMutex
 }
 
 // NewEngine creates a new workflow engine.
-func NewEngine(store *Store, logger *zap.Logger, workerClient *worker.Client) *Engine {
+//
+// registry is the unified ToolRegistry. Pass a non-nil registry to route
+// workflow tool calls through registry.Execute (enables audit log,
+// permission checks and sandbox flags). Pass nil to keep the legacy
+// direct worker.Client.RunTool path.
+func NewEngine(store *Store, logger *zap.Logger, workerClient *worker.Client, registry *toolregistry.Registry) *Engine {
 	return &Engine{
 		db:         store,
 		logger:     logger,
-		runner:     NewRunner(logger, workerClient),
+		runner:     NewRunner(logger, workerClient, registry),
+		registry:   registry,
 		activeRuns: make(map[string]*atomic.Bool),
 	}
+}
+
+// Registry returns the ToolRegistry attached to this engine, if any.
+func (e *Engine) Registry() *toolregistry.Registry { return e.registry }
+
+// WithRegistry attaches a ToolRegistry to this engine and its runner.
+// Allows main.go to wire the registry after both Engine and Registry are
+// constructed. Returns the engine for chaining.
+func (e *Engine) WithRegistry(registry *toolregistry.Registry) *Engine {
+	e.registry = registry
+	if e.runner != nil {
+		e.runner = e.runner.WithRegistry(registry)
+	}
+	return e
 }
 
 // Close releases the underlying database connection.

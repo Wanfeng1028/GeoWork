@@ -22,6 +22,13 @@ type ModelProvider struct {
 	SpeedProfile    string `json:"speedProfile"` // 1x | 2x
 	CreatedAt       int64  `json:"createdAt"`
 	UpdatedAt       int64  `json:"updatedAt"`
+
+	// Pricing (USD per 1K tokens). Used by UsageMeter to estimate cost
+	// per call (P1-2 §3.5). 0 means "unknown" — the record is still
+	// audited but EstimatedCost stays 0. P2-5 will externalize these
+	// into a dedicated pricing table when multi-provider routing lands.
+	PricePer1KInput  float64 `json:"pricePer1KInput,omitempty"`
+	PricePer1KOutput float64 `json:"pricePer1KOutput,omitempty"`
 }
 
 // SpeedProfile defines rate/parallelism settings for a provider.

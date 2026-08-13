@@ -50,6 +50,10 @@ type ToolPolicy struct {
 	RequiresApproval bool
 	// AlwaysDeny when true, the tool can never be executed.
 	AlwaysDeny bool
+	// ReadOnly (P3-3 §4.5.2): true means the tool has no side effects
+	// and can be speculatively executed during model streaming. Write
+	// tools default to false.
+	ReadOnly bool
 }
 
 // DefaultToolPolicies returns the default policy set for all governed tools.
@@ -62,6 +66,7 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTurn:    5,
 			RequiresApproval:   false,
 			RequiredPermission: nil,
+			ReadOnly:           true,
 		},
 		{
 			Name:               "write_file",
@@ -77,6 +82,7 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTask:    20,
 			MaxCallsPerTurn:    3,
 			RequiresApproval:   false,
+			ReadOnly:           true,
 		},
 		{
 			Name:               "run_shell",
@@ -115,6 +121,7 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTask:    10,
 			MaxCallsPerTurn:    2,
 			RequiresApproval:   false,
+			ReadOnly:           true,
 		},
 		{
 			Name:               "network_request",
@@ -154,6 +161,7 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTask:    50,
 			MaxCallsPerTurn:    5,
 			RequiresApproval:   false,
+			ReadOnly:           true,
 		},
 		{
 			Name:               "search_workspace",
@@ -161,6 +169,7 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTask:    50,
 			MaxCallsPerTurn:    5,
 			RequiresApproval:   false,
+			ReadOnly:           true,
 		},
 		{
 			Name:               "create_artifact",
@@ -168,6 +177,14 @@ func DefaultToolPolicies() []ToolPolicy {
 			MaxCallsPerTask:    50,
 			MaxCallsPerTurn:    5,
 			RequiresApproval:   false,
+		},
+		{
+			Name:               "paper_search",
+			Risk:               RiskLow,
+			MaxCallsPerTask:    50,
+			MaxCallsPerTurn:    5,
+			RequiresApproval:   false,
+			ReadOnly:           true,
 		},
 	}
 }
@@ -180,4 +197,44 @@ func GetGovernedToolNames() []string {
 		names = append(names, p.Name)
 	}
 	return names
+}
+
+// PolicyTable is a lookup table of ToolPolicy indexed by tool name.
+// P3-3 §4.5.2: used by SpeculativeExecutor to check ReadOnly before
+// starting speculative execution during model streaming.
+type PolicyTable struct {
+	policies map[string]ToolPolicy
+}
+
+// NewPolicyTable builds a PolicyTable from the given policies.
+func NewPolicyTable(policies []ToolPolicy) *PolicyTable {
+	pt := &PolicyTable{policies: make(map[string]ToolPolicy, len(policies))}
+	for _, p := range policies {
+		pt.policies[p.Name] = p
+	}
+	return pt
+}
+
+// DefaultPolicyTable returns a PolicyTable seeded with DefaultToolPolicies.
+func DefaultPolicyTable() *PolicyTable {
+	return NewPolicyTable(DefaultToolPolicies())
+}
+
+// Get returns the policy for toolName, or nil if no policy is defined.
+func (pt *PolicyTable) Get(toolName string) *ToolPolicy {
+	if pt == nil {
+		return nil
+	}
+	if p, ok := pt.policies[toolName]; ok {
+		return &p
+	}
+	return nil
+}
+
+// IsReadOnly returns true when the tool has a policy with ReadOnly=true.
+func (pt *PolicyTable) IsReadOnly(toolName string) bool {
+	if p := pt.Get(toolName); p != nil {
+		return p.ReadOnly
+	}
+	return false
 }

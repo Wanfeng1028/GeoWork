@@ -14,6 +14,35 @@ type Client struct {
 	HTTP    *http.Client
 }
 
+// WorkerToolDef describes a tool exposed by the Python Worker.
+// Worker tool names use a namespaced format (e.g. "research.openalex.search",
+// "geo.gdal.inspect_dataset"), distinct from the 13 builtin ToolRegistry tools.
+type WorkerToolDef struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	InputSchema map[string]any `json:"input_schema"`
+	RiskLevel   string         `json:"risk_level"`
+}
+
+// workerToolsResponse is the JSON shape returned by GET /tools on the Python Worker.
+type workerToolsResponse struct {
+	Tools []WorkerToolDef `json:"tools"`
+}
+
+// ListTools fetches the tool catalog exposed by the Python Worker.
+// Used at startup to dynamically register Worker tools into ToolRegistry
+// so workflow / aiagent calls flow through the same governance path.
+func (c *Client) ListTools(ctx context.Context) ([]WorkerToolDef, error) {
+	if c == nil || c.BaseURL == "" {
+		return nil, fmt.Errorf("worker client not configured")
+	}
+	var resp workerToolsResponse
+	if err := c.get(ctx, "/tools", &resp); err != nil {
+		return nil, fmt.Errorf("list worker tools: %w", err)
+	}
+	return resp.Tools, nil
+}
+
 func NewClient(baseURL string) *Client {
 	return &Client{BaseURL: baseURL, HTTP: &http.Client{Timeout: 20 * time.Second}}
 }

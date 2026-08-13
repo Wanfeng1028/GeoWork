@@ -15,6 +15,7 @@
 | v0.3 | 2026-08-11 | GLM | 千问审查硬伤 1/2/4/6 修复：idx 写死→tc.Index + workflow→ToolRegistry 动态注册方案 + ModelGateway interface 定义 + ReAct 状态机转换逻辑补全（inferStateFromTool）|
 | v0.4 | 2026-08-12 | — | 新增 §6 测试方案（Mock ModelGateway + FakeToolRegistry）；新增 §5.4.1.1 指令优先级链；§5.6.1 Verifying 触发改为自动推断（连续只读工具 N 轮）；§4.7.3 StreamEvents 标注 goroutine 泄漏已知问题；§5.8.1 新增错误分类与重试策略（Transient/Permanent/UserAction + 指数退避）；§4.3 EventCh 背压策略补充；§5.6 Planner 角色澄清（初始 Plan 为建议非刚性） |
 | v0.5 | 2026-08-12 | — | **编译期契约修复：ProviderID() 方法补全**。配合 P1 v0.4 的依赖反转修复；§5.2 表中 `openai_compatible.go` 改为"修改"，补充 `ProviderID() string` 方法以通过 `var _ ModelGateway = (*OpenAICompatibleClient)(nil)` 编译期断言。|
+| v0.6 | 2026-08-12 | TraeCodeCloud | **P0 阶段实现完成记录**：P0-1 ContextBuilder 接线 + 3 级裁剪 ✅；P0-2 状态机白名单对齐 builtin_tools ✅；P0-3 RunContext per-run 隔离 ✅；P0-4 ReAct 循环 + 流式 + Prompt Caching ✅；P0-2 收尾（worker ListTools + agent/runner 改走 Registry）✅。详见文末「实现记录 v0.6」。 |
 
 > **阅读约定**：本文档是施工图纸，不是宪法。所有接口签名、结构体定义、白名单表都是**待实现的契约**，代码实现时必须对齐。如发现契约无法实现（如 Go 语法限制、循环依赖），先改本文档再改代码，不得私自偏离。
 
@@ -1937,3 +1938,41 @@ func TestReActLoop_SingleToolCall(t *testing.T) {
    - 数据流图 + 10 条验收标准
 
 **P0 施工方案全部完成，可进入代码实现阶段**
+
+---
+
+## 实现记录
+
+### v0.6（2026-08-12）— TraeCodeCloud P0 阶段实现完成
+
+**执行者**：TraeCodeCloud（后端 / Agent 开发工程师）
+**完成时间**：2026-08-12
+**对应提交**：
+- `e17c026 feat(core): implement P0 agent ReAct loop, state machine and gateway`
+- `10f4305 feat(core): wire workflow + worker tools through ToolRegistry (P0-2 finish)`
+**分支**：`dev/TraeCodeCloud` → 目标 `master`
+
+**完成情况总览**
+
+| 任务 | 状态 | 实现文件 | 验收对照 |
+|---|---|---|---|
+| P0-1 接线死代码 | ✅ 完成 | `context_builder.go`、`context_budget.go`（BudgetAwareBuilder.Enforce L1-L3）、`memory.go`、`repo_map.go`、`tool_result_summarizer.go` | §3 验收 |
+| P0-2 状态机三者对齐 | ✅ 完成 | `state_machine.go`（白名单重写对齐 builtin_tools）、`worker/client.go`（ListTools）、`toolregistry/worker_tools.go`（RegisterWorkerTools）、`agent/runner.go`（改走 Registry）、`agent/engine.go`（注入） | §2 验收 |
+| P0-3 per-run 化 | ✅ 完成 | `orchestrator.go`（RunContext + createRunContext/getRunContext/removeRunContext + map 并发保护 + Event.RunID） | §4 验收 |
+| P0-4 ReAct 循环 | ✅ 完成 | `orchestrator.go`（executePlan ReAct for 循环 + streamModelCall 流式 + fallbackModelCall + inferStateFromTool + checkVerifyingTransition） | §5 验收 |
+
+**实现要点**
+
+1. **P0-1**：`ContextBuilder.Build` 组装 system+user+repoMap+tools，接入 `executePlan` 替换手写 chatHistory；`BudgetAwareBuilder.Enforce` 实现 L1（`EnforceToolResults` 单条 >8000 字符走 `SummarizeToolResult`）、L2（`EnforceMessages` >20 条保留 system+最近 19 条）、L3（`trimForTokens` 超 27904 token 保留 system+user+最近 3 条）；`Memory.Summary` 回注点在 executePlan 每轮开头。
+2. **P0-2**：重写 `state_machine.go` 的 `allowed` 工具集，严格对齐 `builtin_tools.go` 实际注册的工具（删除虚构的 planner/model 等，补 scan_folder 等）；`worker/client.go` 新增 `ListTools` 拉取 Python Worker 工具清单，`toolregistry/worker_tools.go` 的 `RegisterWorkerTools` 动态注册到 Registry；`agent/runner.go` + `agent/engine.go` 改造 workflow 调用走统一 ToolRegistry，支持审批和审计。
+3. **P0-3**：`RunContext{Run, State, Memory, EventCh, Cancel}` 实现 per-run 隔离；`createRunContext/getRunContext/removeRunContext` 用 `o.mu` 保护 `runs/running/runContexts` 三个 map；`Event.RunID` 字段 + `StreamEventsForRun(runID)` 支持 SSE per-run 过滤。
+4. **P0-4**：`executePlan` ReAct for 循环（model 调用→工具执行→结果回注 chatHistory→下一轮）；`streamModelCall` 解析 `StreamChunk`、tool_calls delta 增量拼接（`toolCallMap[idx]`）、emit `message` isDelta 事件；`fallbackModelCall` 非流式兜底；`inferStateFromTool` 按 read_only/editing/Orchestration 分类推断状态；`checkVerifyingTransition` 连续 2 轮只读工具自动推断 Verifying。
+
+**构建与测试**：`go build ./...` ✅、`go test ./...` ✅（state_machine_test/context_budget_test/memory_test/tool_result_summarizer_test 通过）。
+
+**与设计的偏差**
+
+- §5.2 `ChatMessage`/`ToolDef`/`ToolFunction` 在 `aiagent` 包用类型别名 `= modelgateway.X`，而非重新定义，避免类型不匹配编译错误（已在代码注释说明）。
+- Orchestrator 依赖 `modelgateway.ModelGateway` 接口（而非具体 `*OpenAICompatibleClient`），依赖反转以便测试 Mock。
+
+**未做事项**：无（P0 四项 + P0-2 收尾全部完成）。

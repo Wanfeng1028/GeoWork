@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"geowork/core/internal/toolregistry"
 	"geowork/core/internal/worker"
 
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ import (
 type Runner struct {
 	logger     *zap.Logger
 	worker     *worker.Client
+	registry   *toolregistry.Registry
 	httpClient *http.Client
 	// maxRetries is the maximum number of retry attempts for transient errors.
 	maxRetries int
@@ -24,15 +26,33 @@ type Runner struct {
 }
 
 // NewRunner creates a new node runner.
-func NewRunner(logger *zap.Logger, workerClient *worker.Client) *Runner {
+//
+// registry is the unified ToolRegistry. When non-nil, Runner.callWorker
+// routes through registry.Execute so workflow calls benefit from the same
+// governance (audit / permission / sandbox) as the aiagent ReAct loop.
+// When nil, Runner falls back to calling worker.Client.RunTool directly
+// (legacy path, kept for backward compatibility with callers that have
+// not been wired with a registry yet).
+func NewRunner(logger *zap.Logger, workerClient *worker.Client, registry *toolregistry.Registry) *Runner {
 	return &Runner{
 		logger:      logger,
 		worker:      workerClient,
+		registry:    registry,
 		httpClient:  &http.Client{},
 		maxRetries:  3,
 		callTimeout: 30 * time.Second,
 	}
 }
+
+// WithRegistry replaces the registry on an existing Runner.
+// Useful when the registry is constructed after the Runner.
+func (r *Runner) WithRegistry(registry *toolregistry.Registry) *Runner {
+	r.registry = registry
+	return r
+}
+
+// Registry returns the attached ToolRegistry, if any.
+func (r *Runner) Registry() *toolregistry.Registry { return r.registry }
 
 // ExecuteNode runs a single workflow node.
 func (r *Runner) ExecuteNode(ctx context.Context, node *WorkflowNode, workflow *Workflow) error {
@@ -103,9 +123,6 @@ func (r *Runner) executeCondition(_ context.Context, node *WorkflowNode, _ *Work
 }
 
 func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
-	if r.worker == nil {
-		return fmt.Errorf("worker client not configured")
-	}
 	toolName := firstString(node.Config["tool"], node.Config["toolName"], node.Config["workerTool"])
 	if toolName == "" {
 		toolName = node.Name
@@ -132,7 +149,7 @@ func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 	var err error
 	for attempt := 0; attempt <= r.maxRetries; attempt++ {
 		callCtx, cancel := context.WithTimeout(ctx, r.callTimeout)
-		result, err = r.worker.RunTool(callCtx, toolName, payload)
+		result, err = r.executeWorkerTool(callCtx, toolName, payload)
 		cancel()
 
 		if err == nil {
@@ -181,6 +198,28 @@ func (r *Runner) callWorker(ctx context.Context, node *WorkflowNode) error {
 		zap.Any("result", result),
 	)
 	return nil
+}
+
+// executeWorkerTool routes the call through ToolRegistry when available,
+// otherwise falls back to calling worker.Client.RunTool directly.
+//
+// Routing through the registry gives workflow calls the same governance
+// benefits as the aiagent ReAct loop: audit log entries, permission checks,
+// and (once P1-1 lands) approval flow integration. When the registry is
+// nil (caller has not been wired) or the tool is not registered there, we
+// fall back to the legacy direct worker call to preserve existing behavior.
+//
+// Workflow calls always run in ModeDeterministic: the workflow author has
+// pre-authorized critical operations at design time, so the ApprovalGovernor
+// only audit-logs them rather than blocking on interactive approval.
+func (r *Runner) executeWorkerTool(ctx context.Context, toolName string, payload map[string]any) (map[string]any, error) {
+	if r.registry != nil && r.registry.IsRegistered(toolName) {
+		return r.registry.Execute(ctx, toolName, payload, toolregistry.ModeDeterministic)
+	}
+	if r.worker == nil {
+		return nil, fmt.Errorf("worker client not configured and tool %s not in registry", toolName)
+	}
+	return r.worker.RunTool(ctx, toolName, payload)
 }
 
 // isTransientError returns true for network/timeout errors worth retrying.

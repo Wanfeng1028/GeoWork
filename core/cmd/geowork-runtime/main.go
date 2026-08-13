@@ -12,7 +12,9 @@ import (
 
 	"geowork/core/internal/aiagent"
 	"geowork/core/internal/api"
+	"geowork/core/internal/browserbridge"
 	"geowork/core/internal/conversation"
+	"geowork/core/internal/mcp"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/permissions"
 	gruntime "geowork/core/internal/runtime"
@@ -67,7 +69,51 @@ func main() {
 	if err := toolregistry.RegisterBuiltinTools(toolRegistry); err != nil {
 		logger.Fatal("Failed to register built-in tools", zap.Error(err))
 	}
-	logger.Info("Built-in tools registered", zap.Int("count", len(toolRegistry.List())))
+	// P1-1 §2.4: configure sandbox roots so write/exec tools are confined
+	// to the workspace. Without this, validateSandboxPath is a no-op
+	// (legacy behavior) and a misconfigured model could escape the
+	// workspace boundary.
+	toolRegistry.WithAllowedRoots([]string{app.Workspace()})
+	logger.Info("Built-in tools registered",
+		zap.Int("count", len(toolRegistry.List())),
+		zap.String("sandboxRoot", app.Workspace()),
+	)
+
+	// Dynamically register Python Worker tools into the same registry so
+	// workflow + aiagent calls flow through one governance path (P0-2 D5).
+	// Failure is non-fatal: a missing/unreachable worker leaves only the
+	// builtin tools registered, which is enough for aiagent offline runs.
+	workerClient := worker.NewClient("http://127.0.0.1:8766")
+	if err := toolregistry.RegisterWorkerTools(ctx, toolRegistry, workerClient, logger); err != nil {
+		logger.Warn("Failed to register worker tools", zap.Error(err))
+	}
+
+	// P2-7 §8.4: register browser tools (browser_control / screenshot /
+	// network_request / paper_search) against the browserbridge controller.
+	// The controller is shared across runs — sessions are tracked per Run
+	// via sessionId. The CDP adapter is created in stub mode (no real
+	// browser); CaptureScreenshot falls back to page metadata until chromedp
+	// is added.
+	browserCtrl := browserbridge.NewController(logger)
+	if err := toolregistry.RegisterBrowserTools(toolRegistry, browserCtrl, logger); err != nil {
+		logger.Warn("Failed to register browser tools", zap.Error(err))
+	}
+
+	// P2-2 §3.5: register MCP tools. The Manager ships with two default
+	// servers (filesystem, git) marked BuiltIn=true but Enabled=false — they
+	// only connect when the user opts in via the HTTP API or flips Enabled.
+	// RegisterAllTools is non-fatal on per-server failure.
+	mcpManager := mcp.NewManager(logger)
+	if err := mcp.RegisterAllTools(ctx, mcpManager, toolRegistry, logger); err != nil {
+		logger.Warn("Failed to register MCP tools", zap.Error(err))
+	}
+
+	// Wire the registry into the workflow engine created by gruntime.New
+	// so workflow callWorker routes through ToolRegistry (P0-2).
+	if app.AgentEngine() != nil {
+		app.AgentEngine().WithRegistry(toolRegistry)
+		logger.Info("Agent workflow engine wired with ToolRegistry")
+	}
 
 	// --- Task Service (DB-backed task persistence) ---
 	taskSvc := tasks.NewService(db)
@@ -84,6 +130,41 @@ func main() {
 	// --- Agent Orchestrator ---
 	orchestrator := aiagent.NewOrchestrator(toolRegistry, gateway, provider, logger)
 
+	// P3-2 §3.5: attach the Harness rule engine so every tool call is
+	// evaluated against declarative security rules before execution.
+	// Rules load from config/harness_rules.json when present; otherwise
+	// the built-in defaults (no-delete-in-verifying, auto-approve-low, …)
+	// apply.
+	harness := aiagent.NewHarness(logger)
+	harnessConfig := filepath.Join(app.Workspace(), "config", "harness_rules.json")
+	if err := harness.LoadFromFile(harnessConfig); err != nil {
+		logger.Warn("Failed to load harness rules config", zap.Error(err))
+	}
+	orchestrator.WithHarness(harness)
+
+	// P3-3 §4.5.2: attach the tool policy table so read-only tools are
+	// speculatively executed during model streaming. The policy table
+	// is seeded with DefaultToolPolicies (read_file, list_files, etc.
+	// marked ReadOnly=true).
+	orchestrator.WithPolicyTable(toolregistry.DefaultPolicyTable())
+
+	// P3-4 §5.3: attach the conversation summarizer so L4 (model-based
+	// conversation summary) and L5 (memory solidification) are available
+	// when L1-L3 trimming is insufficient. Only attach when a gateway
+	// is configured (nil gateway → L4 disabled, degrade to L3).
+	if gateway != nil {
+		orchestrator.WithSummarizer(aiagent.NewSummarizer(gateway, logger))
+	}
+
+	// P3-1 §2.3: register the spawn_subagent tool so the model can
+	// delegate sub-tasks to independent child orchestrators. The manager
+	// shares the parent's registry/gateway/provider/governor; each child
+	// gets its own Memory, state machine, and run-context map.
+	subAgentMgr := aiagent.NewSubAgentManager(orchestrator, logger)
+	if err := subAgentMgr.RegisterSubAgentTool(); err != nil {
+		logger.Warn("Failed to register spawn_subagent tool", zap.Error(err))
+	}
+
 	// --- Task Scheduler ---
 	scheduler := tasks.NewScheduler(taskSvc, 3, logger)
 	if err := scheduler.Start(); err != nil {
@@ -91,18 +172,29 @@ func main() {
 	}
 	defer scheduler.Stop()
 
+	// P2-4 §5.3: Agent scheduler (cron-driven recurring Agent runs) + event
+	// triggers. Both are wired to the orchestrator so they kick off runs
+	// through the same governance path (audit + sandbox + approval) as
+	// interactive runs.
+	agentScheduler := aiagent.NewScheduler(orchestrator, logger)
+	agentScheduler.Start()
+	defer agentScheduler.Stop()
+	triggerManager := aiagent.NewTriggerManager(orchestrator, logger)
+
 	logDir := filepath.Join(app.Workspace(), "logs")
 
 	r := api.NewRouter(api.RouterDeps{
-		App:          app,
-		LogDir:       logDir,
-		WorkspaceSvc: wsSvc,
-		PermEngine:   permEngine,
-		SandboxSvc:   sbSvc,
-		TaskSvc:      taskSvc,
-		Scheduler:    scheduler,
-		Orchestrator: orchestrator,
-		ConvStore:    convStore,
+		App:            app,
+		LogDir:         logDir,
+		WorkspaceSvc:   wsSvc,
+		PermEngine:     permEngine,
+		SandboxSvc:     sbSvc,
+		TaskSvc:        taskSvc,
+		Scheduler:      scheduler,
+		Orchestrator:   orchestrator,
+		ConvStore:      convStore,
+		AgentScheduler: agentScheduler,
+		TriggerManager: triggerManager,
 	})
 	logger.Info("GeoWork runtime listening on http://127.0.0.1:8765")
 	server := &http.Server{Addr: "127.0.0.1:8765", Handler: r}

@@ -261,9 +261,24 @@ func (p *Planner) BuildSystemPrompt(mode, memory string) string {
 		config = modeConfigs["Work"]
 	}
 
-	prompt := config.Prompt
+	prompt := fmt.Sprintf(`你是 GeoWork 的 %s
+
+[能力边界]
+你可以调用以下工具：%s
+你不能：访问互联网、执行未注册的工具、绕过沙箱限制。
+
+[行为规范]
+1. 先思考再行动，每轮只调用必要的工具。
+2. 工具结果返回后，判断是否需要继续调用工具。
+3. 任务完成时，用自然语言总结结果，不再调用工具。
+4. 遇到错误时，尝试调整参数重试，最多 3 次后报告失败。`,
+		config.Prompt,
+		strings.Join(config.Tools, ", "),
+	)
+
 	if memory != "" {
-		prompt += "\n\nPrevious context:\n" + memory
+		prompt += "\n\n[记忆上下文]\n" + memory
 	}
+
 	return prompt
 }
