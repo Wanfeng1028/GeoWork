@@ -70,8 +70,9 @@ export function CapsuleTabs({
   }, [moveIndicator, options.length])
 
   useEffect(() => {
-    window.addEventListener('resize', moveIndicator)
-    return () => window.removeEventListener('resize', moveIndicator)
+    const onWindowResize = () => moveIndicator()
+    window.addEventListener('resize', onWindowResize)
+    return () => window.removeEventListener('resize', onWindowResize)
   }, [moveIndicator])
 
   const vars = useMemo(
