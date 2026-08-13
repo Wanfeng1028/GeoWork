@@ -88,8 +88,8 @@ export function useBootstrapTheme(): ConfigProviderProps {
         token: {
           borderRadius: 4,
           borderRadiusLG: 6,
-          colorPrimary: '#2F80ED',
-          colorInfo: '#2F80ED',
+          colorPrimary: '#3186ff',
+          colorInfo: '#3186ff',
           colorBgLayout: '#EEF4F7',
           colorBgContainer: '#F7FBFD',
           colorBgElevated: '#F7FBFD',
