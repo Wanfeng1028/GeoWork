@@ -744,7 +744,6 @@ export function AppShell() {
               )}
             </div>
           </Beam>
-        )}
 
         {/* Divider 2: 主入口区下 */}
         <Divider style={dividerStyle} />
