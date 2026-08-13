@@ -7,7 +7,6 @@ vi.mock('react-router', () => {
   const React = require('react')
   return {
     RouterProvider: ({ router }: any) => {
-      const _routes = router.routes || []
       return React.createElement('div', { 'data-testid': 'app-root' }, [
         React.createElement('div', { key: 'content', 'data-testid': 'router-content' }, 'App Rendered'),
       ])
