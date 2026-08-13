@@ -43,6 +43,7 @@ export function CapsuleTabs({
   const containerRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<Map<string | number, HTMLButtonElement>>(new Map())
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  const [skipTransition, setSkipTransition] = useState(false)
 
   /**
    * 滑块跟随选中项。用 getBoundingClientRect 相对容器实测，
@@ -74,22 +75,25 @@ export function CapsuleTabs({
   )
 
   useLayoutEffect(() => {
+    // 程序性更新时禁用过渡，避免指示器从错误位置飞入
+    setSkipTransition(true)
+
     const container = containerRef.current
-    const indicator = container?.querySelector(`.${styles.indicator}`) as HTMLElement
+    const indicatorEl = container?.querySelector(`.${styles.indicator}`) as HTMLElement
 
-    // 先禁用 transition，避免指示器从错误位置飞入
-    if (indicator) indicator.style.transition = 'none'
-
-    const rafId = requestAnimationFrame(() => {
-      moveIndicator()
-      // 恢复 transition，让后续交互（如 hover 或点击）有平滑动画
-      if (indicator) {
-        indicator.getBoundingClientRect() // 强制回流，确保 'none' 生效
-        indicator.style.transition = ''
-      }
+    // 使用双重 rAF 确保 DOM 完全就绪后再移动指示器
+    const rafId1 = requestAnimationFrame(() => {
+      const rafId2 = requestAnimationFrame(() => {
+        moveIndicator()
+        if (indicatorEl) {
+          indicatorEl.getBoundingClientRect() // 强制回流，确保 'none' 生效
+        }
+        setSkipTransition(false)
+      })
+      return () => cancelAnimationFrame(rafId2)
     })
 
-    return () => cancelAnimationFrame(rafId)
+    return () => cancelAnimationFrame(rafId1)
   }, [moveIndicator, options.length, value])
 
   useEffect(() => {
@@ -126,7 +130,11 @@ export function CapsuleTabs({
       <span
         className={styles.indicator}
         aria-hidden="true"
-        style={{ left: indicator.left, width: indicator.width }}
+        style={{
+          left: indicator.left,
+          width: indicator.width,
+          transition: skipTransition ? 'none' : 'left 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
       />
       {options.map((opt) => {
         const active = opt.value === value
