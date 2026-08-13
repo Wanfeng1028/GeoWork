@@ -67,12 +67,15 @@ export function CapsuleTabs({
 
   useLayoutEffect(() => {
     moveIndicator()
-  }, [moveIndicator, options.length])
+  }, [moveIndicator, options.length, value])
 
   useEffect(() => {
-    const onWindowResize = () => moveIndicator()
-    window.addEventListener('resize', onWindowResize)
-    return () => window.removeEventListener('resize', onWindowResize)
+    const container = containerRef.current
+    if (!container) return
+    const onResize = () => moveIndicator()
+    const observer = new ResizeObserver(onResize)
+    observer.observe(container)
+    return () => observer.disconnect()
   }, [moveIndicator])
 
   const vars = useMemo(
@@ -80,7 +83,7 @@ export function CapsuleTabs({
       ({
         '--capsule-bg': isDark ? '#1f2128' : '#ffffff',
         '--capsule-border': isDark ? '#3a3d45' : '#e5e5e5',
-        '--capsule-item-color': isDark ? '#9aa0a6' : '#5f6368',
+        '--capsule-item-color': isDark ? '#9aa0a6' : '#1f1f1f',
         '--capsule-item-hover-bg': isDark ? 'rgba(255,255,255,0.08)' : '#f4f4f5',
       }) as CSSProperties,
     [isDark],

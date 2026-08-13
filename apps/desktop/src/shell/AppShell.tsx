@@ -645,11 +645,15 @@ export function AppShell() {
               )}
             </div>
 
-            {/* Segmented 切换区 —— 纯展示，无交互 */}
+            {/* Segmented 切换区 */}
             <div className={styles.sidebarSegmented}>
               <CapsuleTabs
                 block
                 value={segment}
+                onChange={(val) => {
+                  if (val === 'tasks') navigate('/tasks')
+                  else if (val === 'channels') navigate('/mobile-control')
+                }}
                 options={[
                   { label: '任务', value: 'tasks', icon: <List /> },
                   { label: '移动端控制', value: 'channels', icon: <Smartphone /> },
