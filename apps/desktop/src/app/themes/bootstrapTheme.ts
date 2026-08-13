@@ -30,13 +30,14 @@ const useStyles = createStyles(({ css, cssVar }) => ({
     boxShadow: `inset 0 1px 0 ${cssVar.colorBgContainer}`,
   }),
   buttonRoot: css({
-    backgroundImage: 'linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.2))',
-    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+    backgroundImage: 'linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%)',
+    border: 'none',
+    borderRadius: 9999,
+    color: '#ffffff',
+    boxShadow: 'none',
     transition: 'none',
-    borderColor: 'rgba(0, 0, 0, 0.3)',
-    textShadow: '0 -1px 0 rgba(0, 0, 0, 0.2)',
     '&:hover, &:active': {
-      backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.15) 100%)',
+      backgroundImage: 'linear-gradient(89.58deg, #3b82f6 0.28%, #346bf0 44.45%, #4ea0ff 99.55%)',
     },
     '&:active': {
       boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.15)',

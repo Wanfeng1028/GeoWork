@@ -84,7 +84,7 @@ export function useEditorialTheme(): ConfigProviderProps {
       components: {
         // ── 6.1 Button ──
         Button: {
-          borderRadius: 8,
+          borderRadius: 9999,
           controlHeight: 34,
           controlHeightLG: 40,
           controlHeightSM: 28,
