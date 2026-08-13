@@ -66,7 +66,7 @@ export function TitleBar({
             onClick={onToggleSidebar}
           />
         </Tooltip>
-        <Tooltip title={rightPanelCollapsed ? '展开工作台' : '折叠工作台'}>
+        <Tooltip title={rightPanelCollapsed ? '展开右侧栏' : '折叠右侧栏'}>
           <Button
             type="text"
             size="small"
