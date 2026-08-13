@@ -2,13 +2,43 @@
   margin-bottom: 16px;
 }
 
+.switcher :global(.ant-segmented) {
+  background: transparent;
+  padding: 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(49, 134, 255, 0.25);
+}
+
+.switcher :global(.ant-segmented-item) {
+  border-radius: 9999px;
+  border: none;
+  transition: all 0.25s ease;
+}
+
 .switcher :global(.ant-segmented-item-selected) {
   color: #fff;
 }
 
-.switcher :global(.ant-segmented-thumb),
+.switcher :global(.ant-segmented-thumb) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  color: #fff;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(49, 134, 255, 0.45);
+}
+
 .switcher :global(.ant-segmented-item-selected .ant-segmented-item-label) {
-  background: var(--seg-primary);
+  background: transparent;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.switcher :global(.ant-segmented-item:not(.ant-segmented-item-selected) .ant-segmented-item-label) {
+  background: transparent;
+  color: var(--ant-color-text-secondary, rgba(255, 255, 255, 0.65));
+}
+
+.switcher :global(.ant-segmented-item:hover:not(.ant-segmented-item-selected) .ant-segmented-item-label) {
+  background: rgba(49, 134, 255, 0.08);
   color: #fff;
 }
 

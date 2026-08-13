@@ -16,7 +16,6 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  transition: width 0.2s ease, min-width 0.2s ease;
 }
 
 .sidebarCollapsed {
@@ -269,7 +268,7 @@
 /* ── MainWorkspace ── */
 .workspace {
   flex: 1;
-  min-width: 480px;
+  min-width: 360px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -281,6 +280,7 @@
   position: relative;
   user-select: none;
   z-index: 1;
+  background: transparent;
 }
 
 .rightResizeHandle::before {
@@ -288,20 +288,14 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 1px;
-  width: 1px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
   background: transparent;
   transition: background 0.15s ease;
 }
 
-.rightResizeHandle:hover::before {
-  background: var(--accent-color);
-  width: 2px;
-  left: 1px;
-}
-
+.rightResizeHandle:hover::before,
 .rightResizeHandle:active::before {
   background: var(--accent-color);
-  width: 2px;
-  left: 1px;
 }

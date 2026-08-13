@@ -16,6 +16,25 @@
   margin-top: 8px;
 }
 
+/* 推荐搜索胶囊按钮 */
+.recommendTag {
+  border-radius: 9999px !important;
+  padding: 5px 14px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.recommendTag:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.25)) !important;
+  border-color: rgba(49, 134, 255, 0.5) !important;
+  color: #fff !important;
+}
+
 /* 单条结果 */
 .resultItem {
   display: flex;

@@ -127,7 +127,7 @@ export function AppShell() {
   const RW_COLLAPSED_LS = 'geowork.rightWorkspace.collapsed'
   const RW_DEFAULT_WIDTH = 380
   const RW_MIN_WIDTH = 320
-  const RW_MAX_WIDTH = 720
+  const RW_MAX_WIDTH = 960
 
   function safeReadWidth(key: string, fallback: number): number {
     try {
@@ -167,7 +167,7 @@ export function AppShell() {
       const rect = rootRectRef.current
       const containerRight = rect ? rect.right : window.innerWidth
       const rawWidth = containerRight - e.clientX
-      const maxWidth = Math.min(RW_MAX_WIDTH, window.innerWidth * 0.55)
+      const maxWidth = Math.min(RW_MAX_WIDTH, window.innerWidth * 0.65)
       const newWidth = Math.min(Math.max(rawWidth, RW_MIN_WIDTH), maxWidth)
       if (panelRef.current) {
         panelRef.current.style.width = `${newWidth}px`
@@ -853,7 +853,7 @@ export function AppShell() {
         <div
           className={styles.rightResizeHandle}
           onPointerDown={handleDragStart}
-          style={{ '--border-color': token.colorBorderSecondary, '--accent-color': token.colorPrimary } as React.CSSProperties}
+          style={{ '--accent-color': token.colorPrimary, background: token.colorBgLayout } as React.CSSProperties}
         />
       )}
 

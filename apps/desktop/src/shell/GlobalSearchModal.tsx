@@ -167,7 +167,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
               <Tag
                 key={item.key}
                 icon={GROUP_ICON[item.group]}
-                style={{ cursor: 'pointer', paddingInline: 10, paddingBlock: 4 }}
+                className={styles.recommendTag}
                 onClick={() => handleOpen(item)}
               >
                 {item.title}

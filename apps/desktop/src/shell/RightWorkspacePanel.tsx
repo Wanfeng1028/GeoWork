@@ -471,7 +471,6 @@ export function RightWorkspacePanel({
         width,
         flexBasis: width,
         flexShrink: 0,
-        borderLeft: `1px solid ${token.colorBorderSecondary}`,
         background: token.colorBgContainer,
       }}
     >

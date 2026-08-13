@@ -149,10 +149,7 @@ export function UsageModal({ open, onClose }: Props) {
       footer={null}
       width={560}
     >
-      <div
-        className={styles.switcher}
-        style={{ '--seg-primary': token.colorPrimary } as React.CSSProperties}
-      >
+      <div className={styles.switcher}>
         <Segmented
           value={modelType}
           onChange={(v) => setModelType(v as ModelType)}
