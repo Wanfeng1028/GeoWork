@@ -61,6 +61,7 @@ import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
 import { TitleBar } from './TitleBar'
 import { CapsuleButton } from './components/CapsuleButton'
+import { CapsuleTabs } from './components/CapsuleTabs'
 import { CapsuleTag } from './components/CapsuleTag'
 import styles from './AppShell.module.css'
 
@@ -642,6 +643,19 @@ export function AppShell() {
                   })}
                 </div>
               )}
+            </div>
+
+            {/* Segmented 切换区 —— 纯展示，无交互 */}
+            <div className={styles.sidebarSegmented}>
+              <CapsuleTabs
+                block
+                value={segment}
+                options={[
+                  { label: '任务', value: 'tasks', icon: <List /> },
+                  { label: '移动端控制', value: 'channels', icon: <Smartphone /> },
+                ]}
+                size="small"
+              />
             </div>
 
             {/* 内容区：任务列表或空状态 */}
