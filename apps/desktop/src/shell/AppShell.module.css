@@ -269,7 +269,7 @@
 /* ── MainWorkspace ── */
 .workspace {
   flex: 1;
-  min-width: 0;
+  min-width: 480px;
   overflow: hidden;
   box-sizing: border-box;
 }
