@@ -104,7 +104,8 @@ export function AppShell() {
   const { token } = theme.useToken()
   const { message } = App.useApp()
 
-  const [segment, setSegment] = useState<SidebarSegment>('tasks')
+  /* 侧栏 Tab 直接由路由派生，杜绝状态不同步 */
+  const segment: SidebarSegment = location.pathname === '/mobile-control' ? 'channels' : 'tasks'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [modalOpen, setModalOpen] = useState<
     'usage' | 'shortcuts' | 'feedback' | null
@@ -117,7 +118,7 @@ export function AppShell() {
   const [searchParams] = useSearchParams()
   const activeConvId = searchParams.get('conversationId')
 
-  /* ── 重命名弹窗状态 ── */
+  /* ── 重命名弹窗状态 ─ */
   const [renameModalOpen, setRenameModalOpen] = useState(false)
   const [renameTargetId, setRenameTargetId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
@@ -277,9 +278,6 @@ export function AppShell() {
       }
     } else {
       navigate(key)
-    }
-    if (key === '/mobile-control') {
-      setSegment('channels')
     }
   }
 
@@ -606,7 +604,7 @@ export function AppShell() {
               <CapsuleTabs
                 block
                 value={segment}
-                onChange={(value) => setSegment(value as SidebarSegment)}
+                onChange={(value) => navigate(value === 'channels' ? '/mobile-control' : '/new-task')}
                 options={[
                   { label: '任务', value: 'tasks', icon: <List /> },
                   { label: '移动端控制', value: 'channels', icon: <Smartphone /> },

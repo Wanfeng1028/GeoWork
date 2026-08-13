@@ -40,15 +40,30 @@ export function CapsuleTabs({
   const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
   const isDark = resolvedAppearance === 'dark'
 
+  const containerRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<Map<string | number, HTMLButtonElement>>(new Map())
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
 
-  /** 与博客 moveIndicator() 同款：滑块跟随选中项 offsetLeft / offsetWidth */
-  const moveIndicator = useCallback(() => {
-    const el = value == null ? undefined : btnRefs.current.get(value)
-    if (!el) return
-    setIndicator({ left: el.offsetLeft, width: el.offsetWidth })
-  }, [value])
+  /**
+   * 滑块跟随选中项。用 getBoundingClientRect 相对容器实测，
+   * 不用 offsetLeft —— 后者相对 offsetParent 的 border-box，
+   * 与绝对定位滑块（相对 padding-box）参照系不一致，
+   * block 弹性布局下会导致切换时滑块"从最左侧飞过来"。
+   */
+  const moveIndicator = useCallback(
+    (target?: HTMLElement) => {
+      const container = containerRef.current
+      const el = target ?? (value == null ? undefined : btnRefs.current.get(value))
+      if (!container || !el) return
+      const cRect = container.getBoundingClientRect()
+      const bRect = el.getBoundingClientRect()
+      setIndicator({
+        left: bRect.left - cRect.left - container.clientLeft,
+        width: bRect.width,
+      })
+    },
+    [value],
+  )
 
   useLayoutEffect(() => {
     moveIndicator()
@@ -80,7 +95,7 @@ export function CapsuleTabs({
     .join(' ')
 
   return (
-    <div className={rootClass} role="tablist" style={{ ...vars, ...style }}>
+    <div ref={containerRef} className={rootClass} role="tablist" style={{ ...vars, ...style }}>
       <span
         className={styles.indicator}
         aria-hidden="true"
@@ -100,7 +115,10 @@ export function CapsuleTabs({
               else btnRefs.current.delete(opt.value)
             }}
             className={active ? `${styles.item} ${styles.itemSelected}` : styles.item}
-            onClick={() => onChange?.(opt.value)}
+            onClick={(e) => {
+              moveIndicator(e.currentTarget)
+              onChange?.(opt.value)
+            }}
           >
             {opt.icon}
             {opt.label}
