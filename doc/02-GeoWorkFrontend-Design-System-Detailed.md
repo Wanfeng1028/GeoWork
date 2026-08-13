@@ -139,11 +139,11 @@ F0-4（stylelint）───┘                                         │
 
 ### F2-1 布局骨架三件套
 
-| 组件 | 尺寸锚点 | 落地动作 |
-|---|---|---|
-| 左侧 icon rail | 56px 固定宽，仅在首页/工作台出现 | 新建 `shell/components/IconRail.tsx` |
-| 主内容区 | 4 模板对应 A/B/C/D 四种 max-width 和 padding | 在 `AppShell.tsx` 按路由分发 `<SkeletonPage template={A|B|C|D} />` |
-| 右侧常驻工作面板 | 320 固定宽，可拖 240–480，收起无痕（不是 drawer） | 拆分 `shell/RightWorkspacePanel.tsx` 为独立 panel + 拖拽手柄；dragging 按 §7.3 实现 200ms ease 过渡 |
+| 组件 | 尺寸锚点 | 落地动作 | 状态 |
+|---|---|---|---|
+| 左侧 icon rail | 56px 固定宽，全站常驻 | `IconRail.tsx` 已集成到 `AppShell.tsx`，侧栏折叠→0px 由 rail 承担导航 | ✅ 2026-08-14 |
+| 主内容区 | 4 模板对应 A/B/C/D 四种 max-width 和 padding | 在 `AppShell.tsx` 按路由分发 `<SkeletonPage template={A\|B\|C\|D} />` | ⏳ 待实现 |
+| 右侧常驻工作面板 | 320 固定宽，可拖 240–480，收起返回 null（无残影） | `RightWorkspacePanel.tsx` 独立 panel + 拖拽手柄；收起/展开按钮在顶栏图标组 | ✅ 2026-08-14 |
 
 ### F2-2 页面信息架构对齐
 

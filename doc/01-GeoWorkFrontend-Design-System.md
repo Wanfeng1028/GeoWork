@@ -997,3 +997,17 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 **影响**
 - §3.1 品牌原色表不再是纯品牌资产展示，改为"设计 token 视角的角色表"，反色按钮成为第三种按钮颜色（primary 品牌蓝 → inverted 反色 → default 中性），不破坏明暗同权。
 - 反色按钮建议场景：暗色主题下做"退出深色模式"按钮、亮色主题下做"退出深色模式"按钮、或任何需要在主题突变处提供高对比度视觉锚点的场景。
+
+### v1.5.2（2026-08-14）— 布局骨架代码对齐设计系统
+
+**变更**
+1. §7.1 布局骨架：`AppShell.tsx` 集成 `IconRail` 组件（56px rail 层），侧栏折叠宽度从 64px → 0px（折叠态导航由 rail 承担），折叠时右边框隐藏；
+2. §7.4 右面板收起规则：`RightWorkspacePanel.tsx` 收起态从渲染 40px 窄条改为返回 `null`（完全不渲染），消除右侧白色残影；面板头部的收起按钮移除，统一由顶栏图标组控制；
+3. §7.4 顶栏控制点：`TitleBar.tsx` 新增右面板展开/收起按钮（`PanelRightOpen`/`PanelRightClose`），与侧栏折叠按钮并列，图标随状态切换；
+4. §16.2 图标尺寸：IconRail 按钮图标从 18px → 16px，按钮尺寸从 40×40 → 32×32，对齐设计系统 S 档 16px 规范。
+
+**影响**
+- 布局结构从"侧栏 260/64px 二段"变为"rail 56px + 侧栏 260/0px 三段"，符合 §7.1 铁律；
+- 右面板收起后主区真正占满，无残留元素，符合 §7.1 铁律第 3 条；
+- `RightWorkspacePanel.module.css` 移除 `.panelCollapsed` 和 `.collapsedBar` 类；
+- `AppShell.module.css` `.sidebarCollapsed` 改为 `width: 0; min-width: 0; border: none`。

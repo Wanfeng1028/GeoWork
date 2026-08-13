@@ -23,6 +23,8 @@ import {
   Diff,
   Globe,
   MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react'
 import styles from './RightWorkspacePanel.module.css'
 import { FileTreePanel } from './panels/FileTreePanel'
@@ -32,6 +34,8 @@ import { TerminalPanel } from './panels/TerminalPanel'
 import { AssistantChatPanel } from './panels/AssistantChatPanel'
 
 const { Text } = Typography
+
+const isElectron = typeof window !== 'undefined' && !!window.geowork?.desktop
 
 /* ── 类型定义 ── */
 type StaticTabKey = 'review'
@@ -433,9 +437,30 @@ export function RightWorkspacePanel({
     }
   }
 
-  /* ── 收起态：完全不渲染，控制按钮已移至顶栏 ── */
+  /* ── 收起态：Electron 下控制按钮在顶栏，完全隐藏；浏览器 dev 模式渲染 fallback 按钮 ── */
   if (collapsed) {
-    return null
+    if (isElectron) return null
+    return (
+      <Tooltip title="展开工作台" placement="left">
+        <Button
+          type="text"
+          icon={<PanelRightOpen style={{ fontSize: 16 }} />}
+          onClick={() => setCollapsed(false)}
+          style={{
+            position: 'fixed',
+            right: 8,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 100,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        />
+      </Tooltip>
+    )
   }
 
   return (
