@@ -4,7 +4,6 @@ import {
   Button,
   Dropdown,
   Empty,
-  Progress,
   Space,
   Tabs,
   Tag,
@@ -19,8 +18,6 @@ import {
   FolderOpenOutlined,
   LeftOutlined,
   RightOutlined,
-  CheckCircleFilled,
-  ClockCircleOutlined,
   CopyOutlined,
   ExpandOutlined,
   ReloadOutlined,
@@ -90,45 +87,12 @@ const isValidOpenTab = (v: unknown): v is DynamicTabKey | ChatTabKey =>
   isDynamicTab(v) || isChatTab(v)
 
 /* ── Mock 数据 ── */
-const MOCK_TASK = {
-  title: '新增右侧任务工作台面板',
-  status: '执行中',
-  progress: 62,
-  stage: '正在改造为 IDE 式可关闭标签页',
-}
-
-const MOCK_CHECKLIST = [
-  { text: '分析现有布局', done: true },
-  { text: '创建 RightWorkspacePanel', done: true },
-  { text: '改造为 IDE 式可关闭 Tab', done: true },
-  { text: '接入动态终端 Tab', done: true },
-  { text: '接入动态预览 Tab', done: true },
-  { text: '补充产物区域', done: false },
-  { text: '补充上下文文件区域', done: false },
-  { text: '完成暗色模式适配', done: false },
-]
-
-const MOCK_ARTIFACTS = [
-  { name: 'RightWorkspacePanel.tsx', type: '新增', desc: '右侧任务工作台主组件' },
-  { name: 'RightWorkspacePanel.module.css', type: '新增', desc: '右侧任务工作台样式' },
-  { name: 'AppShell.tsx', type: '修改', desc: '接入右侧面板三栏布局' },
-  { name: 'AppShell.module.css', type: '修改', desc: '补强 flex 布局约束' },
-]
-
 const MOCK_CONTEXT_FILES = [
   'package.json',
   'src/App.tsx',
   'src/shell/AppShell.tsx',
   'src/pages/NewTask/NewTaskPage.tsx',
   'src/shell/RightWorkspacePanel.tsx',
-]
-
-const MOCK_LOGS = [
-  { time: '19:50', text: '已读取当前布局文件' },
-  { time: '19:51', text: '已确认项目使用 Ant Design' },
-  { time: '19:52', text: '已创建右侧工作台组件' },
-  { time: '19:53', text: '已切换为动态 Tab 结构' },
-  { time: '19:54', text: '等待接入真实任务状态' },
 ]
 
 const MOCK_MODIFIED_FILES = [
