@@ -1,0 +1,16 @@
+/* CapsuleTabs — 覆盖 antd Segmented 默认样式，对齐设计系统 §10.1 */
+
+.capsule {
+  background: var(--capsule-track-bg) !important;
+  border: 1px solid var(--ant-color-border) !important;
+}
+
+.capsule :global(.ant-segmented-item-selected) {
+  color: var(--capsule-selected-color) !important;
+}
+
+.capsule :global(.ant-segmented-thumb),
+.capsule :global(.ant-segmented-item-selected .ant-segmented-item-label) {
+  background: var(--ant-color-primary) !important;
+  color: var(--capsule-selected-color) !important;
+}
