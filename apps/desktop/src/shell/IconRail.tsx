@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button, Tooltip, theme } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 // TODO: Replace @ant-design/icons with lucide-react (Plus, Home, Clock, ListChecks, Smartphone, Settings, Sun, Moon)
 import styles from './IconRail.module.css'
 

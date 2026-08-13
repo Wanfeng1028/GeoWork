@@ -533,7 +533,7 @@ export const realStreamAdapter: StreamAdapter = {
       }
 
       // 计划就绪：尝试拉取 run 详情以填充工作流步骤
-      es.addEventListener('plan', (e) => {
+      es.addEventListener('plan', (_e) => {
         callbacks.onStatus?.('planning')
         if (!runId) return
         fetch(`${CORE_BASE_URL}/api/agent/runs/${runId}`)

@@ -4,7 +4,6 @@ import {
   App,
   Button,
   Dropdown,
-  Tag,
   Tour,
   Typography,
   theme,
@@ -23,7 +22,6 @@ import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
 import { CapsuleTabs } from '../../shell/components/CapsuleTabs'
 import { CapsuleTag } from '../../shell/components/CapsuleTag'
-import { CapsuleButton } from '../../shell/components/CapsuleButton'
 import { PageSkeleton } from '../../shell/feedback'
 import styles from './NewTaskPage.module.css'
 // 主界面大 logo 已注释，暂不需要该资源

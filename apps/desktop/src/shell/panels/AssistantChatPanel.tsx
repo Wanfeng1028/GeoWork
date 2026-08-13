@@ -387,7 +387,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
       <div className={styles.inputWrap}>
         <div className={styles.inputArea}>
           <Input.TextArea
-            ref={inputRef}
+            ref={inputRef as any}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="向我提问，使用 @ 添加上下文，使用 / 选择命令或能力"

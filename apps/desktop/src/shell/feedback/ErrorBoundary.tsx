@@ -1,7 +1,6 @@
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button, theme } from 'antd'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import type { ReactNode } from 'react'
-import Component from 'react'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -94,11 +93,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     this.state = { hasError: false, error: null }
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static override getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error }
   }
 
-  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
   }
 

@@ -50,12 +50,9 @@ export function EmptyState({
               {icon}
             </div>
           ) : (
-            <Empty.PRESENTED_IMAGE_SIMPLE
-              style={{
-                height: config.iconSize,
-                opacity: 0.6,
-              }}
-            />
+            <div style={{ height: config.iconSize, opacity: 0.6 }}>
+              {Empty.PRESENTED_IMAGE_SIMPLE}
+            </div>
           )
         }
         imageStyle={{

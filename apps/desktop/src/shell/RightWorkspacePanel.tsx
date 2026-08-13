@@ -57,10 +57,6 @@ const DYNAMIC_TAB_CONFIG: Record<DynamicTabKey, { label: string; icon: React.Rea
   context: { label: '上下文', icon: <FolderOpenOutlined /> },
 }
 
-const STATIC_TAB_CONFIG: Record<StaticTabKey, { label: string; icon: React.ReactNode; closable: boolean }> = {
-  review: { label: '审查', icon: <DiffOutlined />, closable: false },
-}
-
 /* ── localStorage 工具 ── */
 const LS_PREFIX = 'geowork.rightWorkspace.'
 const LS_ACTIVE = `${LS_PREFIX}activeTab`
@@ -143,102 +139,6 @@ const MOCK_MODIFIED_FILES = [
 ]
 
 /* ── Tab 内容组件 ── */
-
-function TaskPanelContent({ token }: { token: ReturnType<typeof theme.useToken>['token'] }) {
-  return (
-    <div className={styles.content}>
-      {/* 任务概览 */}
-      <div className={styles.cardSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>任务概览</div>
-        <div style={{ marginBottom: 8 }}>
-          <Text strong style={{ fontSize: 14 }}>{MOCK_TASK.title}</Text>
-        </div>
-        <Space size={8} style={{ marginBottom: 12 }}>
-          <Tag color="processing">{MOCK_TASK.status}</Tag>
-          <Text type="secondary" style={{ fontSize: 12 }}>{MOCK_TASK.stage}</Text>
-        </Space>
-        <Progress
-          percent={MOCK_TASK.progress}
-          size="small"
-          strokeColor={token.colorPrimary}
-          format={(p) => `${p}%`}
-        />
-      </div>
-
-      {/* 待办 Checklist */}
-      <div className={styles.cardSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>待办</div>
-        <div className={styles.checklist}>
-          {MOCK_CHECKLIST.map((item, i) => (
-            <div key={i} className={`${styles.checklistItem} ${item.done ? styles.checklistDone : ''}`}>
-              <span className={styles.checklistIcon} style={{ color: item.done ? token.colorSuccess : token.colorTextQuaternary }}>
-                {item.done ? <CheckCircleFilled /> : <ClockCircleOutlined />}
-              </span>
-              <Text
-                type={item.done ? 'secondary' : undefined}
-                style={{ fontSize: 13, textDecoration: item.done ? 'line-through' : 'none' }}
-              >
-                {item.text}
-              </Text>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 产物 Artifacts */}
-      <div className={styles.cardSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>产物</div>
-        <div className={styles.artifactList}>
-          {MOCK_ARTIFACTS.map((a, i) => (
-            <div
-              key={i}
-              className={styles.artifactItem}
-              style={{ background: token.colorFillQuaternary }}
-            >
-              <div className={styles.artifactName} style={{ color: token.colorText }}>
-                {a.name}
-              </div>
-              <div className={styles.artifactMeta}>
-                <Tag
-                  color={a.type === '新增' ? 'success' : 'processing'}
-                  style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px', marginRight: 6 }}
-                >
-                  {a.type}
-                </Tag>
-                <Text type="secondary" style={{ fontSize: 11 }}>{a.desc}</Text>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 上下文文件 */}
-      <div className={styles.cardSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>上下文文件</div>
-        <div className={styles.fileList}>
-          {MOCK_CONTEXT_FILES.map((f, i) => (
-            <div key={i} className={styles.fileItem} style={{ color: token.colorText }}>
-              <span style={{ fontSize: 12, color: token.colorTextTertiary }}>{f}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 最近日志 */}
-      <div className={styles.cardSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>最近日志</div>
-        <div className={styles.logList}>
-          {MOCK_LOGS.map((log, i) => (
-            <div key={i} className={styles.logItem}>
-              <span className={styles.logTime} style={{ color: token.colorTextTertiary }}>{log.time}</span>
-              <Text style={{ fontSize: 12 }}>{log.text}</Text>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function PreviewPanelContent({ token }: { token: ReturnType<typeof theme.useToken>['token'] }) {
   return (

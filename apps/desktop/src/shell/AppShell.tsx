@@ -4,7 +4,6 @@ import {
   App,
   BorderBeam,
   Button,
-  ConfigProvider,
   Divider,
   Dropdown,
   Empty,
