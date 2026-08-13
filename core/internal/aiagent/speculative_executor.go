@@ -197,7 +197,8 @@ func (e *SpeculativeExecutor) Cleanup() {
 // parseable argument block.
 // P3-3 §4.5.4.
 func IsJSONComplete(s string) bool {
-	count := 0
+	braceDepth := 0  // {} nesting
+	bracketDepth := 0 // [] nesting
 	inString := false
 	escape := false
 	for _, r := range s {
@@ -216,12 +217,19 @@ func IsJSONComplete(s string) bool {
 		if inString {
 			continue
 		}
-		if r == '{' {
-			count++
-		}
-		if r == '}' {
-			count--
+		switch r {
+		case '{':
+			braceDepth++
+		case '}':
+			braceDepth--
+		case '[':
+			bracketDepth++
+		case ']':
+			bracketDepth--
 		}
 	}
-	return count == 0 && len(s) > 0
+	// Both counters must be back to zero for the JSON to be balanced.
+	// Negative depth means a closing brace appeared before an opening
+	// one — also invalid.
+	return braceDepth == 0 && bracketDepth == 0 && len(s) > 0
 }

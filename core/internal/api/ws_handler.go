@@ -183,7 +183,9 @@ func (h *WsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				"jsonrpc": "2.0",
 				"error":   perr,
 			})
-			_ = conn.Write(ctx, websocket.MessageText, errNotif)
+			writeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			_ = conn.Write(writeCtx, websocket.MessageText, errNotif)
+			cancel()
 			continue
 		}
 
@@ -317,12 +319,16 @@ func (h *WsHandler) handleClientNotification(session *WsSession, notif *JsonRpcN
 }
 
 // writeResponse sends a JSON-RPC response to the client.
+// A 10s timeout wraps the Write so a slow/stuck client cannot block
+// the read loop indefinitely.
 func (h *WsHandler) writeResponse(ctx context.Context, session *WsSession, resp JsonRpcResponse) error {
 	payload, err := json.Marshal(resp)
 	if err != nil {
 		return err
 	}
-	return session.conn.Write(ctx, websocket.MessageText, payload)
+	writeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	return session.conn.Write(writeCtx, websocket.MessageText, payload)
 }
 
 // SendApprovalRequest is called by the orchestrator to ask the UI to

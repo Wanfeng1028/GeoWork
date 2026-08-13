@@ -155,9 +155,16 @@ func (tm *TriggerManager) HandleEvent(event string, data map[string]any) {
 			if path == "" {
 				continue
 			}
-			matched, err := filepath.Match(t.Pattern, filepath.Base(path))
+			// Match against the full path first so patterns containing
+			// "/" (e.g. "src/**/*.go") work as expected. Fall back to
+			// Base(path) so simple filename patterns (e.g. "*.py") keep
+			// matching regardless of directory.
+			matched, err := filepath.Match(t.Pattern, path)
 			if err != nil || !matched {
-				continue
+				matched, err = filepath.Match(t.Pattern, filepath.Base(path))
+				if err != nil || !matched {
+					continue
+				}
 			}
 		}
 		matching = append(matching, t)

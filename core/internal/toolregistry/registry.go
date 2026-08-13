@@ -302,7 +302,10 @@ func validateSandboxPath(path string, allowedRoots []string) error {
 		if err != nil {
 			continue
 		}
-		// Ensure both end with separator so "/data/evil" doesn't match "/data/e".
+		// filepath.Rel already handles the boundary correctly: a path
+		// like "/data/evil" yields rel "evil" against root "/data/e"
+		// (NOT "."), so the HasPrefix("..") check below rejects it.
+		// No manual separator-padding is needed.
 		rel, err := filepath.Rel(absRoot, absPath)
 		if err != nil {
 			continue
