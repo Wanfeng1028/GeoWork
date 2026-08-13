@@ -1,7 +1,9 @@
 .card {
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .header {

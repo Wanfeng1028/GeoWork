@@ -1,5 +1,6 @@
 .pageContainer {
   max-width: 920px;
+  min-width: 320px;
   margin: 0 auto;
   padding: 0 24px;
   height: 100%;
@@ -44,11 +45,12 @@
   margin-bottom: 0 !important;
   font-size: 14px;
   line-height: 1.6;
+  word-break: break-word;
 }
 
 /* ── Hero 横幅 ── */
 .heroCard {
-  border-radius: 10px;
+  border-radius: 12px;
   margin-bottom: 20px;
 }
 
@@ -128,9 +130,22 @@
 
   .heroPills {
     justify-content: flex-start;
+    max-width: 100%;
   }
 
   .cardGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 0 12px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
