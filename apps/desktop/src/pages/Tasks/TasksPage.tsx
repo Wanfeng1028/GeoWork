@@ -4,7 +4,6 @@ import {
   App,
   Button,
   Dropdown,
-  Empty,
   Segmented,
   Select,
   Space,
@@ -21,7 +20,6 @@ import type { ColumnsType } from 'antd/es/table'
 import {
   PlusOutlined,
   ReloadOutlined,
-  ClockCircleOutlined,
   SortAscendingOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -29,6 +27,7 @@ import {
   StopOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { EmptyState } from '../../shell/feedback'
 import { ScheduledTaskCard } from './components/ScheduledTaskCard'
 import { ScheduledTaskModal } from './components/ScheduledTaskModal'
 import { apiGet, apiPost, apiDelete, apiPatch } from '../../shared/api/client'
@@ -572,16 +571,10 @@ export function TasksPage() {
                       <Spin />
                     </div>
                   ) : sortedTasks.length === 0 ? (
-                    <Empty
-                      image={<ClockCircleOutlined style={{ fontSize: 48, opacity: 0.3 }} />}
-                      description={
-                        <Space direction="vertical" size={4}>
-                          <Text>暂无定时任务</Text>
-                          <Text type="secondary" style={{ fontSize: 13 }}>
-                            新建定时任务后，将显示在这里。
-                          </Text>
-                        </Space>
-                      }
+                    <EmptyState
+                      title="暂无定时任务"
+                      description="创建定时任务，让 GeoWork 按计划自动执行地理分析"
+                      action={<Button type="primary" onClick={handleCreateNew}>创建任务</Button>}
                     />
                   ) : (
                     sortedTasks.map((task) => (
@@ -640,16 +633,10 @@ export function TasksPage() {
                   pagination={{ pageSize: 5, showSizeChanger: false }}
                   locale={{
                     emptyText: (
-                      <Empty
-                        image={<ClockCircleOutlined style={{ fontSize: 48, opacity: 0.3 }} />}
-                        description={
-                          <Space direction="vertical" size={4}>
-                            <Text>暂无执行记录</Text>
-                            <Text type="secondary" style={{ fontSize: 13 }}>
-                              当定时任务开始执行后，记录将显示在这里。
-                            </Text>
-                          </Space>
-                        }
+                      <EmptyState
+                        title="暂无执行记录"
+                        description="当定时任务开始执行后，记录将显示在这里。"
+                        size="sm"
                       />
                     ),
                   }}

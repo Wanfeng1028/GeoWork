@@ -15,6 +15,7 @@ import {
   CloudServerOutlined,
   BranchesOutlined,
   CompassOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons'
 import { theme } from 'antd'
 import styles from './SettingsSidebar.module.css'
@@ -36,6 +37,7 @@ export type SettingsSectionKey =
   | 'safe-workspace'
   | 'experimental'
   | 'guide'
+  | 'about'
 
 interface NavItem {
   key: SettingsSectionKey
@@ -55,6 +57,7 @@ const NAV_GENERAL: NavItem[] = [
   { key: 'memory', label: '记忆与上下文', icon: <DatabaseOutlined /> },
   { key: 'update', label: '更新应用', icon: <CloudDownloadOutlined /> },
   { key: 'archived', label: '已归档', icon: <InboxOutlined /> },
+  { key: 'about', label: '关于 GeoWork', icon: <InfoCircleOutlined /> },
 ]
 
 const NAV_EXTENSIONS: NavItem[] = [

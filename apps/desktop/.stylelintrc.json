@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "color-no-invalid-hex": true,
+    "declaration-block-no-duplicate-properties": true,
+    "declaration-no-important": true,
+    "no-duplicate-selectors": true,
+    "unit-no-unknown": true,
+    "value-no-vendor-prefix": true,
+    "property-no-vendor-prefix": true,
+    "selector-no-vendor-prefix": true,
+    "at-rule-no-vendor-prefix": true,
+    "media-feature-name-no-vendor-prefix": true,
+    "custom-property-pattern": null,
+    "no-unknown-custom-properties": null
+  },
+  "customSyntax": null,
+  "overrides": [
+    {
+      "files": ["*.css", "*.module.css"],
+      "rules": {}
+    }
+  ]
+}

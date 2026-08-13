@@ -25,8 +25,12 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src')
-      }
+        '@': resolve(__dirname, 'src'),
+        '@shared': resolve(__dirname, 'src/shared'),
+        '@shell': resolve(__dirname, 'src/shell'),
+        '@pages': resolve(__dirname, 'src/pages'),
+        '@app': resolve(__dirname, 'src/app'),
+      },
     },
     server: {
       proxy: {

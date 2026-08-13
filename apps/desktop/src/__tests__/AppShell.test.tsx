@@ -6,9 +6,7 @@ import App from '../App'
 vi.mock('react-router', () => {
   const React = require('react')
   return {
-    RouterProvider: ({ router }: any) => {
-      const routes = router.routes || []
-      const indexRoute = routes.find((r: any) => r.index)
+    RouterProvider: () => {
       return React.createElement('div', { 'data-testid': 'app-root' }, [
         React.createElement('div', { key: 'content', 'data-testid': 'router-content' }, 'App Rendered'),
       ])

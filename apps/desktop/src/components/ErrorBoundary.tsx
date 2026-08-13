@@ -2,30 +2,30 @@
  * React Error Boundary component.
  * Catches rendering errors in child components and displays a fallback UI.
  */
-import React from 'react';
+import { Component, type ReactNode } from 'react'
 
 interface Props {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode
+  fallback?: ReactNode
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
+  hasError: boolean
+  error: Error | null
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
-  state: State = { hasError: false, error: null };
+export class ErrorBoundary extends Component<Props, State> {
+  override state: State = { hasError: false, error: null }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error('ErrorBoundary caught:', error, errorInfo)
   }
 
-  render(): React.ReactNode {
+  override render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;

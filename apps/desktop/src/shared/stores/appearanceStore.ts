@@ -20,11 +20,7 @@ interface AppearanceState {
 const STORAGE_KEY = 'geowork.appearance'
 
 const VALID_APPEARANCES: ReadonlySet<Appearance> = new Set([
-  'light',
-  'dark',
   'system',
-  'illustration',
-  'glass',
   'editorial',
   'editorial-dark',
 ])
@@ -43,10 +39,10 @@ function resolveAppearance(appearance: Appearance): ResolvedAppearance {
 }
 
 function getInitialAppearance(): Appearance {
-  if (typeof window === 'undefined') return 'light'
+  if (typeof window === 'undefined') return 'editorial'
   const saved = window.localStorage.getItem(STORAGE_KEY)
   if (saved && VALID_APPEARANCES.has(saved as Appearance)) return saved as Appearance
-  return 'light'
+  return 'editorial'
 }
 
 const initialAppearance = getInitialAppearance()

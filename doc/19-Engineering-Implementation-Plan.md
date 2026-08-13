@@ -10,6 +10,7 @@
 | 版本 | 日期 | 变更摘要 |
 |---|---|---|
 | v1.0 | 2026-08-12 | 初稿：E0-E2 三阶段工程化施工计划 |
+| v1.1 | 2026-08-12 | TraeCode AI Agent | E0 基础设施完成（Prettier/oxlint/tsconfig strict/CI pipeline/.env.example/.gitattributes）。前端 F0~F2+FP3 全部完成，仅 E1/E2 待后续 |
 
 ---
 
@@ -40,10 +41,12 @@ E0（基础设施）──→ E1（质量门禁）──→ E2（可观测性）
 
 ### E0 验收
 
-- [ ] CI pipeline 在 PR 上自动运行
-- [ ] lint + build + test 全部通过才能合并
-- [ ] tsconfig `strict: true` 开启（有 `@ts-expect-error` 标记的除外）
-- [ ] Prettier 格式化全项目
+- [x] CI pipeline 在 PR 上自动运行（`.github/workflows/pr-check.yml` 已创建并推送）
+- [x] lint + build + test 全部通过才能合并（CI 门禁配置就位）
+- [x] tsconfig `strict: true` 开启
+- [x] Prettier 格式化全项目
+
+> **E0 完成日期**：2026-08-12 · **执行者**：TraeCode AI Agent · **分支**：dev-frontend/TraeCodeCloud-SeedCode
 
 ---
 
