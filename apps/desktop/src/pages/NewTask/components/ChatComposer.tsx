@@ -434,7 +434,7 @@ export function ChatComposer({
           <Button
             color="primary"
             variant="solid"
-            shape="circle"
+            shape="round"
             icon={<Send />}
             className={styles.iconBtn}
             onClick={handleSend}
