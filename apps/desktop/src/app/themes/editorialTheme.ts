@@ -110,7 +110,7 @@ export function useEditorialTheme(): ConfigProviderProps {
           itemColor: '#475569',
           itemHoverBg: 'rgba(15,23,42,0.04)',
           itemHoverColor: '#0f172a',
-          itemSelectedBg: 'rgba(14,116,144,0.06)',
+          itemSelectedBg: 'rgba(29, 78, 216, 0.06)',
           itemSelectedColor: '#0f172a',
           subMenuItemBg: 'transparent',
           iconSize: 16,

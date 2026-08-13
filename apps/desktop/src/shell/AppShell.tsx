@@ -60,9 +60,7 @@ import { UserMenu } from './UserMenu'
 import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
 import { TitleBar } from './TitleBar'
-import { IconRail } from './IconRail'
 import { CapsuleButton } from './components/CapsuleButton'
-import { CapsuleTabs } from './components/CapsuleTabs'
 import { CapsuleTag } from './components/CapsuleTag'
 import styles from './AppShell.module.css'
 
@@ -515,33 +513,80 @@ export function AppShell() {
         onOpenSearch={() => setGlobalSearchOpen(true)}
         onOpenModal={(m) => setModalOpen(m)}
       />
-      {/* ── Icon Rail (56px) ── */}
-      <IconRail
-        items={navItems.map((item) => ({ key: item.key, icon: item.icon, label: item.label }))}
-        activeKey={selectedKey}
-        onNavigate={handleNavClick}
-        onCreateTask={handleCreateTask}
-      />
-      {/* ── Sidebar ─ */}
+      {/* ── Sidebar ── */}
       <aside
         className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}
         style={{
-          background: token.colorBgContainer,
-          borderRight: sidebarCollapsed ? 'none' : `1px solid ${token.colorBorderSecondary}`,
+          background: token.colorBgLayout,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
         }}
       >
         {/* Divider 1: 工具区下 */}
         <Divider style={dividerStyle} />
 
-        {/* 主功能入口 - 展开态 Menu */}
-        <Beam className={styles.sidebarBody}>
-          <Menu
-            mode="inline"
-            selectedKeys={selectedKey ? [selectedKey] : []}
-            items={menuItems}
-            onClick={({ key }) => handleNavClick(key)}
-            style={{ border: 'none', background: 'transparent' }}
-          />
+        {/* 主功能入口 */}
+        {sidebarCollapsed ? (
+          <Beam className={styles.sidebarBodyCollapsed}>
+            {navItems.map((item, idx) => {
+              const isActive = location.pathname === item.key
+              return (
+                <Tooltip key={idx} title={item.label} placement="right">
+                  <Button
+                    type={isActive ? 'primary' : 'text'}
+                    icon={item.icon}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 16,
+                    }}
+                    onClick={() => handleNavClick(item.key)}
+                  />
+                </Tooltip>
+              )
+            })}
+
+            {/* 扩展入口 - 折叠态 Dropdown */}
+            <Dropdown
+              trigger={['hover']}
+              placement="bottomRight"
+              getPopupContainer={() => document.body}
+              menu={{
+                items: extChildren.map((item) => ({
+                  key: item.key,
+                  icon: item.icon,
+                  label: item.label,
+                  onClick: () => navigate(item.route),
+                })),
+              }}
+            >
+              <Tooltip title="扩展" placement="right">
+                <Button
+                  type={isOnExtension ? 'primary' : 'text'}
+                  icon={<LayoutGrid />}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 16,
+                  }}
+                />
+              </Tooltip>
+            </Dropdown>
+          </Beam>
+        ) : (
+          <Beam className={styles.sidebarBody}>
+            <Menu
+              mode="inline"
+              selectedKeys={selectedKey ? [selectedKey] : []}
+              items={menuItems}
+              onClick={({ key }) => handleNavClick(key)}
+              style={{ border: 'none', background: 'transparent' }}
+            />
 
             {/* 扩展入口 - 展开态 click */}
             <div
@@ -597,20 +642,6 @@ export function AppShell() {
                   })}
                 </div>
               )}
-            </div>
-
-            {/* Segmented 切换区 —— 使用 CapsuleTabs 胶囊组件 */}
-            <div className={styles.sidebarSegmented}>
-              <CapsuleTabs
-                block
-                value={segment}
-                onChange={(value) => navigate(value === 'channels' ? '/mobile-control' : '/new-task')}
-                options={[
-                  { label: '任务', value: 'tasks', icon: <List /> },
-                  { label: '移动端控制', value: 'channels', icon: <Smartphone /> },
-                ]}
-                size="small"
-              />
             </div>
 
             {/* 内容区：任务列表或空状态 */}
@@ -699,7 +730,7 @@ export function AppShell() {
                                   {task.status === 'stopped' && <CapsuleTag>已停止</CapsuleTag>}
                                   {task.status === 'failed' && <CapsuleTag color="error">失败</CapsuleTag>}
                                   {task.status === 'idle' && <CapsuleTag>空闲</CapsuleTag>}
-                                  <Text type="secondary" style={{ fontSize: 11 }}>
+                                  <Text type="secondary" style={{ fontSize: 12 }}>
                                     {new Date(task.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                   </Text>
                                 </div>
@@ -744,6 +775,7 @@ export function AppShell() {
               )}
             </div>
           </Beam>
+        )}
 
         {/* Divider 2: 主入口区下 */}
         <Divider style={dividerStyle} />
@@ -782,7 +814,7 @@ export function AppShell() {
               title="切换主题"
               placement={sidebarCollapsed ? 'right' : undefined}
             >
-              <Button type="text" icon={<Sun />} size={sidebarCollapsed ? 'middle' : 'small'} />
+              <Button type="text" icon={isLight ? <Sun /> : <Moon />} size={sidebarCollapsed ? 'middle' : 'small'} />
             </Tooltip>
           </Dropdown>
         </Beam>
