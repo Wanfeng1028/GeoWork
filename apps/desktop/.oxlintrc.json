@@ -19,8 +19,6 @@
     "no-fallthrough": "error",
     "no-constant-condition": "error",
     "no-empty": "warn",
-    "no-irregular-whitespace": "warn",
-    "no-trailing-spaces": "warn",
-    "eol-last": "warn"
+    "no-irregular-whitespace": "warn"
   }
 }
