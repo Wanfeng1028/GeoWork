@@ -1,11 +1,11 @@
 import { App, Avatar, Button, Dropdown, Space, Switch, Tag, Typography, theme } from 'antd'
 import type { MenuProps } from 'antd'
 import {
-  EditOutlined,
-  BellOutlined,
-  InfoCircleOutlined,
-  DisconnectOutlined,
-} from '@ant-design/icons'
+  Pencil,
+  Bell,
+  Info,
+  Unlink,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import styles from './MobileChannelCard.module.css'
 
@@ -52,26 +52,26 @@ export function MobileChannelCard({ channel, onConfig, onToggle, onRebind, onDis
   const moreMenuItems: MenuProps['items'] = [
     {
       key: 'rebind',
-      icon: <EditOutlined />,
+      icon: <Pencil />,
       label: '重新绑定',
       onClick: () => onRebind(channel),
     },
     {
       key: 'test',
-      icon: <BellOutlined />,
+      icon: <Bell />,
       label: '测试通知',
       onClick: () => message.info('测试通知后续接入'),
     },
     {
       key: 'help',
-      icon: <InfoCircleOutlined />,
+      icon: <Info />,
       label: '查看说明',
       onClick: () => message.info('移动端控制说明后续接入'),
     },
     { type: 'divider' },
     {
       key: 'disconnect',
-      icon: <DisconnectOutlined />,
+      icon: <Unlink />,
       label: '断开连接',
       danger: true,
       onClick: () => {

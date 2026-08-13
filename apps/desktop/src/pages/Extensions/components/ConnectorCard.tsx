@@ -1,16 +1,16 @@
 import { Avatar, Button, Card, Tag, Typography, theme } from 'antd'
 import {
-  PlusOutlined,
-  CheckOutlined,
-  CloudOutlined,
-  ApiOutlined,
-  HomeOutlined,
-  GlobalOutlined,
-  CloudServerOutlined,
-  DatabaseOutlined,
-  MessageOutlined,
-  LinkOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Check,
+  Cloud,
+  Cable,
+  Home,
+  Globe,
+  Server,
+  Database,
+  MessageSquare,
+  Link,
+} from 'lucide-react'
 import type { ConnectorItem } from '../connectorsMockData'
 import { AUTH_TYPE_LABELS } from '../connectorsMockData'
 import styles from './ConnectorCard.module.css'
@@ -19,22 +19,22 @@ const { Text, Paragraph } = Typography
 
 /* 按 slug 映射图标 */
 const ICON_MAP: Record<string, React.ReactNode> = {
-  'google-workspace': <CloudOutlined />,
-  'microsoft-365': <ApiOutlined />,
-  'geowork-internal': <HomeOutlined />,
-  'browser-context': <GlobalOutlined />,
-  'arcgis-online': <CloudServerOutlined />,
-  geoserver: <CloudServerOutlined />,
-  'postgis-database': <DatabaseOutlined />,
-  'google-earth-engine': <CloudOutlined />,
-  'amap-open-platform': <GlobalOutlined />,
-  wecom: <MessageOutlined />,
-  lark: <MessageOutlined />,
-  dingtalk: <MessageOutlined />,
-  'geowork-workdir': <HomeOutlined />,
-  'geowork-datacenter': <DatabaseOutlined />,
-  'geowork-map-context': <GlobalOutlined />,
-  'geowork-task-center': <LinkOutlined />,
+  'google-workspace': <Cloud />,
+  'microsoft-365': <Cable />,
+  'geowork-internal': <Home />,
+  'browser-context': <Globe />,
+  'arcgis-online': <Server />,
+  geoserver: <Server />,
+  'postgis-database': <Database />,
+  'google-earth-engine': <Cloud />,
+  'amap-open-platform': <Globe />,
+  wecom: <MessageSquare />,
+  lark: <MessageSquare />,
+  dingtalk: <MessageSquare />,
+  'geowork-workdir': <Home />,
+  'geowork-datacenter': <Database />,
+  'geowork-map-context': <Globe />,
+  'geowork-task-center': <Link />,
 }
 
 interface ConnectorCardProps {
@@ -73,7 +73,7 @@ export function ConnectorCard({ connector, onConnect }: ConnectorCardProps) {
               color: connector.connected ? token.colorSuccess : token.colorPrimary,
             }}
           >
-            {ICON_MAP[connector.slug] ?? <LinkOutlined />}
+            {ICON_MAP[connector.slug] ?? <Link />}
           </Avatar>
           <div className={styles.nameBlock}>
             <Text strong className={styles.name}>{connector.name}</Text>
@@ -82,12 +82,12 @@ export function ConnectorCard({ connector, onConnect }: ConnectorCardProps) {
         </div>
         <div className={styles.headerRight}>
           {connector.connected ? (
-            <Tag icon={<CheckOutlined />} color="success" style={{ margin: 0 }}>已连接</Tag>
+            <Tag icon={<Check />} color="success" style={{ margin: 0 }}>已连接</Tag>
           ) : (
             <Button
               type="text"
               size="small"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={handleAction}
             />
           )}

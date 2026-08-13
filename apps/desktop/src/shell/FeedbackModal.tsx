@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { App, Button, Input, Modal, Upload } from 'antd'
-import { InboxOutlined } from '@ant-design/icons'
+import { Inbox } from 'lucide-react'
 import type { UploadFile } from 'antd'
 import styles from './FeedbackModal.module.css'
 
@@ -110,7 +110,7 @@ export function FeedbackModal({ open, onClose }: Props) {
           maxCount={3}
         >
           <p className="ant-upload-drag-icon">
-            <InboxOutlined />
+            <Inbox />
           </p>
           <p className="ant-upload-text">
             点击添加，或拖拽/粘贴图片到此区域

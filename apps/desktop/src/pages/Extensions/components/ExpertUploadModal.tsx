@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { App, Modal, Typography, Upload, theme } from 'antd'
-import { InboxOutlined } from '@ant-design/icons'
+import { Inbox } from 'lucide-react'
 import type { UploadFile } from 'antd'
 import styles from './ExpertUploadModal.module.css'
 
@@ -48,7 +48,7 @@ export function ExpertUploadModal({ open, onClose }: ExpertUploadModalProps) {
         className={styles.dragger}
       >
         <p className="ant-upload-drag-icon">
-          <InboxOutlined style={{ color: token.colorPrimary }} />
+          <Inbox style={{ color: token.colorPrimary }} />
         </p>
         <Text>点击或拖拽 .zip 文件到此处</Text>
       </Dragger>

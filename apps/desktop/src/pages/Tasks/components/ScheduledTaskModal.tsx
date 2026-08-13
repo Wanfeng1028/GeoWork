@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { App, Button, Dropdown, Form, Input, Modal, Select, Space, TimePicker, theme } from 'antd'
-import { FolderOpenOutlined, PlusOutlined, RobotOutlined } from '@ant-design/icons'
+import { FolderOpen, Plus, Bot } from 'lucide-react'
 import dayjs from 'dayjs'
 import type { ScheduledTask } from '../TasksPage'
 import styles from './ScheduledTaskModal.module.css'
@@ -121,20 +121,20 @@ export function ScheduledTaskModal({ open, task, onClose, onSave }: ScheduledTas
           style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
         >
           <Button
-            icon={<FolderOpenOutlined />}
+            icon={<FolderOpen />}
             size="small"
             onClick={() => message.info('工作目录选择后续接入')}
           >
             选择工作目录
           </Button>
           <Button
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             size="small"
             shape="circle"
             onClick={() => message.info('附件与工具选择后续接入')}
           />
           <Dropdown menu={modelMenu} trigger={['click']}>
-            <Button size="small" icon={<RobotOutlined />}>
+            <Button size="small" icon={<Bot />}>
               Auto
             </Button>
           </Dropdown>

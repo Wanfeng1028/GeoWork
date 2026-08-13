@@ -13,10 +13,10 @@ import {
   theme,
 } from 'antd'
 import {
-  ReloadOutlined,
-  SearchOutlined,
-  PlusOutlined,
-} from '@ant-design/icons'
+  RotateCw,
+  Search,
+  Plus,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { McpServerCard } from './components/McpServerCard'
 import { McpServerList } from './components/McpServerList'
@@ -340,10 +340,10 @@ export function McpPage() {
       {/* 顶部工具栏 */}
       <div className={styles.toolbar}>
         <Space>
-          <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
+          <Button type="text" icon={<RotateCw />} onClick={handleRefresh} />
           <Input
             placeholder="搜索 MCP 服务..."
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
@@ -351,7 +351,7 @@ export function McpPage() {
           />
         </Space>
         <Dropdown menu={{ items: addMenuItems }} trigger={['click']}>
-          <Button type="primary" icon={<PlusOutlined />}>添加</Button>
+          <Button type="primary" icon={<Plus />}>添加</Button>
         </Dropdown>
       </div>
 

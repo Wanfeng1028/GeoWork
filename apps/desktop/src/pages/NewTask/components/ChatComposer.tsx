@@ -10,23 +10,23 @@ import {
   theme,
 } from 'antd'
 import {
-  PlusOutlined,
-  SendOutlined,
-  AudioOutlined,
-  StopOutlined,
-  ThunderboltOutlined,
-  FolderOpenOutlined,
-  CheckOutlined,
-  GlobalOutlined,
-  RobotOutlined,
-  CloudUploadOutlined,
-  FolderOutlined,
-  AimOutlined,
-  PieChartOutlined,
-  FileTextOutlined,
-  SearchOutlined,
-  RadarChartOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Send,
+  AudioLines,
+  Square,
+  Zap,
+  FolderOpen,
+  Check,
+  Globe,
+  Bot,
+  CloudUpload,
+  Folder,
+  Target,
+  PieChart,
+  FileText,
+  Search,
+  Network,
+} from 'lucide-react'
 import { ModelPicker } from './ModelPicker'
 import { SelectedContextBar } from './SelectedContextBar'
 import type { SelectedContextItem, SelectedContextKind } from './conversationStorage'
@@ -36,21 +36,21 @@ import styles from './ChatComposer.module.css'
 /* ── 常量 ── */
 
 const MODE_OPTIONS = [
-  { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
-  { key: 'spatial', label: '空间分析', icon: <AimOutlined />, desc: '缓冲区、叠加、空间查询' },
-  { key: 'cartography', label: '专题制图', icon: <PieChartOutlined />, desc: '生成专题地图和可视化' },
-  { key: 'paper', label: '论文辅助', icon: <FileTextOutlined />, desc: '学术论文写作辅助' },
-  { key: 'query', label: '数据查询', icon: <SearchOutlined />, desc: '属性与空间数据检索' },
-  { key: 'remote-sensing', label: '遥感解译', icon: <RadarChartOutlined />, desc: '遥感影像处理与解译' },
+  { key: 'general', label: '通用 GIS', icon: <Globe />, desc: '通用地理信息系统任务' },
+  { key: 'spatial', label: '空间分析', icon: <Target />, desc: '缓冲区、叠加、空间查询' },
+  { key: 'cartography', label: '专题制图', icon: <PieChart />, desc: '生成专题地图和可视化' },
+  { key: 'paper', label: '论文辅助', icon: <FileText />, desc: '学术论文写作辅助' },
+  { key: 'query', label: '数据查询', icon: <Search />, desc: '属性与空间数据检索' },
+  { key: 'remote-sensing', label: '遥感解译', icon: <Network />, desc: '遥感影像处理与解译' },
 ]
 
 const ATTACH_ITEMS = [
-  { key: 'skill', icon: <ThunderboltOutlined />, label: '选择技能', msg: '技能选择面板后续接入' },
-  { key: 'expert', icon: <RobotOutlined />, label: '选择专家', msg: '专家模式后续接入' },
-  { key: 'mcp', icon: <GlobalOutlined />, label: '连接 MCP', msg: 'MCP 工具连接后续接入' },
-  { key: 'file', icon: <CloudUploadOutlined />, label: '选择文件', msg: '文件选择后续接入' },
-  { key: 'folder', icon: <FolderOutlined />, label: '选择文件夹', msg: '文件夹选择后续接入' },
-  { key: 'image', icon: <FolderOpenOutlined />, label: '上传图片', msg: '图片上传后续接入' },
+  { key: 'skill', icon: <Zap />, label: '选择技能', msg: '技能选择面板后续接入' },
+  { key: 'expert', icon: <Bot />, label: '选择专家', msg: '专家模式后续接入' },
+  { key: 'mcp', icon: <Globe />, label: '连接 MCP', msg: 'MCP 工具连接后续接入' },
+  { key: 'file', icon: <CloudUpload />, label: '选择文件', msg: '文件选择后续接入' },
+  { key: 'folder', icon: <Folder />, label: '选择文件夹', msg: '文件夹选择后续接入' },
+  { key: 'image', icon: <FolderOpen />, label: '上传图片', msg: '图片上传后续接入' },
 ]
 
 /* File System Access API 类型 */
@@ -323,7 +323,7 @@ export function ChatComposer({
               <span className={styles.modeItemLabel}>{opt.label}</span>
               <span className={styles.modeItemDesc} style={{ color: token.colorTextTertiary }}>{opt.desc}</span>
             </div>
-            {isActive && <CheckOutlined style={{ color: token.colorPrimary, fontSize: 12 }} />}
+            {isActive && <Check style={{ color: token.colorPrimary, fontSize: 12 }} />}
           </div>
         )
       })}
@@ -368,7 +368,7 @@ export function ChatComposer({
       <div className={styles.composerRow}>
         <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
           <Tooltip title="添加附件">
-            <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
+            <Button color="primary" variant="solid" icon={<Plus />} size="small" shape="circle" className={styles.iconBtn} />
           </Tooltip>
         </Dropdown>
 
@@ -396,7 +396,7 @@ export function ChatComposer({
         >
           <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
             <Space size={4}>
-              <ThunderboltOutlined />
+              <Zap />
               {mode}
             </Space>
           </Button>
@@ -409,7 +409,7 @@ export function ChatComposer({
             color={recording ? 'danger' : 'green'}
             variant="filled"
             shape="round"
-            icon={<AudioOutlined />}
+            icon={<AudioLines />}
             className={styles.iconBtn}
             onClick={toggleVoiceInput}
           />
@@ -419,7 +419,7 @@ export function ChatComposer({
           <Button
             danger
             shape="round"
-            icon={<StopOutlined />}
+            icon={<Square />}
             className={styles.iconBtn}
             onClick={onStop}
           />
@@ -428,7 +428,7 @@ export function ChatComposer({
             color="primary"
             variant="solid"
             shape="circle"
-            icon={<SendOutlined />}
+            icon={<Send />}
             className={styles.iconBtn}
             onClick={handleSend}
             disabled={!prompt.trim()}

@@ -1,9 +1,9 @@
 import { Avatar, Button, Card, Space, Tag, Typography, theme } from 'antd'
 import {
-  PlusOutlined,
-  CheckOutlined,
-  RadarChartOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Check,
+  Network,
+} from 'lucide-react'
 import type { SkillItem } from '../skillsMockData'
 import styles from './SkillCard.module.css'
 
@@ -39,7 +39,7 @@ export function SkillCard({ skill, onInstall }: SkillCardProps) {
           <Avatar
             size={32}
             style={{ background: token.colorPrimary }}
-            icon={<RadarChartOutlined />}
+            icon={<Network />}
           />
           <div className={styles.nameBlock}>
             <Text strong className={styles.name}>{skill.name}</Text>
@@ -48,12 +48,12 @@ export function SkillCard({ skill, onInstall }: SkillCardProps) {
         </div>
         <div className={styles.headerRight}>
           {skill.installed ? (
-            <Tag icon={<CheckOutlined />} color="success">已安装</Tag>
+            <Tag icon={<Check />} color="success">已安装</Tag>
           ) : (
             <Button
               type="text"
               size="small"
-              icon={<PlusOutlined />}
+              icon={<Plus />}
               onClick={handleAction}
             />
           )}

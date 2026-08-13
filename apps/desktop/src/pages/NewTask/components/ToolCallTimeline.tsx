@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { App, Button, Tag, Timeline, Typography, theme } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { RotateCw } from 'lucide-react'
 import type { ToolCallLog } from './conversationStorage'
 import styles from './ToolCallTimeline.module.css'
 
@@ -71,7 +71,7 @@ export function ToolCallTimeline({ toolCalls }: ToolCallTimelineProps) {
                       <Button
                         type="link"
                         size="small"
-                        icon={<ReloadOutlined />}
+                        icon={<RotateCw />}
                         onClick={() =>
                           message.info('工具重试功能后续接入')
                         }

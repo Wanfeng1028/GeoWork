@@ -7,20 +7,20 @@
 
 import { Tag, Button, Tooltip } from 'antd'
 import {
-  ThunderboltOutlined,
-  RobotOutlined,
-  GlobalOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons'
+  Zap,
+  Bot,
+  Globe,
+  XCircle,
+} from 'lucide-react'
 import type { SelectedContextItem, SelectedContextKind } from './conversationStorage'
 import styles from './SelectedContextBar.module.css'
 
 /* ── 类型图标映射 ── */
 
 const KIND_CONFIG: Record<SelectedContextKind, { icon: React.ReactNode; label: string }> = {
-  skill: { icon: <ThunderboltOutlined />, label: '技能' },
-  expert: { icon: <RobotOutlined />, label: '专家' },
-  mcp: { icon: <GlobalOutlined />, label: 'MCP' },
+  skill: { icon: <Zap />, label: '技能' },
+  expert: { icon: <Bot />, label: '专家' },
+  mcp: { icon: <Globe />, label: 'MCP' },
 }
 
 /* ── Props ── */
@@ -66,7 +66,7 @@ export function SelectedContextBar({
           <Button
             type="text"
             size="small"
-            icon={<CloseCircleOutlined />}
+            icon={<XCircle />}
             className={styles.clearBtn}
             onClick={onClearAll}
           />

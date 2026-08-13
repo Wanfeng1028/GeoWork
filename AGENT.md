@@ -6,6 +6,7 @@
 | v1.1 | 2026-08-12 | 合并去重双版本；修正路由表 404、skills 结构、依赖文件名；补 marketplace 模块、P0-P3 文档入口、版本表 |
 | v1.2 | 2026-08-12 | TraeCodeCloud 后端/Agent P0-P3 全阶段实现完成：§1 当前阶段更新为「P0-P3 后端施工全部完成，待验收」；P0/P1/P2/P3 施工图各追加「实现记录」版本（05-v0.6 / 06-v0.5 / 07-v0.5 / 08-v0.3）。 |
 | v1.2 | 2026-08-12 | TraeCode AI Agent 前端施工记录：E0/F0/F1-2/F1-3/F2-1/F2-2/F2-4/FP3 全部完成，更新项目阶段、文档路由、验收记录 |
+| v1.3 | 2026-08-13 | TraeCode AI Agent F1-1 图标库替换：`@ant-design/icons` → `lucide-react`，55+ 文件全量替换，typecheck 全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -22,11 +23,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-<<<<<<< HEAD
-| 当前阶段 | P0-P3 后端施工全部完成（TraeCodeCloud 实现，分支 `dev/TraeCodeCloud`，待验收）；前端施工图待开始 |
-=======
-| 当前阶段 | P0 详细设计完成（`doc/05-GeoWorkAgent-P0-Detailed-Design.md`），前端 F0~F2+FP3 完成（2026-08-12），待后端施工 + 前端 F1-1（Lucide 替换）+ E1/E2 |
->>>>>>> e287191 (docs: 更新版本记录、验收清单和施工进度)
+| 当前阶段 | P0-P3 后端施工全部完成（TraeCodeCloud 实现，分支 `dev/TraeCodeCloud`，待验收）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13，分支 `feat/F1-visual-upgrade`），待 E1/E2 |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---

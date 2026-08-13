@@ -12,20 +12,20 @@ import {
   theme,
 } from 'antd'
 import {
-  PlusOutlined,
-  CodeOutlined,
-  EyeOutlined,
-  FolderOpenOutlined,
-  LeftOutlined,
-  RightOutlined,
-  CopyOutlined,
-  ExpandOutlined,
-  ReloadOutlined,
-  FileTextOutlined,
-  DiffOutlined,
-  GlobalOutlined,
-  MessageOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Code,
+  Eye,
+  FolderOpen,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Maximize2,
+  RotateCw,
+  FileText,
+  Diff,
+  Globe,
+  MessageSquare,
+} from 'lucide-react'
 import styles from './RightWorkspacePanel.module.css'
 import { FileTreePanel } from './panels/FileTreePanel'
 import { ReviewPanel } from './panels/ReviewPanel'
@@ -47,11 +47,11 @@ type WorkspaceTabKey = SystemTabKey | DynamicTabKey | ChatTabKey
 const VALID_DYNAMIC_TABS: DynamicTabKey[] = ['files', 'browser', 'terminal', 'preview', 'context']
 
 const DYNAMIC_TAB_CONFIG: Record<DynamicTabKey, { label: string; icon: React.ReactNode }> = {
-  files: { label: '文件', icon: <FileTextOutlined /> },
-  browser: { label: '浏览器', icon: <GlobalOutlined /> },
-  terminal: { label: '终端', icon: <CodeOutlined /> },
-  preview: { label: '预览', icon: <EyeOutlined /> },
-  context: { label: '上下文', icon: <FolderOpenOutlined /> },
+  files: { label: '文件', icon: <FileText /> },
+  browser: { label: '浏览器', icon: <Globe /> },
+  terminal: { label: '终端', icon: <Code /> },
+  preview: { label: '预览', icon: <Eye /> },
+  context: { label: '上下文', icon: <FolderOpen /> },
 }
 
 /* ── localStorage 工具 ── */
@@ -123,13 +123,13 @@ function PreviewPanelContent({ token }: { token: ReturnType<typeof theme.useToke
         </div>
         <Space size={0}>
           <Tooltip title="刷新">
-            <Button type="text" size="small" icon={<ReloadOutlined />} style={{ fontSize: 12 }} />
+            <Button type="text" size="small" icon={<RotateCw />} style={{ fontSize: 12 }} />
           </Tooltip>
           <Tooltip title="外部打开">
-            <Button type="text" size="small" icon={<ExpandOutlined />} style={{ fontSize: 12 }} />
+            <Button type="text" size="small" icon={<Maximize2 />} style={{ fontSize: 12 }} />
           </Tooltip>
           <Tooltip title="复制地址">
-            <Button type="text" size="small" icon={<CopyOutlined />} style={{ fontSize: 12 }} />
+            <Button type="text" size="small" icon={<Copy />} style={{ fontSize: 12 }} />
           </Tooltip>
         </Space>
       </div>
@@ -349,7 +349,7 @@ export function RightWorkspacePanel({
     {
       key: '__new_chat',
       label: '新建辅助对话',
-      icon: <MessageOutlined />,
+      icon: <MessageSquare />,
       onClick: createNewChatTab,
       extra: <Tag color="blue" style={{ fontSize: 10, padding: '0 4px' }}>常用</Tag>,
     },
@@ -382,7 +382,7 @@ export function RightWorkspacePanel({
     key: 'review',
     label: (
       <Space size={4}>
-        <DiffOutlined />
+        <Diff />
         <span>审查</span>
       </Space>
     ),
@@ -398,7 +398,7 @@ export function RightWorkspacePanel({
         key: tabKey,
         label: (
           <Space size={4}>
-            <MessageOutlined />
+            <MessageSquare />
             <span>{getChatTabLabel(sessionId)}</span>
           </Space>
         ),
@@ -450,7 +450,7 @@ export function RightWorkspacePanel({
           <Tooltip title="展开工作台" placement="left">
             <Button
               type="text"
-              icon={<LeftOutlined />}
+              icon={<ChevronLeft />}
               size="small"
               onClick={() => setCollapsed(false)}
             />
@@ -477,7 +477,7 @@ export function RightWorkspacePanel({
         <span className={styles.panelHeaderTitle} />
         <Button
           type="text"
-          icon={<RightOutlined />}
+          icon={<ChevronRight />}
           size="small"
           onClick={() => setCollapsed(true)}
         />
@@ -499,7 +499,7 @@ export function RightWorkspacePanel({
             >
               <Button
                 type="text"
-                icon={<PlusOutlined />}
+                icon={<Plus />}
                 size="small"
                 style={{ marginRight: 4 }}
               />

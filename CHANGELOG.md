@@ -85,11 +85,19 @@
 
 - `useAntdTheme` 只处理 3 种白名单值（editorial/editorial-dark/system），其余 fallback 到 editorial
 - `appearanceStore` 默认主题从 `light` 改为 `editorial`
-- `@ant-design/icons` 保留在依赖中（全量替换待 `lucide-react` 网络安装后执行，已添加到 package.json）
+
+### Removed
+
+- **F1-1 图标库替换**（2026-08-13 · TraeCode AI Agent · 分支 `feat/F1-visual-upgrade`）
+  - 移除 `@ant-design/icons` 依赖（~60 种图标全量替换为 `lucide-react`）
+  - 图标映射：Outlined 风格 → Lucide line 风格，保持语义一致
+  - `spin` 属性替换为 CSS `@keyframes spin` 动画（全局 index.css）
+  - 涉及 55+ 文件，覆盖 shell/、pages/Settings/、pages/Tasks/、pages/NewTask/、pages/Extensions/、pages/MobileControl/、pages/Welcome/、pages/Dashboard/、pages/ThemePreview/
 
 ### Dependency Changes
 
-- 新增 `lucide-react ^0.469.0`（待网络可用后 `npm install`）
+- 新增 `lucide-react ^0.469.0`
+- 移除 `@ant-design/icons ^6.3.2`
 
 ---
 

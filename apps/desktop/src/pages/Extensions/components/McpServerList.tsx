@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { App, Avatar, Button, Space, Switch, Tag, Tooltip, Typography, theme } from 'antd'
 import {
-  ApiOutlined,
-  SettingOutlined,
-  DisconnectOutlined,
-  ReloadOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons'
+  Cable,
+  Settings,
+  Unlink,
+  RotateCw,
+  Info,
+} from 'lucide-react'
 import type { McpServerItem } from '../mcpMockData'
 import styles from './McpServerList.module.css'
 
@@ -62,7 +62,7 @@ export function McpServerList({
                 <Avatar
                   size={28}
                   style={{ background: token.colorPrimary, flexShrink: 0 }}
-                  icon={<ApiOutlined />}
+                  icon={<Cable />}
                 />
                 <div className={styles.itemInfo}>
                   <div className={styles.itemNameRow}>
@@ -109,7 +109,7 @@ export function McpServerList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<SettingOutlined />}
+                        icon={<Settings />}
                         onClick={() => onConfigure?.(server)}
                       />
                     </Tooltip>
@@ -118,7 +118,7 @@ export function McpServerList({
                         type="text"
                         size="small"
                         danger
-                        icon={<DisconnectOutlined />}
+                        icon={<Unlink />}
                         onClick={() => onDisconnect?.(server.id)}
                       />
                     </Tooltip>
@@ -126,7 +126,7 @@ export function McpServerList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<ReloadOutlined />}
+                        icon={<RotateCw />}
                         onClick={() => onReset?.(server.id)}
                       />
                     </Tooltip>
@@ -134,7 +134,7 @@ export function McpServerList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<InfoCircleOutlined />}
+                        icon={<Info />}
                         onClick={() => message.info('MCP 说明后续接入')}
                       />
                     </Tooltip>
@@ -152,7 +152,7 @@ export function McpServerList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<InfoCircleOutlined />}
+                        icon={<Info />}
                         onClick={() => message.info('MCP 说明后续接入')}
                       />
                     </Tooltip>

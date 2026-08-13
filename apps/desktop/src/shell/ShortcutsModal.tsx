@@ -1,5 +1,5 @@
 import { App, Button, Divider, Modal, theme } from 'antd'
-import { SettingOutlined } from '@ant-design/icons'
+import { Settings } from 'lucide-react'
 import styles from './ShortcutsModal.module.css'
 
 interface Props {
@@ -74,7 +74,7 @@ export function ShortcutsModal({ open, onClose }: Props) {
       </div>
 
       <div className={styles.footer}>
-        <Button type="primary" icon={<SettingOutlined />} onClick={handleSetShortcuts}>
+        <Button type="primary" icon={<Settings />} onClick={handleSetShortcuts}>
           设置快捷键
         </Button>
       </div>

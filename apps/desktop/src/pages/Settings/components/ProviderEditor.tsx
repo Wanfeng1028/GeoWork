@@ -16,10 +16,10 @@ import {
   theme,
 } from 'antd'
 import {
-  PlusOutlined,
-  DeleteOutlined,
-  EditOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Trash2,
+  Pencil,
+} from 'lucide-react'
 import { SettingsCard } from './SettingsSection'
 import type {
   CustomModel,
@@ -344,14 +344,14 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
                 <Button
                   type="text"
                   size="small"
-                  icon={<EditOutlined />}
+                  icon={<Pencil />}
                   onClick={() => openEditModel(m)}
                 />
                 <Button
                   type="text"
                   size="small"
                   danger
-                  icon={<DeleteOutlined />}
+                  icon={<Trash2 />}
                   onClick={() => handleDeleteModel(m.id)}
                 />
               </div>
@@ -361,7 +361,7 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
 
         <Button
           type="dashed"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           block
           onClick={openAddModel}
           style={{ marginTop: 8 }}

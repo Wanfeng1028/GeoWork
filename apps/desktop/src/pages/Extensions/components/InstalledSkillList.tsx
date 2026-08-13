@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { App, Avatar, Button, List, Space, Switch, Tag, Tooltip, Typography, theme } from 'antd'
 import {
-  RadarChartOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons'
+  Network,
+  Trash2,
+  RotateCw,
+  Info,
+} from 'lucide-react'
 import type { SkillItem } from '../skillsMockData'
 import styles from './InstalledSkillList.module.css'
 
@@ -53,7 +53,7 @@ export function InstalledSkillList({
                 <Avatar
                   size={28}
                   style={{ background: token.colorPrimary, flexShrink: 0 }}
-                  icon={<RadarChartOutlined />}
+                  icon={<Network />}
                 />
                 <div className={styles.itemInfo}>
                   <div className={styles.itemNameRow}>
@@ -88,7 +88,7 @@ export function InstalledSkillList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<InfoCircleOutlined />}
+                        icon={<Info />}
                         onClick={() => message.info('技能说明后续接入')}
                       />
                     </Tooltip>
@@ -96,7 +96,7 @@ export function InstalledSkillList({
                       <Button
                         type="text"
                         size="small"
-                        icon={<ReloadOutlined />}
+                        icon={<RotateCw />}
                         onClick={() => onReset?.(skill.id)}
                       />
                     </Tooltip>
@@ -105,7 +105,7 @@ export function InstalledSkillList({
                         type="text"
                         size="small"
                         danger
-                        icon={<DeleteOutlined />}
+                        icon={<Trash2 />}
                         onClick={() => onUninstall?.(skill.id)}
                       />
                     </Tooltip>

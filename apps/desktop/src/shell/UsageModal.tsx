@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Modal, Progress, Segmented, Typography, theme } from 'antd'
 import {
-  LinkOutlined,
-  ReloadOutlined,
-  ProjectOutlined,
-  MessageOutlined,
-  UserOutlined,
-  CrownOutlined,
-  GiftOutlined,
-} from '@ant-design/icons'
+  Link,
+  RotateCw,
+  FolderKanban,
+  MessageSquare,
+  User,
+  Crown,
+  Gift,
+} from 'lucide-react'
 import { useLocation } from 'react-router'
 import styles from './UsageModal.module.css'
 
@@ -98,7 +98,7 @@ function UsageCard({
         </span>
         {data.refreshDate && (
           <span className={styles.refresh}>
-            <ReloadOutlined /> 将于 {data.refreshDate} 刷新
+            <RotateCw /> 将于 {data.refreshDate} 刷新
           </span>
         )}
       </div>
@@ -135,9 +135,9 @@ export function UsageModal({ open, onClose }: Props) {
     location.pathname !== '/' && location.pathname !== '/settings'
   const contextLabel = inProject ? '当前项目用量' : '当前对话用量'
   const contextIcon = inProject ? (
-    <ProjectOutlined />
+    <FolderKanban />
   ) : (
-    <MessageOutlined />
+    <MessageSquare />
   )
   const contextData = inProject ? mockProjectUsage : mockConversationUsage
 
@@ -177,7 +177,7 @@ export function UsageModal({ open, onClose }: Props) {
 
         {/* 当前用户总用量 */}
         <UsageCard
-          icon={<UserOutlined />}
+          icon={<User />}
           title="当前用户总用量"
           data={mockTotalUsage}
           showTokens
@@ -189,7 +189,7 @@ export function UsageModal({ open, onClose }: Props) {
         {modelType === 'platform' && (
           <>
             <UsageCard
-              icon={<CrownOutlined />}
+              icon={<Crown />}
               title="当前套餐用量"
               data={mockPlanUsage}
               showTokens={false}
@@ -197,7 +197,7 @@ export function UsageModal({ open, onClose }: Props) {
               colorBorder={token.colorBorderSecondary}
             />
             <UsageCard
-              icon={<GiftOutlined />}
+              icon={<Gift />}
               title="额外用量"
               data={mockExtraUsage}
               showTokens={false}
@@ -210,7 +210,7 @@ export function UsageModal({ open, onClose }: Props) {
 
       <div className={styles.footer}>
         <Typography.Link>
-          查看详情 <LinkOutlined />
+          查看详情 <Link />
         </Typography.Link>
       </div>
     </Modal>

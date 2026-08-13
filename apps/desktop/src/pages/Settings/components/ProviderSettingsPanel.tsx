@@ -8,9 +8,9 @@ import {
   theme,
 } from 'antd'
 import {
-  PlusOutlined,
-  CloudServerOutlined,
-} from '@ant-design/icons'
+  Plus,
+  Server,
+} from 'lucide-react'
 import { SettingsSection } from './SettingsSection'
 import { ProviderCard } from './ProviderCard'
 import { ProviderEditor } from './ProviderEditor'
@@ -159,7 +159,7 @@ export function ProviderSettingsPanel() {
           ))}
           <Button
             className={styles.addBtn}
-            icon={<PlusOutlined />}
+            icon={<Plus />}
             onClick={handleAdd}
           >
             添加供应商
@@ -171,7 +171,7 @@ export function ProviderSettingsPanel() {
             <ProviderEditor provider={selectedProvider} onChanged={refresh} />
           ) : (
             <Empty
-              image={<CloudServerOutlined style={{ fontSize: 48, color: token.colorTextQuaternary }} />}
+              image={<Server style={{ fontSize: 48, color: token.colorTextQuaternary }} />}
               description="暂无供应商，请添加"
             />
           )}

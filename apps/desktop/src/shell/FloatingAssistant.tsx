@@ -11,11 +11,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, FloatButton, Input, Tag, Tooltip, theme } from 'antd'
 import {
-  CustomerServiceOutlined,
-  CloseOutlined,
-  SendOutlined,
-  LinkOutlined,
-} from '@ant-design/icons'
+  Headphones,
+  X,
+  Send,
+  Link,
+} from 'lucide-react'
 import { getCoreConversationId } from '../pages/NewTask/components/streamAdapters'
 import { getConversation } from '../pages/NewTask/components/conversationStorage'
 import styles from './FloatingAssistant.module.css'
@@ -253,7 +253,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
   return (
     <>
       <FloatButton
-        icon={<CustomerServiceOutlined />}
+        icon={<Headphones />}
         type="primary"
         tooltip="悬浮助手"
         className={styles.trigger}
@@ -264,11 +264,11 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
         <div className={styles.panel} style={cssVars}>
           <div className={styles.header}>
             <span className={styles.headerTitle}>
-              <CustomerServiceOutlined />
+              <Headphones />
               悬浮助手
               {inheritable && (
                 <Tooltip title="继承当前主对话上下文">
-                  <Tag icon={<LinkOutlined />} color="processing" className={styles.inheritTag}>
+                  <Tag icon={<Link />} color="processing" className={styles.inheritTag}>
                     继承上下文
                   </Tag>
                 </Tooltip>
@@ -277,7 +277,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
             <Button
               type="text"
               size="small"
-              icon={<CloseOutlined />}
+              icon={<X />}
               onClick={() => setOpen(false)}
             />
           </div>
@@ -315,7 +315,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
             />
             <Button
               type="primary"
-              icon={<SendOutlined />}
+              icon={<Send />}
               loading={sending}
               onClick={handleSend}
               className={styles.sendBtn}

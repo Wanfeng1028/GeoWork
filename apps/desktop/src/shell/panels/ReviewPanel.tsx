@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { App, Button, Empty, Spin, Tag, Tooltip, Typography, theme } from 'antd'
 import {
-  ReloadOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  ArrowLeftOutlined,
-  CheckCircleOutlined,
-  DiffOutlined,
-} from '@ant-design/icons'
+  RotateCw,
+  Check,
+  X,
+  ArrowLeft,
+  CheckCircle2,
+  Diff,
+} from 'lucide-react'
 import styles from './panels.module.css'
 
 const { Text } = Typography
@@ -131,7 +131,7 @@ export function ReviewPanel() {
       <div className={styles.panel} style={{ background: token.colorBgContainer }}>
         <div className={styles.previewHeader} style={{ borderBottom: `1px solid ${border}` }}>
           <Tooltip title="返回列表">
-            <Button type="text" size="small" icon={<ArrowLeftOutlined />} onClick={() => setSelected(null)} />
+            <Button type="text" size="small" icon={<ArrowLeft />} onClick={() => setSelected(null)} />
           </Tooltip>
           <Text style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "'SF Mono', 'Cascadia Code', monospace" }} title={selected.path}>
             {selected.path}
@@ -145,10 +145,10 @@ export function ReviewPanel() {
         </div>
         {selected.status === 'pending' && (
           <div style={{ display: 'flex', gap: 8, padding: '8px 12px', borderTop: `1px solid ${border}`, flexShrink: 0 }}>
-            <Button type="primary" size="small" icon={<CheckOutlined />} loading={acting} onClick={() => handleApprove(selected.id)} style={{ flex: 1 }}>
+            <Button type="primary" size="small" icon={<Check />} loading={acting} onClick={() => handleApprove(selected.id)} style={{ flex: 1 }}>
               应用
             </Button>
-            <Button size="small" icon={<CloseOutlined />} loading={acting} onClick={() => handleReject(selected.id)} style={{ flex: 1 }}>
+            <Button size="small" icon={<X />} loading={acting} onClick={() => handleReject(selected.id)} style={{ flex: 1 }}>
               回滚
             </Button>
           </div>
@@ -161,15 +161,15 @@ export function ReviewPanel() {
   return (
     <div className={styles.panel} style={{ background: token.colorBgContainer }}>
       <div className={styles.toolbar} style={{ borderBottom: `1px solid ${border}` }}>
-        <DiffOutlined style={{ fontSize: 12, color: token.colorTextTertiary }} />
+        <Diff style={{ fontSize: 12, color: token.colorTextTertiary }} />
         <Text type="secondary" style={{ fontSize: 12, flex: 1 }}>
           改动审查 {pendingCount > 0 && <Tag color="processing" style={{ fontSize: 11, marginLeft: 4 }}>{pendingCount} 待审</Tag>}
         </Text>
         <Tooltip title="刷新">
-          <Button type="text" size="small" icon={<ReloadOutlined />} onClick={loadDiffs} />
+          <Button type="text" size="small" icon={<RotateCw />} onClick={loadDiffs} />
         </Tooltip>
         <Tooltip title="应用全部待审查">
-          <Button type="text" size="small" icon={<CheckCircleOutlined />} disabled={pendingCount === 0} loading={acting} onClick={handleApplyAll} />
+          <Button type="text" size="small" icon={<CheckCircle2 />} disabled={pendingCount === 0} loading={acting} onClick={handleApplyAll} />
         </Tooltip>
       </div>
       <div className={styles.content}>

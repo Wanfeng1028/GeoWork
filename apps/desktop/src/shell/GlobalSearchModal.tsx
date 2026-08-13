@@ -10,11 +10,11 @@ import {
   theme,
 } from 'antd'
 import {
-  SearchOutlined,
-  AppstoreOutlined,
-  ToolOutlined,
-  ThunderboltOutlined,
-} from '@ant-design/icons'
+  Search,
+  LayoutGrid,
+  Wrench,
+  Zap,
+} from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router'
 import styles from './GlobalSearchModal.module.css'
 
@@ -63,9 +63,9 @@ const GROUP_COLOR: Record<string, string> = {
 }
 
 const GROUP_ICON: Record<string, React.ReactNode> = {
-  '页面': <AppstoreOutlined />,
-  '扩展': <ToolOutlined />,
-  '能力': <ThunderboltOutlined />,
+  '页面': <LayoutGrid />,
+  '扩展': <Wrench />,
+  '能力': <Zap />,
 }
 
 /* ── 组件 ── */
@@ -150,7 +150,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
         <Input
           size="large"
           placeholder="搜索页面、工具、模型、数据或 GIS 能力……"
-          prefix={<SearchOutlined />}
+          prefix={<Search />}
           allowClear
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}

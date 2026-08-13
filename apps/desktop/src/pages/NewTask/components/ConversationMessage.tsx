@@ -1,5 +1,5 @@
 import { App, Button, Tag, Typography, theme } from 'antd'
-import { CopyOutlined, ThunderboltOutlined, RobotOutlined, GlobalOutlined } from '@ant-design/icons'
+import { Copy, Zap, Bot, Globe } from 'lucide-react'
 import type { ConversationMessage as ConversationMessageType, RunStatus, SelectedContextKind } from './conversationStorage'
 import { MarkdownLite } from './MarkdownLite'
 import { ToolCallTimeline } from './ToolCallTimeline'
@@ -9,9 +9,9 @@ import styles from './ConversationMessage.module.css'
 const { Text } = Typography
 
 const CONTEXT_KIND_ICON: Record<SelectedContextKind, React.ReactNode> = {
-  skill: <ThunderboltOutlined />,
-  expert: <RobotOutlined />,
-  mcp: <GlobalOutlined />,
+  skill: <Zap />,
+  expert: <Bot />,
+  mcp: <Globe />,
 }
 
 const CONTEXT_KIND_LABEL: Record<SelectedContextKind, string> = {
@@ -80,7 +80,7 @@ export function ConversationMessageView({
                 <Button
                   type="text"
                   size="small"
-                  icon={<CopyOutlined />}
+                  icon={<Copy />}
                   className={styles.copyBtn}
                   onClick={handleCopy}
                 />

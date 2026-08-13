@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { App, Divider, Typography, theme } from 'antd'
 import {
-  MobileOutlined,
-  ChromeOutlined,
-  WechatOutlined,
-  DingtalkOutlined,
-  SendOutlined,
-  WechatWorkOutlined,
-} from '@ant-design/icons'
+  Smartphone,
+  Globe,
+  MessageCircle,
+  Send,
+  Building2,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { MobileChannelCard } from './components/MobileChannelCard'
 import type { MobileChannel, ChannelStatus } from './components/MobileChannelCard'
@@ -37,42 +36,42 @@ const INITIAL_CHANNELS: ChannelData[] = [
     key: 'geowork-mobile',
     name: 'GeoWork Mobile',
     description: '通过 GeoWork 移动端查看任务、地图预览和执行提醒',
-    icon: <MobileOutlined />,
+    icon: <Smartphone />,
     status: 'unconfigured',
   },
   {
     key: 'mobile-browser',
     name: '手机浏览器',
     description: '通过移动浏览器打开本地控制入口，查看任务状态与工作目录',
-    icon: <ChromeOutlined />,
+    icon: <Globe />,
     status: 'unconfigured',
   },
   {
     key: 'wechat',
     name: '微信',
     description: '通过微信消息接收任务提醒和快速操作链接',
-    icon: <WechatOutlined />,
+    icon: <MessageCircle />,
     status: 'unconfigured',
   },
   {
     key: 'dingtalk',
     name: '钉钉',
     description: '通过钉钉机器人接收并回复 GeoWork 任务消息',
-    icon: <DingtalkOutlined />,
+    icon: <MessageCircle />,
     status: 'unconfigured',
   },
   {
     key: 'feishu',
     name: '飞书',
     description: '通过飞书机器人接收执行提醒与任务摘要',
-    icon: <SendOutlined />,
+    icon: <Send />,
     status: 'unconfigured',
   },
   {
     key: 'wechat-work',
     name: '企业微信',
     description: '通过企业微信应用接收团队任务通知',
-    icon: <WechatWorkOutlined />,
+    icon: <Building2 />,
     status: 'unconfigured',
   },
 ]

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Button, Modal, Progress, Typography } from 'antd'
-import { CloudDownloadOutlined } from '@ant-design/icons'
+import { CloudDownload } from 'lucide-react'
 import { theme } from 'antd'
 import styles from './UpdateModal.module.css'
 
@@ -86,7 +86,7 @@ export function UpdateFloatWidget({ progress, onViewProgress }: UpdateFloatWidge
       }}
     >
       <div className={styles.floatHeader}>
-        <CloudDownloadOutlined className={styles.floatIcon} style={{ color: token.colorPrimary }} />
+        <CloudDownload className={styles.floatIcon} style={{ color: token.colorPrimary }} />
         <Text className={styles.floatTitle}>更新中...</Text>
       </div>
       <Progress percent={Math.round(progress)} size="small" status={progress >= 100 ? 'success' : 'active'} />

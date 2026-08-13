@@ -1,10 +1,10 @@
 import { App, Button, Card, Space, Tag, Typography, theme } from 'antd'
 import {
-  ExperimentOutlined,
-  ShareAltOutlined,
-  EditOutlined,
-  CompassOutlined,
-} from '@ant-design/icons'
+  FlaskConical,
+  Share2,
+  Pencil,
+  Compass,
+} from 'lucide-react'
 import styles from './WorkflowGuideCard.module.css'
 
 interface Props {
@@ -27,7 +27,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
       {/* Header */}
       <div className={styles.header}>
         <Space size={8}>
-          <ExperimentOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />
+          <FlaskConical style={{ color: token.colorPrimary, fontSize: 18 }} />
           <Typography.Text strong style={{ fontSize: 15 }}>
             空间分析工作流
           </Typography.Text>
@@ -49,7 +49,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
         <div className={styles.tags}>
           <Tag color={token.colorPrimary}>Beta</Tag>
           <Tag color="geekblue">
-            <CompassOutlined /> GIS Workflow
+            <Compass /> GIS Workflow
           </Tag>
         </div>
       </div>
@@ -63,7 +63,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
           type="text"
           size="small"
           shape="round"
-          icon={<ShareAltOutlined />}
+          icon={<Share2 />}
           onClick={() => message.info('分享流程功能后续接入')}
         >
           分享流程
@@ -72,7 +72,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
           type="primary"
           size="small"
           shape="round"
-          icon={<EditOutlined />}
+          icon={<Pencil />}
           onClick={() => message.info('编辑模板功能后续接入')}
         >
           编辑模板

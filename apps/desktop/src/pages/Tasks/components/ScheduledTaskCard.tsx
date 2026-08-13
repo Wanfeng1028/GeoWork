@@ -1,6 +1,6 @@
 import { App, Button, Dropdown, Switch, Tag, Typography, theme } from 'antd'
 import type { MenuProps } from 'antd'
-import { MoreOutlined, EditOutlined, CopyOutlined, PlayCircleOutlined, DeleteOutlined } from '@ant-design/icons'
+import { MoreHorizontal, Pencil, Copy, PlayCircle, Trash2 } from 'lucide-react'
 import type { ScheduledTask } from '../TasksPage'
 import styles from './ScheduledTaskCard.module.css'
 
@@ -19,13 +19,13 @@ export function ScheduledTaskCard({ task, onToggle, onEdit, onCopyToNew, onDelet
   const { message, modal } = App.useApp()
 
   const menuItems: MenuProps['items'] = [
-    { key: 'edit', icon: <EditOutlined />, label: '编辑', onClick: () => onEdit(task) },
-    { key: 'copy', icon: <CopyOutlined />, label: '复制到新任务', onClick: () => onCopyToNew(task) },
-    { key: 'run', icon: <PlayCircleOutlined />, label: '立即运行', onClick: () => message.info('立即运行功能后续接入') },
+    { key: 'edit', icon: <Pencil />, label: '编辑', onClick: () => onEdit(task) },
+    { key: 'copy', icon: <Copy />, label: '复制到新任务', onClick: () => onCopyToNew(task) },
+    { key: 'run', icon: <PlayCircle />, label: '立即运行', onClick: () => message.info('立即运行功能后续接入') },
     { type: 'divider' },
     {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <Trash2 />,
       label: '删除',
       danger: true,
       onClick: () => {
@@ -58,7 +58,7 @@ export function ScheduledTaskCard({ task, onToggle, onEdit, onCopyToNew, onDelet
         />
         <Text strong className={styles.title}>{task.name}</Text>
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-          <Button type="text" size="small" icon={<MoreOutlined />} />
+          <Button type="text" size="small" icon={<MoreHorizontal />} />
         </Dropdown>
       </div>
 

@@ -12,10 +12,10 @@ import {
   theme,
 } from 'antd'
 import {
-  ReloadOutlined,
-  SearchOutlined,
-  PlusOutlined,
-} from '@ant-design/icons'
+  RotateCw,
+  Search,
+  Plus,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { ConnectorCard } from './components/ConnectorCard'
 import { ConnectorList } from './components/ConnectorList'
@@ -520,10 +520,10 @@ export function ConnectorsPage() {
       {/* ── 顶部工具栏 ─ */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <Button icon={<ReloadOutlined />} size="small" onClick={handleRefresh} />
+          <Button icon={<RotateCw />} size="small" onClick={handleRefresh} />
           <Input
             placeholder="搜索连接器..."
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
@@ -543,7 +543,7 @@ export function ConnectorsPage() {
             }}
             trigger={['click']}
           >
-            <Button type="primary" size="small" icon={<PlusOutlined />}>
+            <Button type="primary" size="small" icon={<Plus />}>
               添加
             </Button>
           </Dropdown>

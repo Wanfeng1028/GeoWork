@@ -10,22 +10,22 @@ import {
 } from 'antd'
 import type { MenuProps } from 'antd'
 import {
-  UserOutlined,
-  SettingOutlined,
-  RightOutlined,
-  CheckOutlined,
-  BookOutlined,
-  FileTextOutlined,
-  InfoCircleOutlined,
-  LogoutOutlined,
-  CrownOutlined,
-  ShoppingOutlined,
-  SkinOutlined,
-  GlobalOutlined,
-  FontSizeOutlined,
-  ColumnWidthOutlined,
-  FormatPainterOutlined,
-} from '@ant-design/icons'
+  User,
+  Settings,
+  ChevronRight,
+  Check,
+  BookOpen,
+  FileText,
+  Info,
+  LogOut,
+  Crown,
+  ShoppingCart,
+  Palette,
+  Globe,
+  Type,
+  Columns,
+  PaintbrushVertical,
+} from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
@@ -45,7 +45,7 @@ function checkLabel(text: string, checked: boolean): React.ReactNode {
   return (
     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 120 }}>
       <span>{text}</span>
-      {checked && <CheckOutlined style={{ fontSize: 12, opacity: 0.85 }} />}
+      {checked && <Check style={{ fontSize: 12, opacity: 0.85 }} />}
     </span>
   )
 }
@@ -54,7 +54,7 @@ function subCheckLabel(text: string, checked: boolean): React.ReactNode {
   return (
     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 100 }}>
       <span>{text}</span>
-      {checked && <CheckOutlined style={{ fontSize: 12, opacity: 0.85 }} />}
+      {checked && <Check style={{ fontSize: 12, opacity: 0.85 }} />}
     </span>
   )
 }
@@ -217,31 +217,31 @@ export function UserMenu({ collapsed, onOpenShortcuts: _onOpenShortcuts }: UserM
   const preferencesChildren: MenuItem[] = [
     {
       key: 'pref-language',
-      icon: <GlobalOutlined />,
+      icon: <Globe />,
       label: checkLabel('语言', false),
       children: languageChildren,
     },
     {
       key: 'pref-theme',
-      icon: <FormatPainterOutlined />,
+      icon: <PaintbrushVertical />,
       label: checkLabel('主题', false),
       children: themeChildren,
     },
     {
       key: 'pref-font',
-      icon: <SkinOutlined />,
+      icon: <Palette />,
       label: checkLabel('字体设置', false),
       children: fontChildren,
     },
     {
       key: 'pref-fontsize',
-      icon: <FontSizeOutlined />,
+      icon: <Type />,
       label: checkLabel('字号大小', false),
       children: fontSizeChildren,
     },
     {
       key: 'pref-chatwidth',
-      icon: <ColumnWidthOutlined />,
+      icon: <Columns />,
       label: checkLabel('对话宽度', false),
       children: chatWidthChildren,
     },
@@ -252,56 +252,56 @@ export function UserMenu({ collapsed, onOpenShortcuts: _onOpenShortcuts }: UserM
   const menuItems: MenuItem[] = [
     {
       key: 'settings',
-      icon: <SettingOutlined />,
+      icon: <Settings />,
       label: '设置',
       onClick: handleSettings,
     },
     {
       key: 'preferences',
-      icon: <SkinOutlined />,
+      icon: <Palette />,
       label: (
         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>偏好设置</span>
-          <RightOutlined style={{ fontSize: 10, opacity: 0.5 }} />
+          <ChevronRight style={{ fontSize: 10, opacity: 0.5 }} />
         </span>
       ),
       children: preferencesChildren,
     },
     {
       key: 'upgrade',
-      icon: <CrownOutlined />,
+      icon: <Crown />,
       label: '升级订阅',
       onClick: () => message.info('订阅功能后续接入'),
     },
     {
       key: 'buy-resources',
-      icon: <ShoppingOutlined />,
+      icon: <ShoppingCart />,
       label: '增购资源包',
       onClick: () => message.info('资源包功能后续接入'),
     },
     { type: 'divider' },
     {
       key: 'help',
-      icon: <BookOutlined />,
+      icon: <BookOpen />,
       label: '帮助文档',
       onClick: () => message.info('帮助文档后续接入'),
     },
     {
       key: 'changelog',
-      icon: <FileTextOutlined />,
+      icon: <FileText />,
       label: '更新日志',
       onClick: () => message.info('更新日志后续接入'),
     },
     {
       key: 'about',
-      icon: <InfoCircleOutlined />,
+      icon: <Info />,
       label: '关于 GeoWork',
       onClick: handleAbout,
     },
     { type: 'divider' },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
+      icon: <LogOut />,
       label: '退出登录',
       danger: true,
       onClick: handleLogout,
@@ -330,7 +330,7 @@ export function UserMenu({ collapsed, onOpenShortcuts: _onOpenShortcuts }: UserM
         borderRadius: token.borderRadius,
       }}
     >
-      <Avatar size="small" icon={<UserOutlined />} />
+      <Avatar size="small" icon={<User />} />
       {!collapsed && (
         <div className={styles.userInfo}>
           <Typography.Text ellipsis style={{ flex: 1, color: token.colorText, fontSize: 13, lineHeight: 1.3 }}>

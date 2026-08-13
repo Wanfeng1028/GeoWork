@@ -18,19 +18,19 @@ import {
   theme,
 } from 'antd'
 import {
-  CompassOutlined,
-  CopyOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  ExperimentOutlined,
-  ExportOutlined,
-  FolderOpenOutlined,
-  ImportOutlined,
-  ReloadOutlined,
-  RollbackOutlined,
-  SearchOutlined,
-  ShareAltOutlined,
-} from '@ant-design/icons'
+  Compass,
+  Copy,
+  Download,
+  FlaskConical,
+  FolderOpen,
+  Pencil,
+  RotateCw,
+  Search,
+  Share2,
+  Trash2,
+  Undo2,
+  Upload,
+} from 'lucide-react'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import type { Appearance } from '../../shared/stores/appearanceStore'
 import { SettingsSidebar, type SettingsSectionKey } from './components/SettingsSidebar'
@@ -452,7 +452,7 @@ export function SettingsPage() {
             <Button
               type="text"
               size="small"
-              icon={<CopyOutlined />}
+              icon={<Copy />}
               onClick={() => {
                 navigator.clipboard.writeText('GW-LOCAL-000001')
                 message.success('已复制账号 UID')
@@ -754,7 +754,7 @@ export function SettingsPage() {
         <SettingRow
           title="存储位置"
           description="所有记忆文件的根目录：.geowork/memory"
-          extra={<Button size="small" icon={<FolderOpenOutlined />} onClick={() => message.info('打开文件夹功能后续接入')}>打开所在文件夹</Button>}
+          extra={<Button size="small" icon={<FolderOpen />} onClick={() => message.info('打开文件夹功能后续接入')}>打开所在文件夹</Button>}
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow title="协作风格" description="GeoWork 的沟通和执行方式，可通过个性化选择改变" extra={<Button size="small" type="text">查看</Button>} />
@@ -767,15 +767,15 @@ export function SettingsPage() {
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow title="短期记忆" description="本次对话中的上下文摘要" extra={<Button size="small" type="text">查看</Button>} />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="索引" description="为本地文档建立检索索引" extra={<Button size="small" icon={<SearchOutlined />}>重建搜索索引</Button>} />
+        <SettingRow title="索引" description="为本地文档建立检索索引" extra={<Button size="small" icon={<Search />}>重建搜索索引</Button>} />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="备份与恢复"
           description="导出或导入记忆数据"
           extra={
             <Space size={4}>
-              <Button size="small" icon={<ExportOutlined />}>导出</Button>
-              <Button size="small" icon={<ImportOutlined />}>导入</Button>
+              <Button size="small" icon={<Upload />}>导出</Button>
+              <Button size="small" icon={<Download />}>导入</Button>
             </Space>
           }
         />
@@ -894,7 +894,7 @@ export function SettingsPage() {
                 <Button
                   type="text"
                   size="small"
-                  icon={<RollbackOutlined />}
+                  icon={<Undo2 />}
                   onClick={() => {
                     setArchivedTasks((prev) => prev.filter((t) => t.id !== task.id))
                     message.success('任务已恢复到任务列表')
@@ -906,7 +906,7 @@ export function SettingsPage() {
                   type="text"
                   size="small"
                   danger
-                  icon={<DeleteOutlined />}
+                  icon={<Trash2 />}
                   onClick={() => modal.confirm({
                     title: '确认删除此归档？',
                     content: task.title,
@@ -943,7 +943,7 @@ export function SettingsPage() {
           <Text type="secondary" style={{ fontSize: 13 }}>
             共 {MOCK_WORKSPACE_TEMPLATES.length} 个模板
           </Text>
-          <Button size="small" icon={<ImportOutlined />} onClick={() => message.info('导入工作台模板功能后续接入')}>
+          <Button size="small" icon={<Download />} onClick={() => message.info('导入工作台模板功能后续接入')}>
             导入
           </Button>
         </div>
@@ -1010,7 +1010,7 @@ export function SettingsPage() {
         <SettingRow
           title="修复历史消息显示"
           description="如果历史对话显示异常，可尝试修复显示问题"
-          extra={<Button size="small" icon={<ReloadOutlined />} onClick={() => message.info('历史消息检测功能后续接入')}>重新检测</Button>}
+          extra={<Button size="small" icon={<RotateCw />} onClick={() => message.info('历史消息检测功能后续接入')}>重新检测</Button>}
         />
       </SettingsCard>
     </SettingsSection>
@@ -1025,7 +1025,7 @@ export function SettingsPage() {
       <SettingsCard>
         <div className={styles.guideBody}>
           <Space size={8}>
-            <ExperimentOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />
+            <FlaskConical style={{ color: token.colorPrimary, fontSize: 18 }} />
             <Text strong style={{ fontSize: 15 }}>空间分析工作流</Text>
           </Space>
 
@@ -1040,7 +1040,7 @@ export function SettingsPage() {
           <div className={styles.guideTags}>
             <Tag color={token.colorPrimary}>Beta</Tag>
             <Tag color="geekblue">
-              <CompassOutlined /> GIS Workflow
+              <Compass /> GIS Workflow
             </Tag>
           </div>
 
@@ -1048,10 +1048,10 @@ export function SettingsPage() {
             <Button type="primary" onClick={handleStartGuide}>
               开始引导
             </Button>
-            <Button icon={<ShareAltOutlined />} onClick={() => message.info('分享流程功能后续接入')}>
+            <Button icon={<Share2 />} onClick={() => message.info('分享流程功能后续接入')}>
               分享流程
             </Button>
-            <Button icon={<EditOutlined />} onClick={() => message.info('编辑模板功能后续接入')}>
+            <Button icon={<Pencil />} onClick={() => message.info('编辑模板功能后续接入')}>
               编辑模板
             </Button>
           </div>

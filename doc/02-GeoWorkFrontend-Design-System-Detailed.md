@@ -11,7 +11,8 @@
 | 版本 | 日期 | 作者 | 变更摘要 |
 |---|---|---|---|
 | v0.1 | 2026-08-11 | GLM | 初稿：F0~F3 四阶段划分 + 任务依赖图 + 各阶段验收标准，基于前端设计系统 v1.5.0 与代码现状摸底 |
-| v0.2 | 2026-08-12 | TraeCode AI Agent | F0~F2 + FP3 阶段完成记录：E0 基础设施落地、F0 基础落地（主题收敛+胶囊四件套）、F1-2 反馈三件套、F1-3 全页面对齐、F2-1/2/4 布局+架构+主题下线、FP3 品牌化（Welcome/About 页）。F1-1（Lucide 替换）待网络可用后执行 |
+| v0.2 | 2026-08-12 | TraeCode AI Agent | F0~F2 + FP3 阶段完成记录：E0 基础设施落地、F0 基础落地（主题收敛+胶囊四件套）、F1-2 反馈三件套、F1-3 全页面对齐、F2-1/2/4 布局+架构+主题下线、FP3 品牌化（Welcome/About 页）。 |
+| v0.3 | 2026-08-13 | TraeCode AI Agent | F1-1 图标库替换完成：`@ant-design/icons` → `lucide-react`，55+ 文件全量替换，typecheck 全绿 |
 
 > **阅读约定**：本文档是施工图纸，不是宪法。设计系统里的色值/圆角/组件规格以 `doc/01-GeoWorkFrontend-Design-System.md` 为准，本计划只规定"什么时候做哪一段、做完怎么算数"。
 
@@ -123,12 +124,12 @@ F0-4（stylelint）───┘                                         │
 ### F1 验收
 
 - [ ] 页面截图对比 F0-1 基线，视觉无回流 — ⏳ 待截图
-- [ ] 全局 grep `@ant-design/icons` 命中 0 — ⏳ 待 F1-1 执行
+- [x] 全局 grep `@ant-design/icons` 命中 0 — ✅ F1-1 已完成（2026-08-13）
 - [x] 骨架屏复用在 4 个以上页面调用（NewTaskPage/WorkspacePage/扩展预留）
 - [x] stylelint 在整个 `src/` 零 error
 
 > **F1-2/F1-3 完成日期**：2026-08-12 · **执行者**：TraeCode AI Agent
-> **F1-1 状态**：待执行（依赖 lucide-react 网络安装）
+> **F1-1 完成日期**：2026-08-13 · **执行者**：TraeCode AI Agent · 分支 `feat/F1-visual-upgrade`
 
 ---
 

@@ -1,5 +1,5 @@
 import { Card, Space, Typography, Empty } from 'antd'
-import { HomeOutlined } from '@ant-design/icons'
+import { Home } from 'lucide-react'
 import styles from './DashboardPage.module.css'
 
 const { Title, Text } = Typography
@@ -10,7 +10,7 @@ export function DashboardPage() {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <HomeOutlined style={{ marginRight: 8 }} />
+            <Home style={{ marginRight: 8 }} />
             GeoWork 工作台
           </Title>
           <Text type="secondary">从左侧新任务开始，创建空间智能工作流。</Text>

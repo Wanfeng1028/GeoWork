@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button, Tooltip, theme } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
-// TODO: Replace @ant-design/icons with lucide-react (Plus, Home, Clock, ListChecks, Smartphone, Settings, Sun, Moon)
+import { Plus } from 'lucide-react'
 import styles from './IconRail.module.css'
 
 export interface IconRailItem {
@@ -45,7 +44,7 @@ export function IconRail({
       <Tooltip title="新任务" placement="right">
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus />}
           className={styles.createBtn}
           onClick={onCreateTask}
         />

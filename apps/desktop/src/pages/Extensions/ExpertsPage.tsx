@@ -13,10 +13,10 @@ import {
   theme,
 } from 'antd'
 import {
-  ReloadOutlined,
-  SearchOutlined,
-  PlusOutlined,
-} from '@ant-design/icons'
+  RotateCw,
+  Search,
+  Plus,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { ExpertSuiteCard } from './components/ExpertSuiteCard'
 import { ExpertSuiteDetail } from './components/ExpertSuiteDetail'
@@ -158,12 +158,12 @@ export function ExpertsPage() {
         <Space>
           <Button
             type="text"
-            icon={<ReloadOutlined />}
+            icon={<RotateCw />}
             onClick={handleRefresh}
           />
           <Input
             placeholder="搜索专家套件..."
-            prefix={<SearchOutlined />}
+            prefix={<Search />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
@@ -171,7 +171,7 @@ export function ExpertsPage() {
           />
         </Space>
         <Dropdown menu={{ items: addMenuItems }} trigger={['click']}>
-          <Button type="primary" icon={<PlusOutlined />}>
+          <Button type="primary" icon={<Plus />}>
             添加
           </Button>
         </Dropdown>

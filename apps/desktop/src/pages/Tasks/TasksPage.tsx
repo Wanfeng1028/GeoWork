@@ -18,14 +18,14 @@ import {
 import type { MenuProps } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SortAscendingOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SyncOutlined,
-  StopOutlined,
-} from '@ant-design/icons'
+  Plus,
+  RotateCw,
+  ArrowUpAZ,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Square,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { EmptyState } from '../../shell/feedback'
 import { ScheduledTaskCard } from './components/ScheduledTaskCard'
@@ -162,10 +162,10 @@ const MOCK_EXECUTIONS: ExecutionRecord[] = [
 ]
 
 const statusConfig: Record<ExecutionStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  success: { label: '成功', color: 'success', icon: <CheckCircleOutlined /> },
-  failed: { label: '失败', color: 'error', icon: <CloseCircleOutlined /> },
-  running: { label: '运行中', color: 'processing', icon: <SyncOutlined spin /> },
-  cancelled: { label: '已取消', color: 'default', icon: <StopOutlined /> },
+  success: { label: '成功', color: 'success', icon: <CheckCircle2 /> },
+  failed: { label: '失败', color: 'error', icon: <XCircle /> },
+  running: { label: '运行中', color: 'processing', icon: <RefreshCw style={{ animation: 'spin 1s linear infinite' }} /> },
+  cancelled: { label: '已取消', color: 'default', icon: <Square /> },
 }
 
 /* ── Core Task 对接（/api/db/tasks） ── */
@@ -496,14 +496,14 @@ export function TasksPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<RotateCw />}
             loading={loading}
             onClick={refreshFromCore}
           />
           <Button color="primary" variant="filled" onClick={handleCreateViaGeoWork}>
             通过 GeoWork 创建
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateNew}>
+          <Button type="primary" icon={<Plus />} onClick={handleCreateNew}>
             新建定时任务
           </Button>
         </Space>
@@ -560,7 +560,7 @@ export function TasksPage() {
                     }}
                     trigger={['click']}
                   >
-                    <Button icon={<SortAscendingOutlined />} size="small">
+                    <Button icon={<ArrowUpAZ />} size="small">
                       排序
                     </Button>
                   </Dropdown>
