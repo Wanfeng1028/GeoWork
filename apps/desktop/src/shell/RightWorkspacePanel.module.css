@@ -8,22 +8,6 @@
   min-width: 0;
 }
 
-.panelCollapsed {
-  flex: 0 0 40px;
-  width: 40px;
-}
-
-/* ── 收起态窄条 ── */
-.collapsedBar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 0;
-  height: 100%;
-  box-sizing: border-box;
-}
-
 /* ── 面板头部 ── */
 .panelHeader {
   display: flex;

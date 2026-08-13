@@ -16,8 +16,6 @@ import {
   Code,
   Eye,
   FolderOpen,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Maximize2,
   RotateCw,
@@ -435,29 +433,9 @@ export function RightWorkspacePanel({
     }
   }
 
-  /* ── 收起态 ── */
+  /* ── 收起态：完全不渲染，控制按钮已移至顶栏 ── */
   if (collapsed) {
-    return (
-      <div
-        ref={panelRef}
-        className={`${styles.panel} ${styles.panelCollapsed}`}
-        style={{
-          borderLeft: `1px solid ${token.colorBorderSecondary}`,
-          background: token.colorBgContainer,
-        }}
-      >
-        <div className={styles.collapsedBar}>
-          <Tooltip title="展开工作台" placement="left">
-            <Button
-              type="text"
-              icon={<ChevronLeft />}
-              size="small"
-              onClick={() => setCollapsed(false)}
-            />
-          </Tooltip>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -472,15 +450,9 @@ export function RightWorkspacePanel({
         background: token.colorBgContainer,
       }}
     >
-      {/* 面板头部：收起按钮 */}
+      {/* 面板头部 */}
       <div className={styles.panelHeader}>
         <span className={styles.panelHeaderTitle} />
-        <Button
-          type="text"
-          icon={<ChevronRight />}
-          size="small"
-          onClick={() => setCollapsed(true)}
-        />
       </div>
 
       {/* Tabs */}

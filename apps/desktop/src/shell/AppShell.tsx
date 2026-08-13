@@ -60,6 +60,7 @@ import { UserMenu } from './UserMenu'
 import { GlobalSearchModal } from './GlobalSearchModal'
 import { RightWorkspacePanel } from './RightWorkspacePanel'
 import { TitleBar } from './TitleBar'
+import { IconRail } from './IconRail'
 import { CapsuleButton } from './components/CapsuleButton'
 import { CapsuleTabs } from './components/CapsuleTabs'
 import { CapsuleTag } from './components/CapsuleTag'
@@ -511,83 +512,38 @@ export function AppShell() {
       <TitleBar
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+        rightPanelCollapsed={rightWorkspaceCollapsed}
+        onToggleRightPanel={() => setRightWorkspaceCollapsed((v) => !v)}
         onOpenSearch={() => setGlobalSearchOpen(true)}
         onOpenModal={(m) => setModalOpen(m)}
       />
-      {/* ── Sidebar ── */}
+      {/* ── Icon Rail (56px) ── */}
+      <IconRail
+        items={navItems.map((item) => ({ key: item.key, icon: item.icon, label: item.label }))}
+        activeKey={selectedKey}
+        onNavigate={handleNavClick}
+        onCreateTask={handleCreateTask}
+      />
+      {/* ── Sidebar ─ */}
       <aside
         className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}
         style={{
           background: token.colorBgContainer,
-          borderRight: `1px solid ${token.colorBorderSecondary}`,
+          borderRight: sidebarCollapsed ? 'none' : `1px solid ${token.colorBorderSecondary}`,
         }}
       >
         {/* Divider 1: 工具区下 */}
         <Divider style={dividerStyle} />
 
-        {/* 主功能入口 */}
-        {sidebarCollapsed ? (
-          <Beam className={styles.sidebarBodyCollapsed}>
-            {navItems.map((item, idx) => {
-              const isActive = location.pathname === item.key
-              return (
-                <Tooltip key={idx} title={item.label} placement="right">
-                  <Button
-                    type={isActive ? 'primary' : 'text'}
-                    icon={item.icon}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 18,
-                    }}
-                    onClick={() => handleNavClick(item.key)}
-                  />
-                </Tooltip>
-              )
-            })}
-
-            {/* 扩展入口 - 折叠态 Dropdown */}
-            <Dropdown
-              trigger={['hover']}
-              placement="bottomRight"
-              getPopupContainer={() => document.body}
-              menu={{
-                items: extChildren.map((item) => ({
-                  key: item.key,
-                  icon: item.icon,
-                  label: item.label,
-                  onClick: () => navigate(item.route),
-                })),
-              }}
-            >
-              <Tooltip title="扩展" placement="right">
-                <Button
-                  type={isOnExtension ? 'primary' : 'text'}
-                  icon={<LayoutGrid />}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18,
-                  }}
-                />
-              </Tooltip>
-            </Dropdown>
-          </Beam>
-        ) : (
-          <Beam className={styles.sidebarBody}>
-            <Menu
-              mode="inline"
-              selectedKeys={selectedKey ? [selectedKey] : []}
-              items={menuItems}
-              onClick={({ key }) => handleNavClick(key)}
-              style={{ border: 'none', background: 'transparent' }}
-            />
+        {/* 主功能入口 - 展开态 Menu */}
+        <Beam className={styles.sidebarBody}>
+          <Menu
+            mode="inline"
+            selectedKeys={selectedKey ? [selectedKey] : []}
+            items={menuItems}
+            onClick={({ key }) => handleNavClick(key)}
+            style={{ border: 'none', background: 'transparent' }}
+          />
 
             {/* 扩展入口 - 展开态 click */}
             <div

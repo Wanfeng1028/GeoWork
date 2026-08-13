@@ -7,6 +7,8 @@ import {
 import {
   PanelLeftClose,
   PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   LayoutDashboard,
   Search,
   BarChart3,
@@ -22,6 +24,8 @@ const isElectron = typeof window !== 'undefined' && !!window.geowork?.desktop
 interface TitleBarProps {
   sidebarCollapsed: boolean
   onToggleSidebar: () => void
+  rightPanelCollapsed: boolean
+  onToggleRightPanel: () => void
   onOpenSearch: () => void
   onOpenModal: (modal: 'usage' | 'shortcuts' | 'feedback') => void
 }
@@ -29,6 +33,8 @@ interface TitleBarProps {
 export function TitleBar({
   sidebarCollapsed,
   onToggleSidebar,
+  rightPanelCollapsed,
+  onToggleRightPanel,
   onOpenSearch,
   onOpenModal,
 }: TitleBarProps) {
@@ -58,6 +64,14 @@ export function TitleBar({
             size="small"
             icon={sidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
             onClick={onToggleSidebar}
+          />
+        </Tooltip>
+        <Tooltip title={rightPanelCollapsed ? '展开工作台' : '折叠工作台'}>
+          <Button
+            type="text"
+            size="small"
+            icon={rightPanelCollapsed ? <PanelRightOpen /> : <PanelRightClose />}
+            onClick={onToggleRightPanel}
           />
         </Tooltip>
         <Tooltip title="面板">

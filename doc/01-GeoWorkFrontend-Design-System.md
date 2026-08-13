@@ -568,7 +568,7 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 
 为什么引入：现有 Segmented 切换器（9.1）是方角矩形 IDE 风格；胶囊形态更亲和，适合任务分类筛选、状态过滤等"轻量切换"场景。
 
-**关键决策**：BlogAstroPure 的选中色为 Gemini 蓝渐变 `#3186ff → #4ea0ff`，**不是** GeoWork 品牌色。为避免新色彩分裂——**形态照搬（9999px 全圆角）、颜色改穿品牌色**。源参数见原仓库 `src/assets/styles/global.css` 中 `.gemini-btn` 与 `.gcard-tag` 两处。
+**关键决策（v1.4.2 修订）**：直接 **1:1 照搬** BlogAstroPure 的 `pub-toggle`（源文件 `src/pages/projects/index.astro` L182-L295），**不再改穿品牌色**——选中指示器保留 Gemini 蓝渐变 `linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%)`、白底 `#e5e5e5` 细边框、滑动动画 `0.5s cubic-bezier(0.4,0,0.2,1)` 一并照抄。渐变主色 `#3186ff` 即 GeoWork dark 品牌主色，不构成色彩分裂。
 
 #### 10.1.2 适用范围（v1.4.1 扩张后）
 
@@ -595,15 +595,16 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 | 字号 | 13px / 500 |
 | 过渡 | `200ms ease` |
 
-**CapsuleTabs（胶囊切换器）**
+**CapsuleTabs（胶囊切换器）** —— 以下为 pub-toggle 原值 1:1 照搬，**尺寸/颜色不适用上表通用默认**
 
 | 部位 | 规格 |
 |---|---|
-| 容器 | 圆角 9999px；padding 4px；背景 = Level 1（dark `#121829` / light `#ffffff`）；1px `colorBorder` |
-| 未选中项 | 文字一级色；跟随计数 = `colorTextQuaternary` 12px；padding `0 16px`；hover 背景 `colorBgSpotlight` |
-| 选中项 | 背景 = 主色（dark `#3186ff` / light `#1d4ed8`）；文字 = dark `#0a0f1c` / light `#ffffff`；计数同色 80% 透明 |
-| 切换 | 滑块平移 200ms ease |
-| 最小选项宽 | 72px |
+| 容器 | 圆角 100px；padding 3px；背景 light `#ffffff` / dark `#1f2128`；边框 1px light `#e5e5e5` / dark `#3a3d45`；项间 gap 4px |
+| 未选中项 | 文字 light `#5f6368` / dark `#9aa0a6`；字号 18px / 500；padding `12px 24px`；hover 背景 light `#f4f4f5` / dark `rgba(255,255,255,0.08)`；图标 18px，与文字 gap 10px |
+| 选中项 | 滑块 = Gemini 蓝渐变 `linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%)`；文字 `#ffffff`（亮暗一致） |
+| 切换 | 滑块平移 `0.5s cubic-bezier(0.4,0,0.2,1)`（left/width）；颜色/背景 `0.3s ease` |
+| 变体 | `size="small"` 侧栏紧凑版（13px / padding `6px 12px` / gap 6px / 图标 14px，GeoWork 专属新增档）；`block` 各项等宽 |
+| 无障碍 | `role="tablist"` / `role="tab"` + `aria-selected`；`prefers-reduced-motion` 下滑块与颜色过渡全部静止 |
 
 **CapsuleButton（胶囊按钮）**
 
@@ -648,7 +649,7 @@ Agent 执行高风险操作时通过 WebSocket 触发审批弹窗（协议见 `d
 | 新增组件 | CapsuleButton、CapsuleTabs、CapsuleTag、CapsuleGhost 四个组件登记进设计系统 |
 | **圆角例外** | `9999px` 是 4/8/12 三档制的**唯一官方例外**，仅限本节四个组件；其他组件引用视为违规 |
 | **互斥规则** | CapsuleTabs 与 9.1 Segmented 同页互斥：工具页用 Segmented，内容/筛选页用 CapsuleTabs |
-| antd 映射 | CapsuleTabs 底层 = antd `Segmented` + CSS 覆写 `border-radius: 9999px`；CapsuleButton = antd `Button` + `shape="round"` 为基座覆写；CapsuleTag = antd `Tag` + `border-radius: 9999px`；CapsuleGhost = antd `Button` `ghost` + `shape="round"` |
+| antd 映射 | CapsuleTabs = **自定义组件**（自绘容器 + 绝对定位渐变滑块 + 原生 button，v1.4.2 起不再包 antd Segmented）；CapsuleButton = antd `Button` + `shape="round"` 为基座覆写；CapsuleTag = antd `Tag` + `border-radius: 9999px`；CapsuleGhost = antd `Button` `ghost` + `shape="round"` |
 
 #### 10.1.5 验收方式
 

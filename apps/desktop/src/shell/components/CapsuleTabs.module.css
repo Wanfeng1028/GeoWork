@@ -1,16 +1,111 @@
-/* CapsuleTabs — 覆盖 antd Segmented 默认样式，对齐设计系统 §10.1 */
+/* CapsuleTabs — 1:1 复刻 BlogAstroPure pub-toggle（Gemini 官方最终版），对齐设计系统 §10.1 */
 
+/* 容器：白底 + 1px #e5e5e5 边框，padding 3px，圆角 100px（照抄 .pub-toggle） */
 .capsule {
-  background: var(--capsule-track-bg) !important;
-  border: 1px solid var(--ant-color-border) !important;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--capsule-border);
+  border-radius: 9999px;
+  background: var(--capsule-bg);
+  box-shadow: none;
 }
 
-.capsule :global(.ant-segmented-item-selected) {
-  color: var(--capsule-selected-color) !important;
+/* 滑动指示器：Gemini 蓝渐变，绝对定位，transition left/width 0.5s（照抄 .pub-toggle__indicator） */
+.indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 0;
+  border-radius: 9999px;
+  background: linear-gradient(89.58deg, #3186ff 0.28%, #346bf0 44.45%, #4ea0ff 99.55%);
+  transition:
+    left 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
 }
 
-.capsule :global(.ant-segmented-thumb),
-.capsule :global(.ant-segmented-item-selected .ant-segmented-item-label) {
-  background: var(--ant-color-primary) !important;
-  color: var(--capsule-selected-color) !important;
+/* 单项：透明底，文字一级色，18px/500，padding 12px 24px，圆角 100px（照抄 .pub-toggle__btn） */
+.item {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--capsule-item-color);
+  padding: 12px 24px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.item:hover:not(.itemSelected) {
+  background-color: var(--capsule-item-hover-bg);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--capsule-border);
+  outline-offset: 2px;
+}
+
+.itemSelected,
+.itemSelected:hover {
+  color: #ffffff;
+  background-color: transparent;
+}
+
+/* 图标与文字间距（lucide 图标默认 24px，缩到 18px 对齐文字） */
+.item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.itemSelected svg {
+  color: #ffffff;
+}
+
+/* block 模式：各项平分宽度（侧栏任务/移动端控制） */
+.capsuleBlock {
+  display: flex;
+}
+
+.capsuleBlock .item {
+  flex: 1;
+}
+
+/* small 尺寸（侧栏）：缩小字号/padding */
+.capsuleSmall .item {
+  font-size: 13px;
+  padding: 6px 12px;
+  gap: 6px;
+}
+
+.capsuleSmall .item svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* prefers-reduced-motion 下禁止滑动动画 */
+@media (prefers-reduced-motion: reduce) {
+  .indicator,
+  .item {
+    transition: none;
+  }
 }
