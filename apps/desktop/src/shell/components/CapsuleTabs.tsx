@@ -53,7 +53,15 @@ export function CapsuleTabs({
   const moveIndicator = useCallback(
     (target?: HTMLElement) => {
       const container = containerRef.current
-      const el = target ?? (value == null ? undefined : btnRefs.current.get(value))
+      let el = target ?? (value == null ? undefined : btnRefs.current.get(value))
+
+      // 后备：如果 ref 还没准备好，直接从 DOM 查找当前选中按钮
+      if (!el && container && value != null) {
+        el = container.querySelector(
+          `[role="tab"][aria-selected="true"]`
+        ) as HTMLElement
+      }
+
       if (!container || !el) return
       const cRect = container.getBoundingClientRect()
       const bRect = el.getBoundingClientRect()
@@ -66,7 +74,22 @@ export function CapsuleTabs({
   )
 
   useLayoutEffect(() => {
-    moveIndicator()
+    const container = containerRef.current
+    const indicator = container?.querySelector(`.${styles.indicator}`) as HTMLElement
+
+    // 先禁用 transition，避免指示器从错误位置飞入
+    if (indicator) indicator.style.transition = 'none'
+
+    const rafId = requestAnimationFrame(() => {
+      moveIndicator()
+      // 恢复 transition，让后续交互（如 hover 或点击）有平滑动画
+      if (indicator) {
+        indicator.getBoundingClientRect() // 强制回流，确保 'none' 生效
+        indicator.style.transition = ''
+      }
+    })
+
+    return () => cancelAnimationFrame(rafId)
   }, [moveIndicator, options.length, value])
 
   useEffect(() => {
