@@ -120,7 +120,7 @@ export function CapsuleTabs({
             }}
             className={active ? `${styles.item} ${styles.itemSelected}` : styles.item}
             onClick={(e) => {
-              moveIndicator(e.currentTarget)
+              // 不在这里直接移动指示器，避免与 value 变化后的 useLayoutEffect 重复触发动画
               onChange?.(opt.value)
             }}
           >
