@@ -1,14 +1,17 @@
-/* ── 外层胶囊容器 ── */
+/* ── 外层容器 ── */
 .composer {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 1060px;
-  border-radius: 999px;
-  padding: 8px 16px;
-  gap: 4px;
+  border-radius: 12px;
+  padding: 12px 16px;
+  gap: 8px;
   box-sizing: border-box;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
 }
 
 .composerConversation {
@@ -21,7 +24,10 @@
   align-items: center;
   gap: 8px;
   flex-wrap: nowrap;
-  min-height: 36px;
+  min-height: 40px;
+  background: rgba(15,23,42,0.03);
+  border-radius: 9999px;
+  padding: 6px 8px;
 }
 
 /* ── TextArea ── */
@@ -29,6 +35,11 @@
   flex: 1;
   min-width: 0;
   line-height: 22px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 4px 8px;
 }
 
 .textArea::-webkit-scrollbar {
@@ -48,7 +59,7 @@
   padding: 4px 0 0;
 }
 
-/* ── 圆形 icon 按钮 ── */
+/* ── 胶囊按钮 ── */
 .iconBtn {
   width: 32px;
   height: 32px;
@@ -56,6 +67,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border-radius: 9999px;
 }
 
 /* ── 模式按钮 ── */
@@ -65,6 +77,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border-radius: 9999px;
 }
 
 /* ── 右侧操作区不换行 ── */

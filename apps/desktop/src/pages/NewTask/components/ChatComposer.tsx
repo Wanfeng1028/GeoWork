@@ -334,9 +334,10 @@ export function ChatComposer({
     <div
       className={`${styles.composer} ${conversationMode ? styles.composerConversation : ''}`}
       style={{
-        background: token.colorBgContainer,
+        background: 'transparent',
         border: 'none',
-        boxShadow: focused ? token.boxShadowSecondary : 'none',
+        boxShadow: 'none',
+        outline: 'none',
       }}
     >
       {/* 附件标签 */}
@@ -368,7 +369,7 @@ export function ChatComposer({
       <div className={styles.composerRow}>
         <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
           <Tooltip title="添加附件">
-            <Button color="primary" variant="solid" icon={<Plus />} size="small" shape="circle" className={styles.iconBtn} />
+            <Button color="primary" variant="solid" icon={<Plus />} size="small" shape="round" className={styles.iconBtn} />
           </Tooltip>
         </Dropdown>
 
@@ -384,7 +385,13 @@ export function ChatComposer({
           onBlur={() => setFocused(false)}
           variant="borderless"
           autoSize={{ minRows: 1, maxRows: 8 }}
-          style={{ fontSize: 14, resize: 'none' }}
+          style={{ 
+            fontSize: 14, 
+            resize: 'none',
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+          }}
         />
 
         <Dropdown
