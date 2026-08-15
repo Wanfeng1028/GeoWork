@@ -14,7 +14,8 @@ jobs:
       - name: Verify AGENT.md doc references exist
         run: |
           missing=0
-          for ref in $(grep -oE 'doc/[0-9A-Za-z._/-]+\.md' AGENT.md | sort -u); do
+          # tr -d '\r' 兼容 CRLF 行尾（AGENT.md 在 Windows 上编辑）
+          for ref in $(grep -oE 'doc/[0-9A-Za-z._/-]+\.md' AGENT.md | tr -d '\r' | sort -u); do
             if [ ! -f "$ref" ]; then
               echo "MISSING: $ref (referenced in AGENT.md)"
               missing=1
