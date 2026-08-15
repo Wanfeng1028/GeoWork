@@ -285,6 +285,26 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 	if err != nil {
 		return nil, fmt.Errorf("tool %s execution failed: %w", name, err)
 	}
+
+	// Enforce the declared OutputSchema so a tool cannot silently return
+	// a shape that contradicts its contract. Tools without an
+	// OutputSchema (e.g. dynamically registered worker tools) skip this.
+	if schema := t.OutputSchema(); len(schema) > 0 {
+		if verr := validateOutput(schema, result); verr != nil {
+			if auditLog != nil && governor != nil {
+				argsJSON, _ := json.Marshal(args)
+				auditLog.Record(AuditEntry{
+					TaskID:     governor.taskID,
+					ToolName:   name,
+					Args:       string(argsJSON),
+					Success:    false,
+					Error:      verr.Error(),
+					DurationMs: duration,
+				})
+			}
+			return nil, fmt.Errorf("tool %s output rejected: %w", name, verr)
+		}
+	}
 	return result, nil
 }
 
