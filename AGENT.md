@@ -453,7 +453,7 @@ Level 3 — 记录（持续追加）
 **分支**：`dev-frontend/TraeCodeCloud-SeedCode`
 **PR**：#1
 **统计**：3 次提交，38 文件变更，+1382/-123 行
-**待执行**：F1-1（Lucide 全站替换，需网络安装 lucide-react）、E1（测试基础设施）、E2（可观测性）
+**后续**：F1-1（Lucide 全站替换）已于 2026-08-13 完成并合并入 master；E1（测试基础设施）部分完成——vitest 骨架 + 31 个前端测试全绿（2026-08-15 装依赖后验证）；待 E2（可观测性）
 
 ### 2026-08-14 · Gemini 胶囊风格统一（master 直推）
 
@@ -478,9 +478,21 @@ Level 3 — 记录（持续追加）
 | 文档一致性修复 | DEV_VERSION_CHECKLIST / doc/02 右面板规格（320–960）/ CHANGELOG 补记 / F2-2 状态修正 | ✅ |
 | 规则新增 | §5 修改后 + §15.3：代码改完必须同步文档，否则不算完整开发流程 | ✅ |
 
+### 2026-08-15 · ZCode · Orchestrator 执行核心去重与修复
+
+| 内容 | 说明 | 状态 |
+|---|---|---|
+| resume 崩溃修复 | `ResumeFromCheckpoint` 复用已关闭的 `run.done`，`executePlanFromTurn` 收尾再次 close 导致 goroutine 内 panic 崩进程；现在 resume 前重建 done channel | ✅ |
+| hook 分叉修复 | `executePlanFromTurn` 缺失 OnRunStart/OnTurnStart/OnRunEnd 三个钩子；两个循环体合并为单一 `executePlan(ctx, run, rc, chatHistory, startTurn, resumed)`，删除 350 行重复代码 | ✅ |
+| OutputSchema 校验 | 新增 `output_schema.go`（零新依赖，支持 type/properties/required/items 子集），接入 `Registry.Execute` 强制执行；无 schema 的动态工具不受影响 | ✅ |
+| 测试 | 新增 `orchestrator_test.go`（4 测试：maxTurns/正常结束/hook 序列/resume 无 panic）+ `output_schema_test.go`（8 测试）；core 全量 `go test ./...` 全绿 | ✅ |
+
+**验证**：`go build ./...` + `go vet ./...` + `go test ./...` 全绿；前端 `npm test` 31 测试全绿。
+**遗留**：doc-check / worker-check 两个 CI job 仍只执行 `ls`（worker 真检查需配 Python 环境，独立任务）；`go test -race` 因本机无 cgo 未跑。
+
 ---
 
-## 15. 最后原则
+## 16. 最后原则
 
 ```text
 小范围、可回滚、可解释、可验收。
