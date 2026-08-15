@@ -276,8 +276,8 @@ func RegisterBrowserTools(reg *Registry, ctrl *browserbridge.Controller, log *za
 			InputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"query":  map[string]any{"type": "string", "description": "Search query"},
-					"limit":  map[string]any{"type": "integer", "description": "Max results (default 10)"},
+					"query": map[string]any{"type": "string", "description": "Search query"},
+					"limit": map[string]any{"type": "integer", "description": "Max results (default 10)"},
 				},
 				"required": []string{"query"},
 			}).

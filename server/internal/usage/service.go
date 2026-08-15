@@ -22,9 +22,9 @@ func NewService(store *storage.Store) *Service {
 
 // ReportEventRequest represents a usage event.
 type ReportEventRequest struct {
-	Type   string  `json:"type" binding:"required"`
-	Amount int64   `json:"amount"`
-	Model  string  `json:"model"`
+	Type   string `json:"type" binding:"required"`
+	Amount int64  `json:"amount"`
+	Model  string `json:"model"`
 }
 
 // ReportEvents handles POST /api/usage/events

@@ -33,23 +33,23 @@ import (
 
 // Trajectory records one Run's full execution trace.
 type Trajectory struct {
-	RunID     string        `json:"runId"`
-	Mode      string        `json:"mode,omitempty"`
-	Prompt    string        `json:"prompt,omitempty"`
-	StartTime time.Time     `json:"startTime"`
-	EndTime   time.Time     `json:"endTime,omitempty"`
-	Turns     []TurnRecord  `json:"turns"`
+	RunID     string       `json:"runId"`
+	Mode      string       `json:"mode,omitempty"`
+	Prompt    string       `json:"prompt,omitempty"`
+	StartTime time.Time    `json:"startTime"`
+	EndTime   time.Time    `json:"endTime,omitempty"`
+	Turns     []TurnRecord `json:"turns"`
 }
 
 // TurnRecord captures one ReAct loop iteration.
 type TurnRecord struct {
-	TurnIndex      int                       `json:"turnIndex"`
-	Timestamp      time.Time                 `json:"timestamp"`
-	InputMessages  []modelgateway.ChatMessage `json:"inputMessages,omitempty"`
-	ModelResponse  string                     `json:"modelResponse"`
-	ToolCalls      []ToolCallRecord          `json:"toolCalls,omitempty"`
-	TokenUsage     *modelgateway.UsageInfo    `json:"tokenUsage,omitempty"`
-	Duration       time.Duration             `json:"duration"`
+	TurnIndex     int                        `json:"turnIndex"`
+	Timestamp     time.Time                  `json:"timestamp"`
+	InputMessages []modelgateway.ChatMessage `json:"inputMessages,omitempty"`
+	ModelResponse string                     `json:"modelResponse"`
+	ToolCalls     []ToolCallRecord           `json:"toolCalls,omitempty"`
+	TokenUsage    *modelgateway.UsageInfo    `json:"tokenUsage,omitempty"`
+	Duration      time.Duration              `json:"duration"`
 }
 
 // ToolCallRecord captures one tool invocation within a turn.

@@ -17,8 +17,8 @@ import (
 type Routes struct {
 	orchestrator *Orchestrator
 	log          *zap.Logger
-	scheduler    *Scheduler       // P2-4 §5.5
-	triggers     *TriggerManager  // P2-4 §5.5
+	scheduler    *Scheduler      // P2-4 §5.5
+	triggers     *TriggerManager // P2-4 §5.5
 }
 
 func NewRoutes(orchestrator *Orchestrator, log *zap.Logger) *Routes {

@@ -166,8 +166,8 @@ func (s *Service) InstallItem(c *gin.Context) {
 	_ = s.store.IncrementMarketplaceInstallCount(itemID)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "item installed",
-		"item_id":  itemID,
+		"message":    "item installed",
+		"item_id":    itemID,
 		"install_id": install.ID,
 	})
 }
@@ -316,7 +316,7 @@ func (s *Service) SubmitReview(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "review submitted",
+		"message":   "review submitted",
 		"review_id": review.ID,
 	})
 }

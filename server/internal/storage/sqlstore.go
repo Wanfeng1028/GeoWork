@@ -1339,4 +1339,4 @@ func extractObjectID(id string, prefix string) string {
 
 // Ensure non-empty time values.
 var _ = fmt.Sprintf // keep import
-var _ = time.Now   // keep import
+var _ = time.Now    // keep import

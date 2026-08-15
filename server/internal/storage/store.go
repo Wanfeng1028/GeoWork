@@ -76,14 +76,14 @@ type TeamMember struct {
 
 // UsageEvent tracks resource usage.
 type UsageEvent struct {
-	ID               string    `json:"id"`
-	UserID           string    `json:"user_id"`
-	TeamID           string    `json:"team_id"`
-	Type             string    `json:"type"` // model_tokens | model_requests | tool_calls | browser_usage | sync_storage
-	Amount           int64     `json:"amount"`
-	Model            string    `json:"model"`
-	Timestamp        time.Time `json:"timestamp"`
-	SpeedMultiplier  float64   `json:"speed_multiplier"` // 2x rate weighting for paid plans
+	ID              string    `json:"id"`
+	UserID          string    `json:"user_id"`
+	TeamID          string    `json:"team_id"`
+	Type            string    `json:"type"` // model_tokens | model_requests | tool_calls | browser_usage | sync_storage
+	Amount          int64     `json:"amount"`
+	Model           string    `json:"model"`
+	Timestamp       time.Time `json:"timestamp"`
+	SpeedMultiplier float64   `json:"speed_multiplier"` // 2x rate weighting for paid plans
 }
 
 // BillingData tracks credits and plans.
@@ -198,7 +198,7 @@ type Invoice struct {
 	PeriodEnd   time.Time `json:"period_end"`
 	Amount      float64   `json:"amount"`
 	Currency    string    `json:"currency"`
-	Status      string    `json:"status"` // draft | issued | paid | failed
+	Status      string    `json:"status"`     // draft | issued | paid | failed
 	LineItems   string    `json:"line_items"` // JSON
 	CreatedAt   time.Time `json:"created_at"`
 	DueDate     time.Time `json:"due_date"`
@@ -206,11 +206,11 @@ type Invoice struct {
 
 // WorkspaceRole represents a workspace-level role assignment.
 type WorkspaceRole struct {
-	ID          string `json:"id"`
-	WorkspaceID string `json:"workspace_id"`
-	UserID      string `json:"user_id"`
-	Role        string `json:"role"` // owner | admin | member | viewer
-	AssignedBy  string `json:"assigned_by"`
+	ID          string    `json:"id"`
+	WorkspaceID string    `json:"workspace_id"`
+	UserID      string    `json:"user_id"`
+	Role        string    `json:"role"` // owner | admin | member | viewer
+	AssignedBy  string    `json:"assigned_by"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
@@ -218,25 +218,25 @@ type WorkspaceRole struct {
 // Mirrors core/internal/conversation.Conversation with an added UserID for
 // multi-device ownership.
 type Conversation struct {
-	ID          string `json:"id"`
-	UserID      string `json:"user_id"`
-	WorkspaceID string `json:"workspace_id"`
-	Title       string `json:"title"`
-	Mode        string `json:"mode"`
-	Status      string `json:"status"`
+	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
+	WorkspaceID string    `json:"workspace_id"`
+	Title       string    `json:"title"`
+	Mode        string    `json:"mode"`
+	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // Message represents a single message in a cloud-synced conversation.
 type Message struct {
-	ID             string `json:"id"`
-	ConversationID string `json:"conversation_id"`
-	Role           string `json:"role"` // user | assistant | system | tool
-	Content        string `json:"content"`
-	ToolCalls      string `json:"tool_calls,omitempty"` // JSON string
-	Metadata       string `json:"metadata,omitempty"`  // JSON string
-	TokenCount     int    `json:"token_count"`
+	ID             string    `json:"id"`
+	ConversationID string    `json:"conversation_id"`
+	Role           string    `json:"role"` // user | assistant | system | tool
+	Content        string    `json:"content"`
+	ToolCalls      string    `json:"tool_calls,omitempty"` // JSON string
+	Metadata       string    `json:"metadata,omitempty"`   // JSON string
+	TokenCount     int       `json:"token_count"`
 	CreatedAt      time.Time `json:"created_at"`
 }
 
@@ -335,8 +335,8 @@ func (s *Store) EnsureDefaults() error {
 	if count == 0 {
 		now := time.Now().Unix()
 		plans := []struct {
-			userID, plan  string
-			credits       float64
+			userID, plan string
+			credits      float64
 		}{
 			{"system_default", "free", 10.0},
 			{"system_default", "pro", 100.0},
@@ -361,8 +361,8 @@ func (s *Store) EnsureDefaults() error {
 	if mcount == 0 {
 		items := []struct {
 			id, name, typ, version, desc, author, sig string
-			perms                                      string
-			installs                                   int
+			perms                                     string
+			installs                                  int
 		}{
 			{"plugin-openalex", "OpenAlex Plugin", "plugin", "1.0.0", "Search and import papers from OpenAlex database", "GeoWork Team", "sha256:abc123", `["network","file_write"]`, 1250},
 			{"plugin-zotero", "Zotero Plugin", "plugin", "1.2.0", "Import papers and notes from Zotero library", "GeoWork Team", "sha256:def456", `["network","file_read"]`, 890},

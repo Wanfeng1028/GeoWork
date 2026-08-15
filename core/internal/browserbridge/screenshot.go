@@ -13,13 +13,13 @@ import (
 
 // Screenshot captures the current page view.
 type Screenshot struct {
-	SessionID string `json:"sessionId"`
-	Data      string `json:"data"` // base64 encoded PNG
-	Width     int    `json:"width"`
-	Height    int    `json:"height"`
+	SessionID string    `json:"sessionId"`
+	Data      string    `json:"data"` // base64 encoded PNG
+	Width     int       `json:"width"`
+	Height    int       `json:"height"`
 	Timestamp time.Time `json:"timestamp"`
-	Format    string `json:"format"` // png | jpeg
-	Quality   int    `json:"quality,omitempty"` // 1-100 for jpeg
+	Format    string    `json:"format"`            // png | jpeg
+	Quality   int       `json:"quality,omitempty"` // 1-100 for jpeg
 }
 
 // CaptureScreenshot takes a screenshot of the active tab.

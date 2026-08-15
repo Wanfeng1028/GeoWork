@@ -10,17 +10,17 @@ import (
 type Type string
 
 const (
-	TypeMap       Type = "map"
-	TypeCode      Type = "code"
-	TypeDocument  Type = "document"
-	TypeData      Type = "data"
-	TypeImage     Type = "image"
-	TypePPT       Type = "ppt"
-	TypePDF       Type = "pdf"
-	TypeDiff      Type = "diff"
-	TypeLog       Type = "log"
-	TypeManifest  Type = "manifest"
-	TypeNotebook  Type = "notebook"
+	TypeMap         Type = "map"
+	TypeCode        Type = "code"
+	TypeDocument    Type = "document"
+	TypeData        Type = "data"
+	TypeImage       Type = "image"
+	TypePPT         Type = "ppt"
+	TypePDF         Type = "pdf"
+	TypeDiff        Type = "diff"
+	TypeLog         Type = "log"
+	TypeManifest    Type = "manifest"
+	TypeNotebook    Type = "notebook"
 	TypeSpreadsheet Type = "spreadsheet"
 )
 
@@ -40,14 +40,14 @@ type Artifact struct {
 
 // PreviewData holds the content used for artifact preview in the UI
 type PreviewData struct {
-	ArtifactID string `json:"artifactId"`
-	Content    string `json:"content"`
-	MimeType   string `json:"mimeType"`
-	IsTruncated bool  `json:"isTruncated,omitempty"`
+	ArtifactID  string `json:"artifactId"`
+	Content     string `json:"content"`
+	MimeType    string `json:"mimeType"`
+	IsTruncated bool   `json:"isTruncated,omitempty"`
 }
 
 // ArtifactListResponse is the response shape for listing artifacts
 type ArtifactListResponse struct {
-	Total   int         `json:"total"`
+	Total     int        `json:"total"`
 	Artifacts []Artifact `json:"artifacts"`
 }

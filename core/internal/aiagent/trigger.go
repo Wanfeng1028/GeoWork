@@ -22,9 +22,9 @@ type Trigger struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Event   string `json:"event"`   // event type, e.g. "file_changed"
-	Pattern string `json:"pattern"`  // filepath.Match pattern applied to data["path"]
-	Mode    string `json:"mode"`     // Agent Mode
-	Prompt  string `json:"prompt"`   // prompt template; %s placeholders filled from data
+	Pattern string `json:"pattern"` // filepath.Match pattern applied to data["path"]
+	Mode    string `json:"mode"`    // Agent Mode
+	Prompt  string `json:"prompt"`  // prompt template; %s placeholders filled from data
 	Enabled bool   `json:"enabled"`
 }
 

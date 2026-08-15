@@ -19,14 +19,14 @@ type BaseTool struct {
 	executeFn       func(ctx context.Context, args map[string]any) (map[string]any, error)
 }
 
-func (b *BaseTool) Name() string            { return b.name }
-func (b *BaseTool) Description() string     { return b.description }
-func (b *BaseTool) InputSchema() map[string]any { return b.inputSchema }
+func (b *BaseTool) Name() string                 { return b.name }
+func (b *BaseTool) Description() string          { return b.description }
+func (b *BaseTool) InputSchema() map[string]any  { return b.inputSchema }
 func (b *BaseTool) OutputSchema() map[string]any { return b.outputSchema }
-func (b *BaseTool) Permission() string      { return b.permission }
-func (b *BaseTool) RiskLevel() string       { return b.riskLevel }
-func (b *BaseTool) SandboxRequired() bool   { return b.sandboxRequired }
-func (b *BaseTool) StreamingSupported() bool { return b.streaming }
+func (b *BaseTool) Permission() string           { return b.permission }
+func (b *BaseTool) RiskLevel() string            { return b.riskLevel }
+func (b *BaseTool) SandboxRequired() bool        { return b.sandboxRequired }
+func (b *BaseTool) StreamingSupported() bool     { return b.streaming }
 func (b *BaseTool) Execute(ctx context.Context, args map[string]any) (map[string]any, error) {
 	if b.executeFn != nil {
 		return b.executeFn(ctx, args)

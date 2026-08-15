@@ -145,13 +145,13 @@ func (a *AuditLog) Summary(taskID string) map[string]any {
 	}
 
 	return map[string]any{
-		"total":        total,
-		"success":      success,
-		"failed":       failed,
-		"approved":     approved,
+		"total":         total,
+		"success":       success,
+		"failed":        failed,
+		"approved":      approved,
 		"avgDurationMs": int64(totalDuration / int64(max(total, 1))),
-		"toolCounts":   toolCounts,
-		"errorCounts":  errorCounts,
+		"toolCounts":    toolCounts,
+		"errorCounts":   errorCounts,
 	}
 }
 

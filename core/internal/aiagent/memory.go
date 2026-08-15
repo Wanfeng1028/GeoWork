@@ -11,13 +11,13 @@ import (
 
 // Memory stores agent conversation history and state with bounded growth.
 type Memory struct {
-	mu            sync.Mutex
-	shortHistory  []ChatMessage // bounded conversation history
-	taskSummary   string        // high-level task summary
-	importantFiles []string     // files the agent has read/modified
-	lastToolResults []string     // last N tool result summaries
-	maxHistorySize int
-	maxToolResults int
+	mu              sync.Mutex
+	shortHistory    []ChatMessage // bounded conversation history
+	taskSummary     string        // high-level task summary
+	importantFiles  []string      // files the agent has read/modified
+	lastToolResults []string      // last N tool result summaries
+	maxHistorySize  int
+	maxToolResults  int
 }
 
 func NewMemory() *Memory {
@@ -165,10 +165,10 @@ func (m *Memory) Export() []byte {
 	defer m.mu.Unlock()
 
 	data, _ := json.Marshal(map[string]any{
-		"taskSummary":      m.taskSummary,
-		"importantFiles":   m.importantFiles,
-		"lastToolResults":  m.lastToolResults,
-		"shortHistory":     m.shortHistory,
+		"taskSummary":     m.taskSummary,
+		"importantFiles":  m.importantFiles,
+		"lastToolResults": m.lastToolResults,
+		"shortHistory":    m.shortHistory,
 	})
 	return data
 }

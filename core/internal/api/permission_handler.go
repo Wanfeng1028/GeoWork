@@ -12,9 +12,9 @@ import (
 )
 
 type permissionHandler struct {
-	app      *gruntime.App
-	permEng  *permissions.Engine
-	bridge   *EventBridge
+	app     *gruntime.App
+	permEng *permissions.Engine
+	bridge  *EventBridge
 }
 
 func newPermissionHandler(app *gruntime.App, permEng *permissions.Engine, bridge *EventBridge) *permissionHandler {
@@ -96,9 +96,9 @@ func (h *permissionHandler) handleResolve(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, map[string]any{
-		"status":     "resolved",
-		"requestId":  in.RequestID,
-		"decision":   in.Decision,
-		"reason":     in.Reason,
+		"status":    "resolved",
+		"requestId": in.RequestID,
+		"decision":  in.Decision,
+		"reason":    in.Reason,
 	})
 }

@@ -23,9 +23,9 @@ import (
 
 // ExpectedResult defines what a passing regression run looks like.
 type ExpectedResult struct {
-	Success      bool     `json:"success"`
-	MaxTurns     int      `json:"maxTurns"`      // 0 = no limit
-	MustContain  string   `json:"mustContain"`   // substring the final reply must include
+	Success       bool     `json:"success"`
+	MaxTurns      int      `json:"maxTurns"`      // 0 = no limit
+	MustContain   string   `json:"mustContain"`   // substring the final reply must include
 	MustCallTools []string `json:"mustCallTools"` // tool names that must have been called
 }
 
@@ -42,7 +42,7 @@ type RegressionTest struct {
 // TestResult is the outcome of one regression test.
 type TestResult struct {
 	TestID    string        `json:"testId"`
-	Passed    bool         `json:"passed"`
+	Passed    bool          `json:"passed"`
 	Reason    string        `json:"reason,omitempty"`
 	RunID     string        `json:"runId,omitempty"`
 	Turns     int           `json:"turns"`
@@ -53,10 +53,10 @@ type TestResult struct {
 
 // Runner drives regression tests against an orchestrator.
 type Runner struct {
-	orch   *aiagent.Orchestrator
-	scorer *Scorer
-	log    func(format string, args ...any) // optional progress logger
-	mu     sync.Mutex
+	orch    *aiagent.Orchestrator
+	scorer  *Scorer
+	log     func(format string, args ...any) // optional progress logger
+	mu      sync.Mutex
 	results []TestResult
 }
 

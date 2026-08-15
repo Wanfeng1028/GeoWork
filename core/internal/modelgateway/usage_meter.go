@@ -18,12 +18,12 @@ import (
 
 // UsageRecord tracks token usage for a single model call.
 type UsageRecord struct {
-	RunID            string    `json:"runId,omitempty"`
-	ProviderID       string    `json:"providerId"`
-	TaskID           string    `json:"taskId,omitempty"`
-	Model            string    `json:"model"`
-	PromptTokens     int       `json:"promptTokens"`
-	CompletionTokens int       `json:"completionTokens"`
+	RunID            string `json:"runId,omitempty"`
+	ProviderID       string `json:"providerId"`
+	TaskID           string `json:"taskId,omitempty"`
+	Model            string `json:"model"`
+	PromptTokens     int    `json:"promptTokens"`
+	CompletionTokens int    `json:"completionTokens"`
 	// CachedTokens is the number of prompt tokens served from the
 	// provider's prompt cache (P1-2 §3.5 v0.2). 0 when not reported.
 	CachedTokens int `json:"cachedTokens,omitempty"`

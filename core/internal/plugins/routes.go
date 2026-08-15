@@ -43,9 +43,9 @@ func (r *Routes) handleGet(w http.ResponseWriter, req *http.Request) {
 
 func (r *Routes) handleInstall(w http.ResponseWriter, req *http.Request) {
 	var in struct {
-		ID         string `json:"id"`
-		FromMarketplace bool `json:"fromMarketplace"`
-		FromDir   string `json:"fromDir,omitempty"`
+		ID              string `json:"id"`
+		FromMarketplace bool   `json:"fromMarketplace"`
+		FromDir         string `json:"fromDir,omitempty"`
 	}
 	json.NewDecoder(req.Body).Decode(&in)
 

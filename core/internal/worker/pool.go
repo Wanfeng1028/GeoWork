@@ -108,11 +108,11 @@ func pythonExe() string {
 // WorkerProcess wraps one running uvicorn worker with metadata for
 // health checking, restart counting, and port management.
 type WorkerProcess struct {
-	cmd     *exec.Cmd
-	port    int
-	dir     string
-	python  string
-	log     *zap.Logger
+	cmd    *exec.Cmd
+	port   int
+	dir    string
+	python string
+	log    *zap.Logger
 
 	// crashed is set when the process exits unexpectedly. The pool
 	// checks this before handing out the worker.
@@ -203,8 +203,8 @@ func (wp *WorkerProcess) markRestarted() {
 // Release returns it to the pool. If a worker is found to be crashed
 // at Acquire time, the pool respawns it in place before returning.
 type WorkerPool struct {
-	cfg       WorkerConfig
-	log       *zap.Logger
+	cfg WorkerConfig
+	log *zap.Logger
 
 	mu        sync.Mutex
 	workers   []*WorkerProcess

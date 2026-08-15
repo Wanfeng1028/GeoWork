@@ -14,10 +14,10 @@ import (
 
 // Recovery manages agent checkpoint persistence.
 type Recovery struct {
-	mu       sync.Mutex
-	runs     map[string]*Checkpoint
-	log      *zap.Logger
-	dataDir  string
+	mu      sync.Mutex
+	runs    map[string]*Checkpoint
+	log     *zap.Logger
+	dataDir string
 }
 
 // Checkpoint captures one saved ReAct-loop state for a run.
@@ -25,12 +25,12 @@ type Recovery struct {
 // so ResumeFromCheckpoint can pick up exactly where the run left off,
 // rather than restarting the loop with an empty chat history.
 type Checkpoint struct {
-	RunID     string    `json:"runId"`
-	SavedAt   time.Time `json:"savedAt"`
-	Data      []byte    `json:"data"`
-	Mode      string    `json:"mode"`
-	Prompt    string    `json:"prompt"`
-	Status    string    `json:"status"`
+	RunID   string    `json:"runId"`
+	SavedAt time.Time `json:"savedAt"`
+	Data    []byte    `json:"data"`
+	Mode    string    `json:"mode"`
+	Prompt  string    `json:"prompt"`
+	Status  string    `json:"status"`
 
 	// P1-6 §7.4: ReAct-loop bookkeeping for断点续传.
 	// TurnIndex is the index of the next turn to execute (i.e. the

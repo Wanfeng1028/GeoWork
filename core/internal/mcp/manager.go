@@ -13,10 +13,10 @@ import (
 
 // Manager controls MCP server connections.
 type Manager struct {
-	mu       sync.Mutex
-	configs  map[string]*ServerConfig
-	clients  map[string]*MCPClient
-	log      *zap.Logger
+	mu      sync.Mutex
+	configs map[string]*ServerConfig
+	clients map[string]*MCPClient
+	log     *zap.Logger
 }
 
 func NewManager(log *zap.Logger) *Manager {

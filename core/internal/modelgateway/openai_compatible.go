@@ -24,8 +24,8 @@ import (
 // OpenAI API rejects the second turn (400) and lenient servers cannot
 // correlate results with calls.
 type ChatMessage struct {
-	Role    string     `json:"role"`
-	Content string     `json:"content"`
+	Role    string `json:"role"`
+	Content string `json:"content"`
 
 	// ToolCallID is required on role:"tool" messages: the id of the
 	// tool call this result answers.
@@ -60,13 +60,13 @@ type ToolFunctionCall struct {
 
 // ChatCompletionRequest is the OpenAI chat completion request.
 type ChatCompletionRequest struct {
-	Model    string        `json:"model"`
-	Messages []ChatMessage `json:"messages"`
-	Tools    []ToolDef     `json:"tools,omitempty"`
-	Stream   bool          `json:"stream"`
-	Seed     *int          `json:"seed,omitempty"`
-	Temperature *float64 `json:"temperature,omitempty"`
-	MaxTokens int           `json:"max_tokens,omitempty"`
+	Model       string        `json:"model"`
+	Messages    []ChatMessage `json:"messages"`
+	Tools       []ToolDef     `json:"tools,omitempty"`
+	Stream      bool          `json:"stream"`
+	Seed        *int          `json:"seed,omitempty"`
+	Temperature *float64      `json:"temperature,omitempty"`
+	MaxTokens   int           `json:"max_tokens,omitempty"`
 
 	// StreamOptions requests stream-mode extras (currently usage stats).
 	// OpenAI-compatible servers that don't know the field ignore it.
@@ -93,18 +93,18 @@ type ToolFunction struct {
 
 // ChatCompletionResponse is the OpenAI chat completion response.
 type ChatCompletionResponse struct {
-	ID      string           `json:"id"`
-	Model   string           `json:"model"`
-	Choices []Choice         `json:"choices"`
-	Usage   *UsageInfo       `json:"usage,omitempty"`
+	ID      string     `json:"id"`
+	Model   string     `json:"model"`
+	Choices []Choice   `json:"choices"`
+	Usage   *UsageInfo `json:"usage,omitempty"`
 }
 
 // Choice is a single choice in the response.
 type Choice struct {
-	Index        int              `json:"index"`
-	Message      ResponseMessage  `json:"message"`
-	FinishReason string           `json:"finish_reason"`
-	Delta        ResponseMessage  `json:"delta,omitempty"`
+	Index        int             `json:"index"`
+	Message      ResponseMessage `json:"message"`
+	FinishReason string          `json:"finish_reason"`
+	Delta        ResponseMessage `json:"delta,omitempty"`
 }
 
 // ResponseMessage is the message part of a choice.
@@ -127,17 +127,17 @@ type UsageInfo struct {
 
 // StreamChunk is a single SSE chunk from streaming response.
 type StreamChunk struct {
-	Content  string
+	Content   string
 	ToolCalls []ToolCall
-	IsDone   bool
-	Usage    *UsageInfo
+	IsDone    bool
+	Usage     *UsageInfo
 }
 
 // OpenAICompatibleClient implements the model gateway for OpenAI-compatible APIs.
 type OpenAICompatibleClient struct {
-	provider  *ModelProvider
+	provider   *ModelProvider
 	httpClient *http.Client
-	log       *zap.Logger
+	log        *zap.Logger
 	retryCount int
 }
 

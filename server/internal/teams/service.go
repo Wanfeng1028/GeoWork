@@ -151,22 +151,22 @@ func (s *Service) InviteMember(c *gin.Context) {
 
 	// Record team invite event
 	s.store.AppendTelemetryEvent(&storage.TelemetryEvent{
-		ID:   idgen.New("team_"),
+		ID:     idgen.New("team_"),
 		UserID: user.ID,
-		Type: "team_invite",
-		Value: 1,
+		Type:   "team_invite",
+		Value:  1,
 		Metadata: map[string]interface{}{
-			"team_id": teamID,
+			"team_id":        teamID,
 			"target_user_id": req.UserID,
-			"role": role,
+			"role":           role,
 		},
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"team_id":    teamID,
-		"user_id":    req.UserID,
-		"role":       role,
-		"message":    "member invited successfully",
+		"team_id":     teamID,
+		"user_id":     req.UserID,
+		"role":        role,
+		"message":     "member invited successfully",
 		"invite_sent": true,
 	})
 }

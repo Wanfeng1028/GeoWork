@@ -24,8 +24,8 @@ type PaymentProvider interface {
 }
 
 type Service struct {
-	store    *storage.Store
-	payment  PaymentProvider // optional, nil for mock mode
+	store   *storage.Store
+	payment PaymentProvider // optional, nil for mock mode
 }
 
 func NewService(store *storage.Store) *Service {
@@ -69,11 +69,11 @@ func (s *Service) GetUsage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"credits":     credits,
-		"plan":        plan,
-		"usage":       summary,
-		"speed_mult":  getSpeedMultiplier(user.Plan),
-		"team_seats":  getTeamSeats(user.Plan),
+		"credits":    credits,
+		"plan":       plan,
+		"usage":      summary,
+		"speed_mult": getSpeedMultiplier(user.Plan),
+		"team_seats": getTeamSeats(user.Plan),
 	})
 }
 

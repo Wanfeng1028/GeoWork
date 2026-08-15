@@ -29,19 +29,19 @@ type Diff struct {
 
 // DiffResult is the output of a diff generation.
 type DiffResult struct {
-	Diff        string          `json:"diff"`          // unified diff format
-	OldContent  string          `json:"oldContent"`
-	NewContent  string          `json:"newContent"`
-	Path        string          `json:"path"`
-	LineCount   int             `json:"lineCount"`
-	MonacoData  json.RawMessage `json:"monacoPreview,omitempty"`
+	Diff       string          `json:"diff"` // unified diff format
+	OldContent string          `json:"oldContent"`
+	NewContent string          `json:"newContent"`
+	Path       string          `json:"path"`
+	LineCount  int             `json:"lineCount"`
+	MonacoData json.RawMessage `json:"monacoPreview,omitempty"`
 }
 
 // Generator creates file diffs.
 type Generator struct {
-	log      *zap.Logger
-	diffs    map[string]*Diff
-	mgr      *Manager
+	log   *zap.Logger
+	diffs map[string]*Diff
+	mgr   *Manager
 }
 
 func NewGenerator(log *zap.Logger, mgr *Manager) *Generator {

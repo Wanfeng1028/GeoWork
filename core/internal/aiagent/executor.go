@@ -98,7 +98,7 @@ func (e *Executor) ParseModelResponse(content string) ([]ToolCall, string) {
 	// Try to parse as JSON with tool_calls
 	var parsed struct {
 		ToolCalls []openaiToolCallJSON `json:"tool_calls"`
-		Content   string              `json:"content"`
+		Content   string               `json:"content"`
 	}
 	if err := json.Unmarshal([]byte(content), &parsed); err == nil && len(parsed.ToolCalls) > 0 {
 		calls := make([]ToolCall, 0, len(parsed.ToolCalls))
@@ -142,7 +142,7 @@ func (e *Executor) BuildMessages(systemPrompt, userPrompt string, history []Mess
 func (e *Executor) AppendToolResult(messages []ChatMessage, call ToolCall) []ChatMessage {
 	// Add assistant message with tool call
 	messages = append(messages, ChatMessage{
-		Role: "assistant",
+		Role:    "assistant",
 		Content: fmt.Sprintf("Calling tool: %s with args: %v", call.Name, call.Args),
 	})
 

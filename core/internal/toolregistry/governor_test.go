@@ -325,7 +325,10 @@ func TestGovernor_Concurrent(t *testing.T) {
 }
 
 // Helper mock logger for GovernorLogger
-type mockLogger struct{ mu sync.Mutex; msgs []string }
+type mockLogger struct {
+	mu   sync.Mutex
+	msgs []string
+}
 
 func (m *mockLogger) Warn(format string, args ...any) {
 	m.mu.Lock()

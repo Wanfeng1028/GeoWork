@@ -13,11 +13,11 @@ import (
 // It is used to give the LLM awareness of project layout without loading
 // every file's contents into the context.
 type RepoMap struct {
-	mu       sync.RWMutex
-	roots    []string       // top-level directories to scan
-	exclude  map[string]struct{} // dir/file basenames to skip
-	entries  []RepoEntry
-	loaded   bool
+	mu      sync.RWMutex
+	roots   []string            // top-level directories to scan
+	exclude map[string]struct{} // dir/file basenames to skip
+	entries []RepoEntry
+	loaded  bool
 }
 
 // RepoEntry is a single node in the repository tree.
@@ -156,8 +156,8 @@ func (r *RepoMap) FormatAsMarkdown(maxDepth int) string {
 
 	// Group by top-level directory
 	type entry struct {
-		path string
-		isDir bool
+		path     string
+		isDir    bool
 		language string
 	}
 	var grouped map[string][]entry
@@ -168,8 +168,8 @@ func (r *RepoMap) FormatAsMarkdown(maxDepth int) string {
 		parts := strings.Split(e.Path, string(filepath.Separator))
 		top := parts[0]
 		grouped[top] = append(grouped[top], entry{
-			path: e.Path,
-			isDir: e.IsDir,
+			path:     e.Path,
+			isDir:    e.IsDir,
 			language: e.Language,
 		})
 	}

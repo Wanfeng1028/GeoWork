@@ -81,7 +81,7 @@ func (s *Service) Create(c *gin.Context) {
 	}
 
 	var req struct {
-		ID          string `json:"id"`           // optional: client-supplied id (for sync)
+		ID          string `json:"id"` // optional: client-supplied id (for sync)
 		WorkspaceID string `json:"workspace_id"`
 		Title       string `json:"title"`
 		Mode        string `json:"mode"`

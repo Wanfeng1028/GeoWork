@@ -27,9 +27,9 @@ import (
 type ScheduledTask struct {
 	ID      string    `json:"id"`
 	Name    string    `json:"name"`
-	Cron    string    `json:"cron"`    // 5-field Unix cron
-	Mode    string    `json:"mode"`    // Agent Mode (Build / Research / etc.)
-	Prompt  string    `json:"prompt"`  // Prompt template; literal for now
+	Cron    string    `json:"cron"`   // 5-field Unix cron
+	Mode    string    `json:"mode"`   // Agent Mode (Build / Research / etc.)
+	Prompt  string    `json:"prompt"` // Prompt template; literal for now
 	Enabled bool      `json:"enabled"`
 	LastRun time.Time `json:"lastRun"`
 	NextRun time.Time `json:"nextRun"`

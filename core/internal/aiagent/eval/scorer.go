@@ -41,8 +41,8 @@ type QualityScore struct {
 
 // Scorer computes QualityScores from Trajectories.
 type Scorer struct {
-	mu     sync.Mutex
-	cache  map[string]*QualityScore // runID -> last score (idempotent re-score)
+	mu    sync.Mutex
+	cache map[string]*QualityScore // runID -> last score (idempotent re-score)
 }
 
 func NewScorer() *Scorer {
@@ -140,15 +140,15 @@ func calculateScore(q *QualityScore) float64 {
 // Metrics is the aggregate view across many runs. Returned by the
 // /api/agent/eval/metrics endpoint.
 type Metrics struct {
-	TotalRuns         int     `json:"totalRuns"`
-	TaskSuccessRate   float64 `json:"taskSuccessRate"`
-	AvgTurns          float64 `json:"avgTurns"`
-	AvgToolCalls      float64 `json:"avgToolCalls"`
-	ToolErrorRate     float64 `json:"toolErrorRate"`
-	AvgTokenUsage     float64 `json:"avgTokenUsage"`
-	AvgDuration        float64 `json:"avgDurationMs"`
-	UserApprovalRate  float64 `json:"userApprovalRate"`
-	AvgScore          float64 `json:"avgScore"`
+	TotalRuns        int     `json:"totalRuns"`
+	TaskSuccessRate  float64 `json:"taskSuccessRate"`
+	AvgTurns         float64 `json:"avgTurns"`
+	AvgToolCalls     float64 `json:"avgToolCalls"`
+	ToolErrorRate    float64 `json:"toolErrorRate"`
+	AvgTokenUsage    float64 `json:"avgTokenUsage"`
+	AvgDuration      float64 `json:"avgDurationMs"`
+	UserApprovalRate float64 `json:"userApprovalRate"`
+	AvgScore         float64 `json:"avgScore"`
 }
 
 // Aggregate computes Metrics over a slice of scores. nil/empty input

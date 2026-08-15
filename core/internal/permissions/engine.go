@@ -9,11 +9,11 @@ import (
 )
 
 type Engine struct {
-	mu         sync.RWMutex
-	policies   map[string]*PermissionPolicy // taskID -> policy
-	requests   map[string]*PermissionRequest
-	decisions  map[string]Decision // taskID+action -> decision
-	repo       *Repository         // optional persistent store
+	mu        sync.RWMutex
+	policies  map[string]*PermissionPolicy // taskID -> policy
+	requests  map[string]*PermissionRequest
+	decisions map[string]Decision // taskID+action -> decision
+	repo      *Repository         // optional persistent store
 }
 
 type Decision struct {

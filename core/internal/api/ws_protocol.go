@@ -36,8 +36,8 @@ const (
 const (
 	MethodApprovalRequest  = "approval/request"  // S→C
 	MethodApprovalResponse = "approval/response" // C→S
-	MethodRunAbort          = "run/abort"          // C→S
-	MethodRunStatus         = "run/status"         // S→C
+	MethodRunAbort         = "run/abort"         // C→S
+	MethodRunStatus        = "run/status"        // S→C
 )
 
 // JsonRpcRequest is a JSON-RPC 2.0 request (expects a response).
@@ -86,12 +86,12 @@ func (e *JsonRpcError) Error() string {
 // ApprovalRequestParams is the params payload of approval/request.
 // Sent from server to client when a critical tool needs approval.
 type ApprovalRequestParams struct {
-	RunID     string `json:"runId"`
+	RunID      string `json:"runId"`
 	ApprovalID string `json:"approvalId"`
-	Tool      string `json:"tool"`
-	Reason    string `json:"reason"`
-	RiskLevel string `json:"riskLevel"`
-	Timeout   int    `json:"timeout"` // seconds
+	Tool       string `json:"tool"`
+	Reason     string `json:"reason"`
+	RiskLevel  string `json:"riskLevel"`
+	Timeout    int    `json:"timeout"` // seconds
 }
 
 // ApprovalResponseResult is the result payload of approval/response.
@@ -100,7 +100,7 @@ type ApprovalRequestParams struct {
 // earlier (and to the SSE approval_request event's approvalId).
 type ApprovalResponseResult struct {
 	ApprovalID string `json:"approvalId"`
-	Action     string `json:"action"`  // "allow" | "deny"
+	Action     string `json:"action"` // "allow" | "deny"
 	Comment    string `json:"comment,omitempty"`
 }
 
@@ -112,7 +112,7 @@ type RunAbortParams struct {
 
 // RunStatusParams is the params payload of run/status notifications.
 type RunStatusParams struct {
-	RunID  string `json:"runId"`
+	RunID string `json:"runId"`
 	State string `json:"state"`
 }
 

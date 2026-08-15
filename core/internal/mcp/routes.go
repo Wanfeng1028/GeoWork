@@ -95,8 +95,8 @@ func (r *Routes) handleListTools(w http.ResponseWriter, req *http.Request) {
 func (r *Routes) handleCallTool(w http.ResponseWriter, req *http.Request) {
 	id := req.PathValue("id")
 	var in struct {
-		Name string                 `json:"name"`
-		Args map[string]any         `json:"args"`
+		Name string         `json:"name"`
+		Args map[string]any `json:"args"`
 	}
 	if err := json.NewDecoder(req.Body).Decode(&in); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")

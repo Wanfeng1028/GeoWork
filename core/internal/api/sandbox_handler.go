@@ -34,19 +34,19 @@ func (h *sandboxHandler) handleRunCommand(w http.ResponseWriter, r *http.Request
 		return
 	}
 	var input struct {
-		TaskID  string            `json:"taskId"`
-		Workspace string        `json:"workspace"`
-		Command string            `json:"command"`
-		Env     map[string]string `json:"env,omitempty"`
+		TaskID    string            `json:"taskId"`
+		Workspace string            `json:"workspace"`
+		Command   string            `json:"command"`
+		Env       map[string]string `json:"env,omitempty"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&input)
 
 	// Emit tool.call.started event
 	if h.bridge != nil {
 		h.bridge.Publish(TaskEventPayload{
-			Type:   ToolCallStarted,
-			TaskID: input.TaskID,
-			Tool:   "run_command",
+			Type:    ToolCallStarted,
+			TaskID:  input.TaskID,
+			Tool:    "run_command",
 			Message: "Running command: " + input.Command,
 			Data: map[string]any{
 				"command":   input.Command,
@@ -106,9 +106,9 @@ func (h *sandboxHandler) handleRunPython(w http.ResponseWriter, r *http.Request)
 	// Emit tool.call.started event
 	if h.bridge != nil {
 		h.bridge.Publish(TaskEventPayload{
-			Type:   ToolCallStarted,
-			TaskID: input.TaskID,
-			Tool:   "run_python",
+			Type:    ToolCallStarted,
+			TaskID:  input.TaskID,
+			Tool:    "run_python",
 			Message: "Running Python script: " + input.ScriptPath,
 			Data: map[string]any{
 				"scriptPath": input.ScriptPath,

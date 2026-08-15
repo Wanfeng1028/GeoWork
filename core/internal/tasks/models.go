@@ -10,13 +10,13 @@ import (
 type Status string
 
 const (
-	StatusPending    Status = "pending"
-	StatusRunning    Status = "running"
-	StatusCompleted  Status = "completed"
-	StatusFailed     Status = "failed"
-	StatusCancelled  Status = "cancelled"
-	StatusPaused     Status = "paused"
-	StatusRecovered  Status = "recovered"
+	StatusPending   Status = "pending"
+	StatusRunning   Status = "running"
+	StatusCompleted Status = "completed"
+	StatusFailed    Status = "failed"
+	StatusCancelled Status = "cancelled"
+	StatusPaused    Status = "paused"
+	StatusRecovered Status = "recovered"
 )
 
 // Task represents a unit of work in GeoWork
@@ -49,13 +49,13 @@ type TaskEvent struct {
 type EventType string
 
 const (
-	EventPlanCreated  EventType = "plan_created"
-	EventStepStarted  EventType = "step_started"
+	EventPlanCreated   EventType = "plan_created"
+	EventStepStarted   EventType = "step_started"
 	EventStepCompleted EventType = "step_completed"
-	EventArtifact     EventType = "artifact"
-	EventError       EventType = "error"
-	EventStatus      EventType = "status"
-	EventComplete    EventType = "complete"
+	EventArtifact      EventType = "artifact"
+	EventError         EventType = "error"
+	EventStatus        EventType = "status"
+	EventComplete      EventType = "complete"
 )
 
 // TaskListResponse is the response shape for listing tasks

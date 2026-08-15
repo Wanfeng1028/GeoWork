@@ -8,19 +8,19 @@ import (
 
 type persistedState struct {
 	Projects     map[string]Project `json:"projects"`
-	Tasks        map[string]*Task `json:"tasks"`
+	Tasks        map[string]*Task   `json:"tasks"`
 	Events       map[string][]Event `json:"events"`
-	Plugins      []Plugin `json:"plugins"`
-	Models       []ModelConfig `json:"models"`
-	Automations  []Automation `json:"automations"`
-	Knowledge    []KnowledgeItem `json:"knowledge"`
-	Datasets     []Dataset `json:"datasets"`
-	Layers       []MapLayer `json:"layers"`
-	Deliveries   []DeliveryPackage `json:"deliveries"`
-	Runs         []AutomationRun `json:"runs"`
+	Plugins      []Plugin           `json:"plugins"`
+	Models       []ModelConfig      `json:"models"`
+	Automations  []Automation       `json:"automations"`
+	Knowledge    []KnowledgeItem    `json:"knowledge"`
+	Datasets     []Dataset          `json:"datasets"`
+	Layers       []MapLayer         `json:"layers"`
+	Deliveries   []DeliveryPackage  `json:"deliveries"`
+	Runs         []AutomationRun    `json:"runs"`
 	Decisions    []SecurityDecision `json:"decisions"`
-	UsageRecords []UsageRecord `json:"usageRecords"`
-	Settings     SettingsState `json:"settings"`
+	UsageRecords []UsageRecord      `json:"usageRecords"`
+	Settings     SettingsState      `json:"settings"`
 }
 
 func (a *App) loadState() {

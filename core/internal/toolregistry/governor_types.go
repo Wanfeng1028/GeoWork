@@ -72,14 +72,14 @@ const (
 // and then blocks on req.DecisionCh until a decision arrives (or the
 // timeout fires, in which case the orchestrator resolves it as timeout).
 type ApprovalRequest struct {
-	ID         string
-	RunID      string
-	ToolName   string
-	Args       map[string]any
-	RiskLevel  string
-	CreatedAt  time.Time
-	Decision   ApprovalDecision
-	Reason     string
+	ID        string
+	RunID     string
+	ToolName  string
+	Args      map[string]any
+	RiskLevel string
+	CreatedAt time.Time
+	Decision  ApprovalDecision
+	Reason    string
 	// DecisionCh carries the user's decision back to the waiting goroutine.
 	// Buffered with capacity 1 so ResolveApproval can write without
 	// blocking even if the waiter hasn't reached the receive yet.

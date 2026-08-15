@@ -21,9 +21,9 @@ func RegisterBuiltins(reg *Registry) error {
 				Tags:        []string{"gis", "raster", "vector", "ndvi"},
 				Mode:        "Work",
 			},
-			Prompt: "You are a GIS specialist. Prefer Python (rasterio/geopandas) for spatial computation. Save computed raster/vector outputs as artifacts. Always state the CRS and resolution of geospatial data you process.",
+			Prompt:           "You are a GIS specialist. Prefer Python (rasterio/geopandas) for spatial computation. Save computed raster/vector outputs as artifacts. Always state the CRS and resolution of geospatial data you process.",
 			RecommendedTools: []string{"run_python", "read_file", "create_artifact"},
-			DefaultArgs:     map[string]any{"language": "python"},
+			DefaultArgs:      map[string]any{"language": "python"},
 		},
 		{
 			Meta: SkillMeta{
@@ -34,7 +34,7 @@ func RegisterBuiltins(reg *Registry) error {
 				Tags:        []string{"paper", "latex", "writing"},
 				Mode:        "Paper",
 			},
-			Prompt: "You are an academic writing assistant. Produce LaTeX-formatted output. Use \\cite{} for references and follow the venue's bibliography style. Structure papers as Introduction → Related Work → Methods → Experiments → Conclusion.",
+			Prompt:           "You are an academic writing assistant. Produce LaTeX-formatted output. Use \\cite{} for references and follow the venue's bibliography style. Structure papers as Introduction → Related Work → Methods → Experiments → Conclusion.",
 			RecommendedTools: []string{"read_file", "write_file", "search_workspace"},
 		},
 		{
@@ -46,7 +46,7 @@ func RegisterBuiltins(reg *Registry) error {
 				Tags:        []string{"code", "review", "security"},
 				Mode:        "Code",
 			},
-			Prompt: "You are a senior code reviewer. Focus on: (1) security vulnerabilities (injection, path traversal, secrets), (2) performance hotspots (N+1 queries, unbounded loops), (3) readability (naming, complexity). Cite file:line for each finding.",
+			Prompt:           "You are a senior code reviewer. Focus on: (1) security vulnerabilities (injection, path traversal, secrets), (2) performance hotspots (N+1 queries, unbounded loops), (3) readability (naming, complexity). Cite file:line for each finding.",
 			RecommendedTools: []string{"read_file", "search_workspace", "scan_folder"},
 		},
 		{
@@ -58,7 +58,7 @@ func RegisterBuiltins(reg *Registry) error {
 				Tags:        []string{"data", "pandas", "cleaning"},
 				Mode:        "Work",
 			},
-			Prompt: "You are a data engineer. Use Pandas for tabular data cleaning. Report missing-value ratios, outlier counts, and dtype issues. Save cleaned datasets as CSV/Parquet artifacts.",
+			Prompt:           "You are a data engineer. Use Pandas for tabular data cleaning. Report missing-value ratios, outlier counts, and dtype issues. Save cleaned datasets as CSV/Parquet artifacts.",
 			RecommendedTools: []string{"run_python", "read_file", "write_file"},
 		},
 		{
@@ -70,7 +70,7 @@ func RegisterBuiltins(reg *Registry) error {
 				Tags:        []string{"report", "markdown"},
 				Mode:        "Write",
 			},
-			Prompt: "You are a technical report writer. Produce well-structured Markdown with headers, tables, and embedded image references. Each section should have a one-line summary then the detail.",
+			Prompt:           "You are a technical report writer. Produce well-structured Markdown with headers, tables, and embedded image references. Each section should have a one-line summary then the detail.",
 			RecommendedTools: []string{"create_artifact", "write_file"},
 		},
 	}

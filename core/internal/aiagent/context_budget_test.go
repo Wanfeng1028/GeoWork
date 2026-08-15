@@ -39,7 +39,7 @@ func TestEnforceMessages(t *testing.T) {
 	// Over budget — should trim
 	msgs = make([]ChatMessage, 0)
 	for i := 0; i < 25; i++ {
-		msgs = append(msgs, ChatMessage{Role: "user", Content: "msg" + string(rune('0'+(i % 10)))})
+		msgs = append(msgs, ChatMessage{Role: "user", Content: "msg" + string(rune('0'+(i%10)))})
 	}
 	b2 := BudgetAwareBuilder{budget: ContextBudget{MaxMessages: 10}}
 	result = b2.EnforceMessages(msgs)
@@ -64,7 +64,7 @@ func TestEnforceFiles(t *testing.T) {
 
 func TestEnforceToolResults(t *testing.T) {
 	b := BudgetAwareBuilder{budget: ContextBudget{
-		MaxMessages:      20,
+		MaxMessages:        20,
 		MaxToolResultChars: 100,
 	}}
 

@@ -35,9 +35,9 @@ type ParallelResult struct {
 
 // ParallelExecutor runs batches of tool calls with bounded parallelism.
 type ParallelExecutor struct {
-	registry     *toolregistry.Registry
-	log          *zap.Logger
-	maxParallel  int
+	registry    *toolregistry.Registry
+	log         *zap.Logger
+	maxParallel int
 }
 
 // NewParallelExecutor builds an executor with the given parallelism cap.

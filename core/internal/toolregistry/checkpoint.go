@@ -13,22 +13,22 @@ import (
 
 // Checkpoint represents a saved state of the repository at a point in time.
 type Checkpoint struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	CommitHash  string                 `json:"commitHash,omitempty"`
-	Branch      string                 `json:"branch"`
-	Files       map[string]string      `json:"files"`       // file path -> content snapshot
-	EnvVars     map[string]string      `json:"envVars,omitempty"` // environment snapshot
-	Metadata    map[string]any         `json:"metadata,omitempty"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	CommitHash  string            `json:"commitHash,omitempty"`
+	Branch      string            `json:"branch"`
+	Files       map[string]string `json:"files"`             // file path -> content snapshot
+	EnvVars     map[string]string `json:"envVars,omitempty"` // environment snapshot
+	Metadata    map[string]any    `json:"metadata,omitempty"`
 }
 
 // CheckpointManager manages save/restore of checkpoints.
 type CheckpointManager struct {
-	mu      sync.Mutex
+	mu          sync.Mutex
 	checkpoints map[string]*Checkpoint
-	storePath string // directory for persisted checkpoints
+	storePath   string // directory for persisted checkpoints
 }
 
 // NewCheckpointManager creates a new CheckpointManager.

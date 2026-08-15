@@ -53,7 +53,7 @@ type GovernorImpl struct {
 func NewGovernorImpl(log *zap.Logger, registry *toolregistry.Registry) *GovernorImpl {
 	return &GovernorImpl{
 		log:         log,
-		registry:   registry,
+		registry:    registry,
 		pendingApps: make(map[string]*toolregistry.ApprovalRequest),
 	}
 }

@@ -41,13 +41,13 @@ func GetRequiredPermissions(manifest *Manifest) []Permission {
 
 // DangerousActions lists actions that require explicit user approval.
 var DangerousActions = map[string]string{
-	"run_shell":        "Executes arbitrary shell commands",
-	"run_python":       "Executes arbitrary Python code",
-	"write_file":       "Modifies files in the workspace",
-	"delete":           "Deletes files or directories",
-	"browser_control":  "Controls the built-in browser",
-	"network_access":   "Makes network requests",
-	"system_info":      "Reads system information",
+	"run_shell":       "Executes arbitrary shell commands",
+	"run_python":      "Executes arbitrary Python code",
+	"write_file":      "Modifies files in the workspace",
+	"delete":          "Deletes files or directories",
+	"browser_control": "Controls the built-in browser",
+	"network_access":  "Makes network requests",
+	"system_info":     "Reads system information",
 }
 
 // IsDangerous checks if an action requires explicit approval.

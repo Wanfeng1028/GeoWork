@@ -36,9 +36,9 @@ type FuncTool struct {
 	Handler         func(context.Context, Input) (Result, error)
 }
 
-func (t FuncTool) Name() string { return t.ToolName }
-func (t FuncTool) Description() string { return t.ToolDescription }
-func (t FuncTool) RiskLevel() RiskLevel { return t.Risk }
+func (t FuncTool) Name() string                                         { return t.ToolName }
+func (t FuncTool) Description() string                                  { return t.ToolDescription }
+func (t FuncTool) RiskLevel() RiskLevel                                 { return t.Risk }
 func (t FuncTool) Run(ctx context.Context, input Input) (Result, error) { return t.Handler(ctx, input) }
 
 type Registry struct {

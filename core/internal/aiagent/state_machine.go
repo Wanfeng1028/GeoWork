@@ -85,8 +85,8 @@ func NewStateMachine() *StateMachine {
 		ShellAllowed: false,
 	}
 	sm.allowed[StateInspecting] = AllowedToolSet{
-		Tools:         []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search", "spawn_subagent"},
-		ReadAllowed:   true,
+		Tools:          []string{"read_file", "list_files", "search_workspace", "scan_folder", "browser_control", "screenshot", "network_request", "paper_search", "spawn_subagent"},
+		ReadAllowed:    true,
 		NetworkAllowed: true,
 	}
 	sm.allowed[StateEditing] = AllowedToolSet{
@@ -123,10 +123,10 @@ func NewStateMachine() *StateMachine {
 		MachineEventRetry:       StateInspecting,
 	}
 	transitions[StateEditing] = map[MachineEvent]State{
-		MachineEventEditDone:       StateVerifying,
-		MachineEventUserRejected:   StateInspecting,
-		MachineEventUserApproved:   StateVerifying,
-		MachineEventSystemPause:    StateWaitingForUser,
+		MachineEventEditDone:     StateVerifying,
+		MachineEventUserRejected: StateInspecting,
+		MachineEventUserApproved: StateVerifying,
+		MachineEventSystemPause:  StateWaitingForUser,
 	}
 	transitions[StateVerifying] = map[MachineEvent]State{
 		MachineEventVerifyPass:  StateCompleted,
@@ -140,8 +140,8 @@ func NewStateMachine() *StateMachine {
 		MachineEventComplete:     StateCompleted,
 	}
 	transitions[StateRecovering] = map[MachineEvent]State{
-		MachineEventRecover:           StatePlanning,
-		MachineEventCheckpointSaved:   StateInspecting,
+		MachineEventRecover:         StatePlanning,
+		MachineEventCheckpointSaved: StateInspecting,
 	}
 	transitions[StateFailed] = map[MachineEvent]State{
 		MachineEventRetry:   StateRecovering,

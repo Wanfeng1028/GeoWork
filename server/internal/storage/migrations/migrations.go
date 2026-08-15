@@ -61,9 +61,9 @@ func Run(db *sql.DB) error {
 }
 
 type Migration struct {
-	ID  string
+	ID   string
 	Name string
-	SQL string
+	SQL  string
 }
 
 func createSchemaTable(db *sql.DB) error {

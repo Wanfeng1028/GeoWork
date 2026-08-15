@@ -9,23 +9,23 @@ import (
 
 // Workflow represents a user-defined agent workflow.
 type Workflow struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Nodes       []WorkflowNode         `json:"nodes"`
-	Edges       []WorkflowEdge         `json:"edges"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	UpdatedAt   time.Time              `json:"updatedAt"`
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Nodes       []WorkflowNode `json:"nodes"`
+	Edges       []WorkflowEdge `json:"edges"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
 }
 
 // WorkflowNode is a single node in a workflow.
 type WorkflowNode struct {
-	ID     string                 `json:"id"`
-	Type   string                 `json:"type"` // start | process | agent | output | condition
-	Name   string                 `json:"name"`
-	Config map[string]any         `json:"config"`
-	X      float64                `json:"x"`
-	Y      float64                `json:"y"`
+	ID     string         `json:"id"`
+	Type   string         `json:"type"` // start | process | agent | output | condition
+	Name   string         `json:"name"`
+	Config map[string]any `json:"config"`
+	X      float64        `json:"x"`
+	Y      float64        `json:"y"`
 }
 
 // WorkflowEdge connects two nodes in a workflow.
@@ -37,15 +37,15 @@ type WorkflowEdge struct {
 
 // Run represents a single execution of a workflow.
 type Run struct {
-	ID            string            `json:"id"`
-	WorkflowID    string            `json:"workflowId"`
-	WorkflowName  string            `json:"workflowName"`
-	Status        string            `json:"status"` // running | waiting | completed | failed
-	Progress      float64           `json:"progress"`
-	Logs          []string          `json:"logs,omitempty"`
-	StartedAt     time.Time         `json:"startedAt"`
-	CompletedAt   *time.Time        `json:"completedAt,omitempty"`
-	Cancelled     bool              `json:"cancelled"`
+	ID           string     `json:"id"`
+	WorkflowID   string     `json:"workflowId"`
+	WorkflowName string     `json:"workflowName"`
+	Status       string     `json:"status"` // running | waiting | completed | failed
+	Progress     float64    `json:"progress"`
+	Logs         []string   `json:"logs,omitempty"`
+	StartedAt    time.Time  `json:"startedAt"`
+	CompletedAt  *time.Time `json:"completedAt,omitempty"`
+	Cancelled    bool       `json:"cancelled"`
 }
 
 // Store handles persistence of workflows and runs.

@@ -18,7 +18,7 @@ func (c *Controller) PaperSearch(ctx context.Context, sessionID, query string) (
 	// Navigate to Google Scholar
 	scholarURL := "https://scholar.google.com/scholar?q=" +
 		url.PathEscape(query)
-	
+
 	if err := c.Navigate(sessionID, scholarURL); err != nil {
 		return nil, err
 	}
@@ -41,19 +41,19 @@ func (c *Controller) PaperSearch(ctx context.Context, sessionID, query string) (
 func parsePaperResults(text, query string) []PaperResult {
 	results := []PaperResult{
 		{
-			Title:     "Remote Sensing of Urban Green Spaces: A Review",
-			Authors:   []string{"Zhang", "Li", "Wang"},
-			Year:      2024,
-			URL:       "https://scholar.google.com/results?q=" +
+			Title:   "Remote Sensing of Urban Green Spaces: A Review",
+			Authors: []string{"Zhang", "Li", "Wang"},
+			Year:    2024,
+			URL: "https://scholar.google.com/results?q=" +
 				url.PathEscape(query),
 			Abstract:  "This paper reviews recent advances in remote sensing...",
 			Citations: 42,
 		},
 		{
-			Title:     "Sentinel-2 Based NDVI Analysis for Vegetation Monitoring",
-			Authors:   []string{"Chen", "Liu"},
-			Year:      2023,
-			URL:       "https://scholar.google.com/results?q=" +
+			Title:   "Sentinel-2 Based NDVI Analysis for Vegetation Monitoring",
+			Authors: []string{"Chen", "Liu"},
+			Year:    2023,
+			URL: "https://scholar.google.com/results?q=" +
 				url.PathEscape(query),
 			Abstract:  "We present a Sentinel-2 based approach for NDVI...",
 			Citations: 28,
@@ -87,12 +87,12 @@ func OpenAlexSearch(ctx context.Context, query string) ([]PaperResult, error) {
 
 	var result struct {
 		Results []struct {
-			Title    []string `json:"title"`
-			Authors  []struct {
+			Title   []string `json:"title"`
+			Authors []struct {
 				AuthorName string `json:"author_name"`
 			} `json:"authorships"`
-			PublicationYear *int  `json:"publication_year"`
-			CitedByCount    int   `json:"cited_by_count"`
+			PublicationYear *int    `json:"publication_year"`
+			CitedByCount    int     `json:"cited_by_count"`
 			DOI             *string `json:"doi"`
 			OpenAccessURL   *string `json:"open_access,omitempty"`
 		} `json:"results"`
@@ -120,8 +120,8 @@ func OpenAlexSearch(ctx context.Context, query string) ([]PaperResult, error) {
 		}
 
 		paper := PaperResult{
-			Title:    title,
-			Authors:  authors,
+			Title:     title,
+			Authors:   authors,
 			Citations: r.CitedByCount,
 		}
 		if r.PublicationYear != nil {
@@ -189,17 +189,17 @@ func SearchOpenAlexWithFilters(
 	}
 
 	return map[string]any{
-		"results":    results,
-		"total":      len(results),
-		"page":       page,
-		"pageSize":   pageSize,
-		"query":      q,
+		"results":  results,
+		"total":    len(results),
+		"page":     page,
+		"pageSize": pageSize,
+		"query":    q,
 	}, nil
 }
 
 // FetchPaperDetails fetches full paper details from OpenAlex.
 func FetchPaperDetails(ctx context.Context, paperID string) (map[string]any, error) {
-	apiURL := "https://api.openalex.org/works/" + 
+	apiURL := "https://api.openalex.org/works/" +
 		strings.TrimPrefix(paperID, "https://openalex.org/")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)

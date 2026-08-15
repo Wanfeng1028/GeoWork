@@ -29,14 +29,14 @@ type Tool interface {
 
 // Registry manages tool registration and lookup with governance support.
 type Registry struct {
-	mu          sync.RWMutex
-	tools       map[string]Tool
-	log         *zap.Logger
-	governor    *Governor              // existing call-rate / policy Governor (frequency, quota)
-	approvalGov ApprovalGovernor      // P1-1: interactive approval-flow governor (aiagent.GovernorImpl)
-	auditLog    *AuditLog
-	policies    map[string]*GovernorPolicy // cached governor policies
-	allowedRoots []string               // P1-1: sandbox path roots for write/exec tools
+	mu           sync.RWMutex
+	tools        map[string]Tool
+	log          *zap.Logger
+	governor     *Governor        // existing call-rate / policy Governor (frequency, quota)
+	approvalGov  ApprovalGovernor // P1-1: interactive approval-flow governor (aiagent.GovernorImpl)
+	auditLog     *AuditLog
+	policies     map[string]*GovernorPolicy // cached governor policies
+	allowedRoots []string                   // P1-1: sandbox path roots for write/exec tools
 }
 
 func NewRegistry(log *zap.Logger) *Registry {

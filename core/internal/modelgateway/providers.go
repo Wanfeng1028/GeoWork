@@ -12,16 +12,16 @@ import (
 
 // ModelProvider defines a model provider configuration.
 type ModelProvider struct {
-	ID              string `json:"id"`
-	Name            string `json:"name"`
-	Kind            string `json:"kind"` // openai_compatible | ollama | lm_studio | custom
-	BaseURL         string `json:"baseUrl"`
-	APIKeyRef       string `json:"apiKeyRef,omitempty"`
-	DefaultModel    string `json:"defaultModel"`
-	Enabled         bool   `json:"enabled"`
-	SpeedProfile    string `json:"speedProfile"` // 1x | 2x
-	CreatedAt       int64  `json:"createdAt"`
-	UpdatedAt       int64  `json:"updatedAt"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Kind         string `json:"kind"` // openai_compatible | ollama | lm_studio | custom
+	BaseURL      string `json:"baseUrl"`
+	APIKeyRef    string `json:"apiKeyRef,omitempty"`
+	DefaultModel string `json:"defaultModel"`
+	Enabled      bool   `json:"enabled"`
+	SpeedProfile string `json:"speedProfile"` // 1x | 2x
+	CreatedAt    int64  `json:"createdAt"`
+	UpdatedAt    int64  `json:"updatedAt"`
 
 	// Pricing (USD per 1K tokens). Used by UsageMeter to estimate cost
 	// per call (P1-2 §3.5). 0 means "unknown" — the record is still
@@ -33,10 +33,10 @@ type ModelProvider struct {
 
 // SpeedProfile defines rate/parallelism settings for a provider.
 type SpeedProfile struct {
-	ID              string `json:"id"`    // "1x" | "2x"
-	MaxParallel     int    `json:"maxParallel"`
-	TokenBudgetMul  float64 ` json:"tokenBudgetMul"`
-	RateLimitMul    float64 ` json:"rateLimitMul"`
+	ID             string  `json:"id"` // "1x" | "2x"
+	MaxParallel    int     `json:"maxParallel"`
+	TokenBudgetMul float64 ` json:"tokenBudgetMul"`
+	RateLimitMul   float64 ` json:"rateLimitMul"`
 }
 
 var speedProfiles = map[string]SpeedProfile{
@@ -46,9 +46,9 @@ var speedProfiles = map[string]SpeedProfile{
 
 // ProviderRegistry stores and manages model providers.
 type ProviderRegistry struct {
-	mu      sync.RWMutex
+	mu        sync.RWMutex
 	providers map[string]*ModelProvider
-	log     *zap.Logger
+	log       *zap.Logger
 }
 
 func NewProviderRegistry(log *zap.Logger) *ProviderRegistry {

@@ -18,13 +18,13 @@ type GovernorPolicy struct {
 
 // Governor enforces tool call limits and governance rules.
 type Governor struct {
-	mu       sync.RWMutex
-	policies map[string]*GovernorPolicy // tool name -> policy
+	mu        sync.RWMutex
+	policies  map[string]*GovernorPolicy // tool name -> policy
 	taskCalls map[string]int             // tool name -> calls this task
 	turnCalls map[string]int             // tool name -> calls this turn
-	approved map[string]bool            // tool name + taskID -> approved
-	taskID   string
-	log      GovernorLogger
+	approved  map[string]bool            // tool name + taskID -> approved
+	taskID    string
+	log       GovernorLogger
 }
 
 // GovernorLogger is a minimal logging interface for the Governor.
@@ -35,12 +35,12 @@ type GovernorLogger interface {
 // NewGovernor creates a new Governor for the given task.
 func NewGovernor(taskID string, logger GovernorLogger) *Governor {
 	g := &Governor{
-		policies:    make(map[string]*GovernorPolicy),
-		taskCalls:   make(map[string]int),
-		turnCalls:   make(map[string]int),
-		approved:    make(map[string]bool),
-		taskID:      taskID,
-		log:         logger,
+		policies:  make(map[string]*GovernorPolicy),
+		taskCalls: make(map[string]int),
+		turnCalls: make(map[string]int),
+		approved:  make(map[string]bool),
+		taskID:    taskID,
+		log:       logger,
 	}
 
 	// Register default policies

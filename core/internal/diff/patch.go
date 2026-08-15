@@ -10,8 +10,8 @@ import (
 
 // Patch represents a parsed patch with hunks.
 type Patch struct {
-	Path   string
-	Hunks  []Hunk
+	Path  string
+	Hunks []Hunk
 }
 
 // Hunk is a continuous block of changes.

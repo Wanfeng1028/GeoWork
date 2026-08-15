@@ -274,9 +274,9 @@ func (s *Service) Cleanup(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":     "cleanup completed",
-		"ttl_days":    ttlDays,
-		"deleted":     deleted,
+		"message":  "cleanup completed",
+		"ttl_days": ttlDays,
+		"deleted":  deleted,
 	})
 }
 

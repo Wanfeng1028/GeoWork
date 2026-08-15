@@ -197,7 +197,7 @@ func (e *SpeculativeExecutor) Cleanup() {
 // parseable argument block.
 // P3-3 §4.5.4.
 func IsJSONComplete(s string) bool {
-	braceDepth := 0  // {} nesting
+	braceDepth := 0   // {} nesting
 	bracketDepth := 0 // [] nesting
 	inString := false
 	escape := false

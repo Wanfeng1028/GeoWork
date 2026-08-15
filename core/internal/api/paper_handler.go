@@ -32,37 +32,37 @@ func (h *PaperHandler) RegisterRoutes(mux *http.ServeMux) {
 
 // paperSearchRequest represents the JSON body of a paper search request.
 type paperSearchRequest struct {
-	Query     string `json:"query"`
-	Author    string `json:"author,omitempty"`
-	YearFrom  *int   `json:"yearFrom,omitempty"`
-	YearTo    *int   `json:"yearTo,omitempty"`
-	Topic     string `json:"topic,omitempty"`
-	Page      int    `json:"page"`
-	PageSize  int    `json:"pageSize"`
+	Query    string `json:"query"`
+	Author   string `json:"author,omitempty"`
+	YearFrom *int   `json:"yearFrom,omitempty"`
+	YearTo   *int   `json:"yearTo,omitempty"`
+	Topic    string `json:"topic,omitempty"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"pageSize"`
 }
 
 // paperResult represents a single paper result in the response.
 type paperResult struct {
-	ID       string   `json:"id"`
-	Title    string   `json:"title"`
-	Authors  []string `json:"authors"`
-	Journal  string   `json:"journal"`
-	Year     int      `json:"year"`
-	Citations int    `json:"citations"`
-	Abstract string   `json:"abstract"`
-	DOI      string   `json:"doi"`
-	Keywords []string `json:"keywords"`
-	BibTeX   string   `json:"bibtex"`
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	Authors   []string `json:"authors"`
+	Journal   string   `json:"journal"`
+	Year      int      `json:"year"`
+	Citations int      `json:"citations"`
+	Abstract  string   `json:"abstract"`
+	DOI       string   `json:"doi"`
+	Keywords  []string `json:"keywords"`
+	BibTeX    string   `json:"bibtex"`
 }
 
 // paperSearchResponse represents the JSON response of a paper search.
 type paperSearchResponse struct {
-	Status  string          `json:"status"`
-	Results []paperResult   `json:"results"`
-	Total   int             `json:"total"`
-	Page    int             `json:"page"`
-	PageSize int            `json:"pageSize"`
-	Message string          `json:"message"`
+	Status   string        `json:"status"`
+	Results  []paperResult `json:"results"`
+	Total    int           `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"pageSize"`
+	Message  string        `json:"message"`
 }
 
 // handleSearch processes a paper search request and forwards it to the Python worker.

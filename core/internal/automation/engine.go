@@ -21,19 +21,19 @@ const (
 
 // Rule represents an automated action in GeoWork
 type Rule struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	Trigger     Trigger   `json:"trigger"`
-	CronExpr    string    `json:"cronExpr,omitempty"` // cron expression for cron triggers
-	Condition   string    `json:"condition,omitempty"` // JSON condition expression
-	Action      string    `json:"action"`              // action to perform
-	ActionParams string   `json:"actionParams,omitempty"` // JSON params for the action
-	Enabled     bool      `json:"enabled"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	LastRunAt   time.Time `json:"lastRunAt,omitempty"`
-	NextRunAt   time.Time `json:"nextRunAt,omitempty"`
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description,omitempty"`
+	Trigger      Trigger   `json:"trigger"`
+	CronExpr     string    `json:"cronExpr,omitempty"`     // cron expression for cron triggers
+	Condition    string    `json:"condition,omitempty"`    // JSON condition expression
+	Action       string    `json:"action"`                 // action to perform
+	ActionParams string    `json:"actionParams,omitempty"` // JSON params for the action
+	Enabled      bool      `json:"enabled"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	LastRunAt    time.Time `json:"lastRunAt,omitempty"`
+	NextRunAt    time.Time `json:"nextRunAt,omitempty"`
 }
 
 // Engine manages the lifecycle of automation rules

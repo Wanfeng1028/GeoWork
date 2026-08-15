@@ -73,7 +73,7 @@ func RegisterBuiltinTools(reg *Registry) error {
 			OutputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"path":   map[string]any{"type": "string"},
+					"path":    map[string]any{"type": "string"},
 					"written": map[string]any{"type": "integer"},
 				},
 			}).
@@ -108,9 +108,9 @@ func RegisterBuiltinTools(reg *Registry) error {
 					"files": map[string]any{
 						"type": "array",
 						"items": map[string]any{"type": "object", "properties": map[string]any{
-							"name": map[string]any{"type": "string"},
+							"name":  map[string]any{"type": "string"},
 							"isDir": map[string]any{"type": "boolean"},
-							"size": map[string]any{"type": "integer"},
+							"size":  map[string]any{"type": "integer"},
 						}},
 					},
 				},
@@ -268,9 +268,9 @@ func RegisterBuiltinTools(reg *Registry) error {
 			OutputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"id":    map[string]any{"type": "string"},
-					"name":  map[string]any{"type": "string"},
-					"path":  map[string]any{"type": "string"},
+					"id":   map[string]any{"type": "string"},
+					"name": map[string]any{"type": "string"},
+					"path": map[string]any{"type": "string"},
 				},
 			}).
 			Permission("write").
@@ -279,9 +279,9 @@ func RegisterBuiltinTools(reg *Registry) error {
 				name, _ := args["name"].(string)
 				path, _ := args["path"].(string)
 				return map[string]any{
-					"id":     "",
-					"name":   name,
-					"path":   path,
+					"id":   "",
+					"name": name,
+					"path": path,
 				}, nil
 			}).
 			Build(),
@@ -298,7 +298,7 @@ func RegisterBuiltinTools(reg *Registry) error {
 			OutputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"path":   map[string]any{"type": "string"},
+					"path":    map[string]any{"type": "string"},
 					"deleted": map[string]any{"type": "boolean"},
 				},
 			}).
@@ -371,9 +371,9 @@ func RegisterBuiltinTools(reg *Registry) error {
 			InputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"remote":    map[string]any{"type": "string"},
-					"branch":    map[string]any{"type": "string"},
-					"force":     map[string]any{"type": "boolean"},
+					"remote": map[string]any{"type": "string"},
+					"branch": map[string]any{"type": "string"},
+					"force":  map[string]any{"type": "boolean"},
 				},
 				"required": []string{},
 			}).
@@ -438,9 +438,9 @@ func RegisterBuiltinTools(reg *Registry) error {
 			InputSchema(map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"path":        map[string]any{"type": "string"},
-					"maxDepth":    map[string]any{"type": "integer"},
-					"pattern":     map[string]any{"type": "string"},
+					"path":     map[string]any{"type": "string"},
+					"maxDepth": map[string]any{"type": "integer"},
+					"pattern":  map[string]any{"type": "string"},
 				},
 				"required": []string{"path"},
 			}).

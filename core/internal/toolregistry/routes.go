@@ -40,14 +40,14 @@ func (r *Routes) handleList(w http.ResponseWriter, req *http.Request) {
 	result := make([]map[string]any, len(tools))
 	for i, t := range tools {
 		result[i] = map[string]any{
-			"name":              t.Name(),
-			"description":       t.Description(),
-			"permission":        t.Permission(),
-			"riskLevel":         t.RiskLevel(),
-			"sandboxRequired":   t.SandboxRequired(),
+			"name":               t.Name(),
+			"description":        t.Description(),
+			"permission":         t.Permission(),
+			"riskLevel":          t.RiskLevel(),
+			"sandboxRequired":    t.SandboxRequired(),
 			"streamingSupported": t.StreamingSupported(),
-			"inputSchema":       t.InputSchema(),
-			"outputSchema":      t.OutputSchema(),
+			"inputSchema":        t.InputSchema(),
+			"outputSchema":       t.OutputSchema(),
 		}
 	}
 	writeJSON(w, result)
@@ -75,8 +75,8 @@ func (r *Routes) handleGet(w http.ResponseWriter, req *http.Request) {
 
 func (r *Routes) handleExecute(w http.ResponseWriter, req *http.Request) {
 	var reqBody struct {
-		Name string                 `json:"name"`
-		Args map[string]any         `json:"args"`
+		Name string         `json:"name"`
+		Args map[string]any `json:"args"`
 	}
 	if err := json.NewDecoder(req.Body).Decode(&reqBody); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -104,9 +104,9 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 // ---- Patch endpoints ----
 
 type handleRequest struct {
-	Path     string                    `json:"path"`
-	Content  string                    `json:"content"`
-	Lines    []map[string]interface{}  `json:"lines,omitempty"`
+	Path    string                   `json:"path"`
+	Content string                   `json:"content"`
+	Lines   []map[string]interface{} `json:"lines,omitempty"`
 }
 
 func (r *Routes) handleApplyPatch(w http.ResponseWriter, req *http.Request) {
@@ -153,8 +153,8 @@ func (r *Routes) handleApplyPatch(w http.ResponseWriter, req *http.Request) {
 
 func (r *Routes) handlePreviewPatch(w http.ResponseWriter, req *http.Request) {
 	var reqBody struct {
-		Path    string `json:"path"`
-		Content string `json:"content"`
+		Path    string                   `json:"path"`
+		Content string                   `json:"content"`
 		Lines   []map[string]interface{} `json:"lines"`
 	}
 	if err := json.NewDecoder(req.Body).Decode(&reqBody); err != nil {

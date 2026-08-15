@@ -34,8 +34,8 @@ type ServerInfo struct {
 // MCPResponse is the parsed result of a tools/call request. Either Result
 // or Error is populated.
 type MCPResponse struct {
-	Result json.RawMessage  `json:"result,omitempty"`
-	Error  *JSONRPCError    `json:"error,omitempty"`
+	Result json.RawMessage `json:"result,omitempty"`
+	Error  *JSONRPCError   `json:"error,omitempty"`
 }
 
 // MCPClient is a connected MCP client. It is safe for concurrent CallTool use.

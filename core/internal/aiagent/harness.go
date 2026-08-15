@@ -76,18 +76,18 @@ type EvaluationContext struct {
 
 // EvaluationResult is the outcome of evaluating all rules.
 type EvaluationResult struct {
-	Allowed      bool   // false → orchestrator must reject the call
-	AutoApproved bool   // true → orchestrator skips interactive approval
-	Reason       string // human-readable explanation
-	RuleID       string // ID of the rule that decided the outcome
+	Allowed      bool     // false → orchestrator must reject the call
+	AutoApproved bool     // true → orchestrator skips interactive approval
+	Reason       string   // human-readable explanation
+	RuleID       string   // ID of the rule that decided the outcome
 	Audited      []string // IDs of rules that triggered audit logging
 }
 
 // Harness is the unified rule engine. It is safe for concurrent use.
 type Harness struct {
-	rules    []HarnessRule
-	log      *zap.Logger
-	mu       sync.RWMutex
+	rules []HarnessRule
+	log   *zap.Logger
+	mu    sync.RWMutex
 }
 
 // NewHarness builds an empty Harness with default rules loaded.
@@ -253,10 +253,11 @@ func (h *Harness) Evaluate(ctx *EvaluationContext) *EvaluationResult {
 
 // matchCondition evaluates a simple expression against the context.
 // Supported syntax:
-//   field == 'value'       equality
-//   field != 'value'       inequality
-//   expr && expr           AND
-//   expr || expr            OR
+//
+//	field == 'value'       equality
+//	field != 'value'       inequality
+//	expr && expr           AND
+//	expr || expr            OR
 //
 // Fields: state, tool, risk, mode, sandbox, path, runId.
 // `sandbox` is true when the tool requires sandboxing (FilePath is set).

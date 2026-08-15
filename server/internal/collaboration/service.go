@@ -134,10 +134,10 @@ func (s *Service) AddComment(c *gin.Context) {
 	}
 
 	record := &storage.CollabRecord{
-		ID:        idgen.New("collab_"),
-		Type:      "comment",
-		UserID:    user.ID,
-		Data:      string(data),
+		ID:     idgen.New("collab_"),
+		Type:   "comment",
+		UserID: user.ID,
+		Data:   string(data),
 	}
 
 	if err := s.store.AppendCollabRecord(record); err != nil {
@@ -146,7 +146,7 @@ func (s *Service) AddComment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "comment added",
+		"message":    "comment added",
 		"comment_id": record.ID,
 	})
 }

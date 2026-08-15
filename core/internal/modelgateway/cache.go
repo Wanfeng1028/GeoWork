@@ -11,20 +11,20 @@ import (
 
 // CacheEntry is a single cached model response.
 type CacheEntry struct {
-	Response    []byte    `json:"response"`
-	Timestamp   time.Time `json:"timestamp"`
-	PromptHash   string    `json:"promptHash"`
-	Model        string    `json:"model"`
-	TokenCount   int       `json:"tokenCount"`
+	Response   []byte    `json:"response"`
+	Timestamp  time.Time `json:"timestamp"`
+	PromptHash string    `json:"promptHash"`
+	Model      string    `json:"model"`
+	TokenCount int       `json:"tokenCount"`
 }
 
 // Cache is a local in-memory request cache.
 type Cache struct {
-	mu       sync.RWMutex
-	entries  map[string]CacheEntry
-	maxSize  int
-	ttl      time.Duration
-	enabled  bool
+	mu      sync.RWMutex
+	entries map[string]CacheEntry
+	maxSize int
+	ttl     time.Duration
+	enabled bool
 }
 
 // NewCache creates a new cache with the given TTL and max size.

@@ -124,8 +124,8 @@ func (s *Service) DeleteAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":    "account marked for deletion",
-		"deleted_at": time.Now(),
+		"message":           "account marked for deletion",
+		"deleted_at":        time.Now(),
 		"recoverable_until": time.Now().Add(30 * 24 * time.Hour),
 	})
 }

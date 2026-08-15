@@ -18,10 +18,10 @@ func NewEinoAdapter(tools []EinoTool) EinoAdapter {
 
 func (a EinoAdapter) PlanAndExecuteSchema() map[string]any {
 	return map[string]any{
-		"engine": "cloudwego-eino-adapter",
-		"mode": "bridge-only",
-		"description": "GeoWork exposes the guarded Tool Registry to Eino while keeping the transparent Planner/Executor as the execution authority.",
-		"tools": a.Tools,
+		"engine":            "cloudwego-eino-adapter",
+		"mode":              "bridge-only",
+		"description":       "GeoWork exposes the guarded Tool Registry to Eino while keeping the transparent Planner/Executor as the execution authority.",
+		"tools":             a.Tools,
 		"human_in_the_loop": true,
 	}
 }

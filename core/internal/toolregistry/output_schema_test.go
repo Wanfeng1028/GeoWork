@@ -23,12 +23,12 @@ func TestValidateOutput_TypeChecks(t *testing.T) {
 	schema := map[string]any{
 		"type": "object",
 		"properties": map[string]any{
-			"name":    map[string]any{"type": "string"},
-			"size":    map[string]any{"type": "integer"},
-			"ratio":   map[string]any{"type": "number"},
-			"isDir":   map[string]any{"type": "boolean"},
-			"tags":    map[string]any{"type": "array"},
-			"meta":    map[string]any{"type": "object"},
+			"name":  map[string]any{"type": "string"},
+			"size":  map[string]any{"type": "integer"},
+			"ratio": map[string]any{"type": "number"},
+			"isDir": map[string]any{"type": "boolean"},
+			"tags":  map[string]any{"type": "array"},
+			"meta":  map[string]any{"type": "object"},
 		},
 	}
 

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"go.uber.org/zap"
+	_ "modernc.org/sqlite"
 )
 
 // Category represents a knowledge category (folder-like hierarchy).

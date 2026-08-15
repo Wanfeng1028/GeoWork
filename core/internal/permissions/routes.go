@@ -88,9 +88,9 @@ func (r *Routes) handlePolicies(w http.ResponseWriter, req *http.Request) {
 		writeJSON(w, policy)
 	case http.MethodPatch:
 		var input struct {
-			TaskID     string            `json:"taskId"`
-			DefaultLevel string        `json:"defaultLevel"`
-			Actions    map[string]string `json:"actions"`
+			TaskID       string            `json:"taskId"`
+			DefaultLevel string            `json:"defaultLevel"`
+			Actions      map[string]string `json:"actions"`
 		}
 		json.NewDecoder(req.Body).Decode(&input)
 		policy := &PermissionPolicy{

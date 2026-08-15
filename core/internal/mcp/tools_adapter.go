@@ -12,9 +12,9 @@ import (
 
 // ToolsAdapter wraps an MCP server as a ToolRegistry tool.
 type ToolsAdapter struct {
-	base      toolregistry.BaseTool
-	manager   *Manager
-	serverID  string
+	base     toolregistry.BaseTool
+	manager  *Manager
+	serverID string
 }
 
 // NewToolsAdapter creates a meta-tool that exposes an MCP server's tools.
@@ -27,7 +27,7 @@ func NewToolsAdapter(manager *Manager, serverID string) *ToolsAdapter {
 
 // ToTool converts the adapter to a ToolRegistry tool.
 func (a *ToolsAdapter) ToTool() toolregistry.Tool {
-	return toolregistry.NewBuilder("mcp:"+a.serverID).
+	return toolregistry.NewBuilder("mcp:" + a.serverID).
 		Description(fmt.Sprintf("Call tools from MCP server: %s", a.serverID)).
 		InputSchema(map[string]any{
 			"type": "object",
@@ -44,7 +44,7 @@ func (a *ToolsAdapter) ToTool() toolregistry.Tool {
 			"required": []string{"tool", "args"},
 		}).
 		OutputSchema(map[string]any{
-			"type":       "object",
+			"type": "object",
 			"properties": map[string]any{
 				"success": map[string]any{"type": "boolean"},
 				"result":  map[string]any{"type": "string"},

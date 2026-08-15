@@ -18,17 +18,17 @@ type Workspace struct {
 
 // WorkspaceFile represents a file within a workspace
 type WorkspaceFile struct {
-	Path     string `json:"path"`
-	Name     string `json:"name"`
-	Size     int64  `json:"size"`
-	IsDir    bool   `json:"is_dir"`
+	Path     string    `json:"path"`
+	Name     string    `json:"name"`
+	Size     int64     `json:"size"`
+	IsDir    bool      `json:"is_dir"`
 	Modified time.Time `json:"modified"`
 }
 
 // FileTreeNode represents a node in the file tree
 type FileTreeNode struct {
-	Path     string          `json:"path"`
-	Name     string          `json:"name"`
-	IsDir    bool            `json:"is_dir"`
-	Children []FileTreeNode  `json:"children,omitempty"`
+	Path     string         `json:"path"`
+	Name     string         `json:"name"`
+	IsDir    bool           `json:"is_dir"`
+	Children []FileTreeNode `json:"children,omitempty"`
 }

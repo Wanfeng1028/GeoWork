@@ -38,37 +38,37 @@ type KnowledgeItem struct {
 }
 
 type Dataset struct {
-	ID        string    `json:"id"`
-	ProjectID string    `json:"projectId"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	Path      string    `json:"path"`
-	CRS       string    `json:"crs"`
-	Status    string    `json:"status"`
+	ID        string         `json:"id"`
+	ProjectID string         `json:"projectId"`
+	Name      string         `json:"name"`
+	Type      string         `json:"type"`
+	Path      string         `json:"path"`
+	CRS       string         `json:"crs"`
+	Status    string         `json:"status"`
 	Quality   map[string]any `json:"quality"`
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 type MapLayer struct {
-	ID        string    `json:"id"`
-	ProjectID string    `json:"projectId"`
-	Name      string    `json:"name"`
-	Kind      string    `json:"kind"`
-	Source    string    `json:"source"`
-	Visible   bool      `json:"visible"`
-	Opacity   float64   `json:"opacity"`
+	ID        string         `json:"id"`
+	ProjectID string         `json:"projectId"`
+	Name      string         `json:"name"`
+	Kind      string         `json:"kind"`
+	Source    string         `json:"source"`
+	Visible   bool           `json:"visible"`
+	Opacity   float64        `json:"opacity"`
 	Style     map[string]any `json:"style"`
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt time.Time      `json:"createdAt"`
 }
 
 type DeliveryPackage struct {
-	ID        string    `json:"id"`
-	ProjectID string    `json:"projectId"`
-	Name      string    `json:"name"`
-	Path      string    `json:"path"`
+	ID        string     `json:"id"`
+	ProjectID string     `json:"projectId"`
+	Name      string     `json:"name"`
+	Path      string     `json:"path"`
 	Artifacts []Artifact `json:"artifacts"`
-	Formats   []string  `json:"formats"`
-	CreatedAt time.Time `json:"createdAt"`
+	Formats   []string   `json:"formats"`
+	CreatedAt time.Time  `json:"createdAt"`
 }
 
 type AutomationRun struct {

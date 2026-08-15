@@ -30,10 +30,10 @@ type Policy struct {
 func DefaultPolicy(workspaceDir string) *Policy {
 	artifactsDir := filepath.Join(filepath.Dir(workspaceDir), "artifacts")
 	return &Policy{
-		AllowedPaths:           []string{workspaceDir, artifactsDir},
-		BlockedPaths:           []string{"/etc", "/root", "C:\\Windows", "C:\\Program Files"},
-		MaxArtifactSizeBytes:   512 * 1024 * 1024, // 512 MB
-		AllowedMIMETypes:       []string{"image/tiff", "image/png", "application/json", "text/markdown", "text/html", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/x-ipynb+json"},
+		AllowedPaths:            []string{workspaceDir, artifactsDir},
+		BlockedPaths:            []string{"/etc", "/root", "C:\\Windows", "C:\\Program Files"},
+		MaxArtifactSizeBytes:    512 * 1024 * 1024, // 512 MB
+		AllowedMIMETypes:        []string{"image/tiff", "image/png", "application/json", "text/markdown", "text/html", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/x-ipynb+json"},
 		RequireApprovalForPaths: []string{},
 	}
 }

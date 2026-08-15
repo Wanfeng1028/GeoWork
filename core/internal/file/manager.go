@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	_ "modernc.org/sqlite"
 	"go.uber.org/zap"
+	_ "modernc.org/sqlite"
 )
 
 // FileNode represents a file or folder in the project tree.

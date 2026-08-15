@@ -14,22 +14,22 @@ type TaskEventType string
 
 const (
 	// Task lifecycle events
-	TaskStarted    TaskEventType = "task.started"
-	TaskCompleted  TaskEventType = "task.completed"
-	TaskFailed     TaskEventType = "task.failed"
-	TaskCancelled  TaskEventType = "task.cancelled"
-	TaskPaused     TaskEventType = "task.paused"
+	TaskStarted   TaskEventType = "task.started"
+	TaskCompleted TaskEventType = "task.completed"
+	TaskFailed    TaskEventType = "task.failed"
+	TaskCancelled TaskEventType = "task.cancelled"
+	TaskPaused    TaskEventType = "task.paused"
 
 	// Step lifecycle events
-	StepStarted    TaskEventType = "task.step.started"
-	StepDelta      TaskEventType = "task.step.delta"
-	StepCompleted  TaskEventType = "task.step.completed"
+	StepStarted   TaskEventType = "task.step.started"
+	StepDelta     TaskEventType = "task.step.delta"
+	StepCompleted TaskEventType = "task.step.completed"
 
 	// Tool call events
-	ToolCallStarted  TaskEventType = "tool.call.started"
-	ToolCallDelta    TaskEventType = "tool.call.delta"
+	ToolCallStarted   TaskEventType = "tool.call.started"
+	ToolCallDelta     TaskEventType = "tool.call.delta"
 	ToolCallCompleted TaskEventType = "tool.call.completed"
-	ToolCallFailed   TaskEventType = "tool.call.failed"
+	ToolCallFailed    TaskEventType = "tool.call.failed"
 
 	// Permission events
 	PermissionRequired TaskEventType = "permission.required"
@@ -41,13 +41,13 @@ const (
 
 // TaskEventPayload is the standardized JSON payload for SSE task events.
 type TaskEventPayload struct {
-	Type    TaskEventType       `json:"type"`
-	TaskID  string              `json:"taskId,omitempty"`
-	StepID  string              `json:"stepId,omitempty"`
-	Message string              `json:"message,omitempty"`
-	Tool    string              `json:"tool,omitempty"`
-	Data    map[string]any      `json:"data,omitempty"`
-	Error   string              `json:"error,omitempty"`
+	Type    TaskEventType  `json:"type"`
+	TaskID  string         `json:"taskId,omitempty"`
+	StepID  string         `json:"stepId,omitempty"`
+	Message string         `json:"message,omitempty"`
+	Tool    string         `json:"tool,omitempty"`
+	Data    map[string]any `json:"data,omitempty"`
+	Error   string         `json:"error,omitempty"`
 }
 
 // PermissionRequiredPayload is the payload shape for permission.required events.
@@ -82,7 +82,7 @@ type DiffCreatedPayload struct {
 // EventBridge is a thread-safe pub/sub for task events.
 // It replaces the old runtime.App.emit() pattern and provides SSE streaming.
 type EventBridge struct {
-	mu       sync.RWMutex
+	mu          sync.RWMutex
 	subscribers map[string][]chan TaskEventPayload
 }
 
