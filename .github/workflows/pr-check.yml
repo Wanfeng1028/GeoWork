@@ -30,6 +30,14 @@ jobs:
           cd apps/desktop
           npm run lint
           npm run typecheck
+      - name: Test
+        run: |
+          cd apps/desktop
+          npm test
+      - name: Build
+        run: |
+          cd apps/desktop
+          npm run build
 
   # 后端核心检查
   core-check:

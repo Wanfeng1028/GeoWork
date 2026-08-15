@@ -18,6 +18,19 @@
 
 ## [Unreleased]
 
+### Added — 前端 Gemini 胶囊风格统一（2026-08-14，master）
+- 三个主题 primary 色统一为 Gemini 蓝 `#3186ff`（`f16497c`）
+- 全局蓝色按钮统一为 Gemini 胶囊渐变风格（`index.css` 全局样式）（`58a2de8`、`5256c86`、`5262580`、`22b3652`、`f832d3f`）
+- ChatComposer 输入框重做为 Gemini 胶囊风格 + 多行输入适配 + 发送按钮圆角胶囊（`5a596a2`、`f8b0e7f`、`32afc2e`）
+- Shell 组件（UsageModal / GlobalSearchModal）统一为 Gemini 胶囊风格（`8bd9098`、`7a2e743`）
+- CapsuleTabs 修复指示器切换飞出问题 + resize 监听类型修正 + 切换平滑动画（`321e65c`、`04d6990`、`12a75ec`、`100eb48`、`985f736`、`ab4ae25`）
+- AppShell / TitleBar / MainWorkspace 布局逻辑优化，右侧工作面板完善，连接器页响应式布局（`2e7de69`、`210200b`、`8355035`、`284351f`、`aa810c2`、`2f36f63`、`19cb2fe`、`b4ad995`、`a41304c`、`92ebc7f`）
+
+### Added — 提交门禁（2026-08-15 · ZCode）
+- 引入 husky + lint-staged：提交前对 `apps/desktop` 下 JS/TS 跑 oxlint + prettier，CSS 跑 stylelint --fix + prettier
+- 引入 commitlint：commit type 白名单 `feat/fix/docs/style/refactor/test/chore/merge/revert`，关闭 subject-case 规则以兼容中文提交
+- 新增 `.editorconfig`（2 空格缩进 + LF，与 Prettier 对齐；Python 4 空格、Go/Makefile tab）
+
 ### Added
 
 ### Added — 后端/Agent P0-P3 全阶段实现（TraeCodeCloud，2026-08-12，分支 `dev/TraeCodeCloud`）
@@ -32,9 +45,14 @@
 - `doc/06-GeoWorkAgent-P1-Detailed-Design.md` 追加 v0.5 实现记录
 - `doc/07-GeoWorkAgent-P2-Detailed-Design.md` 追加 v0.5 实现记录
 - `doc/08-GeoWorkAgent-P3-Detailed-Design.md` 追加 v0.3 实现记录
+- AGENT.md v1.4（2026-08-15 · ZCode）：§5 修改后 + §15.3 新增「代码改完必须同步文档」规则；§14 补记 2026-08-14 Gemini 胶囊化施工记录
+- `doc/02` v0.4（2026-08-15 · ZCode）：右侧工作面板规格按代码现状修正为默认 380、可拖 320–960；F2-2 状态修正为部分完成（模板分发未实现）
+- `doc/DEV_VERSION_CHECKLIST.md`（2026-08-15 · ZCode）：F2-2 状态修正、F0-3 命中数更新（6 处）、骨架屏复用项改回未完成（实际 2 处）、已知限制刷新
 
 ### Fixed
 - `orchestrator.go` `ExecutionMode` int→string 转换 vet 警告（改用 `.String()`）
+- `pr-check.yml` Go 版本 1.21 → 1.25，匹配 `core/go.mod` 的 go 1.25.0 要求（2026-08-15 · ZCode）
+- `pr-check.yml` 前端 job 补 build + test 步骤：E0 记录声称 CI 含 build+test 但实际缺失，本次补齐使 CI 与文档声明一致（2026-08-15 · ZCode）
 
 ## [1.0.0] - 2026-08-12
 - **E0 基础设施**（2026-08-12 · TraeCode AI Agent · 分支 `dev-frontend/TraeCodeCloud-SeedCode`）
