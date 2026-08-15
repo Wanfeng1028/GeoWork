@@ -1,20 +1,17 @@
 // GeoWork Go Core - Orchestrator ReAct loop tests
 //
-// Covers the two ReAct loop entry points (executePlan via StartRun,
-// executePlanFromTurn via ResumeFromCheckpoint) with a scripted model
-// gateway so no network is involved.
-//
-// TestResumeFromCheckpoint_FiresLifecycleHooks currently FAILS: the
-// resume path panics ("close of closed channel") because the first
-// run's teardown already closed run.done and executePlanFromTurn
-// closes it again. Once the two loop variants are unified, all tests
-// in this file must pass.
+// Covers the ReAct loop (fresh runs via StartRun, resumed runs via
+// ResumeFromCheckpoint) with a scripted model gateway so no network is
+// involved. The loop variants were unified in 2b599d8: executePlan takes
+// the chat history / start turn / resumed flag instead of a separate
+// executePlanFromTurn entry point.
 
 package aiagent
 
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -33,10 +30,15 @@ type scriptedResponse struct {
 
 // scriptedGateway implements modelgateway.ModelGateway with a fixed
 // response queue. Each StreamChat call consumes the next response.
+// failAll makes both call paths return errors (failure-path tests);
+// block makes StreamChat hang until the context is cancelled
+// (stop-path tests).
 type scriptedGateway struct {
 	mu        sync.Mutex
 	responses []scriptedResponse
 	calls     int
+	failAll   bool
+	block     bool
 }
 
 func (g *scriptedGateway) StreamChat(ctx context.Context, messages []modelgateway.ChatMessage, tools []modelgateway.ToolDef) (<-chan modelgateway.StreamChunk, error) {
@@ -49,7 +51,18 @@ func (g *scriptedGateway) StreamChat(ctx context.Context, messages []modelgatewa
 	}
 	g.mu.Unlock()
 
+	if g.failAll {
+		return nil, fmt.Errorf("scripted gateway: stream unavailable")
+	}
+
 	ch := make(chan modelgateway.StreamChunk, 4)
+	if g.block {
+		go func() {
+			defer close(ch)
+			<-ctx.Done()
+		}()
+		return ch, nil
+	}
 	go func() {
 		defer close(ch)
 		if resp.content != "" {
@@ -64,6 +77,9 @@ func (g *scriptedGateway) StreamChat(ctx context.Context, messages []modelgatewa
 }
 
 func (g *scriptedGateway) Chat(ctx context.Context, messages []modelgateway.ChatMessage, tools []modelgateway.ToolDef, stream bool) (*modelgateway.ChatCompletionResponse, error) {
+	if g.failAll {
+		return nil, fmt.Errorf("scripted gateway: chat unavailable")
+	}
 	return nil, fmt.Errorf("scripted gateway: Chat not implemented")
 }
 
@@ -278,5 +294,58 @@ func TestResumeFromCheckpoint_FiresLifecycleHooks(t *testing.T) {
 	}
 	if got := hook.count(HookOnRunEnd); got != 2 {
 		t.Errorf("OnRunEnd fired %d times, want 2", got)
+	}
+}
+
+// TestExecutePlan_ModelFailureKeepsFailedStatus pins the failure path:
+// when both the streaming call and its non-streaming fallback fail, the
+// run must end as StatusFailed with the reason in Result. This guards
+// the teardown fix — it previously overwrote the status with
+// StatusCompleted on every exit path, masking failures.
+func TestExecutePlan_ModelFailureKeepsFailedStatus(t *testing.T) {
+	gw := &scriptedGateway{failAll: true}
+	o := newTestOrchestrator(gw)
+
+	run, err := o.StartRun(context.Background(), "Work", "failure test")
+	if err != nil {
+		t.Fatalf("StartRun failed: %v", err)
+	}
+
+	done := waitRun(t, o, run.ID)
+	if done.Status != StatusFailed {
+		t.Errorf("run status = %q, want %q (failure must not be masked as completed)", done.Status, StatusFailed)
+	}
+	if !strings.Contains(done.Result, "run failed") {
+		t.Errorf("run.Result = %q, want it to carry the failure reason", done.Result)
+	}
+}
+
+// TestExecutePlan_StopRunMarksStopped pins the stop path: a run aborted
+// via StopRun (context cancellation) must end as StatusStopped, not
+// StatusCompleted.
+func TestExecutePlan_StopRunMarksStopped(t *testing.T) {
+	gw := &scriptedGateway{block: true}
+	o := newTestOrchestrator(gw)
+
+	run, err := o.StartRun(context.Background(), "Work", "stop test")
+	if err != nil {
+		t.Fatalf("StartRun failed: %v", err)
+	}
+
+	// Wait until the loop is actually inside the (blocked) model call
+	// before stopping, so the cancellation is what ends the run.
+	deadline := time.Now().Add(5 * time.Second)
+	for gw.callCount() < 1 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if gw.callCount() < 1 {
+		t.Fatal("model call never started within 5s")
+	}
+
+	o.StopRun(run.ID)
+
+	done := waitRun(t, o, run.ID)
+	if done.Status != StatusStopped {
+		t.Errorf("run status = %q, want %q (cancelled run must not read as completed)", done.Status, StatusStopped)
 	}
 }

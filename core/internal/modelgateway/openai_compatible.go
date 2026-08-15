@@ -3,21 +3,43 @@
 package modelgateway
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
 )
 
 // ChatMessage represents a chat message in the OpenAI API format.
+//
+// Tool-calling protocol notes: an assistant turn that invokes tools must
+// be echoed back with ToolCalls populated, and each role:"tool" reply
+// must carry the ToolCallID of the call it answers. Without these the
+// OpenAI API rejects the second turn (400) and lenient servers cannot
+// correlate results with calls.
 type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role    string     `json:"role"`
+	Content string     `json:"content"`
+
+	// ToolCallID is required on role:"tool" messages: the id of the
+	// tool call this result answers.
+	ToolCallID string `json:"tool_call_id,omitempty"`
+
+	// Name is the optional tool/function name hint (OpenAI accepts it
+	// on tool and assistant messages).
+	Name string `json:"name,omitempty"`
+
+	// ToolCalls carries the calls an assistant message produced. Only
+	// meaningful for role:"assistant". Index is not serialized here —
+	// it is a streaming-assembly detail, not part of the wire format
+	// for requests.
+	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 }
 
 // ToolCall represents a tool call from the model.
@@ -45,6 +67,15 @@ type ChatCompletionRequest struct {
 	Seed     *int          `json:"seed,omitempty"`
 	Temperature *float64 `json:"temperature,omitempty"`
 	MaxTokens int           `json:"max_tokens,omitempty"`
+
+	// StreamOptions requests stream-mode extras (currently usage stats).
+	// OpenAI-compatible servers that don't know the field ignore it.
+	StreamOptions *StreamOptions `json:"stream_options,omitempty"`
+}
+
+// StreamOptions mirrors the OpenAI stream_options request field.
+type StreamOptions struct {
+	IncludeUsage bool `json:"include_usage"`
 }
 
 // ToolDef defines a tool for the model to call.
@@ -145,6 +176,10 @@ func (c *OpenAICompatibleClient) StreamChat(ctx context.Context, messages []Chat
 		Messages: messages,
 		Tools:    tools,
 		Stream:   true,
+		// Ask for token usage on the final chunk. Servers that don't
+		// support stream_options ignore it; usage then stays nil and
+		// the caller treats it as "unreported".
+		StreamOptions: &StreamOptions{IncludeUsage: true},
 	}
 
 	reqData, err := json.Marshal(reqBody)
@@ -152,18 +187,7 @@ func (c *OpenAICompatibleClient) StreamChat(ctx context.Context, messages []Chat
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	url := c.provider.BaseURL + "/v1/chat/completions"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqData))
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	if c.provider.APIKeyRef != "" {
-		req.Header.Set("Authorization", "Bearer "+c.provider.APIKeyRef)
-	}
-
-	resp, err := c.retryRequest(ctx, req)
+	resp, err := c.retryRequest(ctx, http.MethodPost, c.provider.BaseURL+"/v1/chat/completions", reqData)
 	if err != nil {
 		return nil, err
 	}
@@ -230,17 +254,7 @@ func (c *OpenAICompatibleClient) doChat(ctx context.Context, reqBody ChatComplet
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	url := c.provider.BaseURL + "/v1/chat/completions"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqData))
-	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	if c.provider.APIKeyRef != "" {
-		req.Header.Set("Authorization", "Bearer "+c.provider.APIKeyRef)
-	}
-
-	resp, err := c.retryRequest(ctx, req)
+	resp, err := c.retryRequest(ctx, http.MethodPost, c.provider.BaseURL+"/v1/chat/completions", reqData)
 	if err != nil {
 		return nil, err
 	}
@@ -258,13 +272,34 @@ func (c *OpenAICompatibleClient) doChat(ctx context.Context, reqBody ChatComplet
 	return &result, nil
 }
 
-func (c *OpenAICompatibleClient) retryRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
+// retryRequest POSTs reqData to url with exponential backoff. A fresh
+// *http.Request (and a fresh body reader) is built per attempt: reusing
+// one request object would send an empty body after the first attempt
+// consumed the reader.
+func (c *OpenAICompatibleClient) retryRequest(ctx context.Context, method, url string, reqData []byte) (*http.Response, error) {
 	var resp *http.Response
 	var err error
 	for i := 0; i <= c.retryCount; i++ {
-		resp, err = c.httpClient.Do(req.WithContext(ctx))
-		if err == nil && resp.StatusCode < 500 {
+		req, rerr := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(reqData))
+		if rerr != nil {
+			return nil, fmt.Errorf("create request: %w", rerr)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		if c.provider.APIKeyRef != "" {
+			req.Header.Set("Authorization", "Bearer "+c.provider.APIKeyRef)
+		}
+
+		resp, err = c.httpClient.Do(req)
+		retryable := err != nil || resp.StatusCode >= 500 || resp.StatusCode == http.StatusTooManyRequests
+		if !retryable {
 			break
+		}
+		// Drain and close the failed attempt so the connection can be
+		// reused (or discarded) before we retry.
+		if resp != nil {
+			_, _ = io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+			resp = nil
 		}
 		if err != nil {
 			c.log.Warn("request attempt failed", zap.Int("attempt", i+1), zap.Error(err))
@@ -274,41 +309,88 @@ func (c *OpenAICompatibleClient) retryRequest(ctx context.Context, req *http.Req
 	return resp, err
 }
 
+// parseStream decodes an SSE ("text/event-stream") body into StreamChunks.
+//
+// The body is a sequence of lines: `data: <json>` payloads terminated by
+// a blank line, with `data: [DONE]` as the end sentinel. Per the SSE
+// spec, lines starting with ":" are comments (heartbeats), other field
+// names (event:, id:, retry:) are ignored, and consecutive data: lines
+// are joined with "\n" before dispatch. A bufio.Scanner handles the
+// framing; JSON decoding only sees the extracted payload.
 func (c *OpenAICompatibleClient) parseStream(body io.ReadCloser, ch chan StreamChunk) {
 	defer body.Close()
 	defer close(ch)
 
-	decoder := json.NewDecoder(body)
-	for decoder.More() {
-		var rawLine map[string]any
-		if err := decoder.Decode(&rawLine); err != nil {
-			break
-		}
+	scanner := bufio.NewScanner(body)
+	// SSE payloads can be large (tool-call argument deltas); allow up
+	// to 4 MiB per line instead of the 64 KiB default.
+	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
 
-		dataVal, ok := rawLine["data"]
-		if !ok {
-			continue
-		}
-		dataStr, _ := dataVal.(string)
-		if dataStr == "[DONE]" {
-			ch <- StreamChunk{IsDone: true}
-			break
-		}
-
-		var chunk ChatCompletionResponse
-		if err := json.Unmarshal([]byte(dataStr), &chunk); err != nil {
-			continue
-		}
-
-		for _, choice := range chunk.Choices {
-			if choice.Delta.Content != "" {
-				ch <- StreamChunk{Content: choice.Delta.Content}
+	var dataLines []string
+	for scanner.Scan() {
+		line := scanner.Text()
+		switch {
+		case line == "":
+			// Blank line: dispatch the accumulated event, if any.
+			if len(dataLines) == 0 {
+				continue
 			}
-			if len(choice.Delta.ToolCalls) > 0 {
-				ch <- StreamChunk{ToolCalls: choice.Delta.ToolCalls}
+			data := strings.Join(dataLines, "\n")
+			dataLines = dataLines[:0]
+			if data == "[DONE]" {
+				ch <- StreamChunk{IsDone: true}
+				return
 			}
-			if choice.FinishReason == "stop" || choice.FinishReason == "tool_calls" {
-				ch <- StreamChunk{IsDone: true, Usage: chunk.Usage}
+			var chunk ChatCompletionResponse
+			if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+				// Malformed payload: skip it, keep the stream alive.
+				continue
+			}
+			// Usage arrives on its own chunk (choices empty) when
+			// stream_options.include_usage was requested.
+			if chunk.Usage != nil {
+				ch <- StreamChunk{Usage: chunk.Usage}
+			}
+			for _, choice := range chunk.Choices {
+				if choice.Delta.Content != "" {
+					ch <- StreamChunk{Content: choice.Delta.Content}
+				}
+				if len(choice.Delta.ToolCalls) > 0 {
+					ch <- StreamChunk{ToolCalls: choice.Delta.ToolCalls}
+				}
+				if choice.FinishReason == "stop" || choice.FinishReason == "tool_calls" || choice.FinishReason == "length" {
+					ch <- StreamChunk{IsDone: true}
+				}
+			}
+		case strings.HasPrefix(line, ":"):
+			// SSE comment / heartbeat — ignore.
+		case strings.HasPrefix(line, "data:"):
+			payload := strings.TrimPrefix(line, "data:")
+			// The spec allows a single optional space after the colon.
+			payload = strings.TrimPrefix(payload, " ")
+			dataLines = append(dataLines, payload)
+		default:
+			// event:, id:, retry: and any unknown field — ignore.
+		}
+	}
+	// Stream ended without [DONE]: flush any residual event so a
+	// truncated-but-parseable final chunk is not lost.
+	if len(dataLines) > 0 {
+		data := strings.Join(dataLines, "\n")
+		if data != "[DONE]" {
+			var chunk ChatCompletionResponse
+			if err := json.Unmarshal([]byte(data), &chunk); err == nil {
+				if chunk.Usage != nil {
+					ch <- StreamChunk{Usage: chunk.Usage}
+				}
+				for _, choice := range chunk.Choices {
+					if choice.Delta.Content != "" {
+						ch <- StreamChunk{Content: choice.Delta.Content}
+					}
+					if len(choice.Delta.ToolCalls) > 0 {
+						ch <- StreamChunk{ToolCalls: choice.Delta.ToolCalls}
+					}
+				}
 			}
 		}
 	}

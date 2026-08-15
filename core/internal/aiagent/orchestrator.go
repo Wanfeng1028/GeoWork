@@ -27,6 +27,7 @@ const (
 	StatusPaused    Status = "paused"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
+	StatusStopped   Status = "stopped" // cancelled via StopRun / context cancellation
 	StatusRecovery  Status = "recovery"
 )
 
@@ -494,20 +495,34 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		// P3-1: capture the final assistant message as run.Result so
 		// sub-agent callers can collect the outcome via CollectSubAgentResult
 		// after the RunContext has been torn down. Prefer the last assistant
-		// message; fall back to the memory summary.
-		if rc.Memory != nil {
+		// message; fall back to the memory summary. A Result already set
+		// (e.g. the failure reason below) is preserved.
+		if run.Result == "" && rc.Memory != nil {
 			run.Result = rc.Memory.LastAssistantMessage()
 		}
-		if run.Result == "" {
+		if run.Result == "" && rc.Memory != nil {
 			run.Result = rc.Memory.Summary(2000)
 		}
-		run.Status = StatusCompleted
+		// Terminal status follows the exit path: the model-call
+		// failure path has already stamped StatusFailed (keep it);
+		// a cancelled context (StopRun / shutdown) maps to
+		// StatusStopped; everything else is a normal completion.
+		// Previously this unconditionally set StatusCompleted, which
+		// silently masked failed and cancelled runs.
+		switch {
+		case run.Status == StatusFailed:
+			// keep — set by the error path before returning
+		case ctx.Err() != nil:
+			run.Status = StatusStopped
+		default:
+			run.Status = StatusCompleted
+		}
 		run.UpdatedAt = time.Now()
 		o.mu.Lock()
 		o.running[run.ID] = false
 		o.mu.Unlock()
 		o.saveCheckpoint(run, rc)
-		doneData := map[string]any{"runId": run.ID, "state": string(rc.State)}
+		doneData := map[string]any{"runId": run.ID, "state": string(rc.State), "status": string(run.Status)}
 		if resumed {
 			doneData["resumed"] = true
 		}
@@ -624,6 +639,9 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			o.log.Error("fallback model call also failed", zap.Error(err))
 			rc.State = StateFailed
 			run.Status = StatusFailed
+			// Surface the failure reason via Result so callers (UI,
+			// sub-agent manager) can show why the run died.
+			run.Result = fmt.Sprintf("run failed: %v", err)
 			o.emitEvent(rc, Event{
 				Type:      "error",
 				Timestamp: time.Now(),
@@ -634,10 +652,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		}
 	}
 
-		// 2.4 Record assistant response
+		// 2.4 Record assistant response. ToolCalls must be echoed back
+		// on the assistant message: without them (and the matching
+		// tool_call_id on each tool reply) strict OpenAI-compatible
+		// servers reject the follow-up turn and lenient ones cannot
+		// correlate results with calls.
 		chatHistory = append(chatHistory, modelgateway.ChatMessage{
-			Role:    "assistant",
-			Content: content,
+			Role:      "assistant",
+			Content:   content,
+			ToolCalls: historyToolCalls(toolCalls),
 		})
 		rc.Memory.Append("assistant", content)
 
@@ -684,9 +707,10 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 					Data:      map[string]any{"error": fmt.Sprintf("tool %q not allowed in state %s", tc.Function.Name, rc.State)},
 				})
 				chatHistory = append(chatHistory, modelgateway.ChatMessage{
-					Role:    "tool",
-					Content: fmt.Sprintf("Error: tool %q not allowed in state %s", tc.Function.Name, rc.State),
-				})
+				Role:       "tool",
+				Content:    fmt.Sprintf("Error: tool %q not allowed in state %s", tc.Function.Name, rc.State),
+				ToolCallID: tc.ID,
+			})
 				toolCallRecords = append(toolCallRecords, ToolCallRecord{
 					ToolName: tc.Function.Name,
 					Args:     args,
@@ -789,11 +813,13 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 				toolContent = string(resultJSON)
 			}
 
-			// 2.7.7 Record to chat history and memory
-			chatHistory = append(chatHistory, modelgateway.ChatMessage{
-				Role:    "tool",
-				Content: toolContent,
-			})
+			// 2.7.7 Record to chat history and memory. The tool_call_id
+		// links this result to the assistant's ToolCall above.
+		chatHistory = append(chatHistory, modelgateway.ChatMessage{
+			Role:       "tool",
+			Content:    toolContent,
+			ToolCallID: tc.ID,
+		})
 			stdout, stderr := extractStdoutStderr(result)
 			rc.Memory.AppendToolResult(tc.Function.Name, stdout, stderr)
 
@@ -1024,11 +1050,13 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 	}
 
 	for chunk := range ch {
+		// Usage can arrive on a dedicated chunk (choices empty) when
+		// stream_options.include_usage is honored, or on the final
+		// choice chunk. Capture it wherever it shows up.
+		if chunk.Usage != nil {
+			usage = chunk.Usage
+		}
 		if chunk.IsDone {
-			// Final chunk carries Usage (when provider reports it).
-			if chunk.Usage != nil {
-				usage = chunk.Usage
-			}
 			break
 		}
 
@@ -1666,4 +1694,22 @@ func extractStdoutStderr(result map[string]any) (string, string) {
 		}
 	}
 	return stdout, stderr
+}
+
+// historyToolCalls converts assembled tool calls into the form stored on
+// assistant history messages. Index is a streaming-assembly detail and is
+// stripped: the request wire format identifies calls by ID only.
+func historyToolCalls(toolCalls []modelgateway.ToolCall) []modelgateway.ToolCall {
+	if len(toolCalls) == 0 {
+		return nil
+	}
+	out := make([]modelgateway.ToolCall, len(toolCalls))
+	for i, tc := range toolCalls {
+		out[i] = modelgateway.ToolCall{
+			ID:       tc.ID,
+			Type:     tc.Type,
+			Function: tc.Function,
+		}
+	}
+	return out
 }
