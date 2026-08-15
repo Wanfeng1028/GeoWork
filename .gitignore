@@ -45,6 +45,13 @@ logs/
 # Cache
 .pytest_cache/
 
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+coverage.out
+coverage.xml
+
 # design files
 *.sketch
 *.fig
