@@ -420,7 +420,7 @@ func (o *Orchestrator) StartRunWithMemory(ctx context.Context, mode, prompt, par
 	run.Plan = plan
 	run.UpdatedAt = time.Now()
 
-	go o.executePlan(runCtx, run, rc)
+	go o.executePlan(runCtx, run, rc, nil, 0, false)
 
 	return run, nil
 }
@@ -452,7 +452,12 @@ func (o *Orchestrator) removeRunContext(runID string) {
 }
 
 // executePlan is the ReAct loop: model calls -> tool execution -> feedback -> next turn.
-func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext) {
+//
+// It serves both fresh runs (chatHistory nil, startTurn 0, resumed false)
+// and checkpoint-resumed runs (chatHistory pre-seeded, startTurn > 0,
+// resumed true). Resumed runs re-fire the run/turn lifecycle hooks so
+// observers see a complete lifecycle regardless of entry point.
+func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext, chatHistory []modelgateway.ChatMessage, startTurn int, resumed bool) {
 	// P1-2 §3.3: initialize the trajectory so per-turn Record() calls
 	// have somewhere to append. FinishRun is deferred below so the
 	// final trajectory is flushed to storage even on early return.
@@ -502,11 +507,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		o.running[run.ID] = false
 		o.mu.Unlock()
 		o.saveCheckpoint(run, rc)
+		doneData := map[string]any{"runId": run.ID, "state": string(rc.State)}
+		if resumed {
+			doneData["resumed"] = true
+		}
 		o.emitEvent(rc, Event{
 			Type:      "done",
 			Timestamp: time.Now(),
 			RunID:     run.ID,
-			Data:      map[string]any{"runId": run.ID, "state": string(rc.State)},
+			Data:      doneData,
 		})
 		o.removeRunContext(run.ID)
 		close(run.done)
@@ -519,8 +528,7 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 	}
 
 	// 2. ReAct loop
-	turnCount := 0
-	var chatHistory []modelgateway.ChatMessage
+	turnCount := startTurn
 
 	for {
 		// 2.1 Check stop conditions
@@ -937,9 +945,14 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 	if len(state.Memory) > 0 {
 		_ = rc.Memory.Import(state.Memory)
 	}
-	// chatHistory is used by executePlanFromTurn below — pass it in
-	// rather than re-deriving from Memory (which only keeps the
-	// bounded shortHistory, not the full ReAct conversation).
+	// chatHistory is passed into executePlan below rather than re-derived
+	// from Memory (which only keeps the bounded shortHistory, not the full
+	// ReAct conversation).
+
+	// The first leg's teardown already closed run.done. Re-arm it so
+	// WaitForRun blocks again and the resumed teardown's close(run.done)
+	// does not panic on an already-closed channel.
+	run.done = make(chan struct{})
 
 	// Mark the run as running again.
 	o.mu.Lock()
@@ -962,350 +975,9 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 	})
 
 	// Re-enter the ReAct loop from the saved turn index.
-	go o.executePlanFromTurn(runCtx, run, rc, state.ChatHistory, state.TurnIndex)
+	go o.executePlan(runCtx, run, rc, state.ChatHistory, state.TurnIndex, true)
 
 	return nil
-}
-
-// executePlanFromTurn is executePlan with a pre-seeded chatHistory and
-// a non-zero starting turn index. Used by ResumeFromCheckpoint to skip
-// re-executing the turns already captured in the checkpoint.
-//
-// The loop body is identical to executePlan — we just don't reset
-// chatHistory to nil and we start turnCount at startTurn rather than 0.
-// This keeps the periodic-checkpoint math consistent (a resumed run at
-// turn 6 will checkpoint at turn 10, not turn 5).
-func (o *Orchestrator) executePlanFromTurn(ctx context.Context, run *Run, rc *RunContext, chatHistory []modelgateway.ChatMessage, startTurn int) {
-	if o.trajectory != nil {
-		o.trajectory.StartRun(run.ID, run.Mode, run.Prompt)
-	}
-	defer func() {
-		if o.trajectory != nil {
-			o.trajectory.FinishRun(run.ID)
-		}
-	}()
-	defer func() {
-		// P3-1: capture the final assistant message as run.Result (same
-		// as executePlan) so resumed runs also expose their outcome.
-		if rc.Memory != nil {
-			run.Result = rc.Memory.LastAssistantMessage()
-		}
-		if run.Result == "" {
-			run.Result = rc.Memory.Summary(2000)
-		}
-		run.Status = StatusCompleted
-		run.UpdatedAt = time.Now()
-		o.mu.Lock()
-		o.running[run.ID] = false
-		o.mu.Unlock()
-		o.saveCheckpoint(run, rc)
-		o.emitEvent(rc, Event{
-			Type:      "done",
-			Timestamp: time.Now(),
-			RunID:     run.ID,
-			Data:      map[string]any{"runId": run.ID, "state": string(rc.State), "resumed": true},
-		})
-		o.removeRunContext(run.ID)
-		close(run.done)
-	}()
-
-	memorySummary := rc.Memory.Summary(2000)
-	if run.parentMemory != "" {
-		memorySummary = run.parentMemory + "\n\n" + memorySummary
-	}
-
-	turnCount := startTurn
-	for {
-		if turnCount >= o.maxTurns {
-			o.log.Warn("max turns reached, stopping",
-				zap.Int("maxTurns", o.maxTurns),
-				zap.String("runId", run.ID),
-				zap.Int("startTurn", startTurn))
-			break
-		}
-		if ctx.Err() != nil {
-			break
-		}
-
-		turnStart := time.Now()
-		var toolCallRecords []ToolCallRecord
-
-		budgetResult := o.contextBld.BuildWithMessages(
-			run.Mode, run.Prompt, memorySummary, chatHistory,
-		)
-		messages := budgetResult.Messages
-		tools := budgetResult.Tools
-
-		// P3-4 L5: if L4 summarization was applied but the prompt is
-		// still over budget, solidify the summary to Memory and clear
-		// chatHistory so the next turn starts from the memory summary.
-		if budgetResult.Summary != "" {
-			var msgContent strings.Builder
-			for _, m := range budgetResult.Messages {
-				msgContent.WriteString(m.Content)
-			}
-			if EstimateTokens(msgContent.String()) > o.budget.MaxPromptTokens-o.budget.ReservedOutputTokens {
-				o.SolidifyMemory(rc, budgetResult.Summary)
-				chatHistory = nil
-				memorySummary = rc.Memory.Summary(2000)
-				if run.parentMemory != "" {
-					memorySummary = run.parentMemory + "\n\n" + memorySummary
-				}
-				budgetResult = o.contextBld.BuildWithMessages(
-					run.Mode, run.Prompt, memorySummary, nil,
-				)
-				messages = budgetResult.Messages
-				tools = budgetResult.Tools
-			}
-		}
-
-		if rc.Paused {
-			o.emitEvent(rc, Event{
-				Type:      "state_change",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data:      map[string]any{"to": "waiting_for_user", "reason": rc.PauseReason},
-			})
-			select {
-			case <-ctx.Done():
-				return
-			case <-rc.PauseCh:
-			}
-		}
-
-		content, toolCalls, usage, err := o.streamModelCall(ctx, messages, tools, rc)
-		if err != nil {
-			o.log.Error("model call failed, trying non-streaming fallback",
-				zap.String("runId", run.ID),
-				zap.Error(err))
-			content, toolCalls, usage, err = o.fallbackModelCall(ctx, messages, tools)
-			if err != nil {
-				o.log.Error("fallback model call also failed", zap.Error(err))
-				rc.State = StateFailed
-				run.Status = StatusFailed
-				o.emitEvent(rc, Event{
-					Type:      "error",
-					Timestamp: time.Now(),
-					RunID:     run.ID,
-					Data:      map[string]any{"error": err.Error()},
-				})
-				return
-			}
-		}
-
-		chatHistory = append(chatHistory, modelgateway.ChatMessage{
-			Role:    "assistant",
-			Content: content,
-		})
-		rc.Memory.Append("assistant", content)
-
-		o.emitEvent(rc, Event{
-			Type:      "message",
-			Timestamp: time.Now(),
-			RunID:     run.ID,
-			Data:      map[string]any{"content": content, "role": "assistant"},
-		})
-
-		if len(toolCalls) == 0 {
-			o.log.Info("task completed, no more tool calls", zap.String("runId", run.ID))
-			rc.Memory.SetTaskSummary(run.Prompt)
-			break
-		}
-
-		o.checkVerifyingTransition(rc, toolCalls)
-
-		for _, tc := range toolCalls {
-			toolStart := time.Now()
-			approved := false
-			var args map[string]any
-			if tc.Function.Arguments != "" {
-				_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
-			}
-
-			targetState := o.inferStateFromTool(tc.Function.Name)
-			if targetState != rc.State && targetState != StateIdle {
-				o.transitionTo(targetState, fmt.Sprintf("tool %s requires %s", tc.Function.Name, targetState), rc)
-			}
-
-			if !o.stateMachine.ToolIsAllowed(rc.State, tc.Function.Name) {
-				o.emitEvent(rc, Event{
-					Type:      "error",
-					Timestamp: time.Now(),
-					RunID:     run.ID,
-					Data:      map[string]any{"error": fmt.Sprintf("tool %q not allowed in state %s", tc.Function.Name, rc.State)},
-				})
-				chatHistory = append(chatHistory, modelgateway.ChatMessage{
-					Role:    "tool",
-					Content: fmt.Sprintf("Error: tool %q not allowed in state %s", tc.Function.Name, rc.State),
-				})
-				toolCallRecords = append(toolCallRecords, ToolCallRecord{
-					ToolName: tc.Function.Name,
-					Args:     args,
-					Error:    fmt.Sprintf("not allowed in state %s", rc.State),
-					Duration: time.Since(toolStart),
-				})
-				continue
-			}
-
-			o.emitEvent(rc, Event{
-				Type:      "tool_call",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data:      map[string]any{"toolName": tc.Function.Name, "args": args},
-			})
-
-			toolCtx := toolregistry.WithRunID(ctx, run.ID)
-			// P2-3: fire OnToolBefore/OnToolAfter around the second
-			// executePlan loop (executePlanFromTurn resumes reuse the
-			// same path, so hooks fire consistently on resume).
-			o.fireHook(HookOnToolBefore, &HookContext{
-				RunID:     run.ID,
-				Run:       run,
-				RunCtx:    rc,
-				TurnIndex: turnCount,
-				ToolName:  tc.Function.Name,
-				ToolArgs:  args,
-				Cancel:    rc.Cancel,
-			})
-			// P3-2 §3.5: evaluate Harness rules before execution.
-			execMode, harnessErr := o.evaluateHarness(rc, tc.Function.Name, args)
-			var result map[string]any
-			var execErr error
-			if harnessErr != nil {
-				result = nil
-				execErr = harnessErr
-			} else if rc.specExec != nil && rc.specExec.HasResult(tc.ID) {
-				// P3-3 §4.5: reuse speculative result from streaming.
-				// The read-only tool already ran during model output;
-				// skip re-execution and use the cached result.
-				specResult, _ := rc.specExec.GetResult(tc.ID)
-				if specResult != nil {
-					result = specResult.Result
-					execErr = specResult.Error
-					if o.log != nil {
-						o.log.Info("tool executed speculatively",
-							zap.String("tool", tc.Function.Name),
-							zap.String("toolCallId", tc.ID),
-						)
-					}
-				} else {
-					result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
-				}
-			} else {
-				result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, execMode)
-			}
-			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
-				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
-				if waitErr == nil {
-					approved = true
-					result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
-				} else {
-					result = nil
-					execErr = waitErr
-				}
-			}
-			o.fireHook(HookOnToolAfter, &HookContext{
-				RunID:      run.ID,
-				Run:        run,
-				RunCtx:     rc,
-				TurnIndex:  turnCount,
-				ToolName:   tc.Function.Name,
-				ToolArgs:   args,
-				ToolResult: result,
-				ToolError:  execErr,
-				Cancel:     rc.Cancel,
-			})
-
-			toolContent := ""
-			if execErr != nil {
-				toolContent = fmt.Sprintf("Error: %s", execErr.Error())
-			} else {
-				resultJSON, _ := json.Marshal(result)
-				toolContent = string(resultJSON)
-			}
-
-			chatHistory = append(chatHistory, modelgateway.ChatMessage{
-				Role:    "tool",
-				Content: toolContent,
-			})
-			stdout, stderr := extractStdoutStderr(result)
-			rc.Memory.AppendToolResult(tc.Function.Name, stdout, stderr)
-
-			o.emitEvent(rc, Event{
-				Type:      "tool_result",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data: map[string]any{
-					"toolName": tc.Function.Name,
-					"result":   result,
-					"error":    execErr,
-				},
-			})
-
-			rec := ToolCallRecord{
-				ToolName: tc.Function.Name,
-				Args:     args,
-				Duration: time.Since(toolStart),
-				Approved: approved,
-			}
-			if execErr != nil {
-				rec.Error = execErr.Error()
-			} else {
-				rec.Result = result
-			}
-			toolCallRecords = append(toolCallRecords, rec)
-		}
-
-		if o.trajectory != nil {
-			o.trajectory.Record(run.ID, TurnRecord{
-				TurnIndex:     turnCount,
-				Timestamp:     turnStart,
-				InputMessages: messages,
-				ModelResponse: content,
-				ToolCalls:     toolCallRecords,
-				TokenUsage:    usage,
-				Duration:      time.Since(turnStart),
-			})
-		}
-		if o.usageMeter != nil && usage != nil {
-			modelName := ""
-			if o.provider != nil {
-				modelName = o.provider.DefaultModel
-			}
-			cost := estimateCost(usage, o.provider)
-			o.usageMeter.Record(run.ID, o.providerID, "", modelName, usage, cost)
-			runTotal := o.usageMeter.GetRunUsage(run.ID)
-			o.emitEvent(rc, Event{
-				Type:      "usage",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data: map[string]any{
-					"runId":            run.ID,
-					"promptTokens":     usage.PromptTokens,
-					"completionTokens": usage.CompletionTokens,
-					"cachedTokens":     usage.CachedTokens,
-					"totalTokens":      usage.TotalTokens,
-					"runTotalTokens":   runTotal,
-					"estimatedCost":    cost,
-				},
-			})
-		}
-
-		if turnCount > 0 && turnCount%checkpointInterval == 0 {
-			o.saveCheckpointWithReason(run, rc, "periodic")
-		}
-
-		// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
-		o.fireHook(HookOnTurnEnd, &HookContext{
-			RunID:     run.ID,
-			Run:       run,
-			RunCtx:    rc,
-			TurnIndex: turnCount,
-			Cancel:    rc.Cancel,
-		})
-
-		turnCount++
-	}
 }
 
 // estimateCost computes a dollar cost estimate for a model call.
