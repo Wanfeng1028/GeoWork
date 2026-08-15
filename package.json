@@ -17,11 +17,26 @@
     "test:worker": "cd workers/geo-python && python -m pytest",
     "verify:static": "py scripts/verify_v1_static.py",
     "verify:flows": "py scripts/verify_v1_flows.py",
-    "check:available": "py scripts/check_all.py"
+    "check:available": "py scripts/check_all.py",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/desktop/**/*.{js,jsx,ts,tsx}": [
+      "oxlint --config apps/desktop/.oxlintrc.json",
+      "prettier --write"
+    ],
+    "apps/desktop/**/*.css": [
+      "stylelint --config apps/desktop/.stylelintrc.json --fix",
+      "prettier --write"
+    ]
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0"
   }
 }
