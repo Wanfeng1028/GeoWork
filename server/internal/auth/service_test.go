@@ -1,16 +1,40 @@
 package auth
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"server/internal/storage"
 	"server/internal/testutil"
 
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// newLoginRouter wires the Login handler onto a Gin engine in test mode so the
+// handler can be exercised end-to-end over HTTP.
+func newLoginRouter(svc *Service) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/api/auth/login", svc.Login)
+	return r
+}
+
+// doLogin posts a login request and returns the recorded response.
+func doLogin(r *gin.Engine, email, password string) *httptest.ResponseRecorder {
+	body, _ := json.Marshal(LoginRequest{Email: email, Password: password})
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
 
 func TestHashPassword(t *testing.T) {
 	hash, err := hashPassword("MySecure1")
@@ -50,25 +74,24 @@ func TestVerifyPassword_LegacySHA256(t *testing.T) {
 }
 
 func TestIsLegacySHA256(t *testing.T) {
+	sum := sha256.Sum256([]byte("test"))
+	realHex := hex.EncodeToString(sum[:])
 	tests := []struct {
+		name string
 		hash string
 		want bool
 	}{
-		{hex.EncodeToString(sha256.New().Sum(nil)), false}, // 64-char but all zeros — actually let me compute properly
-		{"$2a$10$abcdefghijklmnop", false},                 // bcrypt format
-		{"short", false},
+		{"real 64-char hex", realHex, true},
+		{"bcrypt format", "$2a$10$abcdefghijklmnop", false},
+		{"too short", "short", false},
+		{"64 chars but non-hex", string(make([]byte, 64)), false},
 	}
-	// A real 64-char hex string
-	h := sha256.Sum256([]byte("test"))
-	hexStr := hex.EncodeToString(h[:])
-	tests[0].hash = hexStr
-	tests[0].want = true
-
 	for _, tc := range tests {
-		got := isLegacySHA256(tc.hash)
-		if got != tc.want {
-			t.Errorf("isLegacySHA256(%q) = %v, want %v", tc.hash, got, tc.want)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isLegacySHA256(tc.hash); got != tc.want {
+				t.Errorf("isLegacySHA256(%q) = %v, want %v", tc.hash, got, tc.want)
+			}
+		})
 	}
 }
 
@@ -77,12 +100,13 @@ func TestGenerateToken(t *testing.T) {
 	if tok == "" {
 		t.Fatal("expected non-empty token")
 	}
-	// Should have the format: access_user1_<hex>
-	if len(tok) < 20 {
-		t.Errorf("token too short: %q", tok)
+	// Token must embed its type and owner so it can be routed back to the user.
+	if got, want := tok[:12], "access_user1"; got != want {
+		t.Errorf("token prefix = %q, want %q", got, want)
 	}
-	if tok[:12] != "access_user1" {
-		t.Errorf("token prefix = %q, want 'access_user1_...'", tok[:12])
+	// Two tokens for the same user must differ (random suffix).
+	if tok == generateToken("user1", "access") {
+		t.Error("expected distinct tokens for repeated generation")
 	}
 }
 
@@ -96,44 +120,171 @@ func TestSplitEmail(t *testing.T) {
 		{"noemail", "noemail"},
 	}
 	for _, tc := range tests {
-		got := splitEmail(tc.email)
-		if got != tc.want {
+		if got := splitEmail(tc.email); got != tc.want {
 			t.Errorf("splitEmail(%q) = %q, want %q", tc.email, got, tc.want)
 		}
 	}
 }
 
+// TestLogin_Success exercises the Login handler over HTTP with a seeded user and
+// asserts the full success contract: 200, tokens issued, user echoed without the
+// password hash, and both tokens persisted in the store.
 func TestLogin_Success(t *testing.T) {
 	store := testutil.NewTestStore(t)
 	user := testutil.SeedTestUser(t, store)
 	svc := NewService(store)
+	r := newLoginRouter(svc)
 
-	// Verify user exists and password works
-	if !verifyPassword(user.PasswordHash, "Test1234") {
-		t.Fatal("seeded user password should verify")
+	w := doLogin(r, "test@example.com", "Test1234")
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusOK, w.Body.String())
 	}
 
-	// Verify GetUserByEmail works (Login handler uses this)
-	got, err := store.GetUserByEmail("test@example.com")
-	if err != nil {
-		t.Fatalf("GetUserByEmail: %v", err)
-	}
-	if got == nil || got.ID != user.ID {
-		t.Fatalf("expected user %s, got %v", user.ID, got)
+	var resp LoginResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to decode response: %v; body: %s", err, w.Body.String())
 	}
 
-	_ = svc // service created successfully
+	if resp.AccessToken == "" || resp.RefreshToken == "" {
+		t.Fatalf("expected access and refresh tokens, got %+v", resp)
+	}
+	if resp.User == nil || resp.User.ID != user.ID {
+		t.Fatalf("expected user %s in response, got %+v", user.ID, resp.User)
+	}
+	if resp.User.PasswordHash != "" {
+		t.Error("password hash must not be exposed in the login response")
+	}
+
+	// Both tokens must be persisted and retrievable.
+	for _, tok := range []string{resp.AccessToken, resp.RefreshToken} {
+		got, err := store.GetToken(tok)
+		if err != nil || got == nil {
+			t.Errorf("token %q not persisted: %v", tok, err)
+			continue
+		}
+		if got.UserID != user.ID {
+			t.Errorf("token %q belongs to %q, want %q", tok, got.UserID, user.ID)
+		}
+	}
 }
 
+// TestLogin_WrongPassword verifies that a bad password is rejected with 401 and
+// no session tokens are created.
+func TestLogin_WrongPassword(t *testing.T) {
+	store := testutil.NewTestStore(t)
+	testutil.SeedTestUser(t, store)
+	svc := NewService(store)
+	r := newLoginRouter(svc)
+
+	w := doLogin(r, "test@example.com", "WrongPass1")
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusUnauthorized, w.Body.String())
+	}
+}
+
+// TestLogin_UserNotFound verifies that an unknown email is rejected with 401 when
+// auto-registration is disabled (the default).
 func TestLogin_UserNotFound(t *testing.T) {
 	store := testutil.NewTestStore(t)
-	// No users seeded
-	got, err := store.GetUserByEmail("nonexistent@example.com")
-	if err != nil {
-		t.Fatalf("GetUserByEmail: %v", err)
+	svc := NewService(store)
+	r := newLoginRouter(svc)
+
+	w := doLogin(r, "nobody@example.com", "Test1234")
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusUnauthorized, w.Body.String())
 	}
-	if got != nil {
-		t.Error("expected nil for non-existent user")
+}
+
+// TestLogin_InvalidEmail verifies that a malformed email is rejected with 400
+// before any store lookup occurs.
+func TestLogin_InvalidEmail(t *testing.T) {
+	store := testutil.NewTestStore(t)
+	svc := NewService(store)
+	r := newLoginRouter(svc)
+
+	w := doLogin(r, "not-an-email", "Test1234")
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusBadRequest, w.Body.String())
+	}
+}
+
+// TestLogin_AutoRegister verifies that when GEOWORK_AUTO_REGISTER_ENABLED is set,
+// logging in with an unknown email creates the account and issues tokens.
+func TestLogin_AutoRegister(t *testing.T) {
+	t.Setenv("GEOWORK_AUTO_REGISTER_ENABLED", "true")
+
+	store := testutil.NewTestStore(t)
+	svc := NewService(store)
+	r := newLoginRouter(svc)
+
+	w := doLogin(r, "newuser@example.com", "StrongPass1")
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusOK, w.Body.String())
+	}
+
+	var resp LoginResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if resp.User == nil || resp.User.Email != "newuser@example.com" {
+		t.Fatalf("expected auto-registered user, got %+v", resp.User)
+	}
+	if resp.User.Plan != "free" {
+		t.Errorf("auto-registered plan = %q, want %q", resp.User.Plan, "free")
+	}
+
+	// The user must now exist in the store.
+	created, err := store.GetUserByEmail("newuser@example.com")
+	if err != nil || created == nil {
+		t.Fatalf("auto-registered user not persisted: %v", err)
+	}
+}
+
+// TestLogin_LegacyHashMigratesToBcrypt verifies that logging in with a legacy
+// SHA-256 hash transparently upgrades the stored hash to bcrypt.
+func TestLogin_LegacyHashMigratesToBcrypt(t *testing.T) {
+	store := testutil.NewTestStore(t)
+
+	password := "LegacyPass1"
+	h := sha256.Sum256([]byte(password))
+	legacyHash := hex.EncodeToString(h[:])
+
+	user := &storage.User{
+		ID:           "user_legacy_001",
+		Email:        "legacy@example.com",
+		Name:         "Legacy User",
+		Plan:         "free",
+		PasswordHash: legacyHash,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+	if err := store.CreateUser(user); err != nil {
+		t.Fatalf("failed to seed legacy user: %v", err)
+	}
+
+	svc := NewService(store)
+	r := newLoginRouter(svc)
+
+	w := doLogin(r, "legacy@example.com", password)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", w.Code, http.StatusOK, w.Body.String())
+	}
+
+	// After login the stored hash should be bcrypt, not the legacy hex string.
+	updated, err := store.GetUserByEmail("legacy@example.com")
+	if err != nil || updated == nil {
+		t.Fatalf("failed to reload user: %v", err)
+	}
+	if isLegacySHA256(updated.PasswordHash) {
+		t.Error("expected legacy hash to be migrated to bcrypt, still legacy")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(updated.PasswordHash), []byte(password)); err != nil {
+		t.Errorf("migrated hash does not verify against original password: %v", err)
 	}
 }
 

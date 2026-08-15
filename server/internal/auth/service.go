@@ -115,12 +115,13 @@ func (s *Service) Login(c *gin.Context) {
 			return
 		}
 
-		// Transparent migration: if still using legacy SHA-256, upgrade to bcrypt
+		// Transparent migration: if still using legacy SHA-256, upgrade to bcrypt.
+		// UpdateUser does not persist password_hash, so use UpdateUserPassword.
 		if isLegacySHA256(user.PasswordHash) {
 			newHash, err := hashPassword(req.Password)
 			if err == nil {
 				user.PasswordHash = newHash
-				_ = s.store.UpdateUser(user) // best-effort migration
+				_ = s.store.UpdateUserPassword(user.ID, newHash) // best-effort migration
 			}
 		}
 	}
