@@ -3,53 +3,45 @@ import { test, expect } from '@playwright/test'
 /**
  * API 集成 E2E 测试
  *
- * 测试 GeoWork Cloud API 的健康检查与 CRUD 操作。
- * 需要 cloud server 运行在 API_BASE_URL（默认 http://localhost:8080）。
+ * 测试 GeoWork Cloud API 的健康检查、公开接口与认证矩阵。
+ * 需要 cloud server 运行在 API_BASE_URL（默认 http://localhost:8767，
+ * 与 server/cmd/geowork-api/main.go 的默认端口一致）。
+ *
+ * 断言纪律（P0）：
+ * - 每个断言都有明确的失败语义，禁止 "接受 500/503" 式的宽泛断言。
+ * - 服务器不可达时测试应当失败（连接错误），而不是静默通过。
  */
 
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080'
+const API_BASE = process.env.API_BASE_URL || 'http://localhost:8767'
 
 test.describe('API 集成测试', () => {
   test.describe('健康检查', () => {
-    test('服务器可达（任意已知路由返回非 0/502/503）', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/auth/me`)
-      // 401 表示服务器在运行且认证中间件生效
-      // 500/502/503 表示服务不可用
-      expect([401, 404, 200]).toContain(res.status())
+    test('GET /health 返回 200 且 status 为 ok', async ({ request }) => {
+      const res = await request.get(`${API_BASE}/health`)
+      expect(res.status()).toBe(200)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body).toHaveProperty('version')
     })
   })
 
   test.describe('Marketplace 公开接口（无需认证）', () => {
-    test('GET /api/marketplace/plugins 返回数组', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/marketplace/plugins`)
-      if (res.status() === 200) {
-        const data = await res.json()
-        expect(Array.isArray(data)).toBe(true)
-      } else {
-        // 服务器可能未启动，确认返回合理状态码
-        expect([200, 500, 503]).toContain(res.status())
-      }
-    })
+    // 这些接口在 server/internal/api/routes.go 中注册为公开 GET，
+    // 返回数组。若服务器在运行，必须返回 200 + 数组；否则测试应失败。
+    const publicListRoutes = [
+      '/api/marketplace/plugins',
+      '/api/marketplace/skills',
+      '/api/marketplace/connectors',
+    ]
 
-    test('GET /api/marketplace/skills 返回数组', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/marketplace/skills`)
-      if (res.status() === 200) {
+    for (const path of publicListRoutes) {
+      test(`GET ${path} 返回 200 且为数组`, async ({ request }) => {
+        const res = await request.get(`${API_BASE}${path}`)
+        expect(res.status()).toBe(200)
         const data = await res.json()
         expect(Array.isArray(data)).toBe(true)
-      } else {
-        expect([200, 500, 503]).toContain(res.status())
-      }
-    })
-
-    test('GET /api/marketplace/connectors 返回数组', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/marketplace/connectors`)
-      if (res.status() === 200) {
-        const data = await res.json()
-        expect(Array.isArray(data)).toBe(true)
-      } else {
-        expect([200, 500, 503]).toContain(res.status())
-      }
-    })
+      })
+    }
   })
 
   test.describe('需认证接口 — 无 token 时返回 401', () => {
@@ -74,86 +66,63 @@ test.describe('API 集成测试', () => {
     }
   })
 
-  test.describe('CRUD 操作（需登录）', () => {
-    let accessToken: string | null = null
-
-    test.beforeAll(async ({ request }) => {
-      // 尝试登录获取 token
-      const loginRes = await request.post(`${API_BASE}/api/auth/login`, {
-        data: { email: 'test@geowork.local', password: 'Test@123456' },
-      })
-      if (loginRes.status() === 200) {
-        const data = await loginRes.json()
-        accessToken = data.access_token
-      }
-    })
-
-    test('创建和获取 Model Provider（如有 token）', async ({ request }) => {
-      const headers = { Authorization: `Bearer ${accessToken}` }
-
-      // 列出 providers
-      const listRes = await request.get(`${API_BASE}/api/model/providers`, { headers })
-      expect(listRes.status()).toBe(200)
-
-      // 创建 provider
-      const createRes = await request.post(`${API_BASE}/api/model/providers`, {
-        headers,
+  test.describe('Crash 上报', () => {
+    // server/internal/crash/service.go 要求 X-Crash-Opt-In: true 头，
+    // 且字段为 app_version / os（不是 version / platform）。
+    test('未开启 opt-in 时返回 403', async ({ request }) => {
+      const res = await request.post(`${API_BASE}/api/crash/report`, {
         data: {
-          name: 'E2E Test Provider',
-          providerId: 'e2e-test',
-          apiKey: 'test-key',
-          baseUrl: 'http://localhost:9999',
-          endpointPath: '/chat/completions',
-          enabled: true,
-          models: [],
-          providerCapabilities: {
-            imageGeneration: false,
-            speechToText: false,
-            textToSpeech: false,
-            musicGeneration: false,
-            videoGeneration: false,
-          },
+          app_version: '2.0.0-e2e',
+          os: 'e2e-test',
+          message: 'E2E test crash report',
+          stacktrace: 'test stack trace',
         },
       })
-      expect([200, 201]).toContain(createRes.status())
+      expect(res.status()).toBe(403)
     })
 
-    test('列出 Teams（如有 token）', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/teams`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+    test('开启 opt-in 且字段完整时返回 200', async ({ request }) => {
+      const res = await request.post(`${API_BASE}/api/crash/report`, {
+        headers: { 'X-Crash-Opt-In': 'true' },
+        data: {
+          app_version: '2.0.0-e2e',
+          os: 'e2e-test',
+          message: 'E2E test crash report',
+          stacktrace: 'test stack trace',
+        },
       })
       expect(res.status()).toBe(200)
-      const data = await res.json()
-      expect(Array.isArray(data)).toBe(true)
+      const body = await res.json()
+      expect(body.message).toBe('crash report received')
     })
 
-    test('获取 Usage Summary（如有 token）', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/usage/summary`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+    test('开启 opt-in 但缺少必填字段时返回 400', async ({ request }) => {
+      const res = await request.post(`${API_BASE}/api/crash/report`, {
+        headers: { 'X-Crash-Opt-In': 'true' },
+        data: { message: 'missing required fields' },
       })
-      expect(res.status()).toBe(200)
-    })
-
-    test('获取 Billing Plan（如有 token）', async ({ request }) => {
-      const res = await request.get(`${API_BASE}/api/billing/plan`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      expect(res.status()).toBe(200)
+      expect(res.status()).toBe(400)
     })
   })
 
-  test.describe('Crash 上报（无需认证）', () => {
-    test('POST /api/crash/report 接受上报', async ({ request }) => {
-      const res = await request.post(`${API_BASE}/api/crash/report`, {
-        data: {
-          version: '2.0.0-e2e',
-          platform: 'e2e-test',
-          message: 'E2E test crash report',
-          stack: 'test stack trace',
-        },
-      })
-      // 200/202 表示接受，400 表示格式不对但服务在运行
-      expect([200, 201, 202, 400]).toContain(res.status())
+  // Class B（P0 分级）：以下 CRUD 用例意图明确（验证带认证的增删查），
+  // 但依赖一个已注册/已播种的测试账号才能拿到 token。在测试数据 fixture
+  // 落地（P3）之前，它们无法确定性运行，故显式 skip 并保留意图，
+  // 而不是用 "如有 token" 的条件分支静默通过。
+  test.describe.skip('CRUD 操作（需登录）— 待 P3 测试账号 fixture', () => {
+    test.skip('创建和获取 Model Provider', async () => {
+      // TODO(P3): 用播种账号登录拿 token 后：
+      //   GET  /api/model/providers -> 200 数组
+      //   POST /api/model/providers -> 200/201
+    })
+    test.skip('列出 Teams', async () => {
+      // TODO(P3): GET /api/teams -> 200 数组
+    })
+    test.skip('获取 Usage Summary', async () => {
+      // TODO(P3): GET /api/usage/summary -> 200
+    })
+    test.skip('获取 Billing Plan', async () => {
+      // TODO(P3): GET /api/billing/plan -> 200
     })
   })
 })

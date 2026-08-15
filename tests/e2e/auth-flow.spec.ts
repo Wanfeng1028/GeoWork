@@ -4,10 +4,11 @@ import { test, expect } from '@playwright/test'
  * 认证流程 E2E 测试
  *
  * 测试 GeoWork Cloud API 的认证相关接口。
- * 需要 cloud server 运行在 API_BASE_URL（默认 http://localhost:8080）。
+ * 需要 cloud server 运行在 API_BASE_URL（默认 http://localhost:8767，
+ * 与 server/cmd/geowork-api/main.go 的默认端口一致）。
  */
 
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080'
+const API_BASE = process.env.API_BASE_URL || 'http://localhost:8767'
 
 test.describe('认证流程测试', () => {
   test.describe('登录接口 POST /api/auth/login', () => {
@@ -36,8 +37,9 @@ test.describe('认证流程测试', () => {
       const res = await request.post(`${API_BASE}/api/auth/login`, {
         data: { email: 'nonexistent@example.com', password: 'wrongpassword' },
       })
-      // 401 或 404 均可接受（取决于是否隐藏用户存在信息）
-      expect([401, 404]).toContain(res.status())
+      // Login 对未知邮箱（未开启自动注册）与错误密码统一返回 401，
+      // 不泄露用户是否存在。
+      expect(res.status()).toBe(401)
     })
   })
 
@@ -76,23 +78,14 @@ test.describe('认证流程测试', () => {
     })
   })
 
-  test.describe('完整登录流程（如已注册测试账号）', () => {
-    test('登录成功后可访问 /api/auth/me', async ({ request }) => {
-      // 尝试登录（如果自动注册开启或测试账号已存在）
-      const loginRes = await request.post(`${API_BASE}/api/auth/login`, {
-        data: { email: 'test@geowork.local', password: 'Test@123456' },
-      })
-
-      const { access_token } = await loginRes.json()
-      expect(access_token).toBeTruthy()
-
-      // 用 token 访问 /me
-      const meRes = await request.get(`${API_BASE}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
-      expect(meRes.status()).toBe(200)
-      const user = await meRes.json()
-      expect(user).toHaveProperty('email')
+  // Class B（P0 分级）：完整登录流程需要一个已播种的测试账号，或服务器开启
+  // GEOWORK_AUTO_REGISTER_ENABLED。两者默认都不保证，因此该用例无法确定性运行。
+  // 显式 skip 并保留意图，待 P3 测试账号 fixture 落地后启用。
+  test.describe.skip('完整登录流程 — 待 P3 测试账号 fixture', () => {
+    test.skip('登录成功后可访问 /api/auth/me', async () => {
+      // TODO(P3): 播种账号后：
+      //   POST /api/auth/login -> 200 + access_token
+      //   GET  /api/auth/me (Bearer token) -> 200 + user.email
     })
   })
 })
