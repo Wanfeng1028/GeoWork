@@ -8,6 +8,7 @@
   "main": "out/main/main.js",
   "scripts": {
     "dev": "electron-vite dev",
+    "dev:e2e": "vite --config vite.e2e.config.ts",
     "build": "electron-vite build",
     "lint": "oxlint",
     "lint:styles": "npx stylelint \"src/**/*.{css,module.css}\"",
