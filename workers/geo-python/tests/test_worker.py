@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -48,11 +49,14 @@ def test_write_report_and_inspect_dataset(tmp_path: Path):
     assert "GeoWork Task Report" in md_content
     assert "report" in md_content
 
+    # inspect-dataset requires a `path` param; without rasterio/geopandas it still
+    # writes a quality-report artifact recording the dependency error.
     inspect = client.post(
         "/tools/gdal/inspect-dataset",
-        json={"workspace": str(tmp_path), "taskId": "task_3"},
+        json={"workspace": str(tmp_path), "taskId": "task_3", "params": {"path": "sample_dataset.tif"}},
     )
     assert inspect.status_code == 200
+    assert inspect.json()["ok"] is True
     assert (tmp_path / "artifacts" / "task_3_dataset_quality.json").exists()
 
 
@@ -65,13 +69,25 @@ def test_research_and_knowledge_tools(tmp_path: Path):
     assert (tmp_path / "knowledge" / "task_4_literature_matrix.csv").exists()
     
     csv_content = (tmp_path / "knowledge" / "task_4_literature_matrix.csv").read_text()
-    assert "title,year,method,data,reproducibility" in csv_content
+    # Header must match the columns written by /tools/papers/openalex-search.
+    assert "title,authors,year,doi,cited_by_count,abstract" in csv_content
 
+    # parse-pdf requires a `path` param pointing to an existing file. Without
+    # PyPDF2 the endpoint falls back to raw-text extraction, so a plain-text
+    # fixture exercises the degraded path and still produces paper notes.
+    pdf_fixture = tmp_path / "sample_paper.pdf"
+    pdf_fixture.write_text(
+        "Remote Sensing of Vegetation\n\n"
+        "Abstract: This paper reviews NDVI methods.\n\n"
+        "Introduction\nBackground on vegetation indices.\n",
+        encoding="utf-8",
+    )
     paper_notes = client.post(
         "/tools/papers/parse-pdf",
-        json={"workspace": str(tmp_path), "taskId": "task_5"},
+        json={"workspace": str(tmp_path), "taskId": "task_5", "params": {"path": str(pdf_fixture)}},
     )
     assert paper_notes.status_code == 200
+    assert paper_notes.json()["ok"] is True
     assert (tmp_path / "knowledge" / "task_5_paper_notes.md").exists()
 
     index = client.post(
@@ -132,6 +148,19 @@ def test_office_deliverables(tmp_path: Path):
     assert (tmp_path / "artifacts" / "task_notebook_workflow.ipynb").exists()
 
 
+def _has_gis_libs() -> bool:
+    """True when rasterio and geopandas are importable (system GIS stack present)."""
+    try:
+        import geopandas  # noqa: F401
+        import rasterio  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not _has_gis_libs(), reason="requires rasterio + geopandas (system GIS stack)")
 def test_raster_vector_and_map_tools(tmp_path: Path):
     endpoints = [
         ("/tools/raster/metadata", "task_raster_meta", "task_raster_meta_raster_metadata.json"),

@@ -19,6 +19,10 @@ def app():
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "asyncio: run async test functions")
+    config.addinivalue_line(
+        "markers",
+        "integration: requires system GIS stack (rasterio/geopandas) or network; excluded from the default CI run",
+    )
 
 
 def pytest_pyfunc_call(pyfuncitem):

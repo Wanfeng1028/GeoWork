@@ -5,15 +5,28 @@ on:
     branches: [main, master, dev-frontend/TraeCodeCloud-SeedCode]
 
 jobs:
-  # 文档检查
+  # 文档检查：验证 AGENT.md 文档路由表中引用的 doc/*.md 文件真实存在。
+  # 失败语义：AGENT.md 引用了不存在的文档，路由表已失效。
   doc-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check docs
-        run: ls doc/*.md
+      - name: Verify AGENT.md doc references exist
+        run: |
+          missing=0
+          for ref in $(grep -oE 'doc/[0-9A-Za-z._/-]+\.md' AGENT.md | sort -u); do
+            if [ ! -f "$ref" ]; then
+              echo "MISSING: $ref (referenced in AGENT.md)"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::AGENT.md references doc files that do not exist"
+            exit 1
+          fi
+          echo "All AGENT.md doc references resolve."
 
-  # 前端检查
+  # 前端检查：lint + typecheck + 单元测试（vitest）+ 构建，并输出覆盖率报告。
   frontend-check:
     runs-on: ubuntu-latest
     steps:
@@ -30,16 +43,23 @@ jobs:
           cd apps/desktop
           npm run lint
           npm run typecheck
-      - name: Test
+      - name: Unit tests with coverage
         run: |
           cd apps/desktop
-          npm test
+          npx vitest run --coverage
       - name: Build
         run: |
           cd apps/desktop
           npm run build
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: apps/desktop/coverage
+          if-no-files-found: warn
 
-  # 后端核心检查
+  # Go 核心检查：go vet + 全量测试 + 覆盖率。
   core-check:
     runs-on: ubuntu-latest
     steps:
@@ -47,18 +67,66 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25'
-      - name: Test core
-        run: |
-          cd core
-          go test ./...
+      - name: Vet
+        run: cd core && go vet ./...
+      - name: Test with coverage
+        run: cd core && go test ./... -coverprofile=coverage.out
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-coverage
+          path: core/coverage.out
+          if-no-files-found: warn
 
-  # Worker 检查
-  worker-check:
+  # Go 云端检查：go vet + 全量测试 + 覆盖率。
+  server-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Test worker
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Vet
+        run: cd server && go vet ./...
+      - name: Test with coverage
+        run: cd server && go test ./... -coverprofile=coverage.out
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: server/coverage.out
+          if-no-files-found: warn
+
+  # Python Worker 检查：pytest（排除需要系统 GIS 栈的 integration 用例）
+  # + 真实进程级冒烟契约检查（启动 uvicorn，走真实 HTTP，断言响应 schema）。
+  worker-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/geo-python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install lightweight dependencies
         run: |
-          cd workers
-          # 如果有测试脚本则运行，否则列出文件
-          ls
+          python -m pip install --upgrade pip
+          # 纯 Python / 有 wheel 的轻量子集；rasterio/geopandas/earthengine-api 等
+          # 系统级 GIS 依赖由 integration 标记的用例单独覆盖（P2）。
+          pip install fastapi "uvicorn[standard]" pydantic httpx pytest pytest-cov \
+            numpy pandas matplotlib python-docx openpyxl python-pptx PyPDF2
+      - name: Unit & API tests
+        run: python -m pytest -m "not integration" --cov=app --cov-report=xml --cov-report=term
+      - name: Smoke contract check (real process + real HTTP)
+        working-directory: .
+        run: python scripts/worker_smoke_contract.py
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-coverage
+          path: workers/geo-python/coverage.xml
+          if-no-files-found: warn
