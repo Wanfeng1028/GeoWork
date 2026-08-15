@@ -18,6 +18,16 @@
 
 ## [Unreleased]
 
+### Fixed — Orchestrator 执行核心去重与修复（2026-08-15 · ZCode）
+- **修复 resume 崩溃**：`ResumeFromCheckpoint` 复用已关闭的 `run.done`，`executePlanFromTurn` 收尾再次 close 导致 `panic: close of closed channel`（goroutine 内无 recover，直接崩进程）。现在 resume 前重新创建 done channel
+- **修复 hook 分叉**：`executePlanFromTurn` 缺失 `OnRunStart` / `OnTurnStart` / `OnRunEnd` 三个生命周期钩子，恢复的 run 会静默绕过 per-turn 限流/审计。两个循环体合并为单一 `executePlan(ctx, run, rc, chatHistory, startTurn, resumed)`，删除 350 行重复代码
+- **工具输出校验**：`OutputSchema` 此前只作为 API 元数据展示、从不校验。现在 `Registry.Execute` 对声明了 OutputSchema 的工具强制执行结构校验（type/properties/required/items 子集，零新依赖），违规输出被拒绝并记入审计日志；无 schema 的动态工具（Python Worker）不受影响
+- **CI 修复**：`pr-check.yml` 的 core-check 使用 Go 1.21，无法构建 `go 1.25.0` 模块（每个 PR 必挂），已改为 1.25
+
+### Added — Orchestrator 测试覆盖（2026-08-15 · ZCode）
+- 新增 `orchestrator_test.go`：scripted gateway mock + 4 个测试（maxTurns 停止条件、无工具调用正常结束、完整 hook 序列、resume 路径 hook 行为 + 无 panic）
+- 新增 `output_schema_test.go`：校验器单元测试 + Registry.Execute 集成测试（拒绝违规 / 接受合规 / 无 schema 跳过），共 8 个测试
+
 ### Added — 前端 Gemini 胶囊风格统一（2026-08-14，master）
 - 三个主题 primary 色统一为 Gemini 蓝 `#3186ff`（`f16497c`）
 - 全局蓝色按钮统一为 Gemini 胶囊渐变风格（`index.css` 全局样式）（`58a2de8`、`5256c86`、`5262580`、`22b3652`、`f832d3f`）
