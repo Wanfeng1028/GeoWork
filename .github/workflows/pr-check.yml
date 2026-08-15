@@ -72,6 +72,11 @@ jobs:
         run: cd core && go vet ./...
       - name: Test with coverage
         run: cd core && go test ./... -coverprofile=coverage.out
+      - name: Test with race detector
+        # ubuntu runners ship a C toolchain, so -race works here even
+        # though local Windows dev boxes may lack cgo. Guards the
+        # RunContext/run-field locking (P1-5) against regressions.
+        run: cd core && go test -race ./...
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
@@ -124,6 +129,9 @@ jobs:
       - name: Smoke contract check (real process + real HTTP)
         working-directory: .
         run: python scripts/worker_smoke_contract.py
+      - name: Core<->Worker endpoint contract check
+        working-directory: .
+        run: python scripts/core_worker_contract.py
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

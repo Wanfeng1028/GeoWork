@@ -55,25 +55,29 @@ type RunAborter func(runID string, reason string) error
 type WsHandler struct {
 	manager *WsSessionManager
 	log     *zap.Logger
+	auth    *TokenAuth
 
 	// resolver is called when the client sends an approval/response.
 	// If nil, approval responses are dropped (the HTTP API still works
 	// as a fallback). Set via SetApprovalResolver in router.go.
 	resolverMu sync.RWMutex
-	resolver    ApprovalResolver
-	aborter     RunAborter
+	resolver   ApprovalResolver
+	aborter    RunAborter
 
 	// seq is used to generate JSON-RPC request ids for server-initiated
 	// requests (e.g. approval/request). Atomic for concurrent Send* calls.
 	seq atomic.Uint64
 }
 
-// NewWsHandler constructs the WebSocket upgrade handler.
-func NewWsHandler(manager *WsSessionManager, log *zap.Logger) *WsHandler {
+// NewWsHandler constructs the WebSocket upgrade handler. auth may be
+// nil (legacy/tests): the handshake check is then skipped, but the
+// router-level token middleware still guards the endpoint when a
+// TokenAuth is configured.
+func NewWsHandler(manager *WsSessionManager, log *zap.Logger, auth *TokenAuth) *WsHandler {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &WsHandler{manager: manager, log: log}
+	return &WsHandler{manager: manager, log: log, auth: auth}
 }
 
 // Manager returns the underlying session manager. Exposed so the
@@ -133,12 +137,28 @@ func (h *WsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Accept the WebSocket upgrade. The Origin check is permissive in
-	// dev (the desktop app loads from http://localhost); production
-	// deployments should set CheckOrigin appropriately. We rely on the
-	// loopback listener + OS-level isolation for security.
+	// P0-4: handshake gate — token + origin allowlist, BEFORE the
+	// upgrade. coder/websocket's AcceptOptions offers no custom
+	// CheckOrigin hook, only the binary InsecureSkipVerify which
+	// compares Origin against the Host (it would reject the desktop
+	// app's file:// and localhost:5173 origins). So we keep
+	// InsecureSkipVerify to bypass the library's same-origin check
+	// and enforce our own, stricter, token-bound check here.
+	if err := h.auth.CheckHandshake(req); err != nil {
+		h.log.Warn("ws handshake rejected",
+			zap.String("runId", runID),
+			zap.String("origin", req.Header.Get("Origin")),
+			zap.Error(err))
+		http.Error(w, "websocket handshake rejected: "+err.Error(), http.StatusForbidden)
+		return
+	}
+
+	// Accept the WebSocket upgrade. InsecureSkipVerify skips the
+	// library's Origin==Host same-origin check ONLY because
+	// CheckHandshake above already enforced our origin allowlist +
+	// token for this request.
 	conn, err := websocket.Accept(w, req, &websocket.AcceptOptions{
-		InsecureSkipVerify: true, // accept any origin (desktop app)
+		InsecureSkipVerify: true,
 	})
 	if err != nil {
 		h.log.Warn("ws upgrade failed", zap.String("runId", runID), zap.Error(err))

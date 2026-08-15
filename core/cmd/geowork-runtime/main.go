@@ -183,6 +183,11 @@ func main() {
 
 	logDir := filepath.Join(app.Workspace(), "logs")
 
+	// P0-4: runtime token auth. Electron injects the token via env;
+	// standalone runs mint one and print it on stdout (logs go to
+	// stderr). GEOWORK_INSECURE_NO_AUTH=1 disables it for dev.
+	auth := api.NewTokenAuthFromEnv(os.Stdout, logger)
+
 	r := api.NewRouter(api.RouterDeps{
 		App:            app,
 		LogDir:         logDir,
@@ -195,6 +200,7 @@ func main() {
 		ConvStore:      convStore,
 		AgentScheduler: agentScheduler,
 		TriggerManager: triggerManager,
+		Auth:           auth,
 	})
 	logger.Info("GeoWork runtime listening on http://127.0.0.1:8765")
 	server := &http.Server{Addr: "127.0.0.1:8765", Handler: r}

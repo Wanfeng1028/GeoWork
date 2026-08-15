@@ -82,27 +82,27 @@ type Message struct {
 
 // ToolCall represents a tool invocation.
 type ToolCall struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name"`
-	Args     map[string]any         `json:"args"`
-	Stdout   string                 `json:"stdout,omitempty"`
-	Stderr   string                 `json:"stderr,omitempty"`
-	Result   map[string]any         `json:"result,omitempty"`
-	Error    string                 `json:"error,omitempty"`
-	Duration int64                  `json:"duration,omitempty"`
+	ID       string         `json:"id"`
+	Name     string         `json:"name"`
+	Args     map[string]any `json:"args"`
+	Stdout   string         `json:"stdout,omitempty"`
+	Stderr   string         `json:"stderr,omitempty"`
+	Result   map[string]any `json:"result,omitempty"`
+	Error    string         `json:"error,omitempty"`
+	Duration int64          `json:"duration,omitempty"`
 }
 
 // Event is a streaming event from agent execution.
 type Event struct {
-	Type      string                 `json:"type"` // plan, step_start, step_done, message, error, checkpoint, done
-	Timestamp time.Time              `json:"timestamp"`
-	RunID     string                 `json:"runId"`
-	Data      map[string]any         `json:"data,omitempty"`
+	Type      string         `json:"type"` // plan, step_start, step_done, message, error, checkpoint, done
+	Timestamp time.Time      `json:"timestamp"`
+	RunID     string         `json:"runId"`
+	Data      map[string]any `json:"data,omitempty"`
 
 	// P1-3 §4.5.2: Run-local sequence number for Last-Event-ID
 	// reconnect. The SSE handler serializes this as `id: {runID}:{seq}`.
 	// Set by emitEvent when the event is appended to the buffer.
-	Seq       int                    `json:"seq,omitempty"`
+	Seq int `json:"seq,omitempty"`
 }
 
 // EventSink is the sink for agent events. It is implemented by the API
@@ -115,12 +115,12 @@ type EventSink interface {
 
 // RunContext encapsulates per-run mutable state, enabling concurrent Run isolation.
 type RunContext struct {
-	Run         *Run
-	State       State
-	Memory      *Memory
-	EventCh     chan Event
-	Cancel      context.CancelFunc
-	readOnlyStreak int  // consecutive read-only tool turns (for Verifying auto-inference)
+	Run            *Run
+	State          State
+	Memory         *Memory
+	EventCh        chan Event
+	Cancel         context.CancelFunc
+	readOnlyStreak int // consecutive read-only tool turns (for Verifying auto-inference)
 
 	// P1-3 §4.5.3: ring buffer of recent SSE events for Last-Event-ID
 	// reconnect replay. Lazily initialized on first emitEvent call.
@@ -130,6 +130,12 @@ type RunContext struct {
 	// and closed on resume; the ReAct loop blocks on <-PauseCh when
 	// Paused is true. PauseReason is surfaced via the run_paused event
 	// so the UI can show why the run is waiting.
+	//
+	// P1-5: State/Paused/PauseCh/PauseReason are written by the API
+	// goroutine (PauseRun/ResumeRun) and the run goroutine (ReAct
+	// loop) concurrently — every cross-goroutine access goes through
+	// the stateMu-guarded methods below.
+	stateMu     sync.RWMutex
 	Paused      bool
 	PauseCh     chan struct{}
 	PauseReason string
@@ -141,32 +147,98 @@ type RunContext struct {
 	specExec *SpeculativeExecutor
 }
 
+// currentState returns the agent state machine's current state.
+func (rc *RunContext) currentState() State {
+	rc.stateMu.RLock()
+	defer rc.stateMu.RUnlock()
+	return rc.State
+}
+
+// setState updates the agent state.
+func (rc *RunContext) setState(s State) {
+	rc.stateMu.Lock()
+	rc.State = s
+	rc.stateMu.Unlock()
+}
+
+// isPaused reports whether the run is paused.
+func (rc *RunContext) isPaused() bool {
+	rc.stateMu.RLock()
+	defer rc.stateMu.RUnlock()
+	return rc.Paused
+}
+
+// pause atomically flips the run into the paused state and (re)creates
+// the resume channel. Returns false when already paused (idempotent).
+func (rc *RunContext) pause(reason string) bool {
+	rc.stateMu.Lock()
+	defer rc.stateMu.Unlock()
+	if rc.Paused {
+		return false
+	}
+	rc.Paused = true
+	rc.PauseReason = reason
+	rc.PauseCh = make(chan struct{})
+	return true
+}
+
+// resume atomically clears the paused state and hands back the channel
+// to close. Returns nil when not paused.
+func (rc *RunContext) resume() chan struct{} {
+	rc.stateMu.Lock()
+	defer rc.stateMu.Unlock()
+	if !rc.Paused {
+		return nil
+	}
+	rc.Paused = false
+	rc.PauseReason = ""
+	ch := rc.PauseCh
+	rc.PauseCh = nil
+	return ch
+}
+
+// pauseChannel returns the current resume channel (nil when not
+// paused). The ReAct loop snapshots it under the same lock as its
+// isPaused check to avoid a resume racing between the two reads.
+func (rc *RunContext) pauseChannel() chan struct{} {
+	rc.stateMu.RLock()
+	defer rc.stateMu.RUnlock()
+	return rc.PauseCh
+}
+
+// pauseReason returns why the run was paused (for status snapshots).
+func (rc *RunContext) pauseReason() string {
+	rc.stateMu.RLock()
+	defer rc.stateMu.RUnlock()
+	return rc.PauseReason
+}
+
 // Orchestrator is the main agent loop controller with budget-aware context and bounded memory.
 type Orchestrator struct {
-	registry      *toolregistry.Registry
-	gateway       modelgateway.ModelGateway // interface, not concrete type
-	providerID    string
-	provider      *modelgateway.ModelProvider
-	planner       *Planner
-	contextBld    *ContextBuilder
-	recovery      *Recovery
-	stateMachine  *StateMachine
-	eventSink     EventSink
-	log           *zap.Logger
-	budget        ContextBudget
-	maxTurns      int
-	governor      *GovernorImpl // P1-1: interactive approval for critical tools
-	trajectory    *TrajectoryRecorder // P1-2: per-run execution trace recorder (nil = disabled)
-	usageMeter    *modelgateway.UsageMeter // P1-2: token usage audit (nil = disabled)
-	hooks         *HookManager // P2-3: lifecycle hooks (nil = disabled)
-	skillsReg     *skills.Registry // P2-1: skills registry (nil = skill-less mode)
-	harness       *Harness // P3-2: unified rule engine (nil = bypass)
-	policy        *toolregistry.PolicyTable // P3-3: tool risk/ReadOnly lookup (nil = no speculative)
+	registry     *toolregistry.Registry
+	gateway      modelgateway.ModelGateway // interface, not concrete type
+	providerID   string
+	provider     *modelgateway.ModelProvider
+	planner      *Planner
+	contextBld   *ContextBuilder
+	recovery     *Recovery
+	stateMachine *StateMachine
+	eventSink    EventSink
+	log          *zap.Logger
+	budget       ContextBudget
+	maxTurns     int
+	governor     *GovernorImpl             // P1-1: interactive approval for critical tools
+	trajectory   *TrajectoryRecorder       // P1-2: per-run execution trace recorder (nil = disabled)
+	usageMeter   *modelgateway.UsageMeter  // P1-2: token usage audit (nil = disabled)
+	hooks        *HookManager              // P2-3: lifecycle hooks (nil = disabled)
+	skillsReg    *skills.Registry          // P2-1: skills registry (nil = skill-less mode)
+	harness      *Harness                  // P3-2: unified rule engine (nil = bypass)
+	policy       *toolregistry.PolicyTable // P3-3: tool risk/ReadOnly lookup (nil = no speculative)
 
-	mu            sync.Mutex
-	runs          map[string]*Run
-	running       map[string]bool
-	runContexts   map[string]*RunContext // per-run state isolation
+	mu          sync.Mutex
+	runs        map[string]*Run
+	running     map[string]bool
+	runContexts map[string]*RunContext // per-run state isolation
 }
 
 // NewOrchestrator creates a new agent orchestrator with default budget.
@@ -190,7 +262,7 @@ func NewOrchestrator(
 		gateway:      gateway,
 		providerID:   provider.ID,
 		provider:     provider,
-		planner:       NewPlanner(log, nil),
+		planner:      NewPlanner(log, nil),
 		recovery:     NewRecovery(log),
 		stateMachine: NewStateMachine(),
 		log:          log,
@@ -396,15 +468,19 @@ func (o *Orchestrator) StartRunWithMemory(ctx context.Context, mode, prompt, par
 	if _, _, err := o.stateMachine.Next(StateIdle, MachineEventStart); err != nil {
 		o.log.Error("state machine transition failed", zap.Error(err))
 	} else {
-		rc.State = StatePlanning
+		rc.setState(StatePlanning)
 	}
 
+	// P1-5: written under o.mu so concurrent GetRun/ListRuns readers
+	// (which copy the Run under the same lock) never see a torn write.
+	o.mu.Lock()
 	run.Status = StatusRunning
+	o.mu.Unlock()
 	o.emitEvent(rc, Event{
 		Type:      "plan",
 		Timestamp: time.Now(),
 		RunID:     run.ID,
-		Data:      map[string]any{"runId": run.ID, "prompt": prompt, "mode": mode, "state": string(rc.State)},
+		Data:      map[string]any{"runId": run.ID, "prompt": prompt, "mode": mode, "state": string(rc.currentState())},
 	})
 
 	// Try to generate an initial plan (advisory, not rigid)
@@ -491,12 +567,20 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		})
 	}()
 
+	// P1-7: declared before the deferred teardown below so the final
+	// checkpoint can stamp the real turn counter (and history).
+	turnCount := startTurn
+
 	defer func() {
 		// P3-1: capture the final assistant message as run.Result so
 		// sub-agent callers can collect the outcome via CollectSubAgentResult
 		// after the RunContext has been torn down. Prefer the last assistant
 		// message; fall back to the memory summary. A Result already set
-		// (e.g. the failure reason below) is preserved.
+		// (e.g. the failure reason in the error path) is preserved.
+		//
+		// P1-5: all terminal-field writes happen under o.mu —
+		// GetRun/ListRuns copy the Run under the same lock.
+		o.mu.Lock()
 		if run.Result == "" && rc.Memory != nil {
 			run.Result = rc.Memory.LastAssistantMessage()
 		}
@@ -518,11 +602,10 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			run.Status = StatusCompleted
 		}
 		run.UpdatedAt = time.Now()
-		o.mu.Lock()
 		o.running[run.ID] = false
 		o.mu.Unlock()
-		o.saveCheckpoint(run, rc)
-		doneData := map[string]any{"runId": run.ID, "state": string(rc.State), "status": string(run.Status)}
+		o.saveCheckpoint(run, rc, chatHistory, turnCount)
+		doneData := map[string]any{"runId": run.ID, "state": string(rc.currentState()), "status": string(run.Status)}
 		if resumed {
 			doneData["resumed"] = true
 		}
@@ -543,8 +626,6 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 	}
 
 	// 2. ReAct loop
-	turnCount := startTurn
-
 	for {
 		// 2.1 Check stop conditions
 		if turnCount >= o.maxTurns {
@@ -609,48 +690,58 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		// P1-4 §5.3: at the start of each turn, if the run was paused
 		// (manually or by an approval timeout), block until the user
 		// resumes. Cancellation still wins so StopRun works while paused.
-		if rc.Paused {
+		//
+		// P1-5: snapshot the channel ONCE under the same lock that guards
+		// Paused — checking isPaused() first and PauseCh second could
+		// deadlock if a resume lands between the two reads (PauseCh would
+		// already be nil). A channel snapshotted just before a resume is
+		// closed by it, so the wait unblocks immediately either way.
+		if pauseCh := rc.pauseChannel(); pauseCh != nil {
 			o.emitEvent(rc, Event{
 				Type:      "state_change",
 				Timestamp: time.Now(),
 				RunID:     run.ID,
-				Data:      map[string]any{"to": "waiting_for_user", "reason": rc.PauseReason},
+				Data:      map[string]any{"to": "waiting_for_user", "reason": rc.pauseReason()},
 			})
 			select {
 			case <-ctx.Done():
 				return
-			case <-rc.PauseCh:
+			case <-pauseCh:
 				// resumed
 			}
 		}
 
 		// 2.3 Call model (try streaming first, fallback to non-streaming).
-	// P1-2: both call paths now return UsageInfo so the trajectory
-	// recorder and usage meter can attribute tokens to this turn.
-	content, toolCalls, usage, err := o.streamModelCall(ctx, messages, tools, rc)
-	if err != nil {
-		o.log.Error("model call failed, trying non-streaming fallback",
-			zap.String("runId", run.ID),
-			zap.Error(err),
-		)
-		// Fallback to non-streaming
-		content, toolCalls, usage, err = o.fallbackModelCall(ctx, messages, tools)
+		// P1-2: both call paths now return UsageInfo so the trajectory
+		// recorder and usage meter can attribute tokens to this turn.
+		content, toolCalls, usage, err := o.streamModelCall(ctx, messages, tools, rc)
 		if err != nil {
-			o.log.Error("fallback model call also failed", zap.Error(err))
-			rc.State = StateFailed
-			run.Status = StatusFailed
-			// Surface the failure reason via Result so callers (UI,
-			// sub-agent manager) can show why the run died.
-			run.Result = fmt.Sprintf("run failed: %v", err)
-			o.emitEvent(rc, Event{
-				Type:      "error",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data:      map[string]any{"error": err.Error()},
-			})
-			return
+			o.log.Error("model call failed, trying non-streaming fallback",
+				zap.String("runId", run.ID),
+				zap.Error(err),
+			)
+			// Fallback to non-streaming
+			content, toolCalls, usage, err = o.fallbackModelCall(ctx, messages, tools)
+			if err != nil {
+				o.log.Error("fallback model call also failed", zap.Error(err))
+				rc.setState(StateFailed)
+				// P1-5: run terminal fields are read by GetRun/ListRuns
+				// under o.mu — write them under the same lock.
+				o.mu.Lock()
+				run.Status = StatusFailed
+				// Surface the failure reason via Result so callers (UI,
+				// sub-agent manager) can show why the run died.
+				run.Result = fmt.Sprintf("run failed: %v", err)
+				o.mu.Unlock()
+				o.emitEvent(rc, Event{
+					Type:      "error",
+					Timestamp: time.Now(),
+					RunID:     run.ID,
+					Data:      map[string]any{"error": err.Error()},
+				})
+				return
+			}
 		}
-	}
 
 		// 2.4 Record assistant response. ToolCalls must be echoed back
 		// on the assistant message: without them (and the matching
@@ -704,17 +795,17 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 					Type:      "error",
 					Timestamp: time.Now(),
 					RunID:     run.ID,
-					Data:      map[string]any{"error": fmt.Sprintf("tool %q not allowed in state %s", tc.Function.Name, rc.State)},
+					Data:      map[string]any{"error": fmt.Sprintf("tool %q not allowed in state %s", tc.Function.Name, rc.currentState())},
 				})
 				chatHistory = append(chatHistory, modelgateway.ChatMessage{
-				Role:       "tool",
-				Content:    fmt.Sprintf("Error: tool %q not allowed in state %s", tc.Function.Name, rc.State),
-				ToolCallID: tc.ID,
-			})
+					Role:       "tool",
+					Content:    fmt.Sprintf("Error: tool %q not allowed in state %s", tc.Function.Name, rc.currentState()),
+					ToolCallID: tc.ID,
+				})
 				toolCallRecords = append(toolCallRecords, ToolCallRecord{
 					ToolName: tc.Function.Name,
 					Args:     args,
-					Error:    fmt.Sprintf("not allowed in state %s", rc.State),
+					Error:    fmt.Sprintf("not allowed in state %s", rc.currentState()),
 					Duration: time.Since(toolStart),
 				})
 				continue
@@ -793,15 +884,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			// P2-3: fire OnToolAfter so hooks can post-process the
 			// result or log failures.
 			o.fireHook(HookOnToolAfter, &HookContext{
-				RunID:       run.ID,
-				Run:         run,
-				RunCtx:      rc,
-				TurnIndex:   turnCount,
-				ToolName:    tc.Function.Name,
-				ToolArgs:    args,
-				ToolResult:  result,
-				ToolError:   execErr,
-				Cancel:      rc.Cancel,
+				RunID:      run.ID,
+				Run:        run,
+				RunCtx:     rc,
+				TurnIndex:  turnCount,
+				ToolName:   tc.Function.Name,
+				ToolArgs:   args,
+				ToolResult: result,
+				ToolError:  execErr,
+				Cancel:     rc.Cancel,
 			})
 
 			// 2.7.6 Build tool result content
@@ -814,12 +905,12 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			}
 
 			// 2.7.7 Record to chat history and memory. The tool_call_id
-		// links this result to the assistant's ToolCall above.
-		chatHistory = append(chatHistory, modelgateway.ChatMessage{
-			Role:       "tool",
-			Content:    toolContent,
-			ToolCallID: tc.ID,
-		})
+			// links this result to the assistant's ToolCall above.
+			chatHistory = append(chatHistory, modelgateway.ChatMessage{
+				Role:       "tool",
+				Content:    toolContent,
+				ToolCallID: tc.ID,
+			})
 			stdout, stderr := extractStdoutStderr(result)
 			rc.Memory.AppendToolResult(tc.Function.Name, stdout, stderr)
 
@@ -902,7 +993,7 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		// checkpoint on Run completion is saved by the deferred
 		// saveCheckpoint call in executePlan's teardown.
 		if turnCount > 0 && turnCount%checkpointInterval == 0 {
-			o.saveCheckpointWithReason(run, rc, "periodic")
+			o.saveCheckpointWithReason(run, rc, "periodic", chatHistory, turnCount)
 		}
 
 		// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
@@ -955,7 +1046,7 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 	// Decode the checkpoint blob to recover chatHistory + memory.
 	var state struct {
 		Memory      json.RawMessage            `json:"memory"`
-		ChatHistory []modelgateway.ChatMessage  `json:"chatHistory"`
+		ChatHistory []modelgateway.ChatMessage `json:"chatHistory"`
 		State       string                     `json:"state"`
 		TurnIndex   int                        `json:"turnIndex"`
 	}
@@ -966,7 +1057,7 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 	// Reconstruct the RunContext.
 	runCtx, rc := o.createRunContext(run, ctx)
 	if state.State != "" {
-		rc.State = State(state.State)
+		rc.setState(State(state.State))
 	}
 	if len(state.Memory) > 0 {
 		_ = rc.Memory.Import(state.Memory)
@@ -997,7 +1088,7 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 		Type:      "state_change",
 		Timestamp: time.Now(),
 		RunID:     run.ID,
-		Data:      map[string]any{"to": string(rc.State), "reason": "resumed from checkpoint"},
+		Data:      map[string]any{"to": string(rc.currentState()), "reason": "resumed from checkpoint"},
 	})
 
 	// Re-enter the ReAct loop from the saved turn index.
@@ -1172,8 +1263,8 @@ func (o *Orchestrator) inferStateFromTool(toolName string) State {
 
 // transitionTo directly transitions to a target state with logging and event.
 func (o *Orchestrator) transitionTo(target State, reason string, rc *RunContext) {
-	oldState := rc.State
-	rc.State = target
+	oldState := rc.currentState()
+	rc.setState(target)
 	o.log.Info("state transition",
 		zap.String("from", string(oldState)),
 		zap.String("to", string(target)),
@@ -1207,7 +1298,7 @@ func (o *Orchestrator) checkVerifyingTransition(rc *RunContext, toolCalls []mode
 		rc.readOnlyStreak = 0
 	}
 
-	if rc.readOnlyStreak >= 2 && rc.State != StateVerifying {
+	if rc.readOnlyStreak >= 2 && rc.currentState() != StateVerifying {
 		o.transitionTo(StateVerifying, "连续 2 轮只读工具，自动推断验证阶段", rc)
 	}
 }
@@ -1328,13 +1419,12 @@ func (o *Orchestrator) PauseRun(runID string, reason string) error {
 	if rc == nil {
 		return fmt.Errorf("run %q not found", runID)
 	}
-	if rc.Paused {
-		return nil
+	// P1-5: pause() flips Paused/PauseCh/PauseReason atomically; the
+	// loop snapshots PauseCh under the same lock.
+	if !rc.pause(reason) {
+		return nil // already paused — idempotent
 	}
-	rc.Paused = true
-	rc.PauseReason = reason
-	rc.PauseCh = make(chan struct{})
-	if _, _, err := o.stateMachine.Next(rc.State, MachineEventSystemPause); err == nil {
+	if _, _, err := o.stateMachine.Next(rc.currentState(), MachineEventSystemPause); err == nil {
 		// State machine transition is best-effort: even if it fails we
 		// still mark the run as paused so the loop blocks at the next
 		// turn boundary. The error is logged for observability.
@@ -1359,16 +1449,16 @@ func (o *Orchestrator) ResumeRun(runID string) error {
 	if rc == nil {
 		return fmt.Errorf("run %q not found", runID)
 	}
-	if !rc.Paused {
-		return nil
+	// P1-5: resume() clears the paused state atomically and hands
+	// back the channel to close (outside the lock — closing under it
+	// would wake the loop while the state is mid-transition).
+	ch := rc.resume()
+	if ch == nil {
+		return nil // not paused — idempotent
 	}
-	rc.Paused = false
-	reason := rc.PauseReason
-	rc.PauseReason = ""
-	close(rc.PauseCh)
-	if _, _, err := o.stateMachine.Next(rc.State, MachineEventSystemResume); err == nil {
+	close(ch)
+	if _, _, err := o.stateMachine.Next(rc.currentState(), MachineEventSystemResume); err == nil {
 		// best-effort state transition; logged for observability
-		_ = reason
 	}
 	o.emitEvent(rc, Event{
 		Type:      "run_resumed",
@@ -1404,7 +1494,7 @@ func (o *Orchestrator) evaluateHarness(rc *RunContext, toolName string, args map
 		RunID:     rc.Run.ID,
 		ToolName:  toolName,
 		Args:      args,
-		State:     rc.State,
+		State:     rc.currentState(),
 		Mode:      toolregistry.ModeAutonomous.String(),
 		RiskLevel: riskLevel,
 		FilePath:  filePath,
@@ -1570,8 +1660,8 @@ func (o *Orchestrator) BuildStateSnapshot(runID string) map[string]any {
 	}
 	snapshot := map[string]any{
 		"runId":  runID,
-		"state":  string(rc.State),
-		"paused": rc.Paused,
+		"state":  string(rc.currentState()),
+		"paused": rc.isPaused(),
 	}
 	if rc.Memory != nil {
 		snapshot["recentMessages"] = rc.Memory.Summary(2000)
@@ -1584,38 +1674,43 @@ func (o *Orchestrator) BuildStateSnapshot(runID string) map[string]any {
 			p := pending[0]
 			snapshot["pendingApproval"] = map[string]any{
 				"approvalId": p.ID,
-				"toolName":    p.ToolName,
-				"args":        p.Args,
-				"riskLevel":   p.RiskLevel,
-				"createdAt":   p.CreatedAt,
+				"toolName":   p.ToolName,
+				"args":       p.Args,
+				"riskLevel":  p.RiskLevel,
+				"createdAt":  p.CreatedAt,
 			}
 		}
 	}
 	return snapshot
 }
 
-func (o *Orchestrator) saveCheckpoint(run *Run, rc *RunContext) {
-	o.saveCheckpointWithReason(run, rc, "")
+func (o *Orchestrator) saveCheckpoint(run *Run, rc *RunContext, chatHistory []modelgateway.ChatMessage, turnCount int) {
+	o.saveCheckpointWithReason(run, rc, "", chatHistory, turnCount)
 }
 
 // saveCheckpointWithReason persists the run state with a reason tag
 // ("periodic", "paused", "completed"). The reason is surfaced in the
 // Checkpoint struct so the UI can explain why a checkpoint was saved.
 // P1-6 §7.3.
-func (o *Orchestrator) saveCheckpointWithReason(run *Run, rc *RunContext, reason string) {
+//
+// P1-7: chatHistory/turnCount come from the live ReAct loop — the
+// loop's REAL message history including tool_call_id-paired tool
+// turns, and the loop's actual turn counter. The previous version
+// exported Memory's bounded 20-message view and proxied the turn
+// index off the event buffer seq, so resumed runs lost tool-pair
+// fidelity and landed on a wrong turn.
+func (o *Orchestrator) saveCheckpointWithReason(run *Run, rc *RunContext, reason string, chatHistory []modelgateway.ChatMessage, turnCount int) {
 	checkpointTime := time.Now().UTC().Format(time.RFC3339)
 	// P1-6 §7.4: include turnIndex + chatHistory so ResumeFromCheckpoint
 	// can pick up exactly where the run left off. Without these the
 	// resumed run would restart from turn 0 with an empty history,
 	// re-doing all the model calls (and re-charging tokens).
-	var chatHistory []modelgateway.ChatMessage
-	if rc != nil {
-		// rc.Memory holds the recent messages; export it as the
-		// chatHistory snapshot. (Memory.Summary is text-only; for a
-		// faithful replay we'd need structured export — added below.)
-		if rc.Memory != nil {
-			chatHistory = rc.Memory.ExportMessages()
-		}
+	var history []modelgateway.ChatMessage
+	if len(chatHistory) > 0 {
+		history = chatHistory
+	} else if rc != nil && rc.Memory != nil {
+		// Defensive fallback for callers without a live loop.
+		history = rc.Memory.ExportMessages()
 	}
 	data, _ := json.Marshal(map[string]any{
 		"status":      run.Status,
@@ -1623,10 +1718,10 @@ func (o *Orchestrator) saveCheckpointWithReason(run *Run, rc *RunContext, reason
 		"messages":    run.Messages,
 		"plan":        run.Plan,
 		"memory":      rc.Memory.Export(),
-		"state":       string(rc.State),
+		"state":       string(rc.currentState()),
 		"checkpoint":  checkpointTime,
-		"turnIndex":   o.getCurrentTurnIndex(rc),
-		"chatHistory": chatHistory,
+		"turnIndex":   turnCount,
+		"chatHistory": history,
 	})
 	run.Checkpoint = data
 	if reason != "" {
@@ -1645,31 +1740,10 @@ func (o *Orchestrator) saveCheckpointWithReason(run *Run, rc *RunContext, reason
 		Data: map[string]any{
 			"runId":        run.ID,
 			"checkpointId": checkpointTime,
-			"state":        string(rc.State),
+			"state":        string(rc.currentState()),
 			"reason":       reason,
 		},
 	})
-}
-
-// getCurrentTurnIndex returns the current turn count for a run.
-// Used by saveCheckpointWithReason to stamp TurnIndex into the
-// checkpoint so ResumeFromCheckpoint knows where to re-enter the loop.
-// Returns 0 when the run context is nil (defensive — shouldn't happen
-// in practice since saveCheckpoint is always called with a live rc).
-func (o *Orchestrator) getCurrentTurnIndex(rc *RunContext) int {
-	if rc == nil {
-		return 0
-	}
-	// We don't track turnCount on RunContext directly; instead, the
-	// trajectory recorder's latest turn index tells us where we are.
-	// If the recorder isn't attached, fall back to the event buffer's
-	// latest seq (a coarser proxy).
-	if rc.eventBuf != nil {
-		// Each turn emits at least one event (state_change), so the
-		// seq is a lower bound on turns. Good enough for checkpointing.
-		return rc.eventBuf.LatestSeq()
-	}
-	return 0
 }
 
 // GetCurrentState returns the current state for a given run.
@@ -1677,7 +1751,7 @@ func (o *Orchestrator) GetCurrentState(runID string) State {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	if rc, ok := o.runContexts[runID]; ok {
-		return rc.State
+		return rc.currentState()
 	}
 	return StateIdle
 }

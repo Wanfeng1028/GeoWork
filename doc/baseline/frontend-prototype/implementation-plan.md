@@ -6,8 +6,8 @@
 
 | Key | 显示名 | 基于 |
 |-----|--------|------|
-| `editorial` | 亮色 | tests/frontend/index.html |
-| `editorial-dark` | 暗色 | tests/frontend/index-dark.html |
+| `editorial` | 亮色 | doc/baseline/frontend-prototype/index.html |
+| `editorial-dark` | 暗色 | doc/baseline/frontend-prototype/index-dark.html |
 
 ---
 

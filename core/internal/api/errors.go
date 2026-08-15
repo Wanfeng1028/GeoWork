@@ -13,30 +13,33 @@ import (
 type ErrorCode int
 
 const (
+	// Common request errors (10000)
+	ErrBadRequest ErrorCode = 10000
+
 	// Task errors (1xxxx)
-	ErrTaskNotFound       ErrorCode = 10001
-	ErrTaskInvalidState   ErrorCode = 10002
+	ErrTaskNotFound     ErrorCode = 10001
+	ErrTaskInvalidState ErrorCode = 10002
 
 	// Tool/Sandbox errors (2xxxx)
-	ErrToolTimeout        ErrorCode = 20001
-	ErrSandboxDenied      ErrorCode = 20002
+	ErrToolTimeout   ErrorCode = 20001
+	ErrSandboxDenied ErrorCode = 20002
 
 	// Model errors (3xxxx)
-	ErrModelCallFailed    ErrorCode = 30001
-	ErrContextTooLong     ErrorCode = 30002
+	ErrModelCallFailed ErrorCode = 30001
+	ErrContextTooLong  ErrorCode = 30002
 
 	// Permission errors (4xxxx)
-	ErrPermissionDenied   ErrorCode = 40001
+	ErrPermissionDenied ErrorCode = 40001
 
 	// System errors (5xxxx)
-	ErrInternal           ErrorCode = 50001
+	ErrInternal ErrorCode = 50001
 )
 
 // ApiError is the standard error response structure.
 type ApiError struct {
-	Code    ErrorCode  `json:"code"`
-	Message string     `json:"message"`
-	Details any        `json:"details,omitempty"`
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
+	Details any       `json:"details,omitempty"`
 }
 
 // Error implements the error interface.
@@ -66,7 +69,7 @@ func WriteInternalError(w http.ResponseWriter, message string) {
 
 // WriteBadRequest writes a 400 bad request error response.
 func WriteBadRequest(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusBadRequest, ErrTaskInvalidState, message)
+	WriteError(w, http.StatusBadRequest, ErrBadRequest, message)
 }
 
 // WriteNotFound writes a 404 not found error response.

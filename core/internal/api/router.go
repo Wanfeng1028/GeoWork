@@ -38,7 +38,8 @@ type RouterDeps struct {
 	Orchestrator   *aiagent.Orchestrator
 	ConvStore      *conversation.Store
 	AgentScheduler *aiagent.Scheduler      // P2-4 §5.5: cron-style agent runs
-	TriggerManager *aiagent.TriggerManager  // P2-4 §5.5: event-driven agent runs
+	TriggerManager *aiagent.TriggerManager // P2-4 §5.5: event-driven agent runs
+	Auth           *TokenAuth              // P0-4: runtime token guard; nil keeps legacy open behavior (tests)
 }
 
 // Router wraps http.Handler and holds resources that need explicit cleanup.
@@ -154,7 +155,7 @@ func NewRouter(deps RouterDeps) *Router {
 		// aiagent a one-way import (no cycle) and lets both the HTTP
 		// approval API and the WebSocket path share the same resolver.
 		wsManager := NewWsSessionManager(logger)
-		wsHandler := NewWsHandler(wsManager, logger)
+		wsHandler := NewWsHandler(wsManager, logger, deps.Auth)
 		wsHandler.SetApprovalResolver(func(approvalID, decision, reason string) error {
 			gov := deps.Orchestrator.Governor()
 			if gov == nil {
@@ -192,6 +193,12 @@ func NewRouter(deps RouterDeps) *Router {
 	mux.HandleFunc("api/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
+
+	// P0-4: token auth sits OUTSIDE cors so requests are rejected by
+	// the token check before CORS headers are even considered.
+	if deps.Auth != nil {
+		router.handler = deps.Auth.Middleware(router.handler)
+	}
 
 	return router
 }
@@ -233,10 +240,12 @@ func allowedOrigins() []string {
 	return origins
 }
 
-// isOriginAllowed checks whether origin is in the whitelist or is a file://
-// origin (used by Electron).
+// isOriginAllowed checks whether origin is in the whitelist or is a
+// file:// origin (used by Electron). The file:// check is an exact
+// match (plus Chromium's serialized "null"): a prefix match would
+// also bless file:// pages from any local directory.
 func isOriginAllowed(origin string, whitelist []string) bool {
-	if strings.HasPrefix(origin, "file://") {
+	if origin == "file://" || origin == "null" {
 		return true
 	}
 	for _, allowed := range whitelist {
@@ -254,7 +263,7 @@ func cors(next http.Handler) http.Handler {
 		if isOriginAllowed(origin, whitelist) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, "+TokenHeader)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
