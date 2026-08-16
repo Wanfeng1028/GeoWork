@@ -47,6 +47,21 @@ func NewGuardrail(policy *Policy) *Guardrail {
 	return &Guardrail{policy: policy}
 }
 
+// pathMatchesPrefix reports whether abs is inside the directory prefix:
+// it must equal the prefix or continue with a path separator. A raw
+// strings.HasPrefix would let "/etcetera" match "/etc". Both separators
+// are accepted because policy entries mix POSIX ("/etc") and Windows
+// ("C:\Windows") styles regardless of host OS.
+func pathMatchesPrefix(abs, prefix string) bool {
+	if prefix == "" || abs == "" {
+		return false
+	}
+	if abs == prefix {
+		return true
+	}
+	return strings.HasPrefix(abs, prefix+"/") || strings.HasPrefix(abs, prefix+"\\")
+}
+
 // ValidatePath checks if the given path is allowed by the policy
 func (g *Guardrail) ValidatePath(path string) error {
 	abs, err := filepath.Abs(path)
@@ -56,7 +71,7 @@ func (g *Guardrail) ValidatePath(path string) error {
 
 	// Check blocked paths
 	for _, blocked := range g.policy.BlockedPaths {
-		if strings.HasPrefix(abs, blocked) {
+		if pathMatchesPrefix(abs, blocked) {
 			return fmt.Errorf("path %s is blocked by safety policy", path)
 		}
 	}
@@ -64,7 +79,7 @@ func (g *Guardrail) ValidatePath(path string) error {
 	// Check allowed paths
 	allowed := false
 	for _, allowedPath := range g.policy.AllowedPaths {
-		if strings.HasPrefix(abs, allowedPath) {
+		if pathMatchesPrefix(abs, allowedPath) {
 			allowed = true
 			break
 		}
@@ -75,7 +90,7 @@ func (g *Guardrail) ValidatePath(path string) error {
 
 	// Check approval requirements
 	for _, reqPath := range g.policy.RequireApprovalForPaths {
-		if strings.HasPrefix(abs, reqPath) {
+		if pathMatchesPrefix(abs, reqPath) {
 			return fmt.Errorf("path %s requires explicit user approval", path)
 		}
 	}
