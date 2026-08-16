@@ -144,7 +144,7 @@ func (h *Harness) LoadDefaults() {
 			ID:        "audit-sandbox-paths",
 			Name:      "Audit sandbox path checks",
 			Type:      RuleSandbox,
-			Condition: "sandbox == true",
+			Condition: "sandbox == 'true'",
 			Action:    ActionAudit,
 			Priority:  80,
 			Enabled:   true,
