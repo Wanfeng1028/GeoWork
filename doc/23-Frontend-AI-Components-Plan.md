@@ -2,7 +2,7 @@
 
 > **文档路径**：`doc/23-Frontend-AI-Components-Plan.md`
 > **关联文档**：`doc/21-Frontend-Refactor-Plan.md`（六阶段重构已完成，本计划是其后续）
-> **状态**：A1+A2+A3+A4 已完成（2026-08-17）；A5 待执行
+> **状态**：A1–A5 全部完成（2026-08-17），本计划收官
 > **背景**：设计参考 TurboProduct 的 Beautiful UI 组件清单（beautifului.dev，MIT/copy-paste，无公开仓库）；因源码需邮件订阅，本计划以 antd token 体系自研，其组件清单作设计规格参考。
 
 ---
@@ -48,8 +48,10 @@ core 已建好的能力有三个在前端零消费：
 - **前端**：`FileDiff` 类型 + Session `diff.created` 监听（按 path 去重 upsert）；`DiffViewer.tsx`（@git-diff-view/react 动态导入 ~320KB 独立 chunk + antd Collapse 每文件一面板 + 增删行数徽标 + 明暗主题）接入 ConversationMessage
 - 测试：Go 侧 diff 生成器 4 条 + recorder 3 条；前端 Session 3 条（事件填充/同路径去重/缺字段忽略）
 
-### A5 性能（后续）
-路由级代码分割（现单 chunk ~5MB）+ 消息列表虚拟滚动。
+### A5 性能 ✅ 已完成（2026-08-17）
+- **路由级代码分割**：`routes.tsx` 14 个页面全部改 react-router `lazy` 路由（AppShell 壳保持静态导入）；`electron.vite.config.ts` manualChunks 拆 vendor-react / vendor-antd 独立缓存 chunk（不设兜底 vendor，页面专属依赖留在各自懒加载 chunk）。主入口 chunk 5.0MB → 首屏仅 3 个可缓存 chunk，其余按路由懒加载
+- **消息列表虚拟滚动**：NewTaskPage 接入 @tanstack/react-virtual（动态测量 + overscan 6 + 稳定键）；贴底跟随（距底 <80px 才自动滚动，上滑看历史不打扰）；顺带消除 lastAssistantIdx 的 O(n²) 计算
+- 测试：routes 懒加载冒烟 2 条（所有路由声明 lazy + 每个 lazy() 解析出 Component）
 
 ## 明确不做
 

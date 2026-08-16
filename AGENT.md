@@ -15,6 +15,7 @@
 | v1.8 | 2026-08-17 | A1 审批卡片闭环（CoreApprovalRequest 镜像 + Session approval SSE 监听 + resolveApproval 方法 + ApprovalCard 组件）+ A2 Markdown 升级（react-markdown + remark-gfm + Shiki 细粒度懒加载 + 删除 MarkdownLite）；94/94 测试 + build + 边界检查全绿 |
 | v1.9 | 2026-08-17 | A3 Thinking 面板：Session 消费 state_change/message SSE 事件生成 thinkingSteps（状态迁移 + 推理流），ThinkingPanel 折叠组件接入 ConversationMessage；顺带修复真实模式 assistant 气泡只有完成摘要的内容缺失；98/98 测试 + build + 边界检查全绿 |
 | v1.10 | 2026-08-17 | A4 Diff 查看器（跨 Go/前端）：core 写工具（write_file/create_artifact）经 DiffRecorder 上报前后内容，orchestrator 用 go-difflib 生成真实 LCS 多 hunk unified diff 并发 diff.created 事件（带 runID 路由进会话 SSE，payload 仅含自包含 unified）；前端 Session 消费 diff.created 按 path 去重 upsert fileDiffs，DiffViewer 组件（@git-diff-view/react 动态导入 ~320KB 不进主包）内联渲染；101/101 测试 + build + 边界检查 + Go 测试全绿 |
+| v1.11 | 2026-08-17 | A5 性能（doc/23 收官）：路由级代码分割（routes.tsx 全部页面改 react-router lazy，主入口 chunk 5.0MB → 首屏 3 个可缓存 chunk）+ vendor 拆分（react/antd 独立 chunk，依赖不升级哈希不变）+ 消息列表虚拟滚动（@tanstack/react-virtual，动态测量 + 贴底跟随，顺带消除 lastAssistantIdx O(n²) 计算）；103/103 测试 + build + 边界检查全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -31,7 +32,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）；待 A5（性能）、E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；待 E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -453,6 +454,17 @@ Level 3 — 记录（持续追加）
 
 ## 14. AI Agent 施工记录
 
+### 2026-08-17 · ZCode · A5 性能（doc/23，A5 完成，doc/23 全部收官）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| A5 代码分割 | （本次） | `routes.tsx` 14 个页面全部改 react-router `lazy` 路由（AppShell 壳保持静态导入）；`electron.vite.config.ts` manualChunks 拆 vendor-react / vendor-antd 独立缓存 chunk（不设兜底 vendor，页面专属依赖留在各自懒加载 chunk）；主入口 chunk 5.0MB → 首屏仅 3 个可缓存 chunk（vendor-react 759KB + vendor-antd 2.6MB + 入口 1.16MB），其余按路由懒加载 | ✅ |
+| A5 虚拟滚动 | （本次） | NewTaskPage 消息列表接入 @tanstack/react-virtual（estimateSize 120 + measureElement 动态测量 + overscan 6 + getItemKey 稳定键）；贴底跟随（距底 <80px 才自动滚动，上滑看历史不打扰，发送时重置）；顺带把 lastAssistantIdx 从 map 内 O(n²) 提到渲染前 O(n) 一次算出 | ✅ |
+
+**测试**：routes 懒加载冒烟 2 条（所有路由声明 lazy + 每个 lazy() 解析出 Component，钉住动态导入路径写错/导出改名这类构建期不报、运行期白屏的问题）。
+**验收**：tsc + vitest 103/103 + build（无 circular chunk 告警）+ 边界检查 123 源文件全绿。
+**后续**：doc/23 五阶段全部完成；待 E2（可观测性）。
+
 ### 2026-08-17 · ZCode · A4 Diff 查看器（doc/23，A4 完成，跨 Go core + 前端）
 
 | 阶段 | 提交 | 内容 | 状态 |
@@ -462,7 +474,7 @@ Level 3 — 记录（持续追加）
 
 **决策**：调研发现原计划不可行（diff.created 未路由进会话 SSE + core 只产行级 diff 非 unified），经用户确认改修 core 接通完整链路。
 **验收**：前端 tsc + vitest 101/101 + build（git-diff-view 独立 chunk）+ 边界检查 123 源文件全绿；Go build + diff/toolregistry/aiagent 相关测试全绿。
-**后续**：A5（性能：路由级代码分割 + 消息列表虚拟滚动）。
+**后续**：A5（性能：路由级代码分割 + 消息列表虚拟滚动，已完成）。
 
 ### 2026-08-17 · ZCode · A3 Thinking 面板（doc/23，A3 完成）
 

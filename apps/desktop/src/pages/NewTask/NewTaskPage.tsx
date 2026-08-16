@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useSearchParams, useNavigate } from 'react-router'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Alert, App, Button, Dropdown, Tour, Typography, theme } from 'antd'
 import { Loader2, FolderOpen, Boxes, Code, MapPin } from 'lucide-react'
 import { ChatComposer } from './components/ChatComposer'
@@ -81,6 +82,33 @@ export function NewTaskPage() {
 
   const hasConversation = messages.length > 0
   const messageListRef = useRef<HTMLDivElement>(null)
+
+  /* ── A5：消息列表虚拟滚动（仅渲染可视区 + overscan，长会话不再全量挂载） ── */
+  const virtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => messageListRef.current,
+    estimateSize: () => 120,
+    overscan: 6,
+    getItemKey: (i) => messages[i].id,
+  })
+  const totalSize = virtualizer.getTotalSize()
+
+  /* 贴底跟随：用户在底部附近时新内容自动滚动到底；上滑看历史则不打扰 */
+  const stickToBottomRef = useRef(true)
+  const handleListScroll = () => {
+    const el = messageListRef.current
+    if (!el) return
+    stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  }
+
+  /* 最后一条 assistant 消息索引（挂 workflow 卡片/审批回调用，O(n) 一次算出） */
+  let lastAssistantIdx = -1
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant') {
+      lastAssistantIdx = i
+      break
+    }
+  }
 
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -166,11 +194,11 @@ export function NewTaskPage() {
     setWorkMode(cached.workMode ?? 'work')
   }, [convId, snap.phase])
 
-  /* ── 自动滚动到底部 ── */
+  /* ── 自动滚动到底部（贴底跟随；虚拟滚动下用 scrollToIndex 定位末条） ── */
   useEffect(() => {
-    const el = messageListRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [messages])
+    if (!stickToBottomRef.current || messages.length === 0) return
+    virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
+  }, [messages, totalSize, virtualizer])
 
   /* ── 计算当前工作空间信息 ── */
   const currentWorkspaceId =
@@ -221,6 +249,7 @@ export function NewTaskPage() {
   const handleSend = () => {
     const text = prompt.trim()
     if (!text) return
+    stickToBottomRef.current = true
 
     let id = convIdRef.current
     if (!id) {
@@ -464,28 +493,37 @@ export function NewTaskPage() {
         </div>
       </div>
 
-      {/* Message List */}
-      <div className={styles.messageList} ref={messageListRef}>
-        {messages.map((msg, idx) => {
-          /* 找到最后一条 assistant message 的索引 */
-          let lastAssistantIdx = -1
-          for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === 'assistant') {
-              lastAssistantIdx = i
-              break
-            }
-          }
-          return (
-            <ConversationMessageView
-              key={msg.id}
-              data={msg}
-              runStatus={idx === lastAssistantIdx ? runStatus : undefined}
-              onConfirmRun={idx === lastAssistantIdx ? handleConfirmRun : undefined}
-              onAdjustPlan={idx === lastAssistantIdx ? handleAdjustPlan : undefined}
-              isLastAssistant={idx === lastAssistantIdx}
-            />
-          )
-        })}
+      {/* Message List（A5：虚拟滚动，仅挂载可视区 + overscan 的消息节点） */}
+      <div className={styles.messageList} ref={messageListRef} onScroll={handleListScroll}>
+        <div style={{ height: totalSize, width: '100%', position: 'relative' }}>
+          {virtualizer.getVirtualItems().map((vItem) => {
+            const msg = messages[vItem.index]
+            const isLastAssistant = vItem.index === lastAssistantIdx
+            return (
+              <div
+                key={vItem.key}
+                data-index={vItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${vItem.start}px)`,
+                  paddingBottom: 8,
+                }}
+              >
+                <ConversationMessageView
+                  data={msg}
+                  runStatus={isLastAssistant ? runStatus : undefined}
+                  onConfirmRun={isLastAssistant ? handleConfirmRun : undefined}
+                  onAdjustPlan={isLastAssistant ? handleAdjustPlan : undefined}
+                  isLastAssistant={isLastAssistant}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* A1 审批卡片：governar approval_request 事件驱动 */}

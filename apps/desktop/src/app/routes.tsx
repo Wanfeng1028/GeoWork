@@ -1,38 +1,86 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from '../shell/AppShell'
-import { WorkspacePage } from '../pages/Workspace/WorkspacePage'
-import { DataCenterPage } from '../pages/DataCenter/DataCenterPage'
-import { TasksPage } from '../pages/Tasks/TasksPage'
-import { SettingsPage } from '../pages/Settings/SettingsPage'
-import { AboutPage } from '../pages/Settings/AboutPage'
-import { AgentStudioPage } from '../pages/AgentStudio/AgentStudioPage'
 // ThemePreview 仅开发调试用，生产环境下线
 // import { ThemePreviewPage } from '../pages/ThemePreview/ThemePreviewPage'
-import { NewTaskPage } from '../pages/NewTask/NewTaskPage'
-import { ExpertsPage } from '../pages/Extensions/ExpertsPage'
-import { SkillsPage } from '../pages/Extensions/SkillsPage'
-import { McpPage } from '../pages/Extensions/McpPage'
-import { ConnectorsPage } from '../pages/Extensions/ConnectorsPage'
-import { MobileControlPage } from '../pages/MobileControl/MobileControlPage'
-import { WelcomePage } from '../pages/Welcome'
+
+/* A5（doc/23）：路由级代码分割——每个页面独立 chunk，按需加载。
+ * AppShell 保持静态导入（所有路由共享的壳）；页面经 react-router lazy
+ * 在首次导航时拉取，主包不再携带全部页面代码。 */
 
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
-      { index: true, element: <WelcomePage /> },
-      { path: 'new-task', element: <NewTaskPage /> },
-      { path: 'workspace', element: <WorkspacePage /> },
-      { path: 'data-center', element: <DataCenterPage /> },
-      { path: 'tasks', element: <TasksPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: 'about', element: <AboutPage /> },
-      { path: 'agent-studio', element: <AgentStudioPage /> },
-      { path: 'mobile-control', element: <MobileControlPage /> },
-      { path: 'extensions/experts', element: <ExpertsPage /> },
-      { path: 'extensions/skills', element: <SkillsPage /> },
-      { path: 'extensions/mcp', element: <McpPage /> },
-      { path: 'extensions/connectors', element: <ConnectorsPage /> },
+      {
+        index: true,
+        lazy: async () => ({ Component: (await import('../pages/Welcome')).WelcomePage }),
+      },
+      {
+        path: 'new-task',
+        lazy: async () => ({
+          Component: (await import('../pages/NewTask/NewTaskPage')).NewTaskPage,
+        }),
+      },
+      {
+        path: 'workspace',
+        lazy: async () => ({
+          Component: (await import('../pages/Workspace/WorkspacePage')).WorkspacePage,
+        }),
+      },
+      {
+        path: 'data-center',
+        lazy: async () => ({
+          Component: (await import('../pages/DataCenter/DataCenterPage')).DataCenterPage,
+        }),
+      },
+      {
+        path: 'tasks',
+        lazy: async () => ({ Component: (await import('../pages/Tasks/TasksPage')).TasksPage }),
+      },
+      {
+        path: 'settings',
+        lazy: async () => ({
+          Component: (await import('../pages/Settings/SettingsPage')).SettingsPage,
+        }),
+      },
+      {
+        path: 'about',
+        lazy: async () => ({ Component: (await import('../pages/Settings/AboutPage')).AboutPage }),
+      },
+      {
+        path: 'agent-studio',
+        lazy: async () => ({
+          Component: (await import('../pages/AgentStudio/AgentStudioPage')).AgentStudioPage,
+        }),
+      },
+      {
+        path: 'mobile-control',
+        lazy: async () => ({
+          Component: (await import('../pages/MobileControl/MobileControlPage')).MobileControlPage,
+        }),
+      },
+      {
+        path: 'extensions/experts',
+        lazy: async () => ({
+          Component: (await import('../pages/Extensions/ExpertsPage')).ExpertsPage,
+        }),
+      },
+      {
+        path: 'extensions/skills',
+        lazy: async () => ({
+          Component: (await import('../pages/Extensions/SkillsPage')).SkillsPage,
+        }),
+      },
+      {
+        path: 'extensions/mcp',
+        lazy: async () => ({ Component: (await import('../pages/Extensions/McpPage')).McpPage }),
+      },
+      {
+        path: 'extensions/connectors',
+        lazy: async () => ({
+          Component: (await import('../pages/Extensions/ConnectorsPage')).ConnectorsPage,
+        }),
+      },
       // ThemePreview 仅开发调试用，生产环境下线
       // { path: 'theme-preview', element: <ThemePreviewPage /> },
     ],

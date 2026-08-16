@@ -18,6 +18,12 @@
 
 ## [Unreleased]
 
+### Changed — A5 性能：路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动（doc/23 收官，2026-08-17 · ZCode）
+- **路由级代码分割**：`routes.tsx` 14 个页面全部改 react-router `lazy` 路由（AppShell 壳保持静态导入）——此前所有页面静态打进单一 5.0MB 主 chunk；现在每个页面独立 chunk 按需加载
+- **vendor 拆分**：`electron.vite.config.ts` manualChunks 拆 vendor-react（759KB）/ vendor-antd（2.6MB）独立缓存 chunk，依赖不升级时哈希不变可长期缓存；不设兜底 vendor chunk，页面专属依赖（如 xterm）留在各自懒加载 chunk。首屏从 5.0MB 单 chunk 降为 3 个可缓存 chunk
+- **消息列表虚拟滚动**：NewTaskPage 接入 @tanstack/react-virtual（estimateSize + measureElement 动态测量 + overscan 6 + 稳定键），长会话只挂载可视区节点；贴底跟随（距底 <80px 才自动滚动，上滑看历史不打扰，发送时重置）；顺带把 lastAssistantIdx 从 map 内 O(n²) 提到渲染前 O(n) 一次算出
+- 测试：routes 懒加载冒烟 2 条（所有路由声明 lazy + 每个 lazy() 解析出 Component），前端 103/103 全绿
+
 ### Added — A4 Diff 查看器：core unified diff 生成 + diff.created 路由 + 前端内联渲染（doc/23，2026-08-17 · ZCode）
 - **core 接通 diff.created 完整链路**：此前 `diff.created` 事件无会话路由（发不到会话 SSE）且 core 只产行级 diff——write_file/create_artifact 现在经 `DiffRecorder` 上下文注入上报写前/写后内容，orchestrator 用 go-difflib（真实 LCS，替换原单 hunk 简化算法）生成多 hunk unified diff 并发 `diff.created`（带 runID → EventBridge → 会话 SSE，复用既有事件路由）；payload 仅含 path/toolCallId/unified（自包含，不带全文，SSE 帧与重放缓冲保持精简）
 - **前端消费**：Session 监听 `diff.created` 按 path 去重 upsert 进 assistant 消息 `fileDiffs`；新增 `DiffViewer` 组件（@git-diff-view/react 动态导入 ~320KB 独立 chunk 不进主包，antd Collapse 每文件一面板 + 增删行数徽标 + 明暗主题）接入 ConversationMessage
