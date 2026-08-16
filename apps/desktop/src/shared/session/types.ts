@@ -62,6 +62,16 @@ export interface ThinkingStep {
   endedAt?: number
 }
 
+/* ── 文件变更（A4，doc/23：消费 diff.created 事件） ── */
+export interface FileDiff {
+  id: string
+  path: string
+  /** 自包含的 unified diff（含 --- / +++ / @@ 头） */
+  unified: string
+  toolCallId?: string
+  createdAt: number
+}
+
 /* ── 附件元信息 ── */
 export type AttachedFileKind = 'file' | 'image'
 
@@ -98,6 +108,8 @@ export interface ConversationMessage {
   toolCalls?: ToolCallLog[]
   /** A3：思考步骤（state_change 状态迁移 + message 推理流） */
   thinkingSteps?: ThinkingStep[]
+  /** A4：文件变更（diff.created 事件，unified diff 内联渲染） */
+  fileDiffs?: FileDiff[]
   attachments?: AttachedFileMeta[]
   contexts?: SelectedContextItem[]
 }

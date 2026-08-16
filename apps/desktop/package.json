@@ -19,6 +19,7 @@
     "dist:win": "electron-builder --win nsis --x64"
   },
   "dependencies": {
+    "@git-diff-view/react": "^0.1.7",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "antd": "^6.4.5",

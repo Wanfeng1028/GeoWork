@@ -1,0 +1,42 @@
+.root {
+  margin-top: 8px;
+}
+
+.header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.path {
+  font-size: 12px;
+  font-family: Menlo, Consolas, monospace;
+  max-width: 320px;
+}
+
+.countTag {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

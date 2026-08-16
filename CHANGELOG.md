@@ -18,6 +18,11 @@
 
 ## [Unreleased]
 
+### Added — A4 Diff 查看器：core unified diff 生成 + diff.created 路由 + 前端内联渲染（doc/23，2026-08-17 · ZCode）
+- **core 接通 diff.created 完整链路**：此前 `diff.created` 事件无会话路由（发不到会话 SSE）且 core 只产行级 diff——write_file/create_artifact 现在经 `DiffRecorder` 上下文注入上报写前/写后内容，orchestrator 用 go-difflib（真实 LCS，替换原单 hunk 简化算法）生成多 hunk unified diff 并发 `diff.created`（带 runID → EventBridge → 会话 SSE，复用既有事件路由）；payload 仅含 path/toolCallId/unified（自包含，不带全文，SSE 帧与重放缓冲保持精简）
+- **前端消费**：Session 监听 `diff.created` 按 path 去重 upsert 进 assistant 消息 `fileDiffs`；新增 `DiffViewer` 组件（@git-diff-view/react 动态导入 ~320KB 独立 chunk 不进主包，antd Collapse 每文件一面板 + 增删行数徽标 + 明暗主题）接入 ConversationMessage
+- 测试：Go diff 生成器 4 条（多 hunk/新文件/无变更/删行）+ recorder 3 条；前端 Session 3 条（事件填充/同路径去重留最新/缺字段忽略），前端 101/101 全绿
+
 ### Security — BP4 安全加固：guardrails 双绕过 + worker 鉴权（doc/22，2026-08-17 · ZCode）
 - **修复 guardrails 符号链接逃逸（S5）**：`ValidatePath` 此前不解析符号链接——workspace 内一个指向 `/etc` 或 `C:\Windows` 的 symlink 即可穿过前缀检查；现在对目标与 allowed/blocked 根都做 EvalSymlinks（不存在的写入目标解析最长存在前缀后拼接）
 - **修复 Windows 大小写绕过（S5）**：路径前缀比较在 Windows 上改为折叠比较（`c:\windows` 此前绕过 `C:\Windows` 黑名单）；本机 TEMP 恰在 `C:\Windows\TEMP` 下，顺带暴露并修复了三个测试夹具的环境碰撞

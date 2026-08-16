@@ -14,6 +14,7 @@
 | v1.7 | 2026-08-17 | ZCode 前端六阶段重构（doc/21）全部完成：协议类型镜像、React-free 会话对象层（D1 演示模式开关）、useSession/useInvoke 绑定、NewTaskPage 接线（D2 真实 run 轮询）、zustand taskStore、shared/storage 统一入口 + CI 边界检查；删除静默 mock 降级/假执行/每 token 全量写 localStorage 三大病灶 |
 | v1.8 | 2026-08-17 | A1 审批卡片闭环（CoreApprovalRequest 镜像 + Session approval SSE 监听 + resolveApproval 方法 + ApprovalCard 组件）+ A2 Markdown 升级（react-markdown + remark-gfm + Shiki 细粒度懒加载 + 删除 MarkdownLite）；94/94 测试 + build + 边界检查全绿 |
 | v1.9 | 2026-08-17 | A3 Thinking 面板：Session 消费 state_change/message SSE 事件生成 thinkingSteps（状态迁移 + 推理流），ThinkingPanel 折叠组件接入 ConversationMessage；顺带修复真实模式 assistant 气泡只有完成摘要的内容缺失；98/98 测试 + build + 边界检查全绿 |
+| v1.10 | 2026-08-17 | A4 Diff 查看器（跨 Go/前端）：core 写工具（write_file/create_artifact）经 DiffRecorder 上报前后内容，orchestrator 用 go-difflib 生成真实 LCS 多 hunk unified diff 并发 diff.created 事件（带 runID 路由进会话 SSE，payload 仅含自包含 unified）；前端 Session 消费 diff.created 按 path 去重 upsert fileDiffs，DiffViewer 组件（@git-diff-view/react 动态导入 ~320KB 不进主包）内联渲染；101/101 测试 + build + 边界检查 + Go 测试全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -30,7 +31,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）；待 A4（Diff 查看器）、E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）；待 A5（性能）、E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -452,6 +453,17 @@ Level 3 — 记录（持续追加）
 
 ## 14. AI Agent 施工记录
 
+### 2026-08-17 · ZCode · A4 Diff 查看器（doc/23，A4 完成，跨 Go core + 前端）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| A4-core | （本次） | `toolregistry/diff_recorder.go`：DiffRecorder 上下文注入（WithDiffRecorder/ReportDiff）；write_file/create_artifact 写前读旧内容、成功后上报 DiffRecord；orchestrator 工具执行挂 recorder 闭包（回填 toolCallId），`emitDiffCreated` 发 `diff.created` 事件（带 runID → EventBridge → 会话 SSE，复用 step_start/step_done 既有路由）；`internal/diff` 生成器升级为 go-difflib 真实 LCS 多 hunk unified diff（原单 hunk 简化版）；payload 仅含 path/toolCallId/unified（自包含，不带全文，SSE 帧与重放缓冲保持精简） | ✅ |
+| A4-front | （本次） | `FileDiff` 类型 + Session `diff.created` 监听（按 path 去重 upsert，缺 path/unified 忽略）；`DiffViewer.tsx`：@git-diff-view/react 动态导入（~320KB 独立 chunk 不进主包）+ antd Collapse 每文件一面板（路径 + 增删行数徽标）+ 明暗主题 + Suspense 加载态；接入 ConversationMessage（ToolCallTimeline 之后）；3 条 Session 测试 | ✅ |
+
+**决策**：调研发现原计划不可行（diff.created 未路由进会话 SSE + core 只产行级 diff 非 unified），经用户确认改修 core 接通完整链路。
+**验收**：前端 tsc + vitest 101/101 + build（git-diff-view 独立 chunk）+ 边界检查 123 源文件全绿；Go build + diff/toolregistry/aiagent 相关测试全绿。
+**后续**：A5（性能：路由级代码分割 + 消息列表虚拟滚动）。
+
 ### 2026-08-17 · ZCode · A3 Thinking 面板（doc/23，A3 完成）
 
 | 阶段 | 提交 | 内容 | 状态 |
@@ -460,7 +472,7 @@ Level 3 — 记录（持续追加）
 
 **顺带修复**：真实模式下 assistant 回复文本只存在于 `message` 事件，此前气泡只有「✅ 执行完成」摘要——完整帧现在并入气泡。
 **验收**：tsc + vitest 98/98 + build + 边界检查 122 源文件全绿。
-**后续**：A4（Diff 查看器）、A5（性能：代码分割 + 虚拟滚动）。
+**后续**：A4（Diff 查看器，已完成）、A5（性能：代码分割 + 虚拟滚动）。
 
 ### 2026-08-17 · ZCode · A1 审批卡片闭环 + A2 Markdown 升级（doc/23，A1+A2 完成）
 
@@ -470,7 +482,7 @@ Level 3 — 记录（持续追加）
 | A2 Markdown | b35e570 | react-markdown + remark-gfm 替换自研 MarkdownLite；Shiki 细粒度懒加载（shiki/core + engine/javascript + 8 .mjs 语言）；CodeBlockInner 200ms 去抖 + aliveRef + 明暗主题；PreRenderer 拦截 pre>code 提取语言；ConversationMessage React.memo；AssistantChatPanel 同步切换；4 条渲染测试；删除 MarkdownLite.tsx/.module.css | ✅ |
 
 **验收**：tsc + vitest 94/94 + build + 边界检查 121 源文件全绿；17 文件变更 +2571/-323 行。
-**后续**：A3（Thinking 面板）、A4（Diff 查看器）、A5（性能：代码分割 + 虚拟滚动）。
+**后续**：A3（Thinking 面板，已完成）、A4（Diff 查看器，已完成）、A5（性能：代码分割 + 虚拟滚动）。
 
 ### 2026-08-17 · ZCode · 前端六阶段重构（doc/21，P1→P6 全部完成）
 

@@ -22,6 +22,7 @@ export type {
   ToolCallLog,
   ThinkingStepKind,
   ThinkingStep,
+  FileDiff,
   AttachedFileKind,
   AttachedFileMeta,
   SelectedContextKind,

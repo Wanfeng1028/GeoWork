@@ -3,13 +3,13 @@
 package diff
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/pmezard/go-difflib/difflib"
 	"go.uber.org/zap"
 )
 
@@ -103,59 +103,45 @@ func (g *Generator) Generate(ctx context.Context, path, oldContent, newContent, 
 	return result, nil
 }
 
+// generateUnifiedDiff produces a real LCS-based unified diff (multiple
+// hunks, 3 lines of context) via go-difflib. doc/23 A4: the previous
+// single-hunk prefix matcher collapsed mid-file edits into one giant
+// hunk and mislabeled line ranges, which broke frontend diff viewers.
 func generateUnifiedDiff(path, old, new string) string {
-	// Simplified unified diff format
-	oldLines := splitLines(old)
-	newLines := splitLines(new)
-
-	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("--- a/%s\n", path))
-	buf.WriteString(fmt.Sprintf("+++ b/%s\n", path))
-
-	// Find common prefix
-	prefixLines := 0
-	for i := 0; i < len(oldLines) && i < len(newLines); i++ {
-		if oldLines[i] == newLines[i] {
-			prefixLines++
-		} else {
-			break
-		}
+	unified, err := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
+		A:        splitKeepNewline(old),
+		B:        splitKeepNewline(new),
+		FromFile: "a/" + path,
+		ToFile:   "b/" + path,
+		Context:  3,
+	})
+	if err != nil {
+		return ""
 	}
+	return unified
+}
 
-	// Write common prefix context
-	start := 0
-	if prefixLines > 3 {
-		start = prefixLines - 3
+// splitKeepNewline splits content into lines that each retain their trailing
+// "\n" (so WriteUnifiedDiff emits them verbatim), without the phantom extra
+// line that difflib.SplitLines appends for content ending in a newline. An
+// empty string yields a nil slice so new/deleted files get the canonical
+// "@@ -0,0 +1,N @@" / "@@ -1,N +0,0 @@" headers.
+func splitKeepNewline(s string) []string {
+	if s == "" {
+		return nil
 	}
-	for i := start; i < prefixLines; i++ {
-		buf.WriteString(fmt.Sprintf(" %s\n", oldLines[i]))
+	lines := strings.SplitAfter(s, "\n")
+	if lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
 	}
+	return lines
+}
 
-	// Write removed lines
-	if prefixLines < len(oldLines) {
-		var diffHeader strings.Builder
-		diffHeader.WriteString("@@ -")
-		diffHeader.WriteString(fmt.Sprintf("%d,%d", prefixLines+1, len(oldLines)-prefixLines))
-		diffHeader.WriteString(fmt.Sprintf(" +%d,%d @@\n", prefixLines+1, len(newLines)-prefixLines))
-		buf.WriteString(diffHeader.String())
-		for i := prefixLines; i < len(oldLines); i++ {
-			buf.WriteString(fmt.Sprintf("-%s\n", oldLines[i]))
-		}
-		for i := prefixLines; i < len(newLines); i++ {
-			buf.WriteString(fmt.Sprintf("+%s\n", newLines[i]))
-		}
-	} else {
-		// New file
-		var header strings.Builder
-		header.WriteString("@@ -0,0 +")
-		header.WriteString(fmt.Sprintf("%d @@\n", len(newLines)))
-		buf.WriteString(header.String())
-		for _, line := range newLines {
-			buf.WriteString(fmt.Sprintf("+%s\n", line))
-		}
-	}
-
-	return buf.String()
+// Unified returns a unified diff string between old and new content for the
+// file at path. Exported so the orchestrator can embed it in diff.created
+// events without constructing a Generator/Manager.
+func Unified(path, old, new string) string {
+	return generateUnifiedDiff(path, old, new)
 }
 
 func splitLines(s string) []string {

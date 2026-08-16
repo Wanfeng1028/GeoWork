@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"geowork/core/internal/aiagent/skills"
+	"geowork/core/internal/diff"
 	"geowork/core/internal/idgen"
 	"geowork/core/internal/modelgateway"
 	"geowork/core/internal/toolregistry"
@@ -1007,6 +1008,15 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			if o.workspacePath != "" {
 				toolCtx = toolregistry.WithWorkspacePath(toolCtx, o.workspacePath)
 			}
+			// doc/23 A4: write tools report file mutations through this
+			// recorder; each one becomes a diff.created event on the run's
+			// SSE stream (routed to conversation subscribers like
+			// step_start/step_done). The tool-call id is stamped here
+			// because tools don't know their own call id.
+			toolCtx = toolregistry.WithDiffRecorder(toolCtx, func(rec toolregistry.DiffRecord) {
+				rec.ToolCallID = tc.ID
+				o.emitDiffCreated(rc, run.ID, rec)
+			})
 			// P2-3: fire OnToolBefore so hooks can audit/log/inspect.
 			o.fireHook(HookOnToolBefore, &HookContext{
 				RunID:     run.ID,
@@ -1859,6 +1869,32 @@ func (o *Orchestrator) emitEvent(rc *RunContext, e Event) {
 		default:
 		}
 	}
+}
+
+// emitDiffCreated publishes a diff.created event for a file mutation
+// captured by a write tool (doc/23 A4). The unified diff is computed
+// lazily here (not inside the tool) so write tools stay free of diff
+// dependencies. No-op when the content is unchanged. The payload carries
+// only the self-contained unified diff (not full old/new contents) to keep
+// SSE frames and the persisted conversation snapshot lean.
+func (o *Orchestrator) emitDiffCreated(rc *RunContext, runID string, rec toolregistry.DiffRecord) {
+	if rec.OldContent == rec.NewContent {
+		return
+	}
+	unified := diff.Unified(rec.Path, rec.OldContent, rec.NewContent)
+	if unified == "" {
+		return
+	}
+	o.emitEvent(rc, Event{
+		Type:      "diff.created",
+		Timestamp: time.Now(),
+		RunID:     runID,
+		Data: map[string]any{
+			"path":       rec.Path,
+			"toolCallId": rec.ToolCallID,
+			"unified":    unified,
+		},
+	})
 }
 
 // GetEventBuffer returns the per-run event buffer, or nil if the run

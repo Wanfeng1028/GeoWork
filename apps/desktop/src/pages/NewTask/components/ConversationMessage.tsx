@@ -8,6 +8,7 @@ import type {
 } from './conversationStorage'
 import { MarkdownStream } from './MarkdownStream'
 import { ThinkingPanel } from './ThinkingPanel'
+import { DiffViewer } from './DiffViewer'
 import { ToolCallTimeline } from './ToolCallTimeline'
 import { WorkflowRunCard } from './WorkflowRunCard'
 import styles from './ConversationMessage.module.css'
@@ -122,6 +123,11 @@ export const ConversationMessageView = memo(function ConversationMessageView({
         {/* ── 工具调用日志（assistant 消息下方） ── */}
         {!isUser && data.toolCalls && data.toolCalls.length > 0 && (
           <ToolCallTimeline toolCalls={data.toolCalls} />
+        )}
+
+        {/* ── 文件变更（A4：diff.created unified diff 内联渲染） ── */}
+        {!isUser && data.fileDiffs && data.fileDiffs.length > 0 && (
+          <DiffViewer fileDiffs={data.fileDiffs} />
         )}
 
         {/* ── 工作流计划卡片（仅最后一条 assistant message） ── */}

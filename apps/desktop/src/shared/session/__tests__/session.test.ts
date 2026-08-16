@@ -595,6 +595,62 @@ describe('Session 思考步骤（A3，doc/23）', () => {
   })
 })
 
+describe('Session 文件变更（A4，doc/23）', () => {
+  it('21. diff.created 事件写入当前 assistant 消息的 fileDiffs', async () => {
+    const session = new Session('conv-df1', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('diff.created', {
+      data: {
+        path: 'src/analysis.ts',
+        toolCallId: 'tc-1',
+        unified: '--- a/src/analysis.ts\n+++ b/src/analysis.ts\n@@ -1 +1,2 @@\n a\n+b\n',
+      },
+    })
+    session.flushSync()
+
+    const diffs = session.getSnapshot().messages.at(-1)!.fileDiffs!
+    expect(diffs).toHaveLength(1)
+    expect(diffs[0]).toMatchObject({ path: 'src/analysis.ts', toolCallId: 'tc-1' })
+    expect(diffs[0].unified).toContain('@@ -1 +1,2 @@')
+    expect(diffs[0].id).toBeTruthy()
+    expect(diffs[0].createdAt).toBeGreaterThan(0)
+  })
+
+  it('22. 同路径多次 diff.created 去重：保留最新一条', async () => {
+    const session = new Session('conv-df2', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('diff.created', {
+      data: { path: 'a.ts', unified: '@@ -1 +1 @@\n-old\n+v1\n' },
+    })
+    es.emit('diff.created', {
+      data: { path: 'b.ts', unified: '@@ -1 +1 @@\n-old\n+v1\n' },
+    })
+    es.emit('diff.created', {
+      data: { path: 'a.ts', unified: '@@ -1 +1 @@\n-v1\n+v2\n' },
+    })
+    session.flushSync()
+
+    const diffs = session.getSnapshot().messages.at(-1)!.fileDiffs!
+    expect(diffs).toHaveLength(2)
+    const aDiff = diffs.find((d) => d.path === 'a.ts')!
+    expect(aDiff.unified).toContain('+v2')
+  })
+
+  it('23. 缺少 path 或 unified 的 diff.created 被忽略', async () => {
+    const session = new Session('conv-df3', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('diff.created', { data: { unified: '@@ -1 +1 @@\n-x\n+y\n' } })
+    es.emit('diff.created', { data: { path: 'a.ts' } })
+    es.emit('diff.created', { data: {} })
+    session.flushSync()
+
+    expect(session.getSnapshot().messages.at(-1)!.fileDiffs ?? []).toHaveLength(0)
+  })
+})
+
 describe('SessionManager', () => {
   it('ensure 惰性建且常驻：同 id 返回同实例；reset 后重建并 dispose', () => {
     const manager = new SessionManager()

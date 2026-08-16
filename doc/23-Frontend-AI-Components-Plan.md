@@ -2,7 +2,7 @@
 
 > **文档路径**：`doc/23-Frontend-AI-Components-Plan.md`
 > **关联文档**：`doc/21-Frontend-Refactor-Plan.md`（六阶段重构已完成，本计划是其后续）
-> **状态**：A1+A2+A3 已完成（2026-08-17）；A4/A5 待执行
+> **状态**：A1+A2+A3+A4 已完成（2026-08-17）；A5 待执行
 > **背景**：设计参考 TurboProduct 的 Beautiful UI 组件清单（beautifului.dev，MIT/copy-paste，无公开仓库）；因源码需邮件订阅，本计划以 antd token 体系自研，其组件清单作设计规格参考。
 
 ---
@@ -15,9 +15,9 @@ core 已建好的能力有三个在前端零消费：
 
 | core 已就绪 | 前端现状 |
 |---|---|
-| `approval_request` SSE 事件 + `GET/POST /api/agent/approvals/*`（governor 审批，routes.go 注释明言"for the frontend"） | 零消费 |
-| `diff.created` SSE 事件 | 零消费 |
-| `message` / `state_change` SSE 事件（思考流） | 零消费 |
+| `approval_request` SSE 事件 + `GET/POST /api/agent/approvals/*`（governor 审批，routes.go 注释明言"for the frontend"） | A1 已消费 ✅ |
+| `diff.created` SSE 事件（A4 起 core 产 unified diff 并路由进会话 SSE） | A4 已消费 ✅ |
+| `message` / `state_change` SSE 事件（思考流） | A3 已消费 ✅ |
 
 ## 阶段划分（每阶段独立提交、独立验收）
 
@@ -42,11 +42,14 @@ core 已建好的能力有三个在前端零消费：
 - `ThinkingPanel.tsx`：antd Collapse，流式自动展开、结束自动收起，Brain 图标 + 步数 + 活动 spinner
 - 4 条测试（state 步骤/去噪/reasoning 累积与关闭/终态关闭）
 
-### A4 Diff 查看器（后续）
-消费 `diff.created` 事件，`@git-diff-view/react` 内联渲染。
+### A4 Diff 查看器 ✅ 已完成（2026-08-17，跨 Go core + 前端）
+调研发现原方案不可行：`diff.created` 事件未带会话路由（发不到会话 SSE），且 core 只产行级 diff 非 unified。经确认改修 core 接通完整链路：
+- **core**：`toolregistry/diff_recorder.go`（DiffRecorder 上下文注入）；write_file/create_artifact 写前读旧内容、成功后上报；orchestrator 工具执行挂 recorder 闭包，`emitDiffCreated` 用 go-difflib（真实 LCS 多 hunk）生成 unified diff 并发 `diff.created`（带 runID → EventBridge → 会话 SSE，复用既有事件路由）；payload 仅含 path/toolCallId/unified（自包含，不带全文）
+- **前端**：`FileDiff` 类型 + Session `diff.created` 监听（按 path 去重 upsert）；`DiffViewer.tsx`（@git-diff-view/react 动态导入 ~320KB 独立 chunk + antd Collapse 每文件一面板 + 增删行数徽标 + 明暗主题）接入 ConversationMessage
+- 测试：Go 侧 diff 生成器 4 条 + recorder 3 条；前端 Session 3 条（事件填充/同路径去重/缺字段忽略）
 
-### A5 性能（后续，与 A3/A4 并行）
-路由级代码分割（现单 chunk 4.57MB）+ 消息列表虚拟滚动。
+### A5 性能（后续）
+路由级代码分割（现单 chunk ~5MB）+ 消息列表虚拟滚动。
 
 ## 明确不做
 

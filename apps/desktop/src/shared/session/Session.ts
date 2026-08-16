@@ -31,6 +31,7 @@ import type {
   Conversation,
   ConversationMessage,
   ConversationSnapshot,
+  FileDiff,
   ObservableSnapshot,
   RunStatus,
   SendOptions,
@@ -652,6 +653,22 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
           assistantId,
         )
       })
+
+      // A4 文件变更：write_file/create_artifact 写文件后 core 发 diff.created，
+      // 携带自包含 unified diff；按 path 去重（同一路径多次写只留最新）。
+      es.addEventListener('diff.created', (e) => {
+        const d = (parse(e).data ?? {}) as Record<string, unknown>
+        const path = String(d.path ?? '')
+        const unified = String(d.unified ?? '')
+        if (!path || !unified) return
+        this.upsertFileDiff(assistantId, {
+          id: `diff_${Date.now()}_${path}`,
+          path,
+          unified,
+          toolCallId: d.toolCallId !== undefined ? String(d.toolCallId) : undefined,
+          createdAt: Date.now(),
+        })
+      })
     })
   }
 
@@ -909,6 +926,22 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
       updated[idx] = { ...updated[idx], endedAt: Date.now() }
       return { ...m, thinkingSteps: updated }
     })
+  }
+
+  /* ══════════ A4：文件变更（diff.created 事件） ══════════ */
+
+  /** diff.created → 按 path 去重 upsert（同一路径多次写只留最新）。 */
+  private upsertFileDiff(assistantId: string, diff: FileDiff): void {
+    this.updateMessages((m) => {
+      const diffs = m.fileDiffs ?? []
+      const idx = diffs.findIndex((d) => d.path === diff.path)
+      if (idx >= 0) {
+        const updated = [...diffs]
+        updated[idx] = diff
+        return { ...m, fileDiffs: updated }
+      }
+      return { ...m, fileDiffs: [...diffs, diff] }
+    }, assistantId)
   }
 
   private finishAssistantMessage(

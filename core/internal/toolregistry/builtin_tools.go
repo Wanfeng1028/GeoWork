@@ -95,12 +95,22 @@ func RegisterBuiltinTools(reg *Registry) error {
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				path, _ := args["path"].(string)
 				content, _ := args["content"].(string)
-				if err := os.MkdirAll(filepath.Dir(filepath.Clean(path)), 0755); err != nil {
+				clean := filepath.Clean(path)
+				// doc/23 A4: capture the pre-write content so the
+				// orchestrator can emit a diff.created event. A missing
+				// file reads as "" (new-file diff).
+				oldBytes, _ := os.ReadFile(clean)
+				if err := os.MkdirAll(filepath.Dir(clean), 0755); err != nil {
 					return nil, err
 				}
-				if err := os.WriteFile(filepath.Clean(path), []byte(content), 0644); err != nil {
+				if err := os.WriteFile(clean, []byte(content), 0644); err != nil {
 					return nil, err
 				}
+				ReportDiff(ctx, DiffRecord{
+					Path:       path,
+					OldContent: string(oldBytes),
+					NewContent: content,
+				})
 				return map[string]any{"path": path, "written": len(content)}, nil
 			}).
 			Build(),
@@ -349,9 +359,16 @@ func RegisterBuiltinTools(reg *Registry) error {
 					return nil, err
 				}
 				if hasContent {
+					// doc/23 A4: capture pre-write content for diff.created.
+					oldBytes, _ := os.ReadFile(full)
 					if err := os.WriteFile(full, []byte(content), 0644); err != nil {
 						return nil, err
 					}
+					ReportDiff(ctx, DiffRecord{
+						Path:       full,
+						OldContent: string(oldBytes),
+						NewContent: content,
+					})
 				} else {
 					f, err := os.OpenFile(full, os.O_CREATE|os.O_WRONLY, 0644)
 					if err != nil {
