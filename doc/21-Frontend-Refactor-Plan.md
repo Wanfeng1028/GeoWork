@@ -3,7 +3,7 @@
 > **文档路径**：`doc/21-Frontend-Refactor-Plan.md`
 > **关联文档**：`doc/15-Engineering-API-Contract.md` §2.5（统一 API 客户端）/ `doc/03-GeoWorkFrontend-Engineering-Standards.md`
 > **适用对象**：前端贡献者（含 AI 编程助手）
-> **状态**：待批准（2026-08-16 起草，等待用户确认后按阶段执行）
+> **状态**：已批准并执行完成（2026-08-16 确认，2026-08-17 P1→P6 六阶段全部落地；各阶段提交号见文末执行记录）
 > **前置**：Phase 0 已完成——`shared/api/client.ts` 统一（token/超时/ApiError 三分类，commit 98cdde6）
 
 ---
@@ -327,3 +327,18 @@ P1(0.5d) → P2(2d) → P3(0.5d) → P4(1.5d) → P5(1d)
 - 40 包 monorepo 拆分（目录级模块约定 + CI 边界检查即可）
 - `/api/ws` 审批流接入（独立任务，D2 备注）
 - Extensions 四页接真数据（等 core skills/MCP 端点稳定，另立计划）
+
+---
+
+## 7. 执行记录（2026-08-17，全部完成）
+
+| 阶段 | 提交 | 与计划的偏差 |
+|---|---|---|
+| P1 协议镜像 | dcd9882 | 无；CoreTasksBundle 更名 TasksBundle（页面视图类型） |
+| P2 会话对象层 | 7b51697 | 传输层抽 SessionTransport 接口（测试注入，生产 coreApi）；cancel/fail 终态也落盘（计划只写 onDone，无此则刷新丢失停止态）；测试用例 1/2 按真实协议改为 stepId 合并/重复帧幂等（TaskEventPayload 无 seq 字段） |
+| P3 绑定层 | 26844c1 | 无 |
+| P4 NewTaskPage | 7bd2577 | 行数 825→~560（计划估 ≤320 是压缩 JSX 后的数字；JSX 原样保留优先可读性）；run.status 终态枚举按 aiagent.Status 实测为 completed/failed/stopped（计划写的 cancelled 不存在） |
+| P5 taskStore | a75ef69 | 侧栏离线条仅 TasksPage 落地，AppShell 侧栏暂不加（source 字段已就位） |
+| P6 storage+守护 | 本次提交 | 守护白名单比计划更严：conversationCache 也已走统一入口，localStorage 白名单仅 shared/storage/；收编范围扩至 6 套 storage 之外的全部调用点（AppShell/RightWorkspacePanel/FileTreePanel/TasksPage/GitWorktreeSettings 等 15+ 处）；CHANGELOG 因工作区存在并行未提交改动暂未同步 |
+
+**验收**：每阶段 `tsc --noEmit` + `vitest run`（终态 88/88）+ `electron-vite build` 三绿；边界检查 120 源文件零违规（M3 达成）。

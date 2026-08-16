@@ -64,6 +64,8 @@ export interface AvailableModelOption {
 
 /* ── 常量 ── */
 
+import { readJSON, writeJSON } from '../storage'
+
 const STORAGE_KEY = 'geowork.modelProviders.v1'
 const EVENT_NAME = 'geowork:model-providers-updated'
 const SECRET_KEY_PREFIX = 'geowork.provider.apiKey.'
@@ -145,16 +147,14 @@ let hydrateDone = false
 
 export function loadModelProviders(): ModelProviderData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return structuredClone(DEFAULT_DATA)
-    const parsed = JSON.parse(raw)
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {} as Record<string, unknown>)
     if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.providers)) {
       return structuredClone(DEFAULT_DATA)
     }
     const data: ModelProviderData = {
       providers: parsed.providers,
       useProxy: !!parsed.useProxy,
-      proxyUrl: parsed.proxyUrl ?? '',
+      proxyUrl: (parsed.proxyUrl as string | undefined) ?? '',
     }
     // 合并 safeStorage 缓存的 apiKey
     for (const provider of data.providers) {
@@ -184,7 +184,7 @@ export function saveModelProviders(data: ModelProviderData): void {
       // hydrate 未完成时 apiKey 为空属于"尚未回填"，保留已有 secret
       provider.apiKey = '' // 剥离明文，不写入 localStorage
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped))
+    writeJSON(STORAGE_KEY, stripped)
     window.dispatchEvent(new CustomEvent(EVENT_NAME))
   } catch {
     /* 静默失败 */
@@ -204,9 +204,7 @@ export async function hydrateProviderApiKeys(): Promise<void> {
     return
   }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    const parsed = JSON.parse(raw)
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {} as Record<string, unknown>)
     if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.providers)) return
     let needsRewrite = false
     for (const provider of parsed.providers as ModelProvider[]) {
@@ -221,7 +219,7 @@ export async function hydrateProviderApiKeys(): Promise<void> {
       if (secret) apiKeyCache.set(provider.id, secret)
     }
     if (needsRewrite) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+      writeJSON(STORAGE_KEY, parsed)
     }
     window.dispatchEvent(new CustomEvent(EVENT_NAME))
   } catch {

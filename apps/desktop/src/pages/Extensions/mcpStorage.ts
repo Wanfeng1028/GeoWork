@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 /**
  * GeoWork MCP 服务状态 — localStorage 持久化
  *
@@ -44,7 +45,9 @@ function isSensitiveKey(key: string): boolean {
 }
 
 /** 将 env 中敏感字段的 value 替换为掩码 */
-export function sanitizeEnv(env: Record<string, string> | undefined): Record<string, string> | undefined {
+export function sanitizeEnv(
+  env: Record<string, string> | undefined,
+): Record<string, string> | undefined {
   if (!env) return undefined
   const sanitized: Record<string, string> = {}
   for (const [key, value] of Object.entries(env)) {
@@ -57,12 +60,13 @@ export function sanitizeEnv(env: Record<string, string> | undefined): Record<str
 
 export function loadMcpStore(): McpStore {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...DEFAULT_STORE }
-    const parsed = JSON.parse(raw)
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {})
     if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_STORE }
     return {
-      states: typeof parsed.states === 'object' && parsed.states !== null ? parsed.states : {},
+      states:
+        typeof parsed.states === 'object' && parsed.states !== null
+          ? (parsed.states as Record<string, StoredMcpState>)
+          : {},
       localServers: Array.isArray(parsed.localServers) ? parsed.localServers : [],
     }
   } catch {
@@ -72,7 +76,7 @@ export function loadMcpStore(): McpStore {
 
 export function saveMcpStore(store: McpStore): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+    writeJSON(STORAGE_KEY, store)
     window.dispatchEvent(new CustomEvent('geowork:mcp-updated'))
   } catch {
     /* 静默失败 */
@@ -80,10 +84,7 @@ export function saveMcpStore(store: McpStore): void {
 }
 
 /** 合并 mock 基础数据与 localStorage 状态 */
-export function mergeMcpServers(
-  baseServers: McpServerItem[],
-  store: McpStore,
-): McpServerItem[] {
+export function mergeMcpServers(baseServers: McpServerItem[], store: McpStore): McpServerItem[] {
   return baseServers.map((server) => {
     const state = store.states[server.id]
     if (!state) return server

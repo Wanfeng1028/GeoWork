@@ -11,6 +11,7 @@
 | v1.5 | 2026-08-15 | ZCode orchestrator 施工：合并 executePlan/executePlanFromTurn（-350 行）、修复 resume double-close 崩溃与 hook 分叉、OutputSchema 执行期校验（零新依赖）、CI Go 版本 1.21→1.25、新增 orchestrator/output_schema 测试 12 个 |
 | v1.6 | 2026-08-16 | ZCode 提交 P0-4 runtime token 前端全链路 + 安全加固 + 17 个测试文件（08-15 夜批次）；前端 API 客户端统一：删除 utils/apiClient.ts 死代码、client.ts 增加超时/ApiError 三分类/取消支持、doc/15 v1.1 契约同步 |
 | v1.6 | 2026-08-16 | ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
+| v1.7 | 2026-08-17 | ZCode 前端六阶段重构（doc/21）全部完成：协议类型镜像、React-free 会话对象层（D1 演示模式开关）、useSession/useInvoke 绑定、NewTaskPage 接线（D2 真实 run 轮询）、zustand taskStore、shared/storage 统一入口 + CI 边界检查；删除静默 mock 降级/假执行/每 token 全量写 localStorage 三大病灶 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -27,7 +28,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 31 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；待 E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 88 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成：会话对象层 + taskStore + storage 统一入口 + CI 边界守护；待 E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -448,6 +449,20 @@ Level 3 — 记录（持续追加）
 ---
 
 ## 14. AI Agent 施工记录
+
+### 2026-08-17 · ZCode · 前端六阶段重构（doc/21，P1→P6 全部完成）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| P1 协议镜像 | dcd9882 | `shared/api/types.ts` 镜像 Go 协议（conversation/TaskEventPayload/Run/Task），删 4 处本地重复定义 | ✅ |
+| P2 会话对象层 | 7b51697 | Session 状态机（live/frozen/error 三相）+ SSE 驱动 + 微任务合批 + 差分快照；mock 流式迁入显式演示开关（D1）；终态落盘，流式过程零写；11 测试纯 Node | ✅ |
+| P3 绑定层 | 26844c1 | `session/react.ts`：useSession（uSES）/useInvoke，目录内唯一 React 文件 | ✅ |
+| P4 NewTaskPage 接线 | 7bd2577 | 7 effect→4，快照派生一切；假执行改 `GET /api/agent/runs/{id}` 轮询（D2，1s/5min）；删硬编码目录（settingsStorage.recentWorkDirs）；离线/演示提示条 | ✅ |
+| P5 taskStore | a75ef69 | zustand 真 store 替代 taskSidebarStore（删 CustomEvent 通知）；TasksPage 去 mock 兜底改两级降级 | ✅ |
+| P6 storage+守护 | （本次） | `shared/storage/index.ts` 收编全仓 15+ 处 localStorage（geowork. 前缀强制）；`scripts/check_frontend_boundaries.mjs` 三条边界守护接入 CI | ✅ |
+
+**验收**：每阶段 tsc + vitest（终态 88/88）+ build 三绿；边界检查 120 源文件零违规。
+**遗留**：CHANGELOG 因工作区存在并行未提交改动暂未同步；`/api/ws` 审批流接入为独立任务（doc/21 §6）。
 
 ### 2026-08-12 · TraeCode AI Agent · 前端 F0~F2 + FP3 阶段
 

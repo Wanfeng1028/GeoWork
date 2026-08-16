@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 import type { ChannelStatus } from './components/MobileChannelCard'
 
 export const STORAGE_KEY = 'geowork.mobileControl.channels.v1'
@@ -19,9 +20,7 @@ interface ChannelLike {
 /** 从 localStorage 读取已保存的通道状态，异常时返回空数组 */
 export function loadStoredChannelStates(): StoredMobileChannelState[] {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
+    const parsed: unknown = readJSON<unknown>(STORAGE_KEY, null)
     if (!Array.isArray(parsed)) return []
     /* 只做最外层字段校验，容错优先 */
     return parsed.filter(
@@ -45,7 +44,12 @@ export function mergeStoredChannels<T extends ChannelLike>(
   return initialChannels.map((ch) => {
     const stored = storedMap.get(ch.key)
     if (!stored) return ch
-    return { ...ch, status: stored.status, enabled: stored.enabled, errorMessage: stored.errorMessage }
+    return {
+      ...ch,
+      status: stored.status,
+      enabled: stored.enabled,
+      errorMessage: stored.errorMessage,
+    }
   })
 }
 
@@ -58,7 +62,7 @@ export function saveChannelStates(channels: ChannelLike[]): void {
       enabled: c.enabled,
       errorMessage: c.errorMessage,
     }))
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    writeJSON(STORAGE_KEY, payload)
   } catch {
     /* 写入失败静默忽略，不影响页面功能 */
   }

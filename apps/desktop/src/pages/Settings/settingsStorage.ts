@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 /**
  * GeoWork 设置中心 — localStorage 持久化
  *
@@ -85,23 +86,13 @@ export const DEFAULT_SETTINGS: GeoWorkSettings = {
 const STORAGE_KEY = 'geowork.settings.v1'
 
 export function loadSettings(): GeoWorkSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...DEFAULT_SETTINGS }
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_SETTINGS }
-    return { ...DEFAULT_SETTINGS, ...parsed }
-  } catch {
-    return { ...DEFAULT_SETTINGS }
-  }
+  const parsed = readJSON<Partial<GeoWorkSettings>>(STORAGE_KEY, {})
+  if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_SETTINGS }
+  return { ...DEFAULT_SETTINGS, ...parsed }
 }
 
 export function saveSettings(settings: GeoWorkSettings): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-  } catch {
-    /* 静默失败：隐私模式或配额满 */
-  }
+  writeJSON(STORAGE_KEY, settings)
 }
 
 /**

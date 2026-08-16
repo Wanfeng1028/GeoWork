@@ -10,6 +10,7 @@
 
 import { create } from 'zustand'
 import { apiGet } from '../api/client'
+import { readJSON, writeJSON } from '../storage'
 import type { CoreTaskListResponse } from '../api/types'
 
 export type SidebarTaskStatus = 'idle' | 'streaming' | 'completed' | 'stopped' | 'failed'
@@ -44,65 +45,39 @@ const MAX_TASKS = 50
 /* ── localStorage 读写（P6 收编到 shared/storage 统一入口） ── */
 
 function loadTasksFromStorage(): SidebarTaskItem[] {
-  try {
-    const raw = window.localStorage.getItem(SIDEBAR_TASKS_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .filter(
-        (item): item is Record<string, unknown> =>
-          typeof item === 'object' &&
-          item !== null &&
-          typeof (item as Record<string, unknown>).id === 'string' &&
-          typeof (item as Record<string, unknown>).status === 'string',
-      )
-      .map((item) => ({
-        ...item,
-        workspaceId: (typeof item.workspaceId === 'string'
-          ? item.workspaceId
-          : 'default') as string,
-        workspaceName: (typeof item.workspaceName === 'string' && item.workspaceName !== ''
-          ? item.workspaceName
-          : '默认') as string,
-      })) as SidebarTaskItem[]
-  } catch {
-    return []
-  }
+  return readJSON<unknown[]>(SIDEBAR_TASKS_KEY, [], Array.isArray)
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Record<string, unknown>).id === 'string' &&
+        typeof (item as Record<string, unknown>).status === 'string',
+    )
+    .map((item) => ({
+      ...item,
+      workspaceId: (typeof item.workspaceId === 'string' ? item.workspaceId : 'default') as string,
+      workspaceName: (typeof item.workspaceName === 'string' && item.workspaceName !== ''
+        ? item.workspaceName
+        : '默认') as string,
+    })) as SidebarTaskItem[]
 }
 
 function saveTasksToStorage(tasks: SidebarTaskItem[]): void {
-  try {
-    window.localStorage.setItem(SIDEBAR_TASKS_KEY, JSON.stringify(tasks))
-  } catch {
-    /* 静默忽略 */
-  }
+  writeJSON(SIDEBAR_TASKS_KEY, tasks)
 }
 
 function loadWorkspacesFromStorage(): SidebarWorkspaceMeta[] {
-  try {
-    const raw = window.localStorage.getItem(SIDEBAR_WORKSPACES_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item): item is SidebarWorkspaceMeta =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof (item as SidebarWorkspaceMeta).id === 'string' &&
-        typeof (item as SidebarWorkspaceMeta).name === 'string',
-    )
-  } catch {
-    return []
-  }
+  return readJSON<unknown[]>(SIDEBAR_WORKSPACES_KEY, [], Array.isArray).filter(
+    (item): item is SidebarWorkspaceMeta =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as SidebarWorkspaceMeta).id === 'string' &&
+      typeof (item as SidebarWorkspaceMeta).name === 'string',
+  )
 }
 
 function saveWorkspacesToStorage(meta: SidebarWorkspaceMeta[]): void {
-  try {
-    window.localStorage.setItem(SIDEBAR_WORKSPACES_KEY, JSON.stringify(meta))
-  } catch {
-    /* 静默忽略 */
-  }
+  writeJSON(SIDEBAR_WORKSPACES_KEY, meta)
 }
 
 /** Core Task status → 侧栏 SidebarTaskStatus 映射。 */

@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 /**
  * GeoWork 技能状态 — localStorage 持久化
  *
@@ -34,14 +35,15 @@ const DEFAULT_STORE: SkillsStore = {
 
 export function loadSkillsStore(): SkillsStore {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...DEFAULT_STORE, states: {}, localSkills: [] }
-    const parsed = JSON.parse(raw)
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {})
     if (typeof parsed !== 'object' || parsed === null) {
       return { ...DEFAULT_STORE, states: {}, localSkills: [] }
     }
     return {
-      states: typeof parsed.states === 'object' && parsed.states !== null ? parsed.states : {},
+      states:
+        typeof parsed.states === 'object' && parsed.states !== null
+          ? (parsed.states as Record<string, StoredSkillState>)
+          : {},
       localSkills: Array.isArray(parsed.localSkills) ? parsed.localSkills : [],
     }
   } catch {
@@ -50,11 +52,7 @@ export function loadSkillsStore(): SkillsStore {
 }
 
 export function saveSkillsStore(store: SkillsStore): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
-  } catch {
-    /* 静默失败：隐私模式或配额满 */
-  }
+  writeJSON(STORAGE_KEY, store)
 }
 
 /** 更新某个技能的状态（安装/启用） */

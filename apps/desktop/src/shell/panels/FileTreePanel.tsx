@@ -1,14 +1,8 @@
+import { readString, writeString } from '../../shared/storage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Empty, Spin, Tooltip, Typography, theme } from 'antd'
 import type { DataNode } from 'antd/es/tree'
-import {
-  Folder,
-  FileText,
-  FolderOpen,
-  RotateCw,
-  ChevronLeft,
-  ArrowLeft,
-} from 'lucide-react'
+import { Folder, FileText, FolderOpen, RotateCw, ChevronLeft, ArrowLeft } from 'lucide-react'
 import Tree from 'antd/es/tree'
 import styles from './panels.module.css'
 
@@ -49,7 +43,7 @@ function toTreeData(nodes: FileTreeNode[]): DataNode[] {
 
 export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
   const { token } = theme.useToken()
-  const [root, setRoot] = useState<string>(() => workspacePath ?? localStorage.getItem(LS_ROOT) ?? '')
+  const [root, setRoot] = useState<string>(() => workspacePath ?? (readString(LS_ROOT, '') || ''))
   const [tree, setTree] = useState<FileTreeNode[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -87,7 +81,7 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
 
   useEffect(() => {
     if (root) {
-      localStorage.setItem(LS_ROOT, root)
+      writeString(LS_ROOT, root)
       loadTree(root)
     }
   }, [root, loadTree])
@@ -102,21 +96,24 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
     if (path) setRoot(path)
   }, [])
 
-  const handleSelectFile = useCallback(async (absPath: string) => {
-    setSelectedFile(absPath)
-    setFileLoading(true)
-    setFileContent('')
-    try {
-      const rel = toRelative(root, absPath)
-      const res = await window.geowork?.runtime?.readFileByPath(root, rel)
-      if (res && res.error) throw new Error(res.error)
-      setFileContent(typeof res?.content === 'string' ? res.content : '')
-    } catch (e: any) {
-      setFileContent(`// 读取失败: ${e?.message || e}`)
-    } finally {
-      setFileLoading(false)
-    }
-  }, [root])
+  const handleSelectFile = useCallback(
+    async (absPath: string) => {
+      setSelectedFile(absPath)
+      setFileLoading(true)
+      setFileContent('')
+      try {
+        const rel = toRelative(root, absPath)
+        const res = await window.geowork?.runtime?.readFileByPath(root, rel)
+        if (res && res.error) throw new Error(res.error)
+        setFileContent(typeof res?.content === 'string' ? res.content : '')
+      } catch (e: any) {
+        setFileContent(`// 读取失败: ${e?.message || e}`)
+      } finally {
+        setFileLoading(false)
+      }
+    },
+    [root],
+  )
 
   const treeData = useMemo(() => toTreeData(tree), [tree])
 
@@ -158,7 +155,16 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
               onClick={() => setSelectedFile(null)}
             />
           </Tooltip>
-          <Text type="secondary" style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <Text
+            type="secondary"
+            style={{
+              fontSize: 12,
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {rel}
           </Text>
         </div>
@@ -178,7 +184,14 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
         </Tooltip>
         <Text
           type="secondary"
-          style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: "'SF Mono', 'Cascadia Code', monospace" }}
+          style={{
+            fontSize: 12,
+            flex: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontFamily: "'SF Mono', 'Cascadia Code', monospace",
+          }}
           title={root}
         >
           {root}
@@ -195,12 +208,25 @@ export function FileTreePanel({ workspacePath }: FileTreePanelProps) {
         ) : error ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<Text type="danger" style={{ fontSize: 12 }}>{error}</Text>}
+            description={
+              <Text type="danger" style={{ fontSize: 12 }}>
+                {error}
+              </Text>
+            }
           >
-            <Button size="small" onClick={handleChooseFolder}>重新选择</Button>
+            <Button size="small" onClick={handleChooseFolder}>
+              重新选择
+            </Button>
           </Empty>
         ) : treeData.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<Text type="secondary" style={{ fontSize: 12 }}>空目录</Text>} />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                空目录
+              </Text>
+            }
+          />
         ) : (
           <Tree
             className={styles.treeWrap}

@@ -43,6 +43,7 @@ import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
 import { useTaskStore } from '../shared/stores/taskStore'
+import { readJSON, readString, writeJSON, writeString } from '../shared/storage'
 import type { SidebarTaskItem } from '../shared/stores/taskStore'
 import { useSession } from '../shared/session/react'
 import { readConversation, writeConversation } from '../shared/session/conversationCache'
@@ -128,27 +129,17 @@ export function AppShell() {
   const RW_MAX_WIDTH = 960
 
   function safeReadWidth(key: string, fallback: number): number {
-    try {
-      const v = localStorage.getItem(key)
-      if (v === null) return fallback
-      const n = Number(v)
-      if (!Number.isFinite(n) || n < RW_MIN_WIDTH || n > RW_MAX_WIDTH) return fallback
-      return n
-    } catch {
-      return fallback
-    }
+    const n = Number(readString(key, ''))
+    if (!Number.isFinite(n) || n < RW_MIN_WIDTH || n > RW_MAX_WIDTH) return fallback
+    return n
   }
 
   const [rightPanelWidth, setRightPanelWidth] = useState(() =>
     safeReadWidth(RW_WIDTH_LS, RW_DEFAULT_WIDTH),
   )
-  const [rightWorkspaceCollapsed, setRightWorkspaceCollapsed] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(RW_COLLAPSED_LS) ?? 'false') === true
-    } catch {
-      return false
-    }
-  })
+  const [rightWorkspaceCollapsed, setRightWorkspaceCollapsed] = useState(() =>
+    readJSON<boolean>(RW_COLLAPSED_LS, false),
+  )
   const [isDragging, setIsDragging] = useState(false)
 
   const rootRef = useRef<HTMLDivElement>(null)
@@ -187,7 +178,7 @@ export function AppShell() {
         const w = parseInt(panelRef.current.style.width, 10)
         if (Number.isFinite(w)) {
           setRightPanelWidth(w)
-          localStorage.setItem(RW_WIDTH_LS, String(w))
+          writeString(RW_WIDTH_LS, String(w))
         }
       }
       document.body.style.cursor = ''
@@ -210,7 +201,7 @@ export function AppShell() {
 
   /* ── 右侧面板折叠持久化 ── */
   useEffect(() => {
-    localStorage.setItem(RW_COLLAPSED_LS, JSON.stringify(rightWorkspaceCollapsed))
+    writeJSON(RW_COLLAPSED_LS, rightWorkspaceCollapsed)
   }, [rightWorkspaceCollapsed])
 
   /* ── 侧栏任务同步：启动拉 Core，跨标签页 storage 事件回填 ── */

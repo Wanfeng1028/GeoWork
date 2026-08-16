@@ -1,20 +1,7 @@
+import { readJSON, writeJSON } from '../../../shared/storage'
 import { useCallback, useState } from 'react'
-import {
-  Alert,
-  App,
-  Badge,
-  Button,
-  Divider,
-  Input,
-  Typography,
-  theme,
-} from 'antd'
-import {
-  GitBranch,
-  FolderOpen,
-  RotateCw,
-  Trash2,
-} from 'lucide-react'
+import { Alert, App, Badge, Button, Divider, Input, Typography, theme } from 'antd'
+import { GitBranch, FolderOpen, RotateCw, Trash2 } from 'lucide-react'
 import { SettingsSection, SettingsCard } from './SettingsSection'
 import styles from './GitWorktreeSettings.module.css'
 
@@ -32,16 +19,15 @@ const STORAGE_KEY = 'geowork.gitWorktree.v1'
 
 function loadGitWorktree(): GitWorktreeData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { worktreePath: '', status: 'unknown' }
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return { worktreePath: '', status: 'unknown' }
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {})
+    if (typeof parsed !== 'object' || parsed === null)
+      return { worktreePath: '', status: 'unknown' }
     return {
-      worktreePath: parsed.worktreePath ?? '',
-      status: parsed.status ?? 'unknown',
-      branch: parsed.branch,
-      changedFiles: parsed.changedFiles,
-      lastCheckedAt: parsed.lastCheckedAt,
+      worktreePath: (parsed.worktreePath as string | undefined) ?? '',
+      status: (parsed.status as GitWorktreeData['status'] | undefined) ?? 'unknown',
+      branch: parsed.branch as string | undefined,
+      changedFiles: parsed.changedFiles as number | undefined,
+      lastCheckedAt: parsed.lastCheckedAt as number | undefined,
     }
   } catch {
     return { worktreePath: '', status: 'unknown' }
@@ -49,12 +35,13 @@ function loadGitWorktree(): GitWorktreeData {
 }
 
 function saveGitWorktree(data: GitWorktreeData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch { /* 静默失败 */ }
+  writeJSON(STORAGE_KEY, data)
 }
 
-const STATUS_MAP: Record<GitWorktreeData['status'], { text: string; status: 'default' | 'success' | 'warning' | 'error' }> = {
+const STATUS_MAP: Record<
+  GitWorktreeData['status'],
+  { text: string; status: 'default' | 'success' | 'warning' | 'error' }
+> = {
   unknown: { text: '尚未检测工作树状态', status: 'default' },
   missing: { text: '未找到可用工作树，请检查路径', status: 'error' },
   clean: { text: '当前工作树干净，无未提交更改', status: 'success' },
@@ -104,7 +91,10 @@ export function GitWorktreeSettings() {
   const statusInfo = STATUS_MAP[data.status]
 
   return (
-    <SettingsSection title="Git 工作树" subtitle="配置 GeoWork 用于读取项目上下文的 Git 工作树目录。">
+    <SettingsSection
+      title="Git 工作树"
+      subtitle="配置 GeoWork 用于读取项目上下文的 Git 工作树目录。"
+    >
       <SettingsCard title="工作树路径">
         <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>
           GeoWork 将在该目录下读取项目结构、变更摘要和提交上下文。
@@ -125,20 +115,26 @@ export function GitWorktreeSettings() {
       </SettingsCard>
 
       <SettingsCard title="当前状态">
-        <div
-          className={styles.statusCard}
-          style={{ background: token.colorFillQuaternary }}
-        >
+        <div className={styles.statusCard} style={{ background: token.colorFillQuaternary }}>
           <div className={styles.statusRow}>
-            <Text className={styles.statusLabel} type="secondary">状态</Text>
-            <Badge status={statusInfo.status} text={<Text style={{ fontSize: 13 }}>{statusInfo.text}</Text>} />
+            <Text className={styles.statusLabel} type="secondary">
+              状态
+            </Text>
+            <Badge
+              status={statusInfo.status}
+              text={<Text style={{ fontSize: 13 }}>{statusInfo.text}</Text>}
+            />
           </div>
           {data.worktreePath && (
             <>
               <Divider style={{ margin: '6px 0' }} />
               <div className={styles.statusRow}>
-                <Text className={styles.statusLabel} type="secondary">当前路径</Text>
-                <Text className={styles.statusValue} copyable>{data.worktreePath}</Text>
+                <Text className={styles.statusLabel} type="secondary">
+                  当前路径
+                </Text>
+                <Text className={styles.statusValue} copyable>
+                  {data.worktreePath}
+                </Text>
               </div>
             </>
           )}
@@ -146,7 +142,9 @@ export function GitWorktreeSettings() {
             <>
               <Divider style={{ margin: '6px 0' }} />
               <div className={styles.statusRow}>
-                <Text className={styles.statusLabel} type="secondary">分支</Text>
+                <Text className={styles.statusLabel} type="secondary">
+                  分支
+                </Text>
                 <Text className={styles.statusValue}>{data.branch}</Text>
               </div>
             </>
@@ -155,7 +153,9 @@ export function GitWorktreeSettings() {
             <>
               <Divider style={{ margin: '6px 0' }} />
               <div className={styles.statusRow}>
-                <Text className={styles.statusLabel} type="secondary">变更文件数</Text>
+                <Text className={styles.statusLabel} type="secondary">
+                  变更文件数
+                </Text>
                 <Text className={styles.statusValue}>{data.changedFiles}</Text>
               </div>
             </>
@@ -164,25 +164,22 @@ export function GitWorktreeSettings() {
             <>
               <Divider style={{ margin: '6px 0' }} />
               <div className={styles.statusRow}>
-                <Text className={styles.statusLabel} type="secondary">最近检测时间</Text>
-                <Text className={styles.statusValue}>{new Date(data.lastCheckedAt).toLocaleString()}</Text>
+                <Text className={styles.statusLabel} type="secondary">
+                  最近检测时间
+                </Text>
+                <Text className={styles.statusValue}>
+                  {new Date(data.lastCheckedAt).toLocaleString()}
+                </Text>
               </div>
             </>
           )}
         </div>
 
         <div className={styles.btnRow}>
-          <Button
-            icon={<FolderOpen />}
-            onClick={() => message.info('打开文件夹功能后续接入')}
-          >
+          <Button icon={<FolderOpen />} onClick={() => message.info('打开文件夹功能后续接入')}>
             打开所在文件夹
           </Button>
-          <Button
-            icon={<Trash2 />}
-            danger
-            onClick={handleClear}
-          >
+          <Button icon={<Trash2 />} danger onClick={handleClear}>
             清空路径
           </Button>
         </div>

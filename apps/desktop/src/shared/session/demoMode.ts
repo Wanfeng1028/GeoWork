@@ -8,6 +8,8 @@
  * 读取顺序：URL ?demo=1 > localStorage 'geowork.demo.enabled' === 'true'，默认 false。
  */
 
+import { readString, writeString } from '../storage'
+
 const DEMO_STORAGE_KEY = 'geowork.demo.enabled'
 
 export function isDemoModeEnabled(): boolean {
@@ -16,10 +18,8 @@ export function isDemoModeEnabled(): boolean {
       const url = new URL(window.location.href)
       if (url.searchParams.get('demo') === '1') return true
     }
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(DEMO_STORAGE_KEY) === 'true'
-    }
-    return false
+    if (typeof localStorage === 'undefined') return false
+    return readString(DEMO_STORAGE_KEY, 'false') === 'true'
   } catch {
     return false
   }
@@ -27,9 +27,8 @@ export function isDemoModeEnabled(): boolean {
 
 export function setDemoMode(enabled: boolean): void {
   try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(DEMO_STORAGE_KEY, String(enabled))
-    }
+    if (typeof localStorage === 'undefined') return
+    writeString(DEMO_STORAGE_KEY, String(enabled))
   } catch {
     /* 隐私模式/配额满：静默 */
   }

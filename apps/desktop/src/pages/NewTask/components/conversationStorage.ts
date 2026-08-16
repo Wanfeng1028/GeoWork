@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../../shared/storage'
 /**
  * conversationStorage.ts — 旧会话持久化入口（过渡兼容层）
  *
@@ -55,29 +56,17 @@ const CONVERSATIONS_KEY = 'geowork.conversations.v1'
 const MAX_CONVERSATIONS = 20
 
 export function loadConversations(): Conversation[] {
-  try {
-    const raw = localStorage.getItem(CONVERSATIONS_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item): item is Conversation =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof (item as Conversation).id === 'string' &&
-        Array.isArray((item as Conversation).messages),
-    )
-  } catch {
-    return []
-  }
+  return readJSON<unknown[]>(CONVERSATIONS_KEY, [], Array.isArray).filter(
+    (item): item is Conversation =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as Conversation).id === 'string' &&
+      Array.isArray((item as Conversation).messages),
+  )
 }
 
 export function saveConversations(conversations: Conversation[]): void {
-  try {
-    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations))
-  } catch {
-    /* 静默失败：隐私模式或配额满 */
-  }
+  writeJSON(CONVERSATIONS_KEY, conversations)
 }
 
 export function upsertConversation(conv: Conversation): void {

@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 /**
  * GeoWork 连接器状态 — localStorage 持久化
  *
@@ -13,11 +14,7 @@
  * 本地添加 / JSON 导入的连接器完整存入 localConnectors。
  */
 
-import type {
-  ConnectorAuthType,
-  ConnectorItem,
-  ConnectorStatus,
-} from './connectorsMockData'
+import type { ConnectorAuthType, ConnectorItem, ConnectorStatus } from './connectorsMockData'
 
 const STORAGE_KEY = 'geowork.connectors.v1'
 const EVENT_NAME = 'geowork:connectors-updated'
@@ -45,12 +42,13 @@ const DEFAULT_STORE: ConnectorStore = {
 
 export function loadConnectorStore(): ConnectorStore {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return structuredClone(DEFAULT_STORE)
-    const parsed = JSON.parse(raw)
+    const parsed = readJSON<Record<string, unknown>>(STORAGE_KEY, {})
     if (typeof parsed !== 'object' || parsed === null) return structuredClone(DEFAULT_STORE)
     return {
-      states: typeof parsed.states === 'object' && parsed.states !== null ? parsed.states : {},
+      states:
+        typeof parsed.states === 'object' && parsed.states !== null
+          ? (parsed.states as Record<string, StoredConnectorState>)
+          : {},
       localConnectors: Array.isArray(parsed.localConnectors) ? parsed.localConnectors : [],
     }
   } catch {
@@ -60,7 +58,7 @@ export function loadConnectorStore(): ConnectorStore {
 
 export function saveConnectorStore(store: ConnectorStore): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+    writeJSON(STORAGE_KEY, store)
     window.dispatchEvent(new CustomEvent(EVENT_NAME))
   } catch {
     /* 静默失败 */
@@ -110,10 +108,7 @@ export function updateConnectorState(
 }
 
 /** 添加本地连接器 */
-export function addLocalConnector(
-  store: ConnectorStore,
-  connector: ConnectorItem,
-): ConnectorStore {
+export function addLocalConnector(store: ConnectorStore, connector: ConnectorItem): ConnectorStore {
   const next: ConnectorStore = {
     ...store,
     localConnectors: [...store.localConnectors, connector],
@@ -133,10 +128,7 @@ export function addLocalConnector(
 }
 
 /** 移除本地连接器 */
-export function removeLocalConnector(
-  store: ConnectorStore,
-  id: string,
-): ConnectorStore {
+export function removeLocalConnector(store: ConnectorStore, id: string): ConnectorStore {
   const next: ConnectorStore = {
     ...store,
     localConnectors: store.localConnectors.filter((c) => c.id !== id),
@@ -154,10 +146,7 @@ export function removeLocalConnector(
 }
 
 /** 重置连接器状态到默认 */
-export function resetConnectorState(
-  store: ConnectorStore,
-  id: string,
-): ConnectorStore {
+export function resetConnectorState(store: ConnectorStore, id: string): ConnectorStore {
   const next: ConnectorStore = {
     ...store,
     states: { ...store.states },

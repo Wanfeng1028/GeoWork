@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 /**
  * expertStorage.ts
  *
@@ -26,9 +27,7 @@ const EXPERT_STORE_KEY = 'geowork.experts.v1'
 
 export function loadExpertStore(): ExpertStore {
   try {
-    const raw = localStorage.getItem(EXPERT_STORE_KEY)
-    if (!raw) return { states: {} }
-    const parsed: unknown = JSON.parse(raw)
+    const parsed: unknown = readJSON<unknown>(EXPERT_STORE_KEY, null)
     if (
       typeof parsed === 'object' &&
       parsed !== null &&
@@ -43,11 +42,7 @@ export function loadExpertStore(): ExpertStore {
 }
 
 export function saveExpertStore(store: ExpertStore): void {
-  try {
-    localStorage.setItem(EXPERT_STORE_KEY, JSON.stringify(store))
-  } catch {
-    /* 静默失败 */
-  }
+  writeJSON(EXPERT_STORE_KEY, store)
 }
 
 /* ── 操作函数 ── */

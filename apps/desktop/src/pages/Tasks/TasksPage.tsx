@@ -1,3 +1,4 @@
+import { readJSON, writeJSON } from '../../shared/storage'
 import { useState, useEffect, useCallback } from 'react'
 import {
   Alert,
@@ -205,21 +206,11 @@ async function loadTasksFromCore(): Promise<TasksBundle> {
 
 /** 读取 localStorage 缓存的任务数据（Core 不可用时的降级数据源）。 */
 function loadCachedTasks(): TasksBundle | null {
-  try {
-    const raw = window.localStorage.getItem(TASKS_CACHE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as TasksBundle
-  } catch {
-    return null
-  }
+  return readJSON<TasksBundle | null>(TASKS_CACHE_KEY, null)
 }
 
 function saveCachedTasks(data: TasksBundle): void {
-  try {
-    window.localStorage.setItem(TASKS_CACHE_KEY, JSON.stringify(data))
-  } catch {
-    /* 静默忽略 */
-  }
+  writeJSON(TASKS_CACHE_KEY, data)
 }
 
 export function TasksPage() {

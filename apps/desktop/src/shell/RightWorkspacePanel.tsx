@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { readJSON, readString, writeJSON, writeString } from '../shared/storage'
 import type { RefObject } from 'react'
 import { Button, Dropdown, Empty, Space, Tabs, Tag, Tooltip, Typography, theme } from 'antd'
 import {
@@ -52,19 +53,13 @@ const LS_OPEN_TABS = `${LS_PREFIX}openTabsV2`
 const LS_CHAT_SESSIONS = `${LS_PREFIX}chatSessions`
 
 function safeReadString(key: string, fallback: string): string {
-  try {
-    const v = localStorage.getItem(key)
-    return typeof v === 'string' ? v : fallback
-  } catch {
-    return fallback
-  }
+  const v = readString(key, fallback)
+  return typeof v === 'string' ? v : fallback
 }
 
 function safeReadArray<T>(key: string, validator: (v: unknown) => v is T): T[] {
   try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
+    const parsed: unknown = readJSON<unknown>(key, null)
     if (!Array.isArray(parsed)) return []
     return parsed.filter(validator)
   } catch {
@@ -272,15 +267,15 @@ export function RightWorkspacePanel({
 
   /* ── 持久化 ── */
   useEffect(() => {
-    localStorage.setItem(LS_ACTIVE, activeTab)
+    writeString(LS_ACTIVE, activeTab)
   }, [activeTab])
 
   useEffect(() => {
-    localStorage.setItem(LS_OPEN_TABS, JSON.stringify(openTabs))
+    writeJSON(LS_OPEN_TABS, openTabs)
   }, [openTabs])
 
   useEffect(() => {
-    localStorage.setItem(LS_CHAT_SESSIONS, JSON.stringify(chatSessions))
+    writeJSON(LS_CHAT_SESSIONS, chatSessions)
   }, [chatSessions])
 
   /* ── activeTab 校验：确保 active 在 openTabs 或 system tab 中 ── */

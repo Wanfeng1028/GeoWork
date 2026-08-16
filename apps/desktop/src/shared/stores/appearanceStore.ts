@@ -1,13 +1,8 @@
 import { create } from 'zustand'
+import { readString, writeString } from '../storage'
 
 export type Appearance =
-  | 'light'
-  | 'dark'
-  | 'system'
-  | 'illustration'
-  | 'glass'
-  | 'editorial'
-  | 'editorial-dark'
+  'light' | 'dark' | 'system' | 'illustration' | 'glass' | 'editorial' | 'editorial-dark'
 export type ResolvedAppearance = 'light' | 'dark'
 
 interface AppearanceState {
@@ -26,7 +21,10 @@ const VALID_APPEARANCES: ReadonlySet<Appearance> = new Set([
 ])
 
 function getSystemAppearance(): ResolvedAppearance {
-  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches
+  ) {
     return 'dark'
   }
   return 'light'
@@ -40,7 +38,7 @@ function resolveAppearance(appearance: Appearance): ResolvedAppearance {
 
 function getInitialAppearance(): Appearance {
   if (typeof window === 'undefined') return 'editorial'
-  const saved = window.localStorage.getItem(STORAGE_KEY)
+  const saved = readString(STORAGE_KEY, '')
   if (saved && VALID_APPEARANCES.has(saved as Appearance)) return saved as Appearance
   return 'editorial'
 }
@@ -52,7 +50,7 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
   resolvedAppearance: resolveAppearance(initialAppearance),
 
   setAppearance: (appearance) => {
-    window.localStorage.setItem(STORAGE_KEY, appearance)
+    writeString(STORAGE_KEY, appearance)
     set({
       appearance,
       resolvedAppearance: resolveAppearance(appearance),

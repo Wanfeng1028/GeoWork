@@ -47,6 +47,8 @@ jobs:
           cd apps/desktop
           npm run lint
           npm run typecheck
+      - name: Frontend boundary check
+        run: node scripts/check_frontend_boundaries.mjs
       - name: Unit tests with coverage
         run: |
           cd apps/desktop
