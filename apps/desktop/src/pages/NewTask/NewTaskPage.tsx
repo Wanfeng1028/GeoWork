@@ -10,7 +10,7 @@ import { sessionManager } from '../../shared/session/SessionManager'
 import { useSession } from '../../shared/session/react'
 import { readConversation } from '../../shared/session/conversationCache'
 import type { SelectedContextItem, WorkMode } from '../../shared/session/types'
-import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
+import { useTaskStore } from '../../shared/stores/taskStore'
 import { loadSettings, updateSettingsPatch } from '../Settings/settingsStorage'
 import { CapsuleTabs } from '../../shell/components/CapsuleTabs'
 import { CapsuleTag } from '../../shell/components/CapsuleTag'
@@ -226,7 +226,7 @@ export function NewTaskPage() {
       id = makeConversationId()
       convIdRef.current = id
       setConvId(id)
-      upsertSidebarTask({
+      useTaskStore.getState().upsertLocal({
         id,
         title: text.slice(0, 20) || '新任务',
         lastMessage: text.slice(0, 50),

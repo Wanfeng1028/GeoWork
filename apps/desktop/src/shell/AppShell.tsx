@@ -42,19 +42,10 @@ import {
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import type { Appearance } from '../shared/stores/appearanceStore'
-import {
-  loadSidebarTasks,
-  loadWorkspaceMeta,
-  updateSidebarTask,
-  archiveSidebarTasksByWorkspace,
-  upsertWorkspaceMeta,
-  refreshSidebarTasksFromCore,
-} from '../shared/stores/taskSidebarStore'
-import type { SidebarTaskItem, SidebarWorkspaceMeta } from '../shared/stores/taskSidebarStore'
-import {
-  getConversation,
-  upsertConversation,
-} from '../pages/NewTask/components/conversationStorage'
+import { useTaskStore } from '../shared/stores/taskStore'
+import type { SidebarTaskItem } from '../shared/stores/taskStore'
+import { useSession } from '../shared/session/react'
+import { readConversation, writeConversation } from '../shared/session/conversationCache'
 import { ErrorBoundary } from '../shell/feedback'
 import { ShortcutsModal } from './ShortcutsModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -113,10 +104,14 @@ export function AppShell() {
   const [extOpen, setExtOpen] = useState(false)
   const [extHeaderHover, setExtHeaderHover] = useState(false)
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
-  const [sidebarTasks, setSidebarTasks] = useState<SidebarTaskItem[]>(() => loadSidebarTasks())
-  const [workspaceMeta, setWorkspaceMeta] = useState<SidebarWorkspaceMeta[]>(() =>
-    loadWorkspaceMeta(),
-  )
+  /* 侧栏任务：zustand 单一真相源（CustomEvent 通知已删除） */
+  const sidebarTasks = useTaskStore((s) => s.tasks)
+  const workspaceMeta = useTaskStore((s) => s.workspaces)
+  const refreshFromCore = useTaskStore((s) => s.refreshFromCore)
+  const updateTaskLocal = useTaskStore((s) => s.updateLocal)
+  const archiveTasksByWorkspace = useTaskStore((s) => s.archiveByWorkspace)
+  const upsertWorkspaceMeta = useTaskStore((s) => s.upsertWorkspace)
+  const upsertTaskLocal = useTaskStore((s) => s.upsertLocal)
   const [searchParams] = useSearchParams()
   const activeConvId = searchParams.get('conversationId')
 
@@ -218,22 +213,53 @@ export function AppShell() {
     localStorage.setItem(RW_COLLAPSED_LS, JSON.stringify(rightWorkspaceCollapsed))
   }, [rightWorkspaceCollapsed])
 
-  /* ── 侧栏任务同步 ── */
+  /* ── 侧栏任务同步：启动拉 Core，跨标签页 storage 事件回填 ── */
   useEffect(() => {
-    const refresh = () => {
-      setSidebarTasks(loadSidebarTasks())
-      setWorkspaceMeta(loadWorkspaceMeta())
-    }
-    window.addEventListener('geowork:sidebar-tasks-updated', refresh)
-    window.addEventListener('storage', refresh)
-    /* 启动时从 Core API 拉取任务列表并合并到 localStorage；
-       失败静默降级，refresh() 由 dispatchUpdated 触发 */
-    refreshSidebarTasksFromCore()
+    void refreshFromCore()
+    const hydrate = () => useTaskStore.getState().hydrate()
+    window.addEventListener('storage', hydrate)
     return () => {
-      window.removeEventListener('geowork:sidebar-tasks-updated', refresh)
-      window.removeEventListener('storage', refresh)
+      window.removeEventListener('storage', hydrate)
     }
-  }, [])
+  }, [refreshFromCore])
+
+  /* ── 当前会话状态 → 侧栏任务（替代原 NewTaskPage 内的同步 effect） ── */
+  const activeSnap = useSession(activeConvId)
+  useEffect(() => {
+    if (!activeConvId) return
+    const messages = activeSnap.messages
+    const last = messages.at(-1)
+    if (!last) return
+    let sidebarStatus: SidebarTaskItem['status'] = 'idle'
+    if (
+      activeSnap.runStatus === 'thinking' ||
+      activeSnap.runStatus === 'planning' ||
+      activeSnap.runStatus === 'running'
+    ) {
+      sidebarStatus = 'streaming'
+    } else if (activeSnap.runStatus === 'completed') {
+      sidebarStatus = 'completed'
+    } else if (activeSnap.runStatus === 'stopped') {
+      sidebarStatus = 'stopped'
+    } else if (activeSnap.runStatus === 'failed') {
+      sidebarStatus = 'failed'
+    } else {
+      return
+    }
+    const existing = useTaskStore.getState().tasks.find((t) => t.id === activeConvId)
+    upsertTaskLocal({
+      id: activeConvId,
+      title: existing?.title ?? activeSnap.title,
+      lastMessage: last.content.slice(0, 50),
+      status: sidebarStatus,
+      updatedAt: Date.now(),
+      workspaceId: existing?.workspaceId ?? 'default',
+      workspaceName: existing?.workspaceName ?? '默认',
+      workDirName: existing?.workDirName,
+      pinned: existing?.pinned,
+      archived: existing?.archived,
+    })
+  }, [activeConvId, activeSnap.runStatus, activeSnap.messages, activeSnap.title, upsertTaskLocal])
 
   const isOnExtension = extRoutes.includes(location.pathname)
 
@@ -369,20 +395,23 @@ export function AppShell() {
     if (!renameTargetId || !renameValue.trim()) return
     const newTitle = renameValue.trim()
     /* 更新侧栏 */
-    updateSidebarTask(renameTargetId, { title: newTitle })
-    /* 同步更新 Conversation.title */
-    const conv = getConversation(renameTargetId)
+    updateTaskLocal(renameTargetId, { title: newTitle })
+    /* 同步更新会话缓存 title */
+    const conv = readConversation(renameTargetId)
     if (conv) {
-      upsertConversation({ ...conv, title: newTitle, updatedAt: Date.now() })
+      writeConversation({ ...conv, title: newTitle, updatedAt: Date.now() })
     }
     setRenameModalOpen(false)
     setRenameTargetId(null)
     setRenameValue('')
-  }, [renameTargetId, renameValue])
+  }, [renameTargetId, renameValue, updateTaskLocal])
 
-  const handleTogglePin = useCallback((task: SidebarTaskItem) => {
-    updateSidebarTask(task.id, { pinned: !task.pinned })
-  }, [])
+  const handleTogglePin = useCallback(
+    (task: SidebarTaskItem) => {
+      updateTaskLocal(task.id, { pinned: !task.pinned })
+    },
+    [updateTaskLocal],
+  )
 
   const handleExportChat = useCallback(
     (_task: SidebarTaskItem) => {
@@ -399,11 +428,11 @@ export function AppShell() {
         okText: '归档',
         cancelText: '取消',
         onOk: () => {
-          updateSidebarTask(task.id, { archived: true })
+          updateTaskLocal(task.id, { archived: true })
         },
       })
     },
-    [message],
+    [message, updateTaskLocal],
   )
 
   const getTaskDropdownItems = useCallback(
@@ -457,31 +486,34 @@ export function AppShell() {
 
   const handleToggleWorkspacePin = useCallback(
     (wsId: string, wsName: string) => {
-      const existing = workspaceMeta.find((m) => m.id === wsId)
+      const existing = useTaskStore.getState().workspaces.find((m) => m.id === wsId)
       upsertWorkspaceMeta({
         id: wsId,
         name: wsName,
         pinned: !(existing?.pinned ?? false),
       })
     },
-    [workspaceMeta],
+    [upsertWorkspaceMeta],
   )
 
   const handleOpenFolder = useCallback(() => {
     message.info('打开文件夹需要桌面端能力，后续接入')
   }, [message])
 
-  const handleArchiveWorkspace = useCallback((wsId: string, wsName: string) => {
-    Modal.confirm({
-      title: '归档整组对话',
-      content: `确定归档「${wsName}」下的所有对话吗？`,
-      okText: '归档',
-      cancelText: '取消',
-      onOk: () => {
-        archiveSidebarTasksByWorkspace(wsId)
-      },
-    })
-  }, [])
+  const handleArchiveWorkspace = useCallback(
+    (wsId: string, wsName: string) => {
+      Modal.confirm({
+        title: '归档整组对话',
+        content: `确定归档「${wsName}」下的所有对话吗？`,
+        okText: '归档',
+        cancelText: '取消',
+        onOk: () => {
+          archiveTasksByWorkspace(wsId)
+        },
+      })
+    },
+    [archiveTasksByWorkspace],
+  )
 
   const getWorkspaceDropdownItems = useCallback(
     (wsId: string, wsName: string) => {

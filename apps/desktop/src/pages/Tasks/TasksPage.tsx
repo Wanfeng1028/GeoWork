@@ -48,47 +48,6 @@ const SCHEDULED_TASK_PROMPT = `我要创建一个定时任务，每【时间间�
 3. 说明期望输出结果，例如报告、地图、表格或提醒。
 4. 如果需要工作目录，请在任务中说明。`
 
-const INITIAL_TASKS: ScheduledTask[] = [
-  {
-    id: '1',
-    name: '午间充电站',
-    description:
-      '午休时间到了！帮我放松一下：请从以下内容中随机挑 2-3 个给我看：1. 一个近期有趣的开源项目 2. 一条 GIS / 遥感 / 前端相关技术动态 3. 一个轻松的小知识。',
-    schedule: '工作日 12:30',
-    prompt:
-      '午休时间到了！帮我放松一下：请从以下内容中随机挑 2-3 个给我看：1. 一个近期有趣的开源项目 2. 一条 GIS / 遥感 / 前端相关技术动态 3. 一个轻松的小知识。',
-    enabled: false,
-  },
-  {
-    id: '2',
-    name: '每日下载文件夹清理',
-    description:
-      '请帮我整理「下载」文件夹：扫描新增文件，按图片、文档、压缩包等类型分类，并生成整理建议。',
-    schedule: '每天 18:30',
-    prompt:
-      '请帮我整理「下载」文件夹：扫描新增文件，按图片、文档、压缩包等类型分类，并生成整理建议。',
-    enabled: false,
-  },
-  {
-    id: '3',
-    name: '每周竞品动态追踪',
-    description: '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
-    schedule: '每周一 10:00',
-    prompt: '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
-    enabled: false,
-  },
-  {
-    id: '4',
-    name: '每日数据报表更新',
-    description:
-      '请读取工作目录中最新的 Excel / CSV 数据文件，与前一天数据对比，计算关键指标变化并生成摘要。',
-    schedule: '每天 09:30',
-    prompt:
-      '请读取工作目录中最新的 Excel / CSV 数据文件，与前一天数据对比，计算关键指标变化并生成摘要。',
-    enabled: false,
-  },
-]
-
 /* ── 执行记录 ── */
 type ExecutionStatus = 'success' | 'failed' | 'running' | 'cancelled'
 
@@ -101,7 +60,8 @@ interface ExecutionRecord {
   summary: string
 }
 
-const MOCK_EXECUTIONS: ExecutionRecord[] = [
+/** @demo 执行记录 mock，接 /api/db/tasks/{id}/executions 后删除 */
+export const MOCK_EXECUTIONS: ExecutionRecord[] = [
   {
     id: 'e1',
     taskName: '每日下载文件夹清理',
@@ -267,9 +227,10 @@ export function TasksPage() {
   const { message } = App.useApp()
   const { token } = theme.useToken()
 
-  const [tasks, setTasks] = useState<ScheduledTask[]>(INITIAL_TASKS)
-  const [executions, setExecutions] = useState<ExecutionRecord[]>(MOCK_EXECUTIONS)
+  const [tasks, setTasks] = useState<ScheduledTask[]>([])
+  const [executions, setExecutions] = useState<ExecutionRecord[]>([])
   const [loading, setLoading] = useState(false)
+  const [offline, setOffline] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<ScheduledTask | null>(null)
   const [activeTab, setActiveTab] = useState('tasks')
@@ -279,7 +240,7 @@ export function TasksPage() {
   const [filterTask, setFilterTask] = useState<string>('all-tasks')
   const [filterStatus, setFilterStatus] = useState<string>('all-status')
 
-  /* ── 从 Core 加载任务列表（失败降级 localStorage 缓存 → mock） ── */
+  /* ── 从 Core 加载任务列表（两级降级：core → localStorage 缓存，无 mock 兜底） ── */
   const refreshFromCore = useCallback(async () => {
     setLoading(true)
     try {
@@ -287,14 +248,15 @@ export function TasksPage() {
       setTasks(bundle.tasks)
       setExecutions(bundle.executions)
       saveCachedTasks(bundle)
+      setOffline(false)
     } catch {
-      /* Core 不可用：尝试 localStorage 缓存，最后保留 mock 初始数据 */
+      /* Core 不可用：读 localStorage 缓存；无缓存则显示空态 + 离线提示条 */
       const cached = loadCachedTasks()
       if (cached) {
         setTasks(cached.tasks)
         setExecutions(cached.executions)
       }
-      /* 无缓存则保留 INITIAL_TASKS / MOCK_EXECUTIONS */
+      setOffline(true)
     } finally {
       setLoading(false)
     }
@@ -499,6 +461,16 @@ export function TasksPage() {
           </Button>
         </Space>
       </div>
+
+      {/* Core 离线提示条：数据来自本地缓存 */}
+      {offline && (
+        <Alert
+          type="warning"
+          showIcon
+          banner
+          message="GeoWork Core 不可达，正在显示本地缓存的任务数据"
+        />
+      )}
 
       {/* Alert */}
       <div
