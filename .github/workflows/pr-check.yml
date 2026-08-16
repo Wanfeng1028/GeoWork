@@ -97,6 +97,10 @@ jobs:
         run: cd server && go vet ./...
       - name: Test with coverage
         run: cd server && go test ./... -coverprofile=coverage.out
+      - name: Test with race detector
+        # ubuntu runners ship a C toolchain, so -race works here even
+        # though local Windows dev boxes may lack cgo.
+        run: cd server && go test -race ./...
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
