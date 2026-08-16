@@ -3,7 +3,7 @@
 > **文档路径**：`doc/22-Backend-Refactor-Plan.md`
 > **关联文档**：`doc/21-Frontend-Refactor-Plan.md`（前端六阶段计划）/ `doc/04-GeoWorkAgent.md` / `doc/05~08` 施工图
 > **适用对象**：core / server / workers 贡献者（含 AI 编程助手）
-> **状态**：**已批准，执行中**（2026-08-17 用户确认：四个决策全按推荐；每完成一个 BP 阶段独立提交）
+> **状态**：**已完成**（2026-08-17 用户确认：四个决策全按推荐；每完成一个 BP 阶段独立提交；BP1–BP6 全部落地）
 > **审查依据**：2026-08-17 全量后端审查（aiagent / toolregistry / modelgateway / api 安全层 / server / python worker）
 
 ---
@@ -191,7 +191,9 @@ func EstimateTokens(text string) int {
 
 ---
 
-### BP5：泄漏、竞态、假工具、审计（1.5 天，1 次提交）
+### BP5：泄漏、竞态、假工具、审计（1.5 天，1 次提交）✅ 已完成（2026-08-17，c8f3cec）
+
+> 实施记录：specExec Cleanup 移到 executePlan turn 尾（复用计数==1 测试先红后绿）；新增 `DeleteRun` + `DELETE /api/agent/runs/{id}` + 保留 100 个终态 run 的 `enforceRunRetention`；`CleanupChildren` 停子代理；`Recovery().Cleanup` 挂 shutdown；run.Plan/run.done 重装/StatusRecovery/eventBuf 懒初始化四处加锁对齐；假工具三件做实（真实退出码、真实 git add、artifact 真实落盘）；审计改执行后单条真实记录（含"失败不记成功"断言）；事件缓冲 64→256 + drop 计数告警 + 终端事件重试。注：本机无 C 工具链，`-race` 未跑，竞态修复靠代码审查 + 既有并发测试验证。
 
 **内存与竞态（S3/S4）——修改 `orchestrator.go`**：
 - 新增 `DeleteRun(id)`（run.done 已关且非 running 才可删）；teardown（L618 后）按保留策略清理：**最近 100 个已完成 run 保留，超限删最旧**（桌面单用户够用）
@@ -221,7 +223,9 @@ func EstimateTokens(text string) int {
 
 ---
 
-### BP6：网关接线与演示代码清算（1 天，1 次提交，依赖 D-B4）
+### BP6：网关接线与演示代码清算（1 天，1 次提交，依赖 D-B4）✅ 已完成（2026-08-17，818035b）
+
+> 实施记录：新增 `RateLimitedGateway` 装饰器（实现 ModelGateway，按 provider QPS 限流，无配额配置时直通），main.go 包住 gateway；S2 流式 usage 两处修复——streamModelCall 在 IsDone 后继续 drain 至 usage chunk/流关闭/500ms 超时，且 usage 记录从 step 2.8 前移到 step 2.5 break 之前（纯文本收尾轮此前永远记不到 usage，是最常见路径）；step 2.8 去重只留 trajectory；Router/Cache 按 D-B4 标注 EXPERIMENTAL 延后 v0.6，router 固定 $0.002/1K 改为按 provider 价格表口径；权限引擎加 TTL 清理（decisions/requests 24h、policies 7d）+ 删除 Evaluate 死参数 + isWriteAction 改由 `WithActionCategory` 注入的工具类别推导；TrajectoryRecorder 文件存储接线（BP1 遗留项）。
 
 **修改 `cmd/geowork-runtime/main.go` + `modelgateway`**（S6）：
 - RateLimiter 接线：`OpenAICompatibleClient` 外包一层限流（或 `httpClient.Transport` 装饰器，零侵入）
