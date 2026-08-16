@@ -483,6 +483,7 @@ export function RightWorkspacePanel({
   return (
     <div
       ref={panelRef}
+      data-testid="right-workspace-panel"
       className={styles.panel}
       style={{
         width,

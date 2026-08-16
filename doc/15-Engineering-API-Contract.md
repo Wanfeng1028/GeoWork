@@ -3,13 +3,14 @@
 > **文档路径**：`doc/15-Engineering-API-Contract.md`
 > **关联文档**：`09-GeoWork-Communication-Protocol.md`（WebSocket 协议）/ `03-GeoWorkFrontend-Engineering-Standards.md`（数据层 §2）
 > **适用对象**：前后端贡献者（含 AI 编程助手）
-> **最后更新**：2026-08-12
+> **最后更新**：2026-08-16
 
 ## 版本表
 
 | 版本 | 日期 | 变更摘要 |
 |---|---|---|
 | v1.0 | 2026-08-12 | 初稿：接口契约维护方式、类型生成、版本管理、错误码规范 |
+| v1.1 | 2026-08-16 | 新增 §2.5 前端统一客户端约定（coreApi + client 双层、超时、ApiError 三分类）；§3.3 补 `X-GeoWork-Token` 请求头 |
 
 ---
 
@@ -59,6 +60,27 @@
 - 前端用 `openapi-typescript` 从 spec 生成 TypeScript 类型
 - CI 中检查 spec 与代码是否同步
 
+### 2.5 前端统一客户端（唯一入口）
+
+前端访问 Go Core 的 HTTP/SSE 接口**必须**通过 `apps/desktop/src/shared/api/`，禁止在组件里裸写 `fetch(CORE_BASE_URL...)`：
+
+```
+shared/api/
+├── coreApi.ts   # 底层：runtime token 鉴权（IPC 获取 + 缓存）
+│                #   coreFetch()        → 自动附加 X-GeoWork-Token 头
+│                #   coreEventSource()  → EventSource，token 走 ?token= query（EventSource 不支持自定义 header）
+│                #   CORE_BASE_URL      → VITE_CORE_API_URL ?? http://127.0.0.1:8765
+└── client.ts    # 上层：apiGet/apiPost/apiPut/apiDelete/apiPatch + createSSEStream
+                 #   - 统一超时：默认 30s（AbortController），RequestOptions.timeoutMs 可覆盖，0 = 不限时
+                 #   - ApiError 三分类 kind = 'timeout' | 'network' | 'http'
+                 #     · network（后端未启动/连接被拒）→ 上层可降级本地缓存
+                 #     · timeout → 可重试
+                 #     · http → 携带状态码 + §5.1 业务错误码 code
+                 #   - RequestOptions.signal 支持组件卸载时取消请求
+```
+
+历史说明：`src/utils/apiClient.ts`（指向 8080、臆想的 `{ok,data}` 信封、无人引用的死代码）已于 2026-08-16 删除。**不要**重新引入第二套客户端或响应信封——Go Core 的 REST 响应是裸 JSON（列表接口带 total 字段），无统一信封包装（见 §3.2）。
+
 ---
 
 ## 3. REST API 规范
@@ -105,6 +127,7 @@ interface ApiError {
 |---|---|---|
 | `Content-Type` | `application/json` | JSON 请求体 |
 | `Accept` | `application/json` | 期望 JSON 响应 |
+| `X-GeoWork-Token` | hex 随机串 | runtime token（P0-4）。Electron 主进程铸造，经 `GEOWORK_RUNTIME_TOKEN` 注入 Go runtime；前端经 IPC 获取后由 `coreFetch` 自动附加。SSE 用 `?token=` query 等效传递 |
 | `X-Request-ID` | UUID | 请求追踪 ID（可选，待实现） |
 
 ---

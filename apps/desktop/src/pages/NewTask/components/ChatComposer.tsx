@@ -345,6 +345,7 @@ export function ChatComposer({
 
   return (
     <div
+      data-testid="chat-composer"
       className={`${styles.composer} ${conversationMode ? styles.composerConversation : ''}`}
       style={{
         background: 'transparent',
@@ -394,6 +395,7 @@ export function ChatComposer({
         </Dropdown>
 
         <Input.TextArea
+          data-testid="chat-composer-input"
           className={styles.textArea}
           placeholder={placeholder ?? '描述你的 GIS 任务……'}
           value={prompt}
@@ -432,6 +434,7 @@ export function ChatComposer({
               size="small"
               shape="round"
               className={styles.modeBtn}
+              data-testid="chat-composer-mode"
             >
               <Space size={4}>
                 <Zap />
@@ -460,6 +463,7 @@ export function ChatComposer({
               icon={<Square />}
               className={styles.iconBtn}
               onClick={onStop}
+              data-testid="chat-composer-stop"
             />
           ) : (
             <Button
@@ -470,6 +474,7 @@ export function ChatComposer({
               className={styles.iconBtn}
               onClick={handleSend}
               disabled={!prompt.trim()}
+              data-testid="chat-composer-send"
             />
           )}
         </div>

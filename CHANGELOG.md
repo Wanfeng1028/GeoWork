@@ -18,6 +18,11 @@
 
 ## [Unreleased]
 
+### Removed — 删除第二套死代码 API 客户端，统一前端请求入口（2026-08-16 · ZCode）
+- 删除 `apps/desktop/src/utils/apiClient.ts`（318 行零引用死代码）：默认指向无服务监听的 `localhost:8080`、按 `{ok, data, error}` 信封解包与 Go Core 裸 JSON 响应不兼容、鉴权读取全前端无人写入的 `access_token`、无 SSE 能力——留着必被未来开发（尤其 AI 辅助编码）误 import，是一颗"接口全部连不上"的地雷
+- `shared/api/client.ts` 成为唯一 HTTP 入口（底层 `coreApi.ts` 负责 token，见下条 Security）：apiGet/apiPost/apiPut/apiDelete/apiPatch 签名不变、新增可选 `RequestOptions`（`timeoutMs` 超时覆盖、`signal` 外部取消）；`ApiError` 三分类 `kind = timeout | network | http`，`network` 可用于触发本地缓存降级、`http` 自动解析 core 业务错误码（`core/internal/api/errors.go`）
+- 测试：`api.test.ts` 新增 5 用例（超时 / 网络不可达 / 业务码 / 外部取消 / 不限时），前端 75/75 全绿；契约文档 `doc/15` 升 v1.1（新增 §2.5 前端统一客户端约定）
+
 ### Security — Electron 侧安全加固 + runtime token 对接（2026-08-16 · ZCode）
 - **P1-8a openExternal 协议白名单**：`shell:openExternal` / `desktop:openExternal` 此前对任意 URL 直接放行，被注入的渲染进程可用 `file://`、自定义协议唤起本地程序。新增 `url-guard.ts`，仅放行 `https:` / `http:` / `mailto:`
 - **P1-8b apiKey 迁 safeStorage**：模型供应商 API Key 此前以明文存于 localStorage（XSS 可读、LevelDB 文件可直接翻出）。新增 `secret-store.ts`（Electron safeStorage，OS 级加密：Windows DPAPI / macOS Keychain / Linux libsecret），密文存 `userData/secrets.json`；`modelProviderStore` 写入时剥离明文、读取时经内存缓存回填，应用启动时自动迁移遗留明文并预热缓存；删除 provider 时同步清理 secret

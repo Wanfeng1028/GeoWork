@@ -9,6 +9,7 @@
 | v1.3 | 2026-08-13 | TraeCode AI Agent F1-1 图标库替换：`@ant-design/icons` → `lucide-react`，55+ 文件全量替换，typecheck 全绿 |
 | v1.4 | 2026-08-15 | ZCode 新增「代码改完必须同步文档」规则（§5 修改后、§15.3）；补记 2026-08-14 Gemini 胶囊化施工记录（§14）；同步当前阶段 |
 | v1.5 | 2026-08-15 | ZCode orchestrator 施工：合并 executePlan/executePlanFromTurn（-350 行）、修复 resume double-close 崩溃与 hook 分叉、OutputSchema 执行期校验（零新依赖）、CI Go 版本 1.21→1.25、新增 orchestrator/output_schema 测试 12 个 |
+| v1.6 | 2026-08-16 | ZCode 提交 P0-4 runtime token 前端全链路 + 安全加固 + 17 个测试文件（08-15 夜批次）；前端 API 客户端统一：删除 utils/apiClient.ts 死代码、client.ts 增加超时/ApiError 三分类/取消支持、doc/15 v1.1 契约同步 |
 | v1.6 | 2026-08-16 | ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
@@ -502,6 +503,29 @@ Level 3 — 记录（持续追加）
 
 **验证**：`go build ./...` + `go vet ./...` + `go test ./...` 全绿；前端 `npm test` 31 测试全绿。
 **遗留**：doc-check / worker-check 两个 CI job 仍只执行 `ls`（worker 真检查需配 Python 环境，独立任务）；`go test -race` 因本机无 cgo 未跑。
+
+### 2026-08-15 夜 · ZCode · P0-4 runtime token 前端全链路 + 安全加固 + 测试补齐
+
+| 内容 | 说明 | 状态 |
+|---|---|---|
+| runtime token 前端链路 | Electron 主进程铸造 token（`electron/security/runtime-token.ts`）→ env 注入 Go runtime → 渲染进程 IPC 获取 → `coreApi.ts` 的 coreFetch/coreEventSource 自动携带（header / query） | ✅ |
+| 外链白名单 | `url-guard.ts`：shell.openExternal 仅放行 http/https/mailto，拦截 file:/javascript:/自定义协议 | ✅ |
+| 密钥存储 | `secret-store.ts`：safeStorage 加密存储模型 provider API key | ✅ |
+| 测试补齐 | core 12 个 + server 4 个 + worker 1 个新测试文件（permissions/modelgateway/safety/tasks/crypto/ratelimit/rbac/sync/tool_catalog） | ✅ |
+
+**验证**：core/server `go test ./...` 全绿；前端 typecheck + 75 测试全绿。
+
+### 2026-08-16 · ZCode · 前端 API 客户端统一（消除双客户端地雷）
+
+| 内容 | 说明 | 状态 |
+|---|---|---|
+| 死代码删除 | `utils/apiClient.ts`（318 行）：指向 8080 死端口、`{ok,data}` 信封与 core 裸 JSON 不兼容、auth 读无人写入的 access_token、无 SSE、零引用 | ✅ |
+| client.ts 增强 | 在 coreApi（token 层）之上：统一 30s 超时（AbortController，`timeoutMs` 可覆盖、0=不限时）、`ApiError` 三分类（timeout/network/http，http 携带 core 业务码）、`RequestOptions.signal` 支持组件卸载取消 | ✅ |
+| 调用方零改动 | apiGet/apiPost/apiPut/apiDelete/apiPatch/createSSEStream 签名向后兼容（新增可选参数） | ✅ |
+| 测试 | api.test.ts 新增 5 个用例（超时/网络错误/业务码/外部取消/不限时），前端 75/75 全绿 | ✅ |
+| 文档 | doc/15 v1.1：新增 §2.5 前端统一客户端约定 + §3.3 补 X-GeoWork-Token | ✅ |
+
+**背景**：源于「前端偶发小 bug」诊断——双客户端 + 7 套 localStorage 封装 + Extensions 页 mock 数据是三大结构性根源，本次消除第一个。后续待办：storage 统一（Extensions 相关等接真数据时一并做）、会话真相源收敛。
 
 ---
 

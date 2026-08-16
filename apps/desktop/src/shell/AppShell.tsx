@@ -51,7 +51,10 @@ import {
   refreshSidebarTasksFromCore,
 } from '../shared/stores/taskSidebarStore'
 import type { SidebarTaskItem, SidebarWorkspaceMeta } from '../shared/stores/taskSidebarStore'
-import { getConversation, upsertConversation } from '../pages/NewTask/components/conversationStorage'
+import {
+  getConversation,
+  upsertConversation,
+} from '../pages/NewTask/components/conversationStorage'
 import { ErrorBoundary } from '../shell/feedback'
 import { ShortcutsModal } from './ShortcutsModal'
 import { FeedbackModal } from './FeedbackModal'
@@ -106,14 +109,14 @@ export function AppShell() {
   /* 侧栏 Tab 直接由路由派生，杜绝状态不同步 */
   const segment: SidebarSegment = location.pathname === '/mobile-control' ? 'channels' : 'tasks'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [modalOpen, setModalOpen] = useState<
-    'usage' | 'shortcuts' | 'feedback' | null
-  >(null)
+  const [modalOpen, setModalOpen] = useState<'usage' | 'shortcuts' | 'feedback' | null>(null)
   const [extOpen, setExtOpen] = useState(false)
   const [extHeaderHover, setExtHeaderHover] = useState(false)
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
   const [sidebarTasks, setSidebarTasks] = useState<SidebarTaskItem[]>(() => loadSidebarTasks())
-  const [workspaceMeta, setWorkspaceMeta] = useState<SidebarWorkspaceMeta[]>(() => loadWorkspaceMeta())
+  const [workspaceMeta, setWorkspaceMeta] = useState<SidebarWorkspaceMeta[]>(() =>
+    loadWorkspaceMeta(),
+  )
   const [searchParams] = useSearchParams()
   const activeConvId = searchParams.get('conversationId')
 
@@ -136,14 +139,20 @@ export function AppShell() {
       const n = Number(v)
       if (!Number.isFinite(n) || n < RW_MIN_WIDTH || n > RW_MAX_WIDTH) return fallback
       return n
-    } catch { return fallback }
+    } catch {
+      return fallback
+    }
   }
 
-  const [rightPanelWidth, setRightPanelWidth] = useState(() => safeReadWidth(RW_WIDTH_LS, RW_DEFAULT_WIDTH))
+  const [rightPanelWidth, setRightPanelWidth] = useState(() =>
+    safeReadWidth(RW_WIDTH_LS, RW_DEFAULT_WIDTH),
+  )
   const [rightWorkspaceCollapsed, setRightWorkspaceCollapsed] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(RW_COLLAPSED_LS) ?? 'false') === true
-    } catch { return false }
+    } catch {
+      return false
+    }
   })
   const [isDragging, setIsDragging] = useState(false)
 
@@ -245,7 +254,12 @@ export function AppShell() {
     className?: string
     style?: React.CSSProperties
   }) => {
-    if (!isLight) return <div className={className} style={style}>{children}</div>
+    if (!isLight)
+      return (
+        <div className={className} style={style}>
+          {children}
+        </div>
+      )
     return (
       <BorderBeam color={token.colorPrimary} outset={0}>
         <div className={className} style={style}>
@@ -256,8 +270,7 @@ export function AppShell() {
   }
 
   /* 路由匹配 → nav 选中态 */
-  const selectedKey =
-    navItems.find((item) => item.key === location.pathname)?.key ?? ''
+  const selectedKey = navItems.find((item) => item.key === location.pathname)?.key ?? ''
 
   /* 展开态菜单项 */
   const menuItems = navItems.map((item) => ({
@@ -288,7 +301,15 @@ export function AppShell() {
   /* ── 分组逻辑 ── */
   const groupedTasks = useMemo(() => {
     const visibleTasks = sidebarTasks.filter((t) => !t.archived)
-    const groupMap = new Map<string, { workspaceId: string; workspaceName: string; tasks: SidebarTaskItem[]; latestUpdatedAt: number }>()
+    const groupMap = new Map<
+      string,
+      {
+        workspaceId: string
+        workspaceName: string
+        tasks: SidebarTaskItem[]
+        latestUpdatedAt: number
+      }
+    >()
 
     for (const task of visibleTasks) {
       const wsId = task.workspaceId || 'default'
@@ -363,61 +384,88 @@ export function AppShell() {
     updateSidebarTask(task.id, { pinned: !task.pinned })
   }, [])
 
-  const handleExportChat = useCallback((_task: SidebarTaskItem) => {
-    message.info('导出对话记录后续接入')
-  }, [message])
-
-  const handleArchiveTask = useCallback((task: SidebarTaskItem) => {
-    Modal.confirm({
-      title: '归档对话',
-      content: `确定归档「${task.title}」吗？归档后可在需要时恢复。`,
-      okText: '归档',
-      cancelText: '取消',
-      onOk: () => {
-        updateSidebarTask(task.id, { archived: true })
-      },
-    })
-  }, [message])
-
-  const getTaskDropdownItems = useCallback((task: SidebarTaskItem) => ({
-    items: [
-      { key: 'rename', icon: <Pencil />, label: '重命名' },
-      { key: 'pin', icon: task.pinned ? <Pin /> : <Pin />, label: task.pinned ? '取消置顶' : '置顶' },
-      { key: 'export', icon: <Upload />, label: '导出对话记录' },
-      { type: 'divider' as const },
-      { key: 'archive', icon: <Inbox />, label: '归档', danger: true },
-    ],
-    onClick: ({ key }: { key: string }) => {
-      switch (key) {
-        case 'rename': handleRenameOpen(task); break
-        case 'pin': handleTogglePin(task); break
-        case 'export': handleExportChat(task); break
-        case 'archive': handleArchiveTask(task); break
-      }
+  const handleExportChat = useCallback(
+    (_task: SidebarTaskItem) => {
+      message.info('导出对话记录后续接入')
     },
-  }), [handleRenameOpen, handleTogglePin, handleExportChat, handleArchiveTask])
+    [message],
+  )
+
+  const handleArchiveTask = useCallback(
+    (task: SidebarTaskItem) => {
+      Modal.confirm({
+        title: '归档对话',
+        content: `确定归档「${task.title}」吗？归档后可在需要时恢复。`,
+        okText: '归档',
+        cancelText: '取消',
+        onOk: () => {
+          updateSidebarTask(task.id, { archived: true })
+        },
+      })
+    },
+    [message],
+  )
+
+  const getTaskDropdownItems = useCallback(
+    (task: SidebarTaskItem) => ({
+      items: [
+        { key: 'rename', icon: <Pencil />, label: '重命名' },
+        {
+          key: 'pin',
+          icon: task.pinned ? <Pin /> : <Pin />,
+          label: task.pinned ? '取消置顶' : '置顶',
+        },
+        { key: 'export', icon: <Upload />, label: '导出对话记录' },
+        { type: 'divider' as const },
+        { key: 'archive', icon: <Inbox />, label: '归档', danger: true },
+      ],
+      onClick: ({ key }: { key: string }) => {
+        switch (key) {
+          case 'rename':
+            handleRenameOpen(task)
+            break
+          case 'pin':
+            handleTogglePin(task)
+            break
+          case 'export':
+            handleExportChat(task)
+            break
+          case 'archive':
+            handleArchiveTask(task)
+            break
+        }
+      },
+    }),
+    [handleRenameOpen, handleTogglePin, handleExportChat, handleArchiveTask],
+  )
 
   /* ── 工作空间操作 ── */
-  const handleWorkspaceNewChat = useCallback((wsId: string, wsName: string) => {
-    const workDirName = wsId.startsWith('workdir:') ? wsId.slice('workdir:'.length) : undefined
-    navigate('/new-task', {
-      state: {
-        resetKey: Date.now(),
-        workspaceId: wsId,
-        workspaceName: wsName,
-        workDirName,
-      },
-    })
-  }, [navigate])
+  const handleWorkspaceNewChat = useCallback(
+    (wsId: string, wsName: string) => {
+      const workDirName = wsId.startsWith('workdir:') ? wsId.slice('workdir:'.length) : undefined
+      navigate('/new-task', {
+        state: {
+          resetKey: Date.now(),
+          workspaceId: wsId,
+          workspaceName: wsName,
+          workDirName,
+        },
+      })
+    },
+    [navigate],
+  )
 
-  const handleToggleWorkspacePin = useCallback((wsId: string, wsName: string) => {
-    const existing = workspaceMeta.find((m) => m.id === wsId)
-    upsertWorkspaceMeta({
-      id: wsId,
-      name: wsName,
-      pinned: !(existing?.pinned ?? false),
-    })
-  }, [workspaceMeta])
+  const handleToggleWorkspacePin = useCallback(
+    (wsId: string, wsName: string) => {
+      const existing = workspaceMeta.find((m) => m.id === wsId)
+      upsertWorkspaceMeta({
+        id: wsId,
+        name: wsName,
+        pinned: !(existing?.pinned ?? false),
+      })
+    },
+    [workspaceMeta],
+  )
 
   const handleOpenFolder = useCallback(() => {
     message.info('打开文件夹需要桌面端能力，后续接入')
@@ -435,25 +483,34 @@ export function AppShell() {
     })
   }, [])
 
-  const getWorkspaceDropdownItems = useCallback((wsId: string, wsName: string) => {
-    const meta = groupedTasks.metaMap.get(wsId)
-    const isPinned = meta?.pinned ?? false
-    return {
-      items: [
-        { key: 'pin', icon: isPinned ? <Pin /> : <Pin />, label: isPinned ? '取消置顶' : '置顶' },
-        { key: 'open-folder', icon: <Folder />, label: '在文件夹中打开' },
-        { type: 'divider' as const },
-        { key: 'archive-all', icon: <Inbox />, label: '归档整组对话', danger: true },
-      ],
-      onClick: ({ key }: { key: string }) => {
-        switch (key) {
-          case 'pin': handleToggleWorkspacePin(wsId, wsName); break
-          case 'open-folder': handleOpenFolder(); break
-          case 'archive-all': handleArchiveWorkspace(wsId, wsName); break
-        }
-      },
-    }
-  }, [groupedTasks.metaMap, handleToggleWorkspacePin, handleOpenFolder, handleArchiveWorkspace])
+  const getWorkspaceDropdownItems = useCallback(
+    (wsId: string, wsName: string) => {
+      const meta = groupedTasks.metaMap.get(wsId)
+      const isPinned = meta?.pinned ?? false
+      return {
+        items: [
+          { key: 'pin', icon: isPinned ? <Pin /> : <Pin />, label: isPinned ? '取消置顶' : '置顶' },
+          { key: 'open-folder', icon: <Folder />, label: '在文件夹中打开' },
+          { type: 'divider' as const },
+          { key: 'archive-all', icon: <Inbox />, label: '归档整组对话', danger: true },
+        ],
+        onClick: ({ key }: { key: string }) => {
+          switch (key) {
+            case 'pin':
+              handleToggleWorkspacePin(wsId, wsName)
+              break
+            case 'open-folder':
+              handleOpenFolder()
+              break
+            case 'archive-all':
+              handleArchiveWorkspace(wsId, wsName)
+              break
+          }
+        },
+      }
+    },
+    [groupedTasks.metaMap, handleToggleWorkspacePin, handleOpenFolder, handleArchiveWorkspace],
+  )
 
   /* 设置按钮 */
   const handleSettingsClick = () => {
@@ -505,7 +562,7 @@ export function AppShell() {
   }
 
   return (
-    <div className={styles.root} ref={rootRef}>
+    <div className={styles.root} ref={rootRef} data-testid="app-shell">
       <TitleBar
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
@@ -516,6 +573,7 @@ export function AppShell() {
       />
       {/* ── Sidebar ── */}
       <aside
+        data-testid="sidebar"
         className={`${styles.sidebar} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}
         style={{
           background: token.colorBgLayout,
@@ -627,11 +685,13 @@ export function AppShell() {
                         type="button"
                         role="menuitem"
                         className={styles.extensionChildRow}
-                        style={{
-                          color: isActive ? token.colorPrimary : token.colorText,
-                          fontWeight: isActive ? 500 : 400,
-                          '--hover-bg': token.colorFillSecondary,
-                        } as React.CSSProperties}
+                        style={
+                          {
+                            color: isActive ? token.colorPrimary : token.colorText,
+                            fontWeight: isActive ? 500 : 400,
+                            '--hover-bg': token.colorFillSecondary,
+                          } as React.CSSProperties
+                        }
                         onClick={() => navigate(item.route)}
                       >
                         <span style={{ marginRight: 8, fontSize: 14, display: 'inline-flex' }}>
@@ -666,22 +726,27 @@ export function AppShell() {
             <div className={styles.sidebarEmpty}>
               {segment === 'tasks' ? (
                 groupedTasks.groups.length > 0 ? (
-                  <div className={styles.taskList}>
+                  <div className={styles.taskList} data-testid="sidebar-task-list">
                     {groupedTasks.groups.map((group) => (
                       <div key={group.workspaceId} className={styles.workspaceGroup}>
                         {/* 工作空间标题 */}
                         <div
                           className={styles.workspaceHeader}
-                          style={{
-                            color: token.colorTextSecondary,
-                            '--hover-bg': token.colorFillSecondary,
-                          } as React.CSSProperties}
+                          style={
+                            {
+                              color: token.colorTextSecondary,
+                              '--hover-bg': token.colorFillSecondary,
+                            } as React.CSSProperties
+                          }
                         >
                           <Folder style={{ fontSize: 12, flexShrink: 0 }} />
                           <span className={styles.workspaceHeaderName}>{group.workspaceName}</span>
                           <span className={styles.workspaceHeaderActions}>
                             <Dropdown
-                              menu={getWorkspaceDropdownItems(group.workspaceId, group.workspaceName)}
+                              menu={getWorkspaceDropdownItems(
+                                group.workspaceId,
+                                group.workspaceName,
+                              )}
                               trigger={['click']}
                               getPopupContainer={() => document.body}
                             >
@@ -715,16 +780,32 @@ export function AppShell() {
                               <div
                                 key={task.id}
                                 className={styles.taskItem}
-                                style={{
-                                  background: isActive ? token.colorPrimaryBg : undefined,
-                                  '--hover-bg': token.colorFillSecondary,
-                                } as React.CSSProperties}
-                                onClick={() => navigate(`/new-task?conversationId=${encodeURIComponent(task.id)}`)}
+                                style={
+                                  {
+                                    background: isActive ? token.colorPrimaryBg : undefined,
+                                    '--hover-bg': token.colorFillSecondary,
+                                  } as React.CSSProperties
+                                }
+                                onClick={() =>
+                                  navigate(
+                                    `/new-task?conversationId=${encodeURIComponent(task.id)}`,
+                                  )
+                                }
                               >
                                 <div className={styles.taskItemTitle}>
-                                  {task.pinned && <Pin style={{ fontSize: 10, color: token.colorPrimary, flexShrink: 0 }} />}
+                                  {task.pinned && (
+                                    <Pin
+                                      style={{
+                                        fontSize: 10,
+                                        color: token.colorPrimary,
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                  )}
                                   <span className={styles.taskItemTitleText}>
-                                    <Text ellipsis style={{ fontSize: 13 }}>{task.title}</Text>
+                                    <Text ellipsis style={{ fontSize: 13 }}>
+                                      {task.title}
+                                    </Text>
                                   </span>
                                   <span className={styles.taskItemActions}>
                                     <Dropdown
@@ -736,20 +817,34 @@ export function AppShell() {
                                         type="text"
                                         size="small"
                                         icon={<MoreHorizontal />}
-                                        style={{ width: 20, height: 20, minWidth: 20, fontSize: 10 }}
+                                        style={{
+                                          width: 20,
+                                          height: 20,
+                                          minWidth: 20,
+                                          fontSize: 10,
+                                        }}
                                         onClick={(e) => e.stopPropagation()}
                                       />
                                     </Dropdown>
                                   </span>
                                 </div>
                                 <div className={styles.taskItemMeta}>
-                                  {task.status === 'streaming' && <CapsuleTag color="processing">进行中</CapsuleTag>}
-                                  {task.status === 'completed' && <CapsuleTag color="success">完成</CapsuleTag>}
+                                  {task.status === 'streaming' && (
+                                    <CapsuleTag color="processing">进行中</CapsuleTag>
+                                  )}
+                                  {task.status === 'completed' && (
+                                    <CapsuleTag color="success">完成</CapsuleTag>
+                                  )}
                                   {task.status === 'stopped' && <CapsuleTag>已停止</CapsuleTag>}
-                                  {task.status === 'failed' && <CapsuleTag color="error">失败</CapsuleTag>}
+                                  {task.status === 'failed' && (
+                                    <CapsuleTag color="error">失败</CapsuleTag>
+                                  )}
                                   {task.status === 'idle' && <CapsuleTag>空闲</CapsuleTag>}
                                   <Text type="secondary" style={{ fontSize: 12 }}>
-                                    {new Date(task.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(task.updatedAt).toLocaleTimeString(undefined, {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
                                   </Text>
                                 </div>
                               </div>
@@ -760,36 +855,22 @@ export function AppShell() {
                     ))}
                   </div>
                 ) : (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="暂无任务"
-                  >
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无任务">
                     {isLight ? (
                       <BorderBeam color={token.colorPrimary} outset={0}>
-                        <CapsuleButton
-                          type="primary"
-                          size="small"
-                          onClick={handleCreateTask}
-                        >
+                        <CapsuleButton type="primary" size="small" onClick={handleCreateTask}>
                           创建任务
                         </CapsuleButton>
                       </BorderBeam>
                     ) : (
-                      <CapsuleButton
-                        type="primary"
-                        size="small"
-                        onClick={handleCreateTask}
-                      >
+                      <CapsuleButton type="primary" size="small" onClick={handleCreateTask}>
                         创建任务
                       </CapsuleButton>
                     )}
                   </Empty>
                 )
               ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="暂无移动端控制会话"
-                />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无移动端控制会话" />
               )}
             </div>
           </Beam>
@@ -806,15 +887,13 @@ export function AppShell() {
             collapsed={sidebarCollapsed}
             onOpenShortcuts={() => setModalOpen('shortcuts')}
           />
-          <Tooltip
-            title="设置"
-            placement={sidebarCollapsed ? 'right' : undefined}
-          >
+          <Tooltip title="设置" placement={sidebarCollapsed ? 'right' : undefined}>
             <Button
               type="text"
               icon={<Settings />}
               size={sidebarCollapsed ? 'middle' : 'small'}
               onClick={handleSettingsClick}
+              data-testid="sidebar-settings"
             />
           </Tooltip>
           <Dropdown
@@ -828,11 +907,12 @@ export function AppShell() {
             trigger={['click']}
             placement="topRight"
           >
-            <Tooltip
-              title="切换主题"
-              placement={sidebarCollapsed ? 'right' : undefined}
-            >
-              <Button type="text" icon={isLight ? <Sun /> : <Moon />} size={sidebarCollapsed ? 'middle' : 'small'} />
+            <Tooltip title="切换主题" placement={sidebarCollapsed ? 'right' : undefined}>
+              <Button
+                type="text"
+                icon={isLight ? <Sun /> : <Moon />}
+                size={sidebarCollapsed ? 'middle' : 'small'}
+              />
             </Tooltip>
           </Dropdown>
         </Beam>
@@ -840,12 +920,15 @@ export function AppShell() {
 
       {/* ── MainWorkspace ── */}
       <main
+        data-testid="main-workspace"
         className={styles.workspace}
         style={{
           background: token.colorBgLayout,
         }}
       >
-        <ErrorBoundary><Outlet /></ErrorBoundary>
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* ── 拖拽分隔条 ── */}
@@ -853,7 +936,12 @@ export function AppShell() {
         <div
           className={styles.rightResizeHandle}
           onPointerDown={handleDragStart}
-          style={{ '--accent-color': token.colorPrimary, background: token.colorBgLayout } as React.CSSProperties}
+          style={
+            {
+              '--accent-color': token.colorPrimary,
+              background: token.colorBgLayout,
+            } as React.CSSProperties
+          }
         />
       )}
 
@@ -867,32 +955,23 @@ export function AppShell() {
       />
 
       {/* ── 工具弹窗 ── */}
-      <UsageModal
-        open={modalOpen === 'usage'}
-        onClose={() => setModalOpen(null)}
-      />
+      <UsageModal open={modalOpen === 'usage'} onClose={() => setModalOpen(null)} />
 
-      <ShortcutsModal
-        open={modalOpen === 'shortcuts'}
-        onClose={() => setModalOpen(null)}
-      />
+      <ShortcutsModal open={modalOpen === 'shortcuts'} onClose={() => setModalOpen(null)} />
 
-      <FeedbackModal
-        open={modalOpen === 'feedback'}
-        onClose={() => setModalOpen(null)}
-      />
+      <FeedbackModal open={modalOpen === 'feedback'} onClose={() => setModalOpen(null)} />
 
-      <GlobalSearchModal
-        open={globalSearchOpen}
-        onClose={() => setGlobalSearchOpen(false)}
-      />
+      <GlobalSearchModal open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
 
       {/* 重命名弹窗 */}
       <Modal
         title="重命名对话"
         open={renameModalOpen}
         onOk={handleRenameConfirm}
-        onCancel={() => { setRenameModalOpen(false); setRenameTargetId(null) }}
+        onCancel={() => {
+          setRenameModalOpen(false)
+          setRenameTargetId(null)
+        }}
         okText="确定"
         cancelText="取消"
         destroyOnHidden

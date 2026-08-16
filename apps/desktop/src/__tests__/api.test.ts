@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { apiGet, apiPost, apiPut, apiDelete, apiPatch, createSSEStream } from '../shared/api/client'
+import {
+  apiGet,
+  apiPost,
+  apiPut,
+  apiDelete,
+  apiPatch,
+  createSSEStream,
+  ApiError,
+} from '../shared/api/client'
 
 describe('API Client', () => {
   beforeEach(() => {
@@ -150,6 +158,109 @@ describe('API Client', () => {
     it('should throw error when PATCH response is not ok', async () => {
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 422 } as Response)
       await expect(apiPatch('/api/items/abc', {})).rejects.toThrow('API Error: 422')
+    })
+  })
+
+  describe('超时与错误分类', () => {
+    /** 模拟一个只在 abort 时才结束的 fetch（真实 fetch 收到 abort signal 的行为，含已 abort 的 signal） */
+    function mockNeverResolvingFetch() {
+      vi.mocked(fetch).mockImplementationOnce(
+        ((_url: RequestInfo | URL, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            const signal = init?.signal
+            const abort = () => reject(new DOMException('This operation was aborted', 'AbortError'))
+            if (signal?.aborted) {
+              abort()
+              return
+            }
+            signal?.addEventListener('abort', abort)
+          })) as typeof fetch,
+      )
+    }
+
+    it('超时应抛出 kind=timeout 的 ApiError', async () => {
+      mockNeverResolvingFetch()
+
+      const err = await apiGet('/api/slow', { timeoutMs: 30 }).then(
+        () => null,
+        (e: unknown) => e,
+      )
+
+      expect(err).toBeInstanceOf(ApiError)
+      const apiErr = err as ApiError
+      expect(apiErr.kind).toBe('timeout')
+      expect(apiErr.isTimeout).toBe(true)
+      expect(apiErr.status).toBe(0)
+      expect(apiErr.message).toContain('/api/slow')
+    })
+
+    it('网络错误（后端未启动）应抛出 kind=network 的 ApiError', async () => {
+      vi.mocked(fetch).mockRejectedValueOnce(new TypeError('fetch failed'))
+
+      const err = await apiGet('/api/health').then(
+        () => null,
+        (e: unknown) => e,
+      )
+
+      expect(err).toBeInstanceOf(ApiError)
+      const apiErr = err as ApiError
+      expect(apiErr.kind).toBe('network')
+      expect(apiErr.isNetworkError).toBe(true)
+      expect(apiErr.message).toContain('fetch failed')
+    })
+
+    it('HTTP 错误应携带 core 业务错误码和 message', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () => Promise.resolve({ code: 40001, message: 'permission denied' }),
+      } as Response)
+
+      const err = await apiPost('/api/tasks', {}).then(
+        () => null,
+        (e: unknown) => e,
+      )
+
+      expect(err).toBeInstanceOf(ApiError)
+      const apiErr = err as ApiError
+      expect(apiErr.kind).toBe('http')
+      expect(apiErr.status).toBe(403)
+      expect(apiErr.code).toBe(40001)
+      expect(apiErr.message).toContain('permission denied')
+    })
+
+    it('外部 signal 取消时应原样抛出 AbortError 而非 ApiError', async () => {
+      mockNeverResolvingFetch()
+
+      const controller = new AbortController()
+      const promise = apiGet('/api/cancellable', { signal: controller.signal, timeoutMs: 5_000 })
+      controller.abort()
+
+      const err = await promise.then(
+        () => null,
+        (e: unknown) => e,
+      )
+
+      expect(err).toBeInstanceOf(DOMException)
+      expect((err as DOMException).name).toBe('AbortError')
+      expect(err).not.toBeInstanceOf(ApiError)
+    })
+
+    it('timeoutMs=0 表示不限时,慢响应正常返回', async () => {
+      let resolveFetch!: (v: Response) => void
+      vi.mocked(fetch).mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve
+          }),
+      )
+
+      const promise = apiGet<{ ok: boolean }>('/api/deferred', { timeoutMs: 0 })
+      // coreFetch 会先 await runtime token（微任务），等 fetch 真正被调用后再 resolve
+      await vi.waitFor(() => expect(resolveFetch).toBeTypeOf('function'))
+      resolveFetch({ ok: true, json: () => Promise.resolve({ ok: true }) } as Response)
+
+      await expect(promise).resolves.toEqual({ ok: true })
     })
   })
 
