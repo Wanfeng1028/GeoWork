@@ -1,16 +1,6 @@
-import { useCallback, useState } from 'react'
-import {
-  App,
-  Button,
-  Empty,
-  Switch,
-  Typography,
-  theme,
-} from 'antd'
-import {
-  Plus,
-  Server,
-} from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { App, Button, Empty, Switch, Typography, theme } from 'antd'
+import { Plus, Server } from 'lucide-react'
 import { SettingsSection } from './SettingsSection'
 import { ProviderCard } from './ProviderCard'
 import { ProviderEditor } from './ProviderEditor'
@@ -30,13 +20,18 @@ export function ProviderSettingsPanel() {
   const { message, modal } = App.useApp()
 
   const [data, setData] = useState(() => loadModelProviders())
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => data.providers[0]?.id ?? null,
-  )
+  const [selectedId, setSelectedId] = useState<string | null>(() => data.providers[0]?.id ?? null)
 
   const refresh = useCallback(() => {
     setData(loadModelProviders())
   }, [])
+
+  /* P1-8: safeStorage hydrate 完成后触发刷新，回填 apiKey */
+  useEffect(() => {
+    const handleUpdate = () => refresh()
+    window.addEventListener('geowork:model-providers-updated', handleUpdate)
+    return () => window.removeEventListener('geowork:model-providers-updated', handleUpdate)
+  }, [refresh])
 
   const selectedProvider = data.providers.find((p) => p.id === selectedId) ?? null
 
@@ -120,7 +115,14 @@ export function ProviderSettingsPanel() {
           border: `1px solid ${token.colorBorderSecondary}`,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: data.useProxy ? 8 : 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: data.useProxy ? 8 : 0,
+          }}
+        >
           <Text style={{ fontSize: 13 }}>模型请求使用代理</Text>
           <Switch size="small" checked={data.useProxy} onChange={handleProxyToggle} />
         </div>
@@ -157,11 +159,7 @@ export function ProviderSettingsPanel() {
               onDelete={handleDelete}
             />
           ))}
-          <Button
-            className={styles.addBtn}
-            icon={<Plus />}
-            onClick={handleAdd}
-          >
+          <Button className={styles.addBtn} icon={<Plus />} onClick={handleAdd}>
             添加供应商
           </Button>
         </div>

@@ -17,6 +17,7 @@ import type {
   WorkflowStep,
   WorkMode,
 } from './conversationStorage'
+import { coreFetch, coreEventSource } from '../../../shared/api/coreApi'
 
 /* ── 统一接口 ── */
 
@@ -191,7 +192,11 @@ const MOCK_RESPONSE_MAP = `我已理解你的制图任务，下面会帮你完�
 
 > 当前版本是前端交互流程演示，后续会接入真实制图引擎。`
 
-function generateMockResponse(input: string, workMode: WorkMode = 'work', contexts?: SelectedContextItem[]): string {
+function generateMockResponse(
+  input: string,
+  workMode: WorkMode = 'work',
+  contexts?: SelectedContextItem[],
+): string {
   let prefix = ''
   if (contexts && contexts.length > 0) {
     const lines = contexts.map((ctx) => {
@@ -201,25 +206,32 @@ function generateMockResponse(input: string, workMode: WorkMode = 'work', contex
     prefix = `已接入以下上下文能力：\n${lines.join('\n')}\n\n`
   }
 
-  const template = workMode === 'code'
-    ? MOCK_RESPONSE_CODE
-    : workMode === 'map'
-      ? MOCK_RESPONSE_MAP
-      : MOCK_RESPONSE_WORK
+  const template =
+    workMode === 'code'
+      ? MOCK_RESPONSE_CODE
+      : workMode === 'map'
+        ? MOCK_RESPONSE_MAP
+        : MOCK_RESPONSE_WORK
 
   /* 关键词微调（仅 work 模式下生效） */
   if (workMode === 'work') {
     const lower = input.toLowerCase()
     if (lower.includes('遥感') || lower.includes('影像')) {
-      return prefix + template.replace(
-        '我已理解你的空间任务，下面会把它拆成可执行的 GeoWork 工作流。',
-        '我已理解你的遥感任务，下面会把它拆成可执行的 GeoWork 工作流。',
+      return (
+        prefix +
+        template.replace(
+          '我已理解你的空间任务，下面会把它拆成可执行的 GeoWork 工作流。',
+          '我已理解你的遥感任务，下面会把它拆成可执行的 GeoWork 工作流。',
+        )
       )
     }
     if (lower.includes('制图') || lower.includes('地图')) {
-      return prefix + template.replace(
-        '我已理解你的空间任务，下面会把它拆成可执行的 GeoWork 工作流。',
-        '我已理解你的制图任务，下面会把它拆成可执行的 GeoWork 工作流。',
+      return (
+        prefix +
+        template.replace(
+          '我已理解你的空间任务，下面会把它拆成可执行的 GeoWork 工作流。',
+          '我已理解你的制图任务，下面会把它拆成可执行的 GeoWork 工作流。',
+        )
       )
     }
   }
@@ -255,7 +267,11 @@ function createInterruptibleDelay(
  */
 export const mockStreamAdapter: StreamAdapter = {
   async start(payload, callbacks, signal) {
-    const fullText = generateMockResponse(payload.input, payload.workMode ?? 'work', payload.contexts)
+    const fullText = generateMockResponse(
+      payload.input,
+      payload.workMode ?? 'work',
+      payload.contexts,
+    )
     let index = 0
     const timers = new Set<ReturnType<typeof setTimeout>>()
     const toolCallTriggered = new Set<number>()
@@ -401,10 +417,6 @@ export const websocketStreamAdapter: StreamAdapter = {
  *  因此 onDelta 主要用于步骤摘要与完成提示，onToolCall 承载真实工具执行。
  * ─────────────────────────────────────────────────────────── */
 
-const CORE_BASE_URL =
-  (import.meta as unknown as { env?: { VITE_CORE_API_URL?: string } }).env?.VITE_CORE_API_URL ??
-  'http://127.0.0.1:8765'
-
 /** 本地 temp 会话 id → Core 会话 id 的缓存，支持多轮复用同一 Core 会话。 */
 const coreConvIdCache = new Map<string, string>()
 
@@ -458,7 +470,7 @@ async function ensureCoreConversation(
   const cached = coreConvIdCache.get(localConvId)
   if (cached) return cached
 
-  const res = await fetch(`${CORE_BASE_URL}/api/conversations`, {
+  const res = await coreFetch('/api/conversations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -488,7 +500,7 @@ export const realStreamAdapter: StreamAdapter = {
     )
 
     // 2. 发送消息，触发 orchestrator
-    const msgRes = await fetch(`${CORE_BASE_URL}/api/conversations/${coreConvId}/messages`, {
+    const msgRes = await coreFetch(`/api/conversations/${coreConvId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: payload.input, mode }),
@@ -511,7 +523,7 @@ export const realStreamAdapter: StreamAdapter = {
         return
       }
 
-      const es = new EventSource(`${CORE_BASE_URL}/api/conversations/${coreConvId}/events`)
+      const es = coreEventSource(`/api/conversations/${coreConvId}/events`)
       let resolved = false
       const finish = () => {
         if (resolved) return
@@ -536,7 +548,7 @@ export const realStreamAdapter: StreamAdapter = {
       es.addEventListener('plan', (_e) => {
         callbacks.onStatus?.('planning')
         if (!runId) return
-        fetch(`${CORE_BASE_URL}/api/agent/runs/${runId}`)
+        coreFetch(`/api/agent/runs/${runId}`)
           .then((r) => (r.ok ? r.json() : null))
           .then((run: { plan?: CoreRunStep[] } | null) => {
             if (run?.plan && run.plan.length > 0) {
@@ -545,7 +557,12 @@ export const realStreamAdapter: StreamAdapter = {
                   key: s.id || `step-${idx}`,
                   title: s.title || s.tool || `步骤 ${idx + 1}`,
                   description: s.tool ? `工具：${s.tool}` : '',
-                  status: s.status === 'completed' ? 'finish' : s.status === 'running' ? 'process' : 'wait',
+                  status:
+                    s.status === 'completed'
+                      ? 'finish'
+                      : s.status === 'running'
+                        ? 'process'
+                        : 'wait',
                 })),
               )
             }

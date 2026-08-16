@@ -2,6 +2,8 @@
 package sync
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -343,5 +345,11 @@ func isValidPayload(typ string, data string) bool {
 }
 
 func generateID() string {
-	return "sync_" + time.Now().Format("20060102150405")
+	// Second-resolution timestamps collided on same-second pushes of
+	// distinct objects (id is the table primary key); use random hex.
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		panic("crypto/rand failed: " + err.Error())
+	}
+	return "sync_" + hex.EncodeToString(b)
 }

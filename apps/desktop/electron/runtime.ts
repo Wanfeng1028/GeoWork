@@ -5,6 +5,7 @@ import http from 'node:http'
 import * as fs from 'node:fs'
 import { ipcMain } from 'electron'
 import { getLogFilePath, writeLog } from './local/logging'
+import { getRuntimeToken, TOKEN_ENV_VAR } from './security/runtime-token'
 
 let goRuntime: ChildProcess | null = null
 let cloudServer: ChildProcess | null = null
@@ -48,7 +49,12 @@ function isPortInUse(port: number): Promise<boolean> {
  */
 function httpHealthCheck(url: string, timeout: number = 3000): Promise<boolean> {
   return new Promise((resolve) => {
-    const req = http.get(url, { timeout }, (res) => {
+    const headers: Record<string, string> = {}
+    const token = getRuntimeToken()
+    if (token) {
+      headers['X-GeoWork-Token'] = token
+    }
+    const req = http.get(url, { timeout, headers }, (res) => {
       resolve(res.statusCode === 200)
       res.resume() // consume response body
     })
@@ -77,7 +83,11 @@ function checkCloudServerHealth(): Promise<boolean> {
 /**
  * Notify renderer about startup status via IPC
  */
-function notifyStartupStatus(service: 'goCore' | 'cloudServer', status: 'running' | 'failed' | 'stopped', error?: string) {
+function notifyStartupStatus(
+  service: 'goCore' | 'cloudServer',
+  status: 'running' | 'failed' | 'stopped',
+  error?: string,
+) {
   const windows = require('electron').BrowserWindow.getAllWindows()
   windows.forEach((win: any) => {
     win.webContents.send('runtime:status-change', {
@@ -94,7 +104,7 @@ function notifyStartupStatus(service: 'goCore' | 'cloudServer', status: 'running
  */
 function logChildOutput(child: ChildProcess, type: 'goCore' | 'cloudServer') {
   const logFile = getLogFilePath(type === 'goCore' ? 'runtime' : 'runtime')
-  
+
   child.stdout?.on('data', (data: Buffer) => {
     const line = data.toString('utf-8').trim()
     if (line) {
@@ -130,7 +140,7 @@ export async function startRuntime() {
   writeLog('main', 'Starting GeoWork runtime...')
 
   // --- Start Go Core Runtime ---
-  
+
   // Check if port 8765 is already in use (started by external script)
   if (await isPortInUse(8765)) {
     startupState.goCore = 'running'
@@ -140,17 +150,20 @@ export async function startRuntime() {
   } else {
     const root = resolve(__dirname, '../../../')
     const logFile = getLogFilePath('runtime')
-    
-    goRuntime = spawn(
-      'go',
-      ['run', './cmd/geowork-runtime', '--port', '8765'],
-      {
-        cwd: join(root, 'core'),
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-        env: { ...process.env },
-      }
-    )
+
+    // P0-4: inject the runtime token so the Go API enforces auth.
+    const token = getRuntimeToken()
+    const childEnv: NodeJS.ProcessEnv = { ...process.env }
+    if (token) {
+      childEnv[TOKEN_ENV_VAR] = token
+    }
+
+    goRuntime = spawn('go', ['run', './cmd/geowork-runtime', '--port', '8765'], {
+      cwd: join(root, 'core'),
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+      env: childEnv,
+    })
 
     goPid = goRuntime.pid ?? null
     console.log(`[GeoWork] Starting Go Core Runtime (PID: ${goPid})...`)
@@ -196,17 +209,13 @@ export async function startRuntime() {
     notifyStartupStatus('cloudServer', 'running')
   } else {
     const root = resolve(__dirname, '../../../')
-    
-    cloudServer = spawn(
-      'go',
-      ['run', './cmd/geowork-api'],
-      {
-        cwd: join(root, 'server'),
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
-        env: { ...process.env },
-      }
-    )
+
+    cloudServer = spawn('go', ['run', './cmd/geowork-api'], {
+      cwd: join(root, 'server'),
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+      env: { ...process.env },
+    })
 
     cloudPid = cloudServer.pid ?? null
     console.log(`[GeoWork] Starting Cloud Server (PID: ${cloudPid})...`)
@@ -255,7 +264,7 @@ export function stopRuntime() {
     try {
       console.log(`[GeoWork] Sending SIGTERM to Go Core (PID: ${goPid})...`)
       process.kill(goPid, 'SIGTERM')
-      
+
       // Force kill after 5 seconds if still running
       setTimeout(() => {
         if (goRuntime && !goRuntime.killed) {
@@ -275,7 +284,7 @@ export function stopRuntime() {
     try {
       console.log(`[GeoWork] Sending SIGTERM to Cloud Server (PID: ${cloudPid})...`)
       process.kill(cloudPid, 'SIGTERM')
-      
+
       // Force kill after 5 seconds
       setTimeout(() => {
         if (cloudServer && !cloudServer.killed) {

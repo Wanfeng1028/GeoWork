@@ -9,6 +9,7 @@
 | v1.3 | 2026-08-13 | TraeCode AI Agent F1-1 图标库替换：`@ant-design/icons` → `lucide-react`，55+ 文件全量替换，typecheck 全绿 |
 | v1.4 | 2026-08-15 | ZCode 新增「代码改完必须同步文档」规则（§5 修改后、§15.3）；补记 2026-08-14 Gemini 胶囊化施工记录（§14）；同步当前阶段 |
 | v1.5 | 2026-08-15 | ZCode orchestrator 施工：合并 executePlan/executePlanFromTurn（-350 行）、修复 resume double-close 崩溃与 hook 分叉、OutputSchema 执行期校验（零新依赖）、CI Go 版本 1.21→1.25、新增 orchestrator/output_schema 测试 12 个 |
+| v1.6 | 2026-08-16 | ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -25,7 +26,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 31 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；待 E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 31 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；待 E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---

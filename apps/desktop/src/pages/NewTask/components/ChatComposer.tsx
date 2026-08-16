@@ -1,14 +1,5 @@
 import { useRef, useState } from 'react'
-import {
-  App,
-  Button,
-  Dropdown,
-  Input,
-  Space,
-  Tag,
-  Tooltip,
-  theme,
-} from 'antd'
+import { App, Button, Dropdown, Input, Space, Tag, Tooltip, theme } from 'antd'
 import {
   Plus,
   Send,
@@ -57,7 +48,9 @@ const ATTACH_ITEMS = [
 type GeoWorkDirectoryHandle = { kind: 'directory'; name: string }
 type GeoWorkFileHandle = { kind: 'file'; name: string }
 type DirectoryPickerWindow = Window & {
-  showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<GeoWorkDirectoryHandle>
+  showDirectoryPicker?: (options?: {
+    mode?: 'read' | 'readwrite'
+  }) => Promise<GeoWorkDirectoryHandle>
   showOpenFilePicker?: (options?: {
     multiple?: boolean
     types?: Array<{ description?: string; accept: Record<string, string[]> }>
@@ -145,7 +138,7 @@ export function ChatComposer({
 
   const [mode, setMode] = useState('通用 GIS')
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false)
-  const [focused, setFocused] = useState(false)
+  const [, setFocused] = useState(false)
   const [recording, setRecording] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const composingRef = useRef(false)
@@ -264,7 +257,12 @@ export function ChatComposer({
     try {
       const handles = await pickerWindow.showOpenFilePicker({
         multiple: true,
-        types: [{ description: '图片', accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'] } }],
+        types: [
+          {
+            description: '图片',
+            accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'] },
+          },
+        ],
       })
       const names = handles.map((h) => h.name)
       setAttachments((prev) => [...prev, ...names])
@@ -314,14 +312,29 @@ export function ChatComposer({
             key={opt.key}
             className={styles.modeItem}
             style={isActive ? { background: token.colorPrimaryBg } : undefined}
-            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = token.colorFillSecondary }}
-            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-            onClick={() => { setMode(opt.label); setModeDropdownOpen(false); message.info(`已切换到：${opt.label}`) }}
+            onMouseEnter={(e) => {
+              if (!isActive) e.currentTarget.style.background = token.colorFillSecondary
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) e.currentTarget.style.background = 'transparent'
+            }}
+            onClick={() => {
+              setMode(opt.label)
+              setModeDropdownOpen(false)
+              message.info(`已切换到：${opt.label}`)
+            }}
           >
-            <span className={styles.modeItemIcon} style={{ color: isActive ? token.colorPrimary : token.colorTextSecondary }}>{opt.icon}</span>
+            <span
+              className={styles.modeItemIcon}
+              style={{ color: isActive ? token.colorPrimary : token.colorTextSecondary }}
+            >
+              {opt.icon}
+            </span>
             <div className={styles.modeItemContent}>
               <span className={styles.modeItemLabel}>{opt.label}</span>
-              <span className={styles.modeItemDesc} style={{ color: token.colorTextTertiary }}>{opt.desc}</span>
+              <span className={styles.modeItemDesc} style={{ color: token.colorTextTertiary }}>
+                {opt.desc}
+              </span>
             </div>
             {isActive && <Check style={{ color: token.colorPrimary, fontSize: 12 }} />}
           </div>
@@ -369,7 +382,14 @@ export function ChatComposer({
       <div className={styles.composerRow}>
         <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
           <Tooltip title="添加附件">
-            <Button color="primary" variant="solid" icon={<Plus />} size="small" shape="round" className={styles.iconBtn} />
+            <Button
+              color="primary"
+              variant="solid"
+              icon={<Plus />}
+              size="small"
+              shape="round"
+              className={styles.iconBtn}
+            />
           </Tooltip>
         </Dropdown>
 
@@ -379,14 +399,18 @@ export function ChatComposer({
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onCompositionStart={() => { composingRef.current = true }}
-          onCompositionEnd={() => { composingRef.current = false }}
+          onCompositionStart={() => {
+            composingRef.current = true
+          }}
+          onCompositionEnd={() => {
+            composingRef.current = false
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           variant="borderless"
           autoSize={{ minRows: 1, maxRows: 8 }}
-          style={{ 
-            fontSize: 14, 
+          style={{
+            fontSize: 14,
             resize: 'none',
             background: 'transparent',
             border: 'none',
@@ -402,7 +426,13 @@ export function ChatComposer({
             open={modeDropdownOpen}
             onOpenChange={setModeDropdownOpen}
           >
-            <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
+            <Button
+              color="purple"
+              variant="solid"
+              size="small"
+              shape="round"
+              className={styles.modeBtn}
+            >
               <Space size={4}>
                 <Zap />
                 {mode}

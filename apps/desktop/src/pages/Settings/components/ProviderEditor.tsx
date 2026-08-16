@@ -15,11 +15,7 @@ import {
   Typography,
   theme,
 } from 'antd'
-import {
-  Plus,
-  Trash2,
-  Pencil,
-} from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import { SettingsCard } from './SettingsSection'
 import type {
   CustomModel,
@@ -84,7 +80,7 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
     enabled: true,
   })
 
-  /* 同步 provider 变化 */
+  /* 同步 provider 变化（含 safeStorage hydrate 后的 apiKey 回填） */
   useEffect(() => {
     setName(provider.name)
     setProviderId(provider.providerId)
@@ -93,7 +89,7 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
     setEndpointPath(provider.endpointPath)
     setProviderCaps(provider.providerCapabilities)
     setProviderIdError('')
-  }, [provider.id, provider.updatedAt])
+  }, [provider.id, provider.updatedAt, provider.apiKey])
 
   /* ── 保存基本信息 ── */
   const saveBasicInfo = useCallback(() => {
@@ -242,9 +238,9 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
       <SettingsCard title="连接配置">
         <Alert
           className={styles.alertRow}
-          type="warning"
+          type="info"
           showIcon
-          title="本地预览阶段 API Key 仅保存在浏览器 localStorage，后续将迁移到安全存储。"
+          title="API Key 通过操作系统级加密（Electron safeStorage）存储，不再以明文保存在本地。"
           style={{ fontSize: 12 }}
         />
 
@@ -296,9 +292,7 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
             <Button type="primary" onClick={saveConnection}>
               保存连接配置
             </Button>
-            <Button onClick={() => message.info('连接测试功能后续接入')}>
-              测试连接
-            </Button>
+            <Button onClick={() => message.info('连接测试功能后续接入')}>测试连接</Button>
           </Space>
         </div>
       </SettingsCard>
@@ -319,8 +313,12 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
             >
               <div className={styles.modelInfo}>
                 <Space size={8}>
-                  <Text strong style={{ fontSize: 13 }}>{m.displayName}</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{m.name}</Text>
+                  <Text strong style={{ fontSize: 13 }}>
+                    {m.displayName}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {m.name}
+                  </Text>
                   {m.contextWindow && (
                     <Text type="secondary" style={{ fontSize: 11 }}>
                       {Math.round(m.contextWindow / 1000)}K
@@ -359,13 +357,7 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
           ))
         )}
 
-        <Button
-          type="dashed"
-          icon={<Plus />}
-          block
-          onClick={openAddModel}
-          style={{ marginTop: 8 }}
-        >
+        <Button type="dashed" icon={<Plus />} block onClick={openAddModel} style={{ marginTop: 8 }}>
           添加模型
         </Button>
       </SettingsCard>
@@ -404,7 +396,9 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
         footer={
           <Space>
             <Button onClick={() => setModelModalOpen(false)}>取消</Button>
-            <Button type="primary" onClick={handleSaveModel}>保存</Button>
+            <Button type="primary" onClick={handleSaveModel}>
+              保存
+            </Button>
           </Space>
         }
         width={520}
@@ -442,7 +436,9 @@ export function ProviderEditor({ provider, onChanged }: ProviderEditorProps) {
             <Text style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>能力</Text>
             <Checkbox.Group
               value={modelForm.capabilities}
-              onChange={(vals) => setModelForm((prev) => ({ ...prev, capabilities: vals as ModelCapability[] }))}
+              onChange={(vals) =>
+                setModelForm((prev) => ({ ...prev, capabilities: vals as ModelCapability[] }))
+              }
               options={CAPABILITY_OPTIONS}
               style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
             />

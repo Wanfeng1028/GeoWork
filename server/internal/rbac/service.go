@@ -247,6 +247,16 @@ func (s *Service) checkPermission(user *storage.User, permission, objectID strin
 		return true
 	}
 
+	// Grant when the permission appears in the user's plan-derived list —
+	// the same source GetPermissions advertises, so the two endpoints agree
+	// (e.g. team plans carry billing:admin there but the role matrix alone
+	// would deny it here).
+	for _, p := range s.getAllPermissions(user) {
+		if p == permission {
+			return true
+		}
+	}
+
 	// Data-driven check using rolePermissions matrix
 	// Map legacy permission strings to matrix actions
 	action := mapLegacyPermission(permission)

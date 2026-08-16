@@ -15,8 +15,15 @@ declare global {
         isWindowMaximized: () => Promise<any>
         setTitleBarTheme: (dark: boolean) => Promise<any>
       }
-      runtime: Record<string, any>
+      runtime: Record<string, any> & {
+        getToken?: () => Promise<string | null>
+      }
       cloud: { api: (method: string, path: string, body?: any) => Promise<any> }
+      secrets?: {
+        get: (key: string) => Promise<string | null>
+        set: (key: string, value: string) => Promise<unknown>
+        delete: (key: string) => Promise<unknown>
+      }
       system: Record<string, any>
       clipboard: Record<string, any>
       notifications: Record<string, any>

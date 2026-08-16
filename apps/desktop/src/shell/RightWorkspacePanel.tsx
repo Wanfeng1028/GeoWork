@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { RefObject } from 'react'
-import {
-  Button,
-  Dropdown,
-  Empty,
-  Space,
-  Tabs,
-  Tag,
-  Tooltip,
-  Typography,
-  theme,
-} from 'antd'
+import { Button, Dropdown, Empty, Space, Tabs, Tag, Tooltip, Typography, theme } from 'antd'
 import {
   Plus,
   Code,
@@ -23,7 +13,6 @@ import {
   Diff,
   Globe,
   MessageSquare,
-  PanelRightClose,
   PanelRightOpen,
 } from 'lucide-react'
 import styles from './RightWorkspacePanel.module.css'
@@ -66,7 +55,9 @@ function safeReadString(key: string, fallback: string): string {
   try {
     const v = localStorage.getItem(key)
     return typeof v === 'string' ? v : fallback
-  } catch { return fallback }
+  } catch {
+    return fallback
+  }
 }
 
 function safeReadArray<T>(key: string, validator: (v: unknown) => v is T): T[] {
@@ -76,14 +67,15 @@ function safeReadArray<T>(key: string, validator: (v: unknown) => v is T): T[] {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
     return parsed.filter(validator)
-  } catch { return [] }
+  } catch {
+    return []
+  }
 }
 
 const isDynamicTab = (v: unknown): v is DynamicTabKey =>
   typeof v === 'string' && VALID_DYNAMIC_TABS.includes(v as DynamicTabKey)
 
-const isChatTab = (v: unknown): v is ChatTabKey =>
-  typeof v === 'string' && v.startsWith('chat-')
+const isChatTab = (v: unknown): v is ChatTabKey => typeof v === 'string' && v.startsWith('chat-')
 
 const isValidOpenTab = (v: unknown): v is DynamicTabKey | ChatTabKey =>
   isDynamicTab(v) || isChatTab(v)
@@ -152,7 +144,9 @@ function ContextPanelContent({ token }: { token: ReturnType<typeof theme.useToke
     <div className={styles.content}>
       {/* 工作目录 */}
       <div className={styles.contextSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>工作目录</div>
+        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>
+          工作目录
+        </div>
         <div
           style={{
             padding: '6px 10px',
@@ -169,7 +163,9 @@ function ContextPanelContent({ token }: { token: ReturnType<typeof theme.useToke
 
       {/* 相关文件 */}
       <div className={styles.contextSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>相关文件</div>
+        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>
+          相关文件
+        </div>
         <div className={styles.fileList}>
           {MOCK_CONTEXT_FILES.map((f, i) => (
             <div key={i} className={styles.fileItem} style={{ color: token.colorText }}>
@@ -181,11 +177,18 @@ function ContextPanelContent({ token }: { token: ReturnType<typeof theme.useToke
 
       {/* 修改文件 */}
       <div className={styles.contextSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>修改文件</div>
+        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>
+          修改文件
+        </div>
         <div className={styles.fileList}>
           {MOCK_MODIFIED_FILES.map((f, i) => (
             <div key={i} className={styles.fileItem} style={{ color: token.colorText }}>
-              <Tag color="processing" style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px', marginRight: 4 }}>M</Tag>
+              <Tag
+                color="processing"
+                style={{ fontSize: 11, lineHeight: '18px', padding: '0 4px', marginRight: 4 }}
+              >
+                M
+              </Tag>
               <span style={{ fontSize: 12 }}>{f}</span>
             </div>
           ))}
@@ -194,17 +197,23 @@ function ContextPanelContent({ token }: { token: ReturnType<typeof theme.useToke
 
       {/* 技术栈 */}
       <div className={styles.contextSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>技术栈</div>
+        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>
+          技术栈
+        </div>
         <div className={styles.tagRow}>
           {['React', 'TypeScript', 'Vite', 'Ant Design', 'CSS Modules'].map((t) => (
-            <Tag key={t} style={{ fontSize: 11, margin: 0 }}>{t}</Tag>
+            <Tag key={t} style={{ fontSize: 11, margin: 0 }}>
+              {t}
+            </Tag>
           ))}
         </div>
       </div>
 
       {/* MCP / 工具调用 */}
       <div className={styles.contextSection}>
-        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>MCP / 工具调用</div>
+        <div className={styles.cardTitle} style={{ color: token.colorTextSecondary }}>
+          MCP / 工具调用
+        </div>
         <Text type="secondary" style={{ fontSize: 12 }}>
           暂无工具调用记录，后续接入任务运行时后展示。
         </Text>
@@ -333,18 +342,18 @@ export function RightWorkspacePanel({
   }, [])
 
   /* ── Tab 关闭（editable-card 的 onEdit） ── */
-  const handleTabEdit = useCallback((
-    targetKey: string | React.MouseEvent | React.KeyboardEvent,
-    action: 'add' | 'remove',
-  ) => {
-    if (action === 'remove' && typeof targetKey === 'string') {
-      const k = targetKey as WorkspaceTabKey
-      if (k === 'review' || k === 'task') return /* system tab 不可关闭 */
-      closeTab(k as DynamicTabKey | ChatTabKey)
-    } else if (action === 'add') {
-      createNewChatTab()
-    }
-  }, [closeTab, createNewChatTab])
+  const handleTabEdit = useCallback(
+    (targetKey: string | React.MouseEvent | React.KeyboardEvent, action: 'add' | 'remove') => {
+      if (action === 'remove' && typeof targetKey === 'string') {
+        const k = targetKey as WorkspaceTabKey
+        if (k === 'review' || k === 'task') return /* system tab 不可关闭 */
+        closeTab(k as DynamicTabKey | ChatTabKey)
+      } else if (action === 'add') {
+        createNewChatTab()
+      }
+    },
+    [closeTab, createNewChatTab],
+  )
 
   /* ── "+" Dropdown 菜单（打开其他动态 Tab，新建辅助对话） ── */
   const plusMenuItems = [
@@ -353,7 +362,11 @@ export function RightWorkspacePanel({
       label: '新建辅助对话',
       icon: <MessageSquare />,
       onClick: createNewChatTab,
-      extra: <Tag color="blue" style={{ fontSize: 10, padding: '0 4px' }}>常用</Tag>,
+      extra: (
+        <Tag color="blue" style={{ fontSize: 10, padding: '0 4px' }}>
+          常用
+        </Tag>
+      ),
     },
     { type: 'divider' as const },
     ...VALID_DYNAMIC_TABS.map((key) => ({
@@ -406,10 +419,7 @@ export function RightWorkspacePanel({
         ),
         closable: true,
         children: (
-          <AssistantChatPanel
-            sessionId={sessionId}
-            parentConversationId={parentConversationId}
-          />
+          <AssistantChatPanel sessionId={sessionId} parentConversationId={parentConversationId} />
         ),
       })
     }
@@ -428,11 +438,18 @@ export function RightWorkspacePanel({
           </Space>
         ),
         closable: true,
-        children: dynKey === 'files' ? <FileTreePanel workspacePath={workspacePath} />
-          : dynKey === 'browser' ? <BrowserPanel active={activeTab === 'browser'} />
-          : dynKey === 'terminal' ? <TerminalPanel active={activeTab === 'terminal'} />
-          : dynKey === 'preview' ? <PreviewPanelContent token={token} />
-          : <ContextPanelContent token={token} />,
+        children:
+          dynKey === 'files' ? (
+            <FileTreePanel workspacePath={workspacePath} />
+          ) : dynKey === 'browser' ? (
+            <BrowserPanel active={activeTab === 'browser'} />
+          ) : dynKey === 'terminal' ? (
+            <TerminalPanel active={activeTab === 'terminal'} />
+          ) : dynKey === 'preview' ? (
+            <PreviewPanelContent token={token} />
+          ) : (
+            <ContextPanelContent token={token} />
+          ),
       })
     }
   }
@@ -493,12 +510,7 @@ export function RightWorkspacePanel({
               trigger={['click']}
               getPopupContainer={() => document.body}
             >
-              <Button
-                type="text"
-                icon={<Plus />}
-                size="small"
-                style={{ marginRight: 4 }}
-              />
+              <Button type="text" icon={<Plus />} size="small" style={{ marginRight: 4 }} />
             </Dropdown>
           }
         />

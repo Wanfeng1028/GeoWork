@@ -1,145 +1,153 @@
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
-import { join } from "node:path";
-import {
-  startRuntime,
-  stopRuntime,
-  checkHealth,
-  getRuntimeStatus,
-} from "./runtime";
-import { registerDesktopIPC } from "./ipc/desktopIpc";
-import { registerRuntimeIPC } from "./ipc/runtimeIpc";
-import { registerSystemIPC } from "./ipc/systemIpc";
-import { registerClipboardIPC } from "./ipc/clipboardIpc";
-import { registerNotificationIPC } from "./ipc/notificationIpc";
-import { registerBrowserViewIPC } from "./ipc/browserView";
-import { registerTerminalIPC } from "./ipc/terminalIpc";
-import registerWindows from "./ipc/windows";
-import { registerPermissionForwarder } from "./security/permission-forwarder";
-import { initTray } from "./local/tray";
-import { registerLoggingIPC, writeLog } from "./local/logging";
-import { cleanupShortcuts } from "./local/shortcuts";
-import { cleanupSystemIPC } from "./ipc/systemIpc";
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
+import { join } from 'node:path'
+import { startRuntime, stopRuntime, checkHealth, getRuntimeStatus } from './runtime'
+import { registerDesktopIPC } from './ipc/desktopIpc'
+import { registerRuntimeIPC } from './ipc/runtimeIpc'
+import { registerSystemIPC } from './ipc/systemIpc'
+import { registerClipboardIPC } from './ipc/clipboardIpc'
+import { registerNotificationIPC } from './ipc/notificationIpc'
+import { registerBrowserViewIPC } from './ipc/browserView'
+import { registerTerminalIPC } from './ipc/terminalIpc'
+import registerWindows from './ipc/windows'
+import { registerPermissionForwarder } from './security/permission-forwarder'
+import { mintRuntimeToken, getRuntimeToken } from './security/runtime-token'
+import { registerSecretIPC } from './security/secret-store'
+import { initTray } from './local/tray'
+import { registerLoggingIPC, writeLog } from './local/logging'
+import { cleanupShortcuts } from './local/shortcuts'
+import { cleanupSystemIPC } from './ipc/systemIpc'
 
-let mainWindow: BrowserWindow | null = null;
-let isAppReady = false;
+let mainWindow: BrowserWindow | null = null
+let isAppReady = false
 
 async function createWindow() {
-  await startRuntime();
+  // P0-4: mint the runtime token BEFORE spawning the Go runtime so it
+  // can be injected via GEOWORK_RUNTIME_TOKEN.
+  mintRuntimeToken()
+
+  await startRuntime()
 
   // Hide native menu bar
-  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null)
 
-  const preloadPath = join(__dirname, "../preload/preload.cjs");
-  console.log("[main] preload path:", preloadPath);
-  console.log("[main] __dirname:", __dirname);
-  console.log("[main] ELECTRON_RENDERER_URL:", process.env.ELECTRON_RENDERER_URL);
+  const preloadPath = join(__dirname, '../preload/preload.cjs')
+  console.log('[main] preload path:', preloadPath)
+  console.log('[main] __dirname:', __dirname)
+  console.log('[main] ELECTRON_RENDERER_URL:', process.env.ELECTRON_RENDERER_URL)
 
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 960,
     minHeight: 640,
-    titleBarStyle: "hidden",
+    titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: "#F7FBFD",
-      symbolColor: "#333333",
+      color: '#F7FBFD',
+      symbolColor: '#333333',
       height: 36,
     },
-    backgroundColor: "#F7FBFD",
-    icon: join(__dirname, "../../assets/app-icon.png"),
+    backgroundColor: '#F7FBFD',
+    icon: join(__dirname, '../../assets/app-icon.png'),
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
     },
-  });
+  })
 
-  const win = mainWindow;
+  const win = mainWindow
 
   if (process.env.ELECTRON_RENDERER_URL) {
-    await win.loadURL(process.env.ELECTRON_RENDERER_URL);
+    await win.loadURL(process.env.ELECTRON_RENDERER_URL)
     // Open DevTools in dev mode
-    win.webContents.openDevTools({ mode: "detach" });
+    win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    await win.loadFile(join(__dirname, "../renderer/index.html"));
+    await win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
   // Initialize local modules after window is ready
-  registerDesktopIPC(win);
-  registerRuntimeIPC();
-  registerSystemIPC(win);
-  registerClipboardIPC();
-  registerNotificationIPC();
-  registerWindows(win);
-  registerPermissionForwarder(win);
-  registerLoggingIPC();
-  registerBrowserViewIPC(win);
-  registerTerminalIPC(win);
+  registerDesktopIPC(win)
+  registerRuntimeIPC()
+  registerSystemIPC(win)
+  registerClipboardIPC()
+  registerNotificationIPC()
+  registerWindows(win)
+  registerPermissionForwarder(win)
+  registerLoggingIPC()
+  registerBrowserViewIPC(win)
+  registerTerminalIPC(win)
+  registerSecretIPC()
 
   // Initialize tray
-  initTray(win);
+  initTray(win)
 
   // Register runtime status IPC
-  ipcMain.handle("runtime:status", async () => {
-    return getRuntimeStatus();
-  });
+  ipcMain.handle('runtime:status', async () => {
+    return getRuntimeStatus()
+  })
+
+  // P0-4: renderer needs the token to call the Go API directly
+  // (EventSource/fetch from the renderer process).
+  ipcMain.handle('runtime:token', async () => {
+    return getRuntimeToken()
+  })
 
   // 动态切换原生标题栏配色（暗色/亮色），解决 titleBarOverlay 写死亮色的问题
-  ipcMain.handle("window:set-titlebar-theme", (_event, dark: boolean) => {
+  ipcMain.handle('window:set-titlebar-theme', (_event, dark: boolean) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setTitleBarOverlay({
-        color: dark ? "#141414" : "#F7FBFD",
-        symbolColor: dark ? "#d6d3d1" : "#333333",
+        color: dark ? '#141414' : '#F7FBFD',
+        symbolColor: dark ? '#d6d3d1' : '#333333',
         height: 36,
-      });
+      })
     }
-    return { success: true };
-  });
+    return { success: true }
+  })
 
-  ipcMain.handle("runtime:health", async () => {
-    return await checkHealth();
-  });
+  ipcMain.handle('runtime:health', async () => {
+    return await checkHealth()
+  })
 
-  win.on("closed", () => {
-    mainWindow = null;
-  });
+  win.on('closed', () => {
+    mainWindow = null
+  })
 
-  isAppReady = true;
-  writeLog("main", "GeoWork main window created and initialized");
+  isAppReady = true
+  writeLog('main', 'GeoWork main window created and initialized')
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(createWindow)
 
-app.on("window-all-closed", () => {
-  stopRuntime();
-  cleanupSystemIPC();
-  cleanupShortcuts();
+app.on('window-all-closed', () => {
+  stopRuntime()
+  cleanupSystemIPC()
+  cleanupShortcuts()
 
-  if (process.platform !== "darwin") {
-    app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit()
   }
-});
+})
 
-app.on("will-quit", () => {
-  stopRuntime();
-  cleanupSystemIPC();
-  cleanupShortcuts();
-});
+app.on('will-quit', () => {
+  stopRuntime()
+  cleanupSystemIPC()
+  cleanupShortcuts()
+})
 
-app.on("activate", () => {
+app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    createWindow()
   }
-});
+})
 
 // Handle renderer crash — graceful recovery
-app.on("web-contents-created", (_event, webContents) => {
-  webContents.on("render-process-gone", (_e, details) => {
-    writeLog("error", `Renderer process gone: ${details.reason}`);
+app.on('web-contents-created', (_event, webContents) => {
+  webContents.on('render-process-gone', (_e, details) => {
+    writeLog('error', `Renderer process gone: ${details.reason}`)
 
-    const win = mainWindow;
+    const win = mainWindow
     if (win && !win.isDestroyed()) {
-      win.webContents.reload();
+      win.webContents.reload()
     }
-  });
-});
+  })
+})

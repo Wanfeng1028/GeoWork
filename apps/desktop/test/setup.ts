@@ -47,6 +47,12 @@ vi.mock('electron', () => ({
 window.geowork = {
   runtime: {
     health: vi.fn(() => Promise.resolve({ status: 'ok' })),
+    getToken: vi.fn(() => Promise.resolve(null)),
+  },
+  secrets: {
+    get: vi.fn(() => Promise.resolve(null)),
+    set: vi.fn(() => Promise.resolve({ success: true })),
+    delete: vi.fn(() => Promise.resolve({ success: true })),
   },
   system: {
     getAppDataPath: vi.fn(() => Promise.resolve('/tmp/geowork')),

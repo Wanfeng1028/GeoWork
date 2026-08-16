@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"server/internal/servercontext"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -74,5 +75,17 @@ func SeedSecondUser(t *testing.T, store *storage.Store) *storage.User {
 func NewTestRouter(store *storage.Store) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	return r
+}
+
+// NewAuthedRouter creates a Gin engine whose every request is pre-authenticated
+// as the given user, bypassing JWT middleware for handler-level tests.
+func NewAuthedRouter(user *storage.User) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		servercontext.SetUser(c, user)
+		c.Next()
+	})
 	return r
 }

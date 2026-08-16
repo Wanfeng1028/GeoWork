@@ -3,18 +3,17 @@
  *
  * key: geowork.modelProviders.v1
  * 解析失败回退默认值，不抛异常。
+ *
+ * P1-8: apiKey 不再以明文存于 localStorage。写入时自动剥离并持久化到
+ * Electron safeStorage（OS 级加密）；读取时通过 hydrateProviderApiKeys()
+ * 异步回填。非 Electron 环境（测试/纯浏览器）下 secrets API 不存在，
+ * apiKey 保持空字符串，功能降级但不报错。
  */
 
 /* ── 类型 ── */
 
 export type ModelCapability =
-  | 'text'
-  | 'vision'
-  | 'embedding'
-  | 'tool-calling'
-  | 'reasoning'
-  | 'audio'
-  | 'video'
+  'text' | 'vision' | 'embedding' | 'tool-calling' | 'reasoning' | 'audio' | 'video'
 
 export interface CustomModel {
   id: string
@@ -67,6 +66,32 @@ export interface AvailableModelOption {
 
 const STORAGE_KEY = 'geowork.modelProviders.v1'
 const EVENT_NAME = 'geowork:model-providers-updated'
+const SECRET_KEY_PREFIX = 'geowork.provider.apiKey.'
+
+function secretKeyFor(providerId: string): string {
+  return `${SECRET_KEY_PREFIX}${providerId}`
+}
+
+/** safeStorage IPC 桥（非 Electron 环境为 undefined） */
+function secretsBridge():
+  | {
+      get: (k: string) => Promise<string | null>
+      set: (k: string, v: string) => Promise<unknown>
+      delete: (k: string) => Promise<unknown>
+    }
+  | undefined {
+  return (
+    window as unknown as {
+      geowork?: {
+        secrets?: {
+          get: (k: string) => Promise<string | null>
+          set: (k: string, v: string) => Promise<unknown>
+          delete: (k: string) => Promise<unknown>
+        }
+      }
+    }
+  ).geowork?.secrets
+}
 
 const DEFAULT_PROVIDER_CAPABILITIES: ModelProvider['providerCapabilities'] = {
   imageGeneration: false,
@@ -108,6 +133,16 @@ const DEFAULT_DATA: ModelProviderData = {
 
 /* ── 读写 ── */
 
+/**
+ * P1-8: apiKey 内存缓存。safeStorage 是异步 IPC，同步的 loadModelProviders
+ * 无法等待，因此用内存 Map 桥接：save 时写入缓存 + safeStorage，
+ * load 时从缓存合并。应用启动时 hydrateProviderApiKeys() 预热缓存。
+ */
+const apiKeyCache = new Map<string, string>()
+
+/** hydrate 是否已完成（防止 hydrate 前保存误删 secret） */
+let hydrateDone = false
+
 export function loadModelProviders(): ModelProviderData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -116,11 +151,17 @@ export function loadModelProviders(): ModelProviderData {
     if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.providers)) {
       return structuredClone(DEFAULT_DATA)
     }
-    return {
+    const data: ModelProviderData = {
       providers: parsed.providers,
       useProxy: !!parsed.useProxy,
       proxyUrl: parsed.proxyUrl ?? '',
     }
+    // 合并 safeStorage 缓存的 apiKey
+    for (const provider of data.providers) {
+      const cached = apiKeyCache.get(provider.id)
+      if (cached) provider.apiKey = cached
+    }
+    return data
   } catch {
     return structuredClone(DEFAULT_DATA)
   }
@@ -128,10 +169,65 @@ export function loadModelProviders(): ModelProviderData {
 
 export function saveModelProviders(data: ModelProviderData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    const bridge = secretsBridge()
+    const stripped = structuredClone(data)
+    for (const provider of stripped.providers) {
+      if (provider.apiKey) {
+        // 写入内存缓存 + safeStorage（fire-and-forget）
+        apiKeyCache.set(provider.id, provider.apiKey)
+        bridge?.set(secretKeyFor(provider.id), provider.apiKey).catch(() => {})
+      } else if (hydrateDone) {
+        // apiKey 被清空且 hydrate 已完成 → 用户显式清除，删除 secret
+        apiKeyCache.delete(provider.id)
+        bridge?.delete(secretKeyFor(provider.id)).catch(() => {})
+      }
+      // hydrate 未完成时 apiKey 为空属于"尚未回填"，保留已有 secret
+      provider.apiKey = '' // 剥离明文，不写入 localStorage
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped))
     window.dispatchEvent(new CustomEvent(EVENT_NAME))
   } catch {
     /* 静默失败 */
+  }
+}
+
+/**
+ * P1-8: 应用启动时调用。
+ * 1. 迁移遗留明文 apiKey（localStorage → safeStorage）
+ * 2. 从 safeStorage 预热 apiKeyCache
+ * 3. 触发 EVENT_NAME 通知 UI 刷新
+ */
+export async function hydrateProviderApiKeys(): Promise<void> {
+  const bridge = secretsBridge()
+  if (!bridge) {
+    hydrateDone = true
+    return
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.providers)) return
+    let needsRewrite = false
+    for (const provider of parsed.providers as ModelProvider[]) {
+      // 遗留明文迁移
+      if (provider.apiKey) {
+        await bridge.set(secretKeyFor(provider.id), provider.apiKey)
+        provider.apiKey = ''
+        needsRewrite = true
+      }
+      // 预热缓存
+      const secret = await bridge.get(secretKeyFor(provider.id))
+      if (secret) apiKeyCache.set(provider.id, secret)
+    }
+    if (needsRewrite) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
+    }
+    window.dispatchEvent(new CustomEvent(EVENT_NAME))
+  } catch {
+    /* 静默失败 */
+  } finally {
+    hydrateDone = true
   }
 }
 
@@ -156,6 +252,11 @@ export function deleteProvider(id: string): void {
   if (data.providers.length > 0 && !data.providers.some((p) => p.isDefault)) {
     data.providers[0].isDefault = true
   }
+  // P1-8: 清理该 provider 的加密 apiKey
+  apiKeyCache.delete(id)
+  secretsBridge()
+    ?.delete(secretKeyFor(id))
+    .catch(() => {})
   saveModelProviders(data)
 }
 

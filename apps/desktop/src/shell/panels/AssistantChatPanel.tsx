@@ -12,21 +12,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Input, Tag, Tooltip, theme } from 'antd'
-import {
-  Send,
-  Link,
-  Plus,
-  Square,
-  Lightbulb,
-} from 'lucide-react'
+import { Send, Link, Plus, Square, Lightbulb } from 'lucide-react'
 import { getCoreConversationId } from '../../pages/NewTask/components/streamAdapters'
 import { getConversation } from '../../pages/NewTask/components/conversationStorage'
 import { MarkdownLite } from '../../pages/NewTask/components/MarkdownLite'
+import { coreFetch, coreEventSource } from '../../shared/api/coreApi'
 import styles from './AssistantChatPanel.module.css'
-
-const CORE_BASE_URL =
-  (import.meta as unknown as { env?: { VITE_CORE_API_URL?: string } }).env?.VITE_CORE_API_URL ??
-  'http://127.0.0.1:8765'
 
 /**
  * 将前端本地会话 id 解析为 Go Core 端会话 id。
@@ -133,7 +124,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
       // 首次发送：创建带 parentId 的子对话（继承父记忆）
       if (!childConvIdRef.current) {
         const coreParentId = resolveCoreConvId(parentConversationId) ?? ''
-        const createRes = await fetch(`${CORE_BASE_URL}/api/conversations`, {
+        const createRes = await coreFetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -151,7 +142,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
       const convId = childConvIdRef.current
 
       // 发送消息触发 orchestrator
-      const msgRes = await fetch(`${CORE_BASE_URL}/api/conversations/${convId}/messages`, {
+      const msgRes = await coreFetch(`/api/conversations/${convId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text, mode: 'Work' }),
@@ -167,7 +158,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
           resolve()
           return
         }
-        const es = new EventSource(`${CORE_BASE_URL}/api/conversations/${convId}/events`)
+        const es = coreEventSource(`/api/conversations/${convId}/events`)
         let resolved = false
         const assistantId = `a_${Date.now()}`
         let assistantContent = ''
@@ -180,9 +171,16 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
 
         controller.signal.addEventListener('abort', finish)
 
-        const parse = (e: MessageEvent): { type: string; data?: Record<string, unknown>; error?: string; message?: string } => {
+        const parse = (
+          e: MessageEvent,
+        ): { type: string; data?: Record<string, unknown>; error?: string; message?: string } => {
           try {
-            return JSON.parse(e.data) as { type: string; data?: Record<string, unknown>; error?: string; message?: string }
+            return JSON.parse(e.data) as {
+              type: string
+              data?: Record<string, unknown>
+              error?: string
+              message?: string
+            }
           } catch {
             return { type: 'unknown' }
           }
@@ -209,7 +207,10 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
           setMessages((prev) =>
             prev.some((m) => m.id === assistantId)
               ? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-              : [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }],
+              : [
+                  ...prev,
+                  { id: assistantId, role: 'assistant' as const, content: assistantContent },
+                ],
           )
         })
 
@@ -223,7 +224,10 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
             setMessages((prev) =>
               prev.some((m) => m.id === assistantId)
                 ? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-                : [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }],
+                : [
+                    ...prev,
+                    { id: assistantId, role: 'assistant' as const, content: assistantContent },
+                  ],
             )
           }
         })
@@ -235,7 +239,10 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
             setMessages((prev) =>
               prev.some((m) => m.id === assistantId)
                 ? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-                : [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }],
+                : [
+                    ...prev,
+                    { id: assistantId, role: 'assistant' as const, content: assistantContent },
+                  ],
             )
           }
           finish()
@@ -252,12 +259,22 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
             const evt = parse(me)
             setMessages((prev) => [
               ...prev,
-              { id: `err_${Date.now()}`, role: 'assistant', content: evt.error || evt.message || '执行失败', error: true },
+              {
+                id: `err_${Date.now()}`,
+                role: 'assistant',
+                content: evt.error || evt.message || '执行失败',
+                error: true,
+              },
             ])
           } else if (!resolved) {
             setMessages((prev) => [
               ...prev,
-              { id: `err_${Date.now()}`, role: 'assistant', content: '与 GeoWork Core 的连接中断', error: true },
+              {
+                id: `err_${Date.now()}`,
+                role: 'assistant',
+                content: '与 GeoWork Core 的连接中断',
+                error: true,
+              },
             ])
           }
           finish()
@@ -282,20 +299,22 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
   return (
     <div
       className={styles.panel}
-      style={{
-        '--border-color': token.colorBorderSecondary,
-        '--bg-container': token.colorBgContainer,
-        '--bg-layout': token.colorBgLayout,
-        '--bg-fill': token.colorFillQuaternary,
-        '--bg-fill-tertiary': token.colorFillTertiary,
-        '--text': token.colorText,
-        '--text-secondary': token.colorTextSecondary,
-        '--text-tertiary': token.colorTextTertiary,
-        '--accent-bg': token.colorPrimaryBg,
-        '--accent-text': token.colorPrimaryText,
-        '--accent': token.colorPrimary,
-        '--error-text': token.colorError,
-      } as React.CSSProperties}
+      style={
+        {
+          '--border-color': token.colorBorderSecondary,
+          '--bg-container': token.colorBgContainer,
+          '--bg-layout': token.colorBgLayout,
+          '--bg-fill': token.colorFillQuaternary,
+          '--bg-fill-tertiary': token.colorFillTertiary,
+          '--text': token.colorText,
+          '--text-secondary': token.colorTextSecondary,
+          '--text-tertiary': token.colorTextTertiary,
+          '--accent-bg': token.colorPrimaryBg,
+          '--accent-text': token.colorPrimaryText,
+          '--accent': token.colorPrimary,
+          '--error-text': token.colorError,
+        } as React.CSSProperties
+      }
     >
       {/* 消息列表区域 */}
       <div className={styles.body} ref={bodyRef}>
@@ -304,9 +323,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
             <div className={styles.emptyIcon}>
               <Lightbulb />
             </div>
-            <div className={styles.emptyTitle}>
-              有什么可以帮你的？
-            </div>
+            <div className={styles.emptyTitle}>有什么可以帮你的？</div>
             <div className={styles.emptyDesc}>
               {inheritable ? (
                 <>
@@ -352,7 +369,11 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
               <div
                 key={m.id}
                 className={`${styles.message} ${
-                  m.error ? styles.messageError : m.role === 'user' ? styles.messageUser : styles.messageAssistant
+                  m.error
+                    ? styles.messageError
+                    : m.role === 'user'
+                      ? styles.messageUser
+                      : styles.messageAssistant
                 }`}
               >
                 {m.role === 'user' ? (
@@ -360,9 +381,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
                     <span className={styles.messageContentText}>{m.content}</span>
                   </div>
                 ) : m.error ? (
-                  <div className={styles.messageErrorContent}>
-                    {m.content}
-                  </div>
+                  <div className={styles.messageErrorContent}>{m.content}</div>
                 ) : (
                   <div className={styles.messageMarkdown}>
                     <MarkdownLite content={m.content} />
@@ -374,7 +393,9 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
               <div className={`${styles.message} ${styles.messageAssistant}`}>
                 <div className={styles.messageBubble}>
                   <span className={styles.typingDots}>
-                    <span /><span /><span />
+                    <span />
+                    <span />
+                    <span />
                   </span>
                 </div>
               </div>

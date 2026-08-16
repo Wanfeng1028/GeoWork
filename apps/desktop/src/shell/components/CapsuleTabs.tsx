@@ -54,13 +54,12 @@ export function CapsuleTabs({
   const moveIndicator = useCallback(
     (target?: HTMLElement) => {
       const container = containerRef.current
-      let el = target ?? (value == null ? undefined : btnRefs.current.get(value))
+      let el =
+        target ?? (value === null || value === undefined ? undefined : btnRefs.current.get(value))
 
       // 后备：如果 ref 还没准备好，直接从 DOM 查找当前选中按钮
-      if (!el && container && value != null) {
-        el = container.querySelector(
-          `[role="tab"][aria-selected="true"]`
-        ) as HTMLElement
+      if (!el && container && value !== null && value !== undefined) {
+        el = container.querySelector(`[role="tab"][aria-selected="true"]`) as HTMLElement
       }
 
       if (!container || !el) return
@@ -133,7 +132,9 @@ export function CapsuleTabs({
         style={{
           left: indicator.left,
           width: indicator.width,
-          transition: skipTransition ? 'none' : 'left 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: skipTransition
+            ? 'none'
+            : 'left 0.15s cubic-bezier(0.4, 0, 0.2, 1), width 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       />
       {options.map((opt) => {
@@ -150,7 +151,7 @@ export function CapsuleTabs({
               else btnRefs.current.delete(opt.value)
             }}
             className={active ? `${styles.item} ${styles.itemSelected}` : styles.item}
-            onClick={(e) => {
+            onClick={() => {
               // 不在这里直接移动指示器，避免与 value 变化后的 useLayoutEffect 重复触发动画
               onChange?.(opt.value)
             }}

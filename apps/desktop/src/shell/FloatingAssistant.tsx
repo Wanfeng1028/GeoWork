@@ -10,19 +10,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, FloatButton, Input, Tag, Tooltip, theme } from 'antd'
-import {
-  Headphones,
-  X,
-  Send,
-  Link,
-} from 'lucide-react'
+import { Headphones, X, Send, Link } from 'lucide-react'
 import { getCoreConversationId } from '../pages/NewTask/components/streamAdapters'
 import { getConversation } from '../pages/NewTask/components/conversationStorage'
+import { coreFetch, coreEventSource } from '../shared/api/coreApi'
 import styles from './FloatingAssistant.module.css'
-
-const CORE_BASE_URL =
-  (import.meta as unknown as { env?: { VITE_CORE_API_URL?: string } }).env?.VITE_CORE_API_URL ??
-  'http://127.0.0.1:8765'
 
 /**
  * 将前端本地会话 id 解析为 Go Core 端会话 id。
@@ -107,7 +99,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
       if (!childConvIdRef.current) {
         // 将前端本地会话 id 解析为 Core 端会话 id 作为 parentId
         const coreParentId = resolveCoreConvId(parentConversationId) ?? ''
-        const createRes = await fetch(`${CORE_BASE_URL}/api/conversations`, {
+        const createRes = await coreFetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -125,7 +117,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
       const convId = childConvIdRef.current
 
       // 发送消息触发 orchestrator
-      const msgRes = await fetch(`${CORE_BASE_URL}/api/conversations/${convId}/messages`, {
+      const msgRes = await coreFetch(`/api/conversations/${convId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text, mode: 'Work' }),
@@ -141,7 +133,7 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
           resolve()
           return
         }
-        const es = new EventSource(`${CORE_BASE_URL}/api/conversations/${convId}/events`)
+        const es = coreEventSource(`/api/conversations/${convId}/events`)
         let resolved = false
         const assistantId = `a_${Date.now()}`
         let assistantContent = ''
@@ -154,9 +146,16 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
 
         controller.signal.addEventListener('abort', finish)
 
-        const parse = (e: MessageEvent): { type: string; data?: Record<string, unknown>; error?: string; message?: string } => {
+        const parse = (
+          e: MessageEvent,
+        ): { type: string; data?: Record<string, unknown>; error?: string; message?: string } => {
           try {
-            return JSON.parse(e.data) as { type: string; data?: Record<string, unknown>; error?: string; message?: string }
+            return JSON.parse(e.data) as {
+              type: string
+              data?: Record<string, unknown>
+              error?: string
+              message?: string
+            }
           } catch {
             return { type: 'unknown' }
           }
@@ -183,7 +182,10 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
           setMessages((prev) =>
             prev.some((m) => m.id === assistantId)
               ? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-              : [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }],
+              : [
+                  ...prev,
+                  { id: assistantId, role: 'assistant' as const, content: assistantContent },
+                ],
           )
         })
 
@@ -194,7 +196,10 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
             setMessages((prev) =>
               prev.some((m) => m.id === assistantId)
                 ? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-                : [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }],
+                : [
+                    ...prev,
+                    { id: assistantId, role: 'assistant' as const, content: assistantContent },
+                  ],
             )
           }
           finish()
@@ -211,13 +216,23 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
             const evt = parse(me)
             setMessages((prev) => [
               ...prev,
-              { id: `err_${Date.now()}`, role: 'assistant', content: evt.error || evt.message || '执行失败', error: true },
+              {
+                id: `err_${Date.now()}`,
+                role: 'assistant',
+                content: evt.error || evt.message || '执行失败',
+                error: true,
+              },
             ])
           } else if (!resolved) {
             // 连接级错误（非 abort）
             setMessages((prev) => [
               ...prev,
-              { id: `err_${Date.now()}`, role: 'assistant', content: '与 GeoWork Core 的连接中断', error: true },
+              {
+                id: `err_${Date.now()}`,
+                role: 'assistant',
+                content: '与 GeoWork Core 的连接中断',
+                error: true,
+              },
             ])
           }
           finish()
@@ -274,18 +289,14 @@ export function FloatingAssistant({ parentConversationId }: FloatingAssistantPro
                 </Tooltip>
               )}
             </span>
-            <Button
-              type="text"
-              size="small"
-              icon={<X />}
-              onClick={() => setOpen(false)}
-            />
+            <Button type="text" size="small" icon={<X />} onClick={() => setOpen(false)} />
           </div>
 
           <div className={styles.body} ref={bodyRef}>
             {messages.length === 0 ? (
               <div className={styles.emptyHint}>
-                在此进行微调式追问，{inheritable ? '将继承当前主对话的上下文与记忆。' : '可独立进行辅助对话。'}
+                在此进行微调式追问，
+                {inheritable ? '将继承当前主对话的上下文与记忆。' : '可独立进行辅助对话。'}
               </div>
             ) : (
               messages.map((m) => (

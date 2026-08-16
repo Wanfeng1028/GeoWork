@@ -18,6 +18,12 @@
 
 ## [Unreleased]
 
+### Security — Electron 侧安全加固 + runtime token 对接（2026-08-16 · ZCode）
+- **P1-8a openExternal 协议白名单**：`shell:openExternal` / `desktop:openExternal` 此前对任意 URL 直接放行，被注入的渲染进程可用 `file://`、自定义协议唤起本地程序。新增 `url-guard.ts`，仅放行 `https:` / `http:` / `mailto:`
+- **P1-8b apiKey 迁 safeStorage**：模型供应商 API Key 此前以明文存于 localStorage（XSS 可读、LevelDB 文件可直接翻出）。新增 `secret-store.ts`（Electron safeStorage，OS 级加密：Windows DPAPI / macOS Keychain / Linux libsecret），密文存 `userData/secrets.json`；`modelProviderStore` 写入时剥离明文、读取时经内存缓存回填，应用启动时自动迁移遗留明文并预热缓存；删除 provider 时同步清理 secret
+- **P0-4 对接（Go 侧见 2d0dd62）**：Electron 主进程铸造随机 token（`runtime-token.ts`），经 `GEOWORK_RUNTIME_TOKEN` 注入 Go runtime 子进程；主进程 IPC 代理与健康检查自动携带 `X-GeoWork-Token`；渲染进程新增 `coreApi.ts`（`coreFetch` 带 header、`coreEventSource` 带 `?token=` query），替换 4 个文件里 8 处裸 `fetch`/`EventSource` 直连；`GEOWORK_INSECURE_NO_AUTH=1` 时全链路降级为无鉴权（仅开发态）
+- 顺带修复：typecheck 3 处既有 TS6133（未使用变量）、lint 2 处既有 eqeqeq error（`== null` 改等价严格比较），`npm run typecheck` / `oxlint` 恢复全绿
+
 ### Fixed — Orchestrator 执行核心去重与修复（2026-08-15 · ZCode）
 - **修复 resume 崩溃**：`ResumeFromCheckpoint` 复用已关闭的 `run.done`，`executePlanFromTurn` 收尾再次 close 导致 `panic: close of closed channel`（goroutine 内无 recover，直接崩进程）。现在 resume 前重新创建 done channel
 - **修复 hook 分叉**：`executePlanFromTurn` 缺失 `OnRunStart` / `OnTurnStart` / `OnRunEnd` 三个生命周期钩子，恢复的 run 会静默绕过 per-turn 限流/审计。两个循环体合并为单一 `executePlan(ctx, run, rc, chatHistory, startTurn, resumed)`，删除 350 行重复代码
