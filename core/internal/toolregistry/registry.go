@@ -204,17 +204,10 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 			return nil, fmt.Errorf("governance denied: %w", err)
 		}
 
-		// Record successful call
-		if auditLog != nil {
-			argsJSON, _ := json.Marshal(args)
-			auditLog.Record(AuditEntry{
-				TaskID:   governor.taskID,
-				ToolName: name,
-				Args:     string(argsJSON),
-				Success:  true,
-				Approved: governor.IsGoverned(name),
-			})
-		}
+		// doc/22 BP5: the "success" audit entry previously landed HERE,
+		// before the tool even ran — a failed call produced one truthful
+		// false record AND one lying true record. The single real record
+		// is now written after execution (see below).
 	}
 
 	// Check permissions
@@ -287,41 +280,42 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 	result, err := t.Execute(ctx, args)
 	duration := time.Since(start).Milliseconds()
 
-	if err != nil && auditLog != nil && governor != nil {
+	// doc/22 BP5: single audit entry per call, written after execution
+	// with the real outcome (covers exec failure and, further below,
+	// OutputSchema rejection).
+	recordAudit := func(success bool, errMsg string) {
+		if auditLog == nil || governor == nil {
+			return
+		}
 		argsJSON, _ := json.Marshal(args)
 		auditLog.Record(AuditEntry{
 			TaskID:     governor.taskID,
 			ToolName:   name,
 			Args:       string(argsJSON),
-			Success:    false,
-			Error:      err.Error(),
+			Success:    success,
+			Approved:   governor.IsGoverned(name),
+			Error:      errMsg,
 			DurationMs: duration,
 		})
 	}
 
 	if err != nil {
+		recordAudit(false, err.Error())
 		return nil, fmt.Errorf("tool %s execution failed: %w", name, err)
 	}
 
 	// Enforce the declared OutputSchema so a tool cannot silently return
 	// a shape that contradicts its contract. Tools without an
 	// OutputSchema (e.g. dynamically registered worker tools) skip this.
+	// The success audit fires only after the schema check — a rejected
+	// output must not leave a success record behind (doc/22 BP5).
 	if schema := t.OutputSchema(); len(schema) > 0 {
 		if verr := validateOutput(schema, result); verr != nil {
-			if auditLog != nil && governor != nil {
-				argsJSON, _ := json.Marshal(args)
-				auditLog.Record(AuditEntry{
-					TaskID:     governor.taskID,
-					ToolName:   name,
-					Args:       string(argsJSON),
-					Success:    false,
-					Error:      verr.Error(),
-					DurationMs: duration,
-				})
-			}
+			recordAudit(false, "output rejected: "+verr.Error())
 			return nil, fmt.Errorf("tool %s output rejected: %w", name, verr)
 		}
 	}
+	recordAudit(true, "")
 	return result, nil
 }
 

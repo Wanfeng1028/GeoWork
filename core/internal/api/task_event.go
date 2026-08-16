@@ -4,8 +4,10 @@ package api
 
 import (
 	"encoding/json"
+	"go.uber.org/zap"
 	"net/http"
 	"sync"
+	"sync/atomic"
 )
 
 // TaskEvent defines the standard event types emitted during task execution.
@@ -84,6 +86,14 @@ type DiffCreatedPayload struct {
 type EventBridge struct {
 	mu          sync.RWMutex
 	subscribers map[string][]chan TaskEventPayload
+	dropped     atomic.Uint64 // doc/22 BP5: dropped-event counter
+	log         *zap.Logger   // optional; nil = silent drops (tests)
+}
+
+// WithLogger attaches a logger for drop warnings (doc/22 BP5).
+func (eb *EventBridge) WithLogger(log *zap.Logger) *EventBridge {
+	eb.log = log
+	return eb
 }
 
 // NewEventBridge creates a new EventBridge instance.
@@ -99,7 +109,10 @@ func (eb *EventBridge) Subscribe(taskID string) chan TaskEventPayload {
 	eb.mu.Lock()
 	defer eb.mu.Unlock()
 
-	ch := make(chan TaskEventPayload, 64)
+	// doc/22 BP5 / S1: 64-slot buffers silently dropped terminal events
+	// (done/error) under burst — the SSE client then waits forever.
+	// 256 covers tool-heavy turns; drops are counted and warned below.
+	ch := make(chan TaskEventPayload, 256)
 	eb.subscribers[taskID] = append(eb.subscribers[taskID], ch)
 	return ch
 }
@@ -122,14 +135,30 @@ func (eb *EventBridge) Unsubscribe(taskID string, ch chan TaskEventPayload) {
 // Publish sends an event to all subscribers for the given taskID.
 func (eb *EventBridge) Publish(event TaskEventPayload) {
 	eb.mu.RLock()
-	defer eb.mu.RUnlock()
-
 	subscribers := eb.subscribers[event.TaskID]
+	eb.mu.RUnlock()
+
 	for _, ch := range subscribers {
 		select {
 		case ch <- event:
 		default:
-			// Drop if channel is full to avoid blocking
+			// Drop when full (doc/22 BP5 / S1) — but never silently:
+			// count it, warn, and for terminal events retry once after
+			// a yield so a UI does not hang on a lost done/error.
+			eb.dropped.Add(1)
+			if eb.log != nil {
+				eb.log.Warn("event dropped: subscriber buffer full",
+					zap.String("type", string(event.Type)),
+					zap.String("taskID", event.TaskID),
+					zap.Uint64("totalDropped", eb.dropped.Load()),
+				)
+			}
+			if event.Type == "done" || event.Type == "error" || event.Type == "state_change" {
+				select {
+				case ch <- event:
+				default:
+				}
+			}
 		}
 	}
 }

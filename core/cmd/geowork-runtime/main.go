@@ -183,6 +183,21 @@ func main() {
 	if err := subAgentMgr.RegisterSubAgentTool(); err != nil {
 		logger.Warn("Failed to register spawn_subagent tool", zap.Error(err))
 	}
+	// doc/22 BP5: hand the manager to the orchestrator so executePlan's
+	// teardown stops + drops child orchestrators when a parent finishes.
+	orchestrator.WithSubAgentManager(subAgentMgr)
+
+	// doc/22 BP5: checkpoint retention. On shutdown, drop checkpoints
+	// older than 7 days so a long-lived desktop install doesn't grow its
+	// checkpoint dir without bound. Runs still referenced by the in-memory
+	// run map are unaffected (retention there is enforced separately).
+	if rec := orchestrator.Recovery(); rec != nil {
+		defer func() {
+			if n := rec.Cleanup(7 * 24 * time.Hour); n > 0 {
+				logger.Info("checkpoint retention", zap.Int("removed", n))
+			}
+		}()
+	}
 
 	// --- Task Scheduler ---
 	scheduler := tasks.NewScheduler(taskSvc, 3, logger)

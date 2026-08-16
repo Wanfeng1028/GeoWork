@@ -3,17 +3,25 @@
 package toolregistry
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"geowork/core/internal/idgen"
 )
 
-// workspaceDirKey is the context key for the workspace directory used by git tools.
-type workspaceDirKey struct{}
+// workspaceDirKey is the context key for the workspace directory used by
+// git tools. doc/22 BP5: aliased onto workspaceKey (context.go) so
+// WithWorkspaceDir and WithWorkspacePath address the SAME value — the
+// orchestrator injects via WithWorkspacePath; previously git tools read a
+// different key and silently fell back to ".".
+type workspaceDirKey = workspaceKey
 
 // WithWorkspaceDir attaches a workspace directory to the context for git tools.
 func WithWorkspaceDir(ctx context.Context, dir string) context.Context {
@@ -42,6 +50,10 @@ func RegisterBuiltinTools(reg *Registry) error {
 			}).
 			Permission("read").
 			RiskLevel("low").
+			// doc/22 BP5: reads are also confined to the sandbox roots
+			// when configured — an unconstrained read_file could exfiltrate
+			// any file on disk into the model context.
+			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				path, ok := args["path"].(string)
 				if !ok {
@@ -212,12 +224,28 @@ func RegisterBuiltinTools(reg *Registry) error {
 				if dir := WorkspacePathFromContext(ctx); dir != "" {
 					cmd.Dir = dir
 				}
-				out, err := cmd.CombinedOutput()
+				// doc/22 BP5: real stdout/stderr split and exit code —
+				// CombinedOutput+exit:0 previously hid every failure from
+				// the model, which then reasoned on top of lies.
+				var stdout, stderr bytes.Buffer
+				cmd.Stdout = &stdout
+				cmd.Stderr = &stderr
+				err := cmd.Run()
+				exitCode := 0
+				if err != nil {
+					var exitErr *exec.ExitError
+					if errors.As(err, &exitErr) {
+						exitCode = exitErr.ExitCode()
+					} else {
+						exitCode = -1
+						stderr.WriteString(err.Error())
+					}
+				}
 				return map[string]any{
-					"stdout": string(out),
-					"stderr": "",
-					"exit":   0,
-				}, err
+					"stdout": stdout.String(),
+					"stderr": stderr.String(),
+					"exit":   exitCode,
+				}, nil
 			}).
 			Build(),
 
@@ -255,12 +283,25 @@ func RegisterBuiltinTools(reg *Registry) error {
 				if dir := WorkspacePathFromContext(ctx); dir != "" {
 					cmd.Dir = dir
 				}
-				out, err := cmd.CombinedOutput()
+				var stdout, stderr bytes.Buffer
+				cmd.Stdout = &stdout
+				cmd.Stderr = &stderr
+				err := cmd.Run()
+				exitCode := 0
+				if err != nil {
+					var exitErr *exec.ExitError
+					if errors.As(err, &exitErr) {
+						exitCode = exitErr.ExitCode()
+					} else {
+						exitCode = -1
+						stderr.WriteString(err.Error())
+					}
+				}
 				return map[string]any{
-					"stdout": string(out),
-					"stderr": "",
-					"exit":   0,
-				}, err
+					"stdout": stdout.String(),
+					"stderr": stderr.String(),
+					"exit":   exitCode,
+				}, nil
 			}).
 			Build(),
 
@@ -289,10 +330,41 @@ func RegisterBuiltinTools(reg *Registry) error {
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				name, _ := args["name"].(string)
 				path, _ := args["path"].(string)
+				content, hasContent := args["content"].(string)
+				// doc/22 BP5: create_artifact previously returned a fake
+				// empty-id record without touching the filesystem — the
+				// model believed artifacts existed. Now the file is
+				// really created inside the workspace (content optional
+				// for binary-oriented flows where the writer is another
+				// tool).
+				if path == "" {
+					return nil, fmt.Errorf("create_artifact: path is required")
+				}
+				dir := WorkspacePathFromContext(ctx)
+				full := path
+				if dir != "" && !filepath.IsAbs(path) {
+					full = filepath.Join(dir, path)
+				}
+				if err := os.MkdirAll(filepath.Dir(full), 0755); err != nil {
+					return nil, err
+				}
+				if hasContent {
+					if err := os.WriteFile(full, []byte(content), 0644); err != nil {
+						return nil, err
+					}
+				} else {
+					f, err := os.OpenFile(full, os.O_CREATE|os.O_WRONLY, 0644)
+					if err != nil {
+						return nil, err
+					}
+					_ = f.Close()
+				}
+				id := idgen.NewPrefixed("art_")
 				return map[string]any{
-					"id":   "",
-					"name": name,
-					"path": path,
+					"id":      id,
+					"name":    name,
+					"path":    full,
+					"created": true,
 				}, nil
 			}).
 			Build(),
@@ -419,8 +491,24 @@ func RegisterBuiltinTools(reg *Registry) error {
 			RiskLevel("high").
 			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
-				_ = args
-				return map[string]any{"staged": 0}, nil
+				// doc/22 BP5: run_git_add previously did nothing and
+				// reported staged:0 — the model then committed nothing
+				// while believing files were staged.
+				path, _ := args["path"].(string)
+				if path == "" {
+					path = "."
+				}
+				workspaceDir, _ := ctx.Value(workspaceDirKey{}).(string)
+				if workspaceDir == "" {
+					workspaceDir = "."
+				}
+				cmd := exec.CommandContext(ctx, "git", "add", "--", path)
+				cmd.Dir = workspaceDir
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					return nil, fmt.Errorf("git add failed: %s: %w", strings.TrimSpace(string(out)), err)
+				}
+				return map[string]any{"staged": true, "path": path}, nil
 			}).
 			Build(),
 

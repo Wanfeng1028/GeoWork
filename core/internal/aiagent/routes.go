@@ -32,6 +32,8 @@ func (r *Routes) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/agent/runs/{id}/stop", r.handleStopRun)
 	mux.HandleFunc("POST /api/agent/runs/{id}/pause", r.handlePauseRun)
 	mux.HandleFunc("POST /api/agent/runs/{id}/resume", r.handleResumeRun)
+	// doc/22 BP5: delete a finished run (and its checkpoint) from memory.
+	mux.HandleFunc("DELETE /api/agent/runs/{id}", r.handleDeleteRun)
 	mux.HandleFunc("GET /api/agent/checkpoints", r.handleListCheckpoints)
 	mux.HandleFunc("GET /api/agent/checkpoints/{runId}", r.handleGetCheckpoint)
 	// P1-6 §7.5: resume a run from its saved checkpoint. Loads the
@@ -187,6 +189,18 @@ func (r *Routes) handleStopRun(w http.ResponseWriter, req *http.Request) {
 	id := req.PathValue("id")
 	r.orchestrator.StopRun(id)
 	writeJSON(w, map[string]string{"status": "stopping"})
+}
+
+// handleDeleteRun removes a finished run (and its checkpoint) from the
+// orchestrator's in-memory maps. Refuses runs that are still executing —
+// the caller must stop them first (doc/22 BP5).
+func (r *Routes) handleDeleteRun(w http.ResponseWriter, req *http.Request) {
+	id := req.PathValue("id")
+	if err := r.orchestrator.DeleteRun(id); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, map[string]string{"status": "deleted", "runId": id})
 }
 
 // handlePauseRun pauses a run via Orchestrator.PauseRun.

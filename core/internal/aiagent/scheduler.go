@@ -37,13 +37,14 @@ type ScheduledTask struct {
 
 // Scheduler periodically starts Agent runs based on ScheduledTasks.
 type Scheduler struct {
-	mu     sync.RWMutex
-	tasks  map[string]*ScheduledTask
-	orch   *Orchestrator
-	log    *zap.Logger
-	stopCh chan struct{}
-	wg     sync.WaitGroup
-	tz     *time.Location
+	mu       sync.RWMutex
+	tasks    map[string]*ScheduledTask
+	orch     *Orchestrator
+	log      *zap.Logger
+	stopCh   chan struct{}
+	stopOnce sync.Once
+	wg       sync.WaitGroup
+	tz       *time.Location
 }
 
 // NewScheduler builds a scheduler bound to an orchestrator. The
@@ -172,7 +173,9 @@ func (s *Scheduler) Start() {
 // goroutine to exit. In-flight StartRun calls are not cancelled — the
 // orchestrator manages their lifecycle independently.
 func (s *Scheduler) Stop() {
-	close(s.stopCh)
+	// doc/22 BP5: second Stop previously panicked on close of a closed
+	// channel (same class as the ratelimit Limiter.Stop fix, 7bc7eae).
+	s.stopOnce.Do(func() { close(s.stopCh) })
 	s.wg.Wait()
 }
 

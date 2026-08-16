@@ -207,6 +207,46 @@ func (m *SubAgentManager) ListSubAgents() []string {
 	return out
 }
 
+// CleanupChildren removes all child orchestrators spawned by the given
+// parent run. Called from the parent's executePlan teardown so a
+// finished parent doesn't leak its children's run maps / goroutines.
+// Children that are still executing are cancelled first via their own
+// StopRun so the teardown is prompt rather than waiting for natural exit.
+func (m *SubAgentManager) CleanupChildren(parentRunID string) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	var toRemove []string
+	for subRunID, pid := range m.parentOf {
+		if pid == parentRunID {
+			toRemove = append(toRemove, subRunID)
+		}
+	}
+	var children []*Orchestrator
+	for _, subRunID := range toRemove {
+		if child, ok := m.children[subRunID]; ok {
+			children = append(children, child)
+		}
+		delete(m.children, subRunID)
+		delete(m.parentOf, subRunID)
+	}
+	m.mu.Unlock()
+
+	for i, child := range children {
+		subRunID := toRemove[i]
+		// Best-effort stop: if the child is still running, cancel it so
+		// its goroutine exits instead of leaking.
+		child.StopRun(subRunID)
+	}
+	if m.log != nil && len(toRemove) > 0 {
+		m.log.Debug("cleaned up subagents",
+			zap.String("parentRun", parentRunID),
+			zap.Int("count", len(toRemove)),
+		)
+	}
+}
+
 // RegisterSubAgentTool registers the spawn_subagent tool against the
 // parent orchestrator's registry. The tool blocks until the spawned
 // child completes, then returns its result as the tool output.

@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -234,6 +235,11 @@ type Orchestrator struct {
 	skillsReg    *skills.Registry          // P2-1: skills registry (nil = skill-less mode)
 	harness      *Harness                  // P3-2: unified rule engine (nil = bypass)
 	policy       *toolregistry.PolicyTable // P3-3: tool risk/ReadOnly lookup (nil = no speculative)
+	// subAgentMgr is the manager that owns child orchestrators spawned
+	// by this run's spawn_subagent tool calls (doc/22 BP5). nil when the
+	// runtime didn't register the sub-agent tool. Teardown calls
+	// CleanupChildren so finished parents don't leak their children.
+	subAgentMgr *SubAgentManager
 	// permPolicy is injected into every tool context (doc/22 BP1 / F1).
 	// nil keeps the registry's read-only default — production must wire
 	// DefaultDesktopPolicy via WithPermissionPolicy.
@@ -397,6 +403,22 @@ func (o *Orchestrator) WithPolicyTable(pt *toolregistry.PolicyTable) *Orchestrat
 	return o
 }
 
+// WithSubAgentManager attaches the sub-agent manager so executePlan's
+// teardown can clean up child orchestrators when a parent run finishes
+// (doc/22 BP5). nil is valid — it means the runtime didn't register the
+// spawn_subagent tool.
+func (o *Orchestrator) WithSubAgentManager(m *SubAgentManager) *Orchestrator {
+	o.subAgentMgr = m
+	return o
+}
+
+// Recovery returns the checkpoint store so the runtime can run periodic
+// or shutdown-time retention (doc/22 BP5). nil-safe: returns nil when
+// the orchestrator was built without one.
+func (o *Orchestrator) Recovery() *Recovery {
+	return o.recovery
+}
+
 // WithSummarizer attaches the conversation summarizer (P3-4 L4). When
 // non-nil, BuildWithMessages will generate a model-based summary when
 // L1-L3 trimming is insufficient. The orchestrator also uses it for
@@ -510,8 +532,12 @@ func (o *Orchestrator) StartRunWithMemory(ctx context.Context, mode, prompt, par
 		plan = nil
 	}
 
+	// doc/22 BP5 / S4: run.Plan is read by GetRun/ListRuns under o.mu —
+	// write it under the same lock.
+	o.mu.Lock()
 	run.Plan = plan
 	run.UpdatedAt = time.Now()
+	o.mu.Unlock()
 
 	go o.executePlan(runCtx, run, rc, nil, 0, false)
 
@@ -541,6 +567,87 @@ func (o *Orchestrator) removeRunContext(runID string) {
 	if rc, ok := o.runContexts[runID]; ok {
 		close(rc.EventCh)
 		delete(o.runContexts, runID)
+	}
+}
+
+// maxRetainedRuns bounds the in-memory run map. Completed/failed/stopped
+// runs accumulate unboundedly otherwise; we keep the most recent
+// maxRetainedRuns terminal runs and drop the rest (oldest first).
+const maxRetainedRuns = 100
+
+// DeleteRun removes a run from the orchestrator's in-memory maps and
+// deletes its checkpoint. It refuses to delete a run that is still
+// executing (the caller must StopRun first). Returns an error if the
+// run is unknown or still running.
+func (o *Orchestrator) DeleteRun(runID string) error {
+	o.mu.Lock()
+	run, ok := o.runs[runID]
+	if !ok {
+		o.mu.Unlock()
+		return fmt.Errorf("run %q not found", runID)
+	}
+	if o.running[runID] {
+		o.mu.Unlock()
+		return fmt.Errorf("run %q is still running; stop it first", runID)
+	}
+	delete(o.runs, runID)
+	delete(o.running, runID)
+	delete(o.runContexts, runID)
+	o.mu.Unlock()
+
+	// Drop the checkpoint so a deleted run can't be resumed.
+	if o.recovery != nil {
+		o.recovery.Delete(runID)
+	}
+	if o.log != nil {
+		o.log.Debug("run deleted", zap.String("runId", runID), zap.String("status", string(run.Status)))
+	}
+	return nil
+}
+
+// enforceRunRetention trims the run map down to maxRetainedRuns terminal
+// runs, evicting the oldest completed/failed/stopped runs first. Called
+// from executePlan's teardown after a run reaches a terminal state so
+// long-lived desktop sessions don't grow the map without bound. Running
+// and pending runs are never evicted.
+func (o *Orchestrator) enforceRunRetention() {
+	o.mu.Lock()
+	// Collect terminal runs (not currently executing).
+	type candidate struct {
+		id        string
+		updatedAt time.Time
+	}
+	var terminal []candidate
+	for id, run := range o.runs {
+		if o.running[id] {
+			continue
+		}
+		switch run.Status {
+		case StatusCompleted, StatusFailed, StatusStopped:
+			terminal = append(terminal, candidate{id: id, updatedAt: run.UpdatedAt})
+		}
+	}
+	if len(terminal) <= maxRetainedRuns {
+		o.mu.Unlock()
+		return
+	}
+	// Sort oldest-first so we evict from the front.
+	sort.Slice(terminal, func(i, j int) bool {
+		return terminal[i].updatedAt.Before(terminal[j].updatedAt)
+	})
+	evict := terminal[:len(terminal)-maxRetainedRuns]
+	for _, c := range evict {
+		delete(o.runs, c.id)
+		delete(o.running, c.id)
+		delete(o.runContexts, c.id)
+	}
+	o.mu.Unlock()
+
+	// Drop checkpoints for evicted runs outside the lock.
+	if o.recovery != nil {
+		for _, c := range evict {
+			o.recovery.Delete(c.id)
+		}
 	}
 }
 
@@ -626,6 +733,14 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			Data:      doneData,
 		})
 		o.removeRunContext(run.ID)
+		// doc/22 BP5: stop + drop any child orchestrators this run spawned
+		// so a finished parent doesn't leak its children.
+		if o.subAgentMgr != nil {
+			o.subAgentMgr.CleanupChildren(run.ID)
+		}
+		// doc/22 BP5: bound the in-memory run map — evict the oldest
+		// terminal runs beyond maxRetainedRuns.
+		o.enforceRunRetention()
 		// P2-3: fire OnRunEnd after the loop exits (covers normal
 		// completion, ctx cancel, and panic-recovered failure). It must
 		// happen before close(run.done): waiters treat done as "the run's
@@ -1030,16 +1145,23 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			o.saveCheckpointWithReason(run, rc, "periodic", chatHistory, turnCount)
 		}
 
-		// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
-		o.fireHook(HookOnTurnEnd, &HookContext{
-			RunID:     run.ID,
-			Run:       run,
-			RunCtx:    rc,
-			TurnIndex: turnCount,
-			Cancel:    rc.Cancel,
-		})
+	// P2-3: fire OnTurnEnd after the turn's model+tool work is done.
+	o.fireHook(HookOnTurnEnd, &HookContext{
+		RunID:     run.ID,
+		Run:       run,
+		RunCtx:    rc,
+		TurnIndex: turnCount,
+		Cancel:    rc.Cancel,
+	})
 
-		turnCount++
+	// doc/22 BP5 / S7: retire this turn's speculative executor AFTER
+	// the tool loop consumed its results.
+	if rc.specExec != nil {
+		rc.specExec.Cleanup()
+		rc.specExec = nil
+	}
+
+	turnCount++
 	}
 }
 
@@ -1103,10 +1225,11 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 	// The first leg's teardown already closed run.done. Re-arm it so
 	// WaitForRun blocks again and the resumed teardown's close(run.done)
 	// does not panic on an already-closed channel.
-	run.done = make(chan struct{})
-
-	// Mark the run as running again.
+	// doc/22 BP5 / S4: the done re-arm joins the same lock as the running
+	// flag — WaitForRun reads run.done without a lock, so the re-arm
+	// must not race a concurrent reader between the two writes.
 	o.mu.Lock()
+	run.done = make(chan struct{})
 	o.running[runID] = true
 	o.runContexts[runID] = rc
 	o.mu.Unlock()
@@ -1117,7 +1240,11 @@ func (o *Orchestrator) ResumeFromCheckpoint(ctx context.Context, runID string) e
 		o.trajectory.StartRun(run.ID, run.Mode, run.Prompt)
 	}
 
+	// doc/22 BP5 / S4: terminal-field discipline — status writes go
+	// through o.mu like every other terminal write.
+	o.mu.Lock()
 	run.Status = StatusRecovery
+	o.mu.Unlock()
 	o.emitEvent(rc, Event{
 		Type:      "state_change",
 		Timestamp: time.Now(),
@@ -1167,11 +1294,14 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 
 	// P3-3 §4.5: create a per-turn speculative executor so read-only
 	// tools start during streaming. The executor is stored on rc so
-	// the tool-execution loop can reuse cached results. Cleaned up
-	// after the stream completes.
+	// the tool-execution loop can reuse cached results.
+	// doc/22 BP5 / S7: Cleanup must NOT defer here. The deferred call
+	// fired when streamModelCall RETURNED — i.e. before the tool
+	// execution phase consulted HasResult — so speculative results were
+	// always wiped and every read-only tool executed twice. Cleanup now
+	// runs at the END of the turn (after tool execution), in executePlan.
 	if o.policy != nil {
 		rc.specExec = NewSpeculativeExecutor(o.registry, o.policy, o.log)
-		defer rc.specExec.Cleanup()
 	}
 
 	for chunk := range ch {
@@ -1349,17 +1479,24 @@ func (o *Orchestrator) GetRun(id string) (*Run, bool) {
 // WaitForRun blocks until the run identified by id reaches a terminal state
 // (completed or failed) or the context is cancelled.
 func (o *Orchestrator) WaitForRun(ctx context.Context, id string) (*Run, error) {
+	// doc/22 BP5 / S4: read run.done under o.mu — ResumeFromCheckpoint
+	// re-arms run.done under the same lock, so an unlocked read here
+	// would race the re-arm.
 	o.mu.Lock()
 	run, ok := o.runs[id]
+	var done chan struct{}
+	if ok {
+		done = run.done
+	}
 	o.mu.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("run %s not found", id)
 	}
-	if run.done == nil {
+	if done == nil {
 		return run, nil
 	}
 	select {
-	case <-run.done:
+	case <-done:
 		return run, nil
 	case <-ctx.Done():
 		return run, ctx.Err()
@@ -1644,11 +1781,17 @@ func (o *Orchestrator) emitEvent(rc *RunContext, e Event) {
 	// reconnect can replay missed events. The buffer is lazily created.
 	// We pre-marshal the data here so the replay path can stream bytes
 	// without re-marshalling under lock.
+	// doc/22 BP5 / S4: emitEvent is reached from the ReAct goroutine AND
+	// from PauseRun/ResumeRun HTTP handlers — guard the lazy init with
+	// rc.stateMu (the same lock GetEventBuffer takes on the read side).
 	dataJSON, _ := json.Marshal(e.Data)
+	rc.stateMu.Lock()
 	if rc.eventBuf == nil {
 		rc.eventBuf = NewEventBuffer(DefaultEventBufferCapacity)
 	}
-	seq := rc.eventBuf.Append(e.Type, string(dataJSON))
+	buf := rc.eventBuf
+	rc.stateMu.Unlock()
+	seq := buf.Append(e.Type, string(dataJSON))
 	// Stamp the assigned seq + runID onto the event so the SSE handler
 	// can construct the `id: {runID}:{seq}` line for EventSource.
 	e.Seq = seq
@@ -1674,11 +1817,15 @@ func (o *Orchestrator) emitEvent(rc *RunContext, e Event) {
 // Last-Event-ID reconnect (P1-3 §4.5.2).
 func (o *Orchestrator) GetEventBuffer(runID string) *EventBuffer {
 	o.mu.Lock()
-	defer o.mu.Unlock()
 	rc, ok := o.runContexts[runID]
+	o.mu.Unlock()
 	if !ok {
 		return nil
 	}
+	// doc/22 BP5 / S4: read under rc.stateMu — emitEvent lazily creates
+	// the buffer under the same lock.
+	rc.stateMu.RLock()
+	defer rc.stateMu.RUnlock()
 	return rc.eventBuf
 }
 
