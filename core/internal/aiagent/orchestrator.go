@@ -897,6 +897,39 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			Data:      map[string]any{"content": content, "role": "assistant"},
 		})
 
+		// doc/22 BP6 / S2: record this turn's token usage BEFORE the
+		// no-tool-calls break below. The final turn of a run is almost
+		// always a text-only answer (no tool calls), and the old code
+		// recorded usage only in step 2.8 — which the break skips — so
+		// the last (and often only) model call never reached the meter.
+		if o.usageMeter != nil && usage != nil {
+			modelName := ""
+			if o.provider != nil {
+				modelName = o.provider.DefaultModel
+			}
+			cost := estimateCost(usage, o.provider)
+			o.usageMeter.Record(run.ID, o.providerID, "", modelName, usage, cost)
+
+			// P1-3 §4.2: push a `usage` SSE event so the frontend can
+			// update the token counter live. The event carries per-call
+			// tokens plus the running total for the run.
+			runTotal := o.usageMeter.GetRunUsage(run.ID)
+			o.emitEvent(rc, Event{
+				Type:      "usage",
+				Timestamp: time.Now(),
+				RunID:     run.ID,
+				Data: map[string]any{
+					"runId":            run.ID,
+					"promptTokens":     usage.PromptTokens,
+					"completionTokens": usage.CompletionTokens,
+					"cachedTokens":     usage.CachedTokens,
+					"totalTokens":      usage.TotalTokens,
+					"runTotalTokens":   runTotal,
+					"estimatedCost":    cost,
+				},
+			})
+		}
+
 		// 2.5 Check if task is complete (no tool calls)
 		if len(toolCalls) == 0 {
 			o.log.Info("task completed, no more tool calls", zap.String("runId", run.ID))
@@ -1092,11 +1125,11 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			toolCallRecords = append(toolCallRecords, rec)
 		}
 
-		// 2.8 P1-2 §3.3-3.5: record this turn for trajectory + usage.
-		// TrajectoryRecorder.Record is a no-op when nil; UsageMeter.Record
-		// is skipped the same way. Cost estimation uses the provider's
-		// default model pricing; unknown pricing yields 0 (audited, not
-		// billed).
+		// 2.8 P1-2 §3.3-3.5: record this turn for trajectory.
+		// TrajectoryRecorder.Record is a no-op when nil.
+		// doc/22 BP6 / S2: usage recording moved up to right after the
+		// assistant message (before the no-tool-calls break) so the final
+		// text-only turn is metered too — do NOT record it again here.
 		if o.trajectory != nil {
 			o.trajectory.Record(run.ID, TurnRecord{
 				TurnIndex:     turnCount,
@@ -1106,33 +1139,6 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 				ToolCalls:     toolCallRecords,
 				TokenUsage:    usage,
 				Duration:      time.Since(turnStart),
-			})
-		}
-		if o.usageMeter != nil && usage != nil {
-			modelName := ""
-			if o.provider != nil {
-				modelName = o.provider.DefaultModel
-			}
-			cost := estimateCost(usage, o.provider)
-			o.usageMeter.Record(run.ID, o.providerID, "", modelName, usage, cost)
-
-			// P1-3 §4.2: push a `usage` SSE event so the frontend can
-			// update the token counter live. The event carries per-call
-			// tokens plus the running total for the run.
-			runTotal := o.usageMeter.GetRunUsage(run.ID)
-			o.emitEvent(rc, Event{
-				Type:      "usage",
-				Timestamp: time.Now(),
-				RunID:     run.ID,
-				Data: map[string]any{
-					"runId":            run.ID,
-					"promptTokens":     usage.PromptTokens,
-					"completionTokens": usage.CompletionTokens,
-					"cachedTokens":     usage.CachedTokens,
-					"totalTokens":      usage.TotalTokens,
-					"runTotalTokens":   runTotal,
-					"estimatedCost":    cost,
-				},
 			})
 		}
 
@@ -1304,15 +1310,58 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 		rc.specExec = NewSpeculativeExecutor(o.registry, o.policy, o.log)
 	}
 
-	for chunk := range ch {
+	// doc/22 BP6 / S2: the usage chunk arrives AFTER the finish_reason
+	// chunk that carries IsDone (OpenAI sends it as a dedicated trailing
+	// event when stream_options.include_usage is honored). The old loop
+	// broke on the first IsDone and therefore dropped the token counts
+	// for every streaming call, leaving /api/agent/usage at zero. After
+	// IsDone we keep draining — bounded by a short deadline — until the
+	// usage chunk lands, the stream closes, or the timeout elapses.
+	const usageDrainTimeout = 500 * time.Millisecond
+	draining := false
+	var drainDeadline <-chan time.Time
+
+	for {
+		var chunk modelgateway.StreamChunk
+		var ok bool
+		if draining {
+			select {
+			case chunk, ok = <-ch:
+			case <-drainDeadline:
+				// Provider never sent the trailing usage chunk in time.
+				ok = false
+			}
+		} else {
+			chunk, ok = <-ch
+		}
+		if !ok {
+			break
+		}
+
 		// Usage can arrive on a dedicated chunk (choices empty) when
 		// stream_options.include_usage is honored, or on the final
 		// choice chunk. Capture it wherever it shows up.
 		if chunk.Usage != nil {
 			usage = chunk.Usage
+			if draining {
+				// Got the trailing usage — nothing left to read.
+				break
+			}
 		}
 		if chunk.IsDone {
-			break
+			if !draining {
+				draining = true
+				drainDeadline = time.After(usageDrainTimeout)
+			}
+			if usage != nil {
+				break
+			}
+			continue
+		}
+		if draining {
+			// Past finish_reason we only care about the usage chunk;
+			// any stray content/tool deltas are spurious.
+			continue
 		}
 
 		// 1. Text content increment

@@ -8,7 +8,7 @@ import (
 
 func TestEngineEvaluateNoPolicy(t *testing.T) {
 	e := NewEngine()
-	level, err := e.Evaluate("unknown-task", ActionRunShell, nil)
+	level, err := e.Evaluate("unknown-task", ActionRunShell)
 	if err == nil {
 		t.Fatalf("expected error for missing policy")
 	}
@@ -34,7 +34,7 @@ func TestEngineEvaluateDefaultAndActionLevels(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := e.Evaluate("t1", tc.action, nil)
+			got, err := e.Evaluate("t1", tc.action)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -55,7 +55,7 @@ func TestEngineRememberedDecision(t *testing.T) {
 	}
 
 	// The approved decision is remembered and returned within the TTL.
-	got, err := e.Evaluate("t1", ActionRunShell, nil)
+	got, err := e.Evaluate("t1", ActionRunShell)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestEngineDenyRequest(t *testing.T) {
 	if err := e.DenyRequest("req-1", "too risky"); err != nil {
 		t.Fatalf("DenyRequest: %v", err)
 	}
-	got, err := e.Evaluate("t1", ActionDeleteFile, nil)
+	got, err := e.Evaluate("t1", ActionDeleteFile)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestEngineIsAllowedWriteActionMatrix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e := NewEngine()
 			e.SetPolicy("t1", &PermissionPolicy{DefaultLevel: tc.level, Actions: map[string]string{}})
-			got, err := e.IsAllowed("t1", tc.action, nil)
+			got, err := e.IsAllowed("t1", tc.action)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -141,7 +141,7 @@ func TestEngineIsAllowedWriteActionMatrix(t *testing.T) {
 
 func TestEngineIsAllowedNoPolicy(t *testing.T) {
 	e := NewEngine()
-	if _, err := e.IsAllowed("missing", "read_file", nil); err == nil {
+	if _, err := e.IsAllowed("missing", "read_file"); err == nil {
 		t.Fatalf("expected error for missing policy")
 	}
 }
@@ -165,7 +165,7 @@ func TestEngineConcurrentEvaluate(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 200; j++ {
-				_, _ = e.Evaluate("t1", ActionRunShell, nil)
+				_, _ = e.Evaluate("t1", ActionRunShell)
 			}
 		}()
 	}

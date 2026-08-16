@@ -1,5 +1,11 @@
 // GeoWork Go Core - Model Router (P2-5)
 //
+// EXPERIMENTAL: not wired into production (doc/22 D-B4, v0.6 decision).
+// The desktop runtime uses a single OpenAICompatibleClient wrapped by
+// RateLimitedGateway; multi-provider routing is deferred. This file is
+// kept complete and tested so v0.6 can adopt it without a rewrite, but
+// nothing in cmd/geowork-runtime constructs a Router today.
+//
 // Router is a ModelGateway that picks a provider per call based on
 // (mode, taskType) routing rules and falls back to a secondary provider
 // when the primary fails. It composes OpenAICompatibleClient instances
@@ -229,7 +235,7 @@ func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, me
 
 	resp, err := client.Chat(ctx, messages, tools, stream)
 	if err == nil {
-		r.recordCost(resp)
+		r.recordCost(primaryID, resp)
 		return resp, nil
 	}
 
@@ -245,7 +251,7 @@ func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, me
 				zap.Error(err))
 			resp, fbErr := fbClient.Chat(ctx, messages, tools, stream)
 			if fbErr == nil {
-				r.recordCost(resp)
+				r.recordCost(rule.FallbackID, resp)
 			}
 			return resp, fbErr
 		}
@@ -318,25 +324,30 @@ func (r *Router) checkBudgetGuard() error {
 // recordCost feeds the actual usage from a completed call into the
 // cost controller so the running total is accurate. No-op if no
 // controller is attached or the response carries no usage.
-func (r *Router) recordCost(resp *ChatCompletionResponse) {
-	if resp == nil {
+//
+// doc/22 BP6 / D-B4: the previous version hardcoded $0.002/1K tokens
+// regardless of provider — a lie for any model that isn't GPT-3.5-tier.
+// Cost is now computed from the provider's own PricePer1KInput/Output
+// (the same口径 the orchestrator's estimateCost uses); unknown pricing
+// yields 0, which the CostController treats as "unbilled" rather than
+// "free".
+func (r *Router) recordCost(providerID string, resp *ChatCompletionResponse) {
+	if resp == nil || resp.Usage == nil {
 		return
 	}
 	r.mu.RLock()
 	c := r.cost
+	p := r.providers[providerID]
 	r.mu.RUnlock()
 	if c == nil {
 		return
 	}
-	// Estimate cost from token usage + provider pricing. We don't have
-	// the provider here directly, so use a conservative $0.002/1K tokens
-	// (roughly GPT-3.5-tier) when pricing is unknown. The UsageMeter
-	// does the precise per-provider calc; this is just the budget guard.
-	if resp.Usage != nil {
-		tokens := resp.Usage.TotalTokens
-		cost := float64(tokens) / 1000.0 * 0.002
-		c.Record(cost)
+	var cost float64
+	if p != nil {
+		cost = float64(resp.Usage.PromptTokens)/1000.0*p.PricePer1KInput +
+			float64(resp.Usage.CompletionTokens)/1000.0*p.PricePer1KOutput
 	}
+	c.Record(cost)
 }
 
 // inferMode extracts the agent Mode from the system message if the

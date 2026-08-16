@@ -80,6 +80,24 @@ func main() {
 		zap.String("sandboxRoot", app.Workspace()),
 	)
 
+	// doc/22 BP6: derive the permission engine's write-action check from
+	// the tools' declared Permission() category instead of a hardcoded
+	// list. "read" is non-mutating; write/exec/delete/admin are mutating.
+	// Unknown tools fall back to the engine's conservative default set.
+	permEngine.WithActionCategory(func(action string) string {
+		if tool, ok := toolRegistry.Get(action); ok {
+			return tool.Permission()
+		}
+		return ""
+	})
+	// doc/22 BP6: prune expired decisions / aged-out requests / stale
+	// policies on shutdown so a long-lived session doesn't leak them.
+	defer func() {
+		if n := permEngine.Cleanup(); n > 0 {
+			logger.Info("permission engine cleanup", zap.Int("removed", n))
+		}
+	}()
+
 	// Dynamically register Python Worker tools into the same registry so
 	// workflow + aiagent calls flow through one governance path (P0-2 D5).
 	// Failure is non-fatal: a missing/unreachable worker leaves only the
@@ -136,8 +154,32 @@ func main() {
 	// --- Model Gateway (optional; LLM calls degrade to no-op when unconfigured) ---
 	gateway, provider := initModelGateway(logger)
 
+	// doc/22 BP6 / S6: wrap the concrete client with the per-provider QPS
+	// limiter so every Chat/StreamChat the agent issues passes through it.
+	// Default desktop budget: 5 QPS on the 1x profile — generous for a
+	// single-user agent, protective against a runaway ReAct loop hammering
+	// a metered provider. NOTE: keep agentGateway a true nil interface when
+	// no provider is configured — a typed-nil wrapper would defeat the
+	// orchestrator's `gateway == nil` degrade check.
+	var agentGateway modelgateway.ModelGateway
+	if gateway != nil {
+		limiter := modelgateway.NewRateLimiter()
+		limiter.ConfigureProvider(provider.ID, 5, modelgateway.SpeedProfile{ID: "1x", MaxParallel: 2, TokenBudgetMul: 1.0, RateLimitMul: 1.0})
+		agentGateway = modelgateway.NewRateLimitedGateway(gateway, limiter)
+	}
+
 	// --- Agent Orchestrator ---
-	orchestrator := aiagent.NewOrchestrator(toolRegistry, gateway, provider, logger)
+	orchestrator := aiagent.NewOrchestrator(toolRegistry, agentGateway, provider, logger)
+
+	// doc/22 BP6 / S6: wire the observability pair. Without these the
+	// /api/agent/trajectory and /api/agent/usage endpoints return 503 and
+	// no token accounting happens at all. Trajectories persist as JSON
+	// files under <workspace>/data/trajectories; usage stays in memory
+	// (audited per run, not billed).
+	usageMeter := modelgateway.NewUsageMeter(logger)
+	orchestrator.WithUsageMeter(usageMeter)
+	trajStorage := aiagent.NewFileTrajectoryStorage(filepath.Join(app.Workspace(), "data", "trajectories"), logger)
+	orchestrator.WithTrajectoryRecorder(aiagent.NewTrajectoryRecorder(trajStorage, logger))
 
 	// doc/22 BP1 / F1: inject the desktop permission policy. Without it
 	// the registry defaults to read-only and EVERY write/exec tool call
@@ -170,9 +212,10 @@ func main() {
 	// P3-4 §5.3: attach the conversation summarizer so L4 (model-based
 	// conversation summary) and L5 (memory solidification) are available
 	// when L1-L3 trimming is insufficient. Only attach when a gateway
-	// is configured (nil gateway → L4 disabled, degrade to L3).
-	if gateway != nil {
-		orchestrator.WithSummarizer(aiagent.NewSummarizer(gateway, logger))
+	// is configured (nil gateway → L4 disabled, degrade to L3). Uses the
+	// rate-limited wrapper so summaries also respect the QPS budget.
+	if agentGateway != nil {
+		orchestrator.WithSummarizer(aiagent.NewSummarizer(agentGateway, logger))
 	}
 
 	// P3-1 §2.3: register the spawn_subagent tool so the model can

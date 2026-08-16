@@ -1,4 +1,9 @@
 // GeoWork Go Core - Model Request Cache
+//
+// EXPERIMENTAL: not wired into production (doc/22 D-B4, v0.6 decision).
+// The desktop runtime does not construct a Cache; modelgateway.NewRoutes
+// (its only consumer) is likewise unregistered. Kept complete and tested
+// so v0.6 can adopt prompt-caching without a rewrite.
 
 package modelgateway
 
