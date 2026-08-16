@@ -130,6 +130,16 @@ func main() {
 	// --- Agent Orchestrator ---
 	orchestrator := aiagent.NewOrchestrator(toolRegistry, gateway, provider, logger)
 
+	// doc/22 BP1 / F1: inject the desktop permission policy. Without it
+	// the registry defaults to read-only and EVERY write/exec tool call
+	// fails with "permission denied" — the agent could only read.
+	// Critical tools still pass through interactive approval + Harness.
+	orchestrator.WithPermissionPolicy(aiagent.DefaultDesktopPolicy())
+
+	// doc/22 BP1 / F5: pin the workspace for RepoMap and for sandboxed
+	// tools (run_shell / run_python execute with cmd.Dir = workspace).
+	orchestrator.WithWorkspacePath(app.Workspace())
+
 	// P3-2 §3.5: attach the Harness rule engine so every tool call is
 	// evaluated against declarative security rules before execution.
 	// Rules load from config/harness_rules.json when present; otherwise

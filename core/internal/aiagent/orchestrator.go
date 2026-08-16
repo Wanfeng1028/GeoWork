@@ -234,6 +234,11 @@ type Orchestrator struct {
 	skillsReg    *skills.Registry          // P2-1: skills registry (nil = skill-less mode)
 	harness      *Harness                  // P3-2: unified rule engine (nil = bypass)
 	policy       *toolregistry.PolicyTable // P3-3: tool risk/ReadOnly lookup (nil = no speculative)
+	// permPolicy is injected into every tool context (doc/22 BP1 / F1).
+	// nil keeps the registry's read-only default — production must wire
+	// DefaultDesktopPolicy via WithPermissionPolicy.
+	permPolicy    *toolregistry.PermissionPolicy
+	workspacePath string // pinned into tool ctx so run_shell/run_python execute inside the workspace
 
 	mu          sync.Mutex
 	runs        map[string]*Run
@@ -316,13 +321,24 @@ func NewChildOrchestrator(
 	return o
 }
 
-// WithWorkspacePath enables RepoMap for the context builder.
+// WithWorkspacePath enables RepoMap for the context builder and pins the
+// workspace directory into every tool context so run_shell / run_python
+// execute with cmd.Dir inside the workspace (doc/22 BP1 / F5).
 func (o *Orchestrator) WithWorkspacePath(workspacePath string) *Orchestrator {
+	o.workspacePath = workspacePath
 	if workspacePath != "" {
 		repoMap := NewRepoMap([]string{workspacePath})
 		repoMap.Load()
 		o.contextBld.WithRepoMap(repoMap)
 	}
+	return o
+}
+
+// WithPermissionPolicy attaches the permission policy injected into every
+// tool context (doc/22 BP1 / F1). Without it the registry defaults to
+// read-only and all write/exec tools fail with "permission denied".
+func (o *Orchestrator) WithPermissionPolicy(p *toolregistry.PermissionPolicy) *Orchestrator {
+	o.permPolicy = p
 	return o
 }
 
@@ -827,7 +843,18 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			// *ErrApprovalRequired we block in waitForApproval and
 			// retry once the user approves (or surface the denial
 			// to the model so it can react).
+			//
+			// doc/22 BP1: the permission policy (without which every
+			// write/exec tool fails) and the workspace path (cmd.Dir
+			// pinning for run_shell/run_python) ride on the same
+			// context.
 			toolCtx := toolregistry.WithRunID(ctx, run.ID)
+			if o.permPolicy != nil {
+				toolCtx = toolregistry.WithPolicy(toolCtx, o.permPolicy)
+			}
+			if o.workspacePath != "" {
+				toolCtx = toolregistry.WithWorkspacePath(toolCtx, o.workspacePath)
+			}
 			// P2-3: fire OnToolBefore so hooks can audit/log/inspect.
 			o.fireHook(HookOnToolBefore, &HookContext{
 				RunID:     run.ID,
@@ -871,9 +898,12 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			if approvalReq, ok := toolregistry.IsApprovalRequired(execErr); ok {
 				waitErr := o.waitForApproval(ctx, rc, approvalReq.Req)
 				if waitErr == nil {
-					// User approved: retry the call. The governor has
-					// already resolved the decision, so the second
-					// Execute will not block again.
+					// User approved: retry the call once. NOTE (doc/22 BP2):
+					// until the governor remembers resolved decisions, a
+					// critical tool's retry re-enters CheckPermission and
+					// raises a NEW approval request; that error is then
+					// surfaced to the model, which typically retries the
+					// tool (and the approval) on the next turn.
 					approved = true
 					result, execErr = o.registry.Execute(toolCtx, tc.Function.Name, args, toolregistry.ModeAutonomous)
 				} else {

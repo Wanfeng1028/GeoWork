@@ -231,7 +231,11 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 			return nil, fmt.Errorf("high-risk tool %s requires an explicit permission policy", name)
 		}
 		if policy.DefaultLevel == "read_only" || policy.DefaultLevel == "limited" {
-			if !CheckPermission(ctx, name) {
+			// doc/22 BP1: check the tool's permission CLASS (read/write/exec).
+			// The previous CheckPermission(ctx, name) passed the tool NAME,
+			// which never matches the class-keyed Actions map and always
+			// fell through to DefaultLevel — a semantic no-op.
+			if !CheckPermission(ctx, t.Permission()) {
 				return nil, fmt.Errorf("high-risk tool %s denied by read-only/limited policy", name)
 			}
 		}
@@ -246,6 +250,19 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 		if pathArg, ok := args["path"].(string); ok && pathArg != "" {
 			if err := validateSandboxPath(pathArg, allowedRoots); err != nil {
 				return nil, err
+			}
+		}
+		// doc/22 BP1 / F5 (minimal fix): run_shell carries its targets
+		// inside the command STRING, not in args["path"]. Scan the
+		// command for absolute-path tokens and reject any that fall
+		// outside the sandbox roots. Best-effort defense in depth —
+		// the hard gates for run_shell are its critical risk level
+		// (interactive approval) and cmd.Dir pinning to the workspace.
+		if cmdArg, ok := args["command"].(string); ok && cmdArg != "" {
+			for _, p := range extractAbsolutePaths(cmdArg) {
+				if err := validateSandboxPath(p, allowedRoots); err != nil {
+					return nil, fmt.Errorf("command references a path outside the sandbox: %w", err)
+				}
 			}
 		}
 	}
@@ -335,6 +352,39 @@ func validateSandboxPath(path string, allowedRoots []string) error {
 		}
 	}
 	return fmt.Errorf("path %q outside sandbox roots", path)
+}
+
+// extractAbsolutePaths scans a shell command string for absolute-path
+// tokens (POSIX "/…" and Windows "C:\…" / "C:/…"). Tokenization is
+// whitespace/quote based and strips trailing shell punctuation; relative
+// paths are not reported because they resolve against cmd.Dir (pinned to
+// the workspace). Best-effort: obfuscated commands can evade it — the
+// authoritative gates for run_shell are interactive approval (critical
+// risk) and the workspace cwd pin.
+func extractAbsolutePaths(command string) []string {
+	fields := strings.FieldsFunc(command, func(r rune) bool {
+		switch r {
+		case ' ', '\t', '\n', '"', '\'', '`':
+			return true
+		}
+		return false
+	})
+	trimPunct := func(s string) string {
+		return strings.TrimRight(s, ";,|&><")
+	}
+	var out []string
+	for _, f := range fields {
+		f = trimPunct(f)
+		if len(f) >= 1 && f[0] == '/' {
+			out = append(out, f)
+			continue
+		}
+		// Windows drive form: letter + ':' + separator.
+		if len(f) >= 3 && f[1] == ':' && (f[2] == '\\' || f[2] == '/') && f[0] >= 'A' && f[0] <= 'z' {
+			out = append(out, f)
+		}
+	}
+	return out
 }
 
 // ExecuteWithArgs is a convenience wrapper that accepts JSON bytes.

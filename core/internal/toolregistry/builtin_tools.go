@@ -207,6 +207,11 @@ func RegisterBuiltinTools(reg *Registry) error {
 					pythonCmd = "python"
 				}
 				cmd := exec.CommandContext(ctx, pythonCmd, "-c", script)
+				// doc/22 BP1: pin execution to the run's workspace so
+				// relative paths resolve inside the sandbox boundary.
+				if dir := WorkspacePathFromContext(ctx); dir != "" {
+					cmd.Dir = dir
+				}
 				out, err := cmd.CombinedOutput()
 				return map[string]any{
 					"stdout": string(out),
@@ -243,6 +248,12 @@ func RegisterBuiltinTools(reg *Registry) error {
 					cmd = exec.CommandContext(ctx, "cmd", "/C", command)
 				} else {
 					cmd = exec.CommandContext(ctx, "sh", "-c", command)
+				}
+				// doc/22 BP1 / F5: pin the shell to the run's workspace —
+				// relative paths and bare filenames resolve inside the
+				// sandbox boundary instead of the process cwd.
+				if dir := WorkspacePathFromContext(ctx); dir != "" {
+					cmd.Dir = dir
 				}
 				out, err := cmd.CombinedOutput()
 				return map[string]any{

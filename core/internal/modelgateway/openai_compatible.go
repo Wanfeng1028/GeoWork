@@ -306,6 +306,12 @@ func (c *OpenAICompatibleClient) retryRequest(ctx context.Context, method, url s
 		}
 		time.Sleep(time.Duration(100*(i+1)) * time.Millisecond)
 	}
+	// doc/22 BP1 / F3: when the LAST attempt returned a retryable status
+	// the loop drained the body and set resp=nil; returning (nil, nil)
+	// would make callers dereference a nil response. Convert to an error.
+	if resp == nil && err == nil {
+		err = fmt.Errorf("request to %s failed after %d attempts (last status retryable)", url, c.retryCount+1)
+	}
 	return resp, err
 }
 

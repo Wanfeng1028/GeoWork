@@ -59,7 +59,9 @@
 
 ## 3. 阶段计划
 
-### BP1：装配止血——让 agent 真正能干活（1.5 天，1 次提交）★最优先
+### BP1：装配止血——让 agent 真正能干活（1.5 天，1 次提交）★最优先 ✅ 已完成（2026-08-17）
+
+> 实施记录：`WithPermissionPolicy`/`WithWorkspacePath` 双注入落地；高风险检查改为按权限类判定；`extractAbsolutePaths` 扫描 run_shell 命令串（含 `rm -rf /` 根路径用例）；retryRequest nil 兜底；E2E 三测 **先红后绿**（无策略时 write_file 静默失败=生产症状）。TrajectoryRecorder 无存储实现可用，最小接线并入 BP6。
 
 **新建 `core/internal/aiagent/policy_provider.go`**（约 40 行）：
 ```go
