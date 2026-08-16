@@ -17,12 +17,16 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"server/internal/accounts"
 	"server/internal/api"
@@ -131,17 +135,41 @@ func (s *Server) Start() error {
 	addr := fmt.Sprintf("127.0.0.1:%d", s.Port)
 	log.Printf("GeoWork Cloud API v0.5.0 starting on %s", addr)
 
+	// 显式 http.Server 替代 Engine.Run（P6 韧性加固）：
+	// - ReadHeaderTimeout 防 slowloris 式慢头发连接耗尽；
+	// - 不设 WriteTimeout——/api/model/stream 是 SSE 长响应，写超时会
+	//   切断流式连接；IdleTimeout 只回收空闲 keep-alive，不影响活跃流。
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           s.Engine,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	// 优雅停机：先停接收新连接，给在途请求 10s 收尾，最后关库
+	// （关库顺序在 Shutdown 之后，避免在途请求写已关闭的 DB）。
+	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, os.Interrupt)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
 		log.Println("Shutting down...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("forced shutdown: %v", err)
+		}
 		if s.Store != nil {
 			s.Store.Close()
 		}
+		close(idleConnsClosed)
 	}()
 
-	return s.Engine.Run(addr)
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	<-idleConnsClosed
+	return nil
 }
 
 // allowedOrigins returns the whitelist of allowed origins from the

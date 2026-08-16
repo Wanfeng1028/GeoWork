@@ -11,6 +11,7 @@
 |---|---|---|
 | v1.0 | 2026-08-12 | 初稿：升级现有测试策略，补充集成测试、视觉回归、E2E 计划、测试数据管理 |
 | v1.1 | 2026-08-17 | P4：新增 §9 增量覆盖率门禁（50%）、§10 Flaky 测试隔离（30 天期限） |
+| v1.2 | 2026-08-17 | P6：新增 §11 非功能测试（安全扫描三件套、性能基线、HTTP 韧性加固） |
 
 ---
 
@@ -240,3 +241,32 @@ Electron 跑在 Windows / macOS / Linux 上。以下维度需要跨平台验证�
 
 - 测试禁止依赖真实时间（`time.Now` 注入）、网络、并发调度顺序；
 - 需要等待的用 channel / `context.Done()` 语义，禁止 `time.Sleep` 轮询（教训见 sandbox `monitorProcess`：终态写入必须在 `cancel()` 之前）。
+
+---
+
+## 11. 非功能测试（P6）
+
+### 11.1 安全扫描（CI 门禁）
+
+| 扫描 | 位置 | 失败条件 |
+|---|---|---|
+| `govulncheck`（core / server） | core-check / server-check | 代码**实际调用**的依赖漏洞（require 但未调用仅提示） |
+| `npm audit --omit=dev --audit-level=high` | frontend-check | 生产依赖高危及以上 |
+| `pip-audit` | worker-check | CI 环境内已知漏洞包 |
+
+规则：
+
+- stdlib 漏洞靠 CI 的 `go-version` 跟进补丁版本兜底（当前 1.26.6+），不靠代码改动；
+- 扫描红了先升级补丁版本；无法升级的（breaking）在提交说明里给出豁免理由与修复计划；
+- dev 依赖漏洞不挡 CI（不进产物），但每周人工看一次 `npm audit` 全量输出。
+
+### 11.2 性能基线
+
+- **benchmark（精确基线）**：server 侧 `internal/{auth,rbac,sync}/bench_test.go`，覆盖 bcrypt（登录主导开销）、权限矩阵（鉴权热路径）、同步 payload 校验（批量同步逐条开销）。CI 不设阈值（runner 波动大），改动这些路径后本地跑 `go test -bench=. -run='^$' ./internal/...` 对比。
+- **延迟冒烟（防灾难退化）**：E2E 断言 `/health` 响应 < 2s——只拦"中间件死循环/锁争用"级退化，不做精确测量。
+
+### 11.3 HTTP 韧性
+
+- 两个 Go 服务（server:8767 / core:8765）显式配置 `ReadHeaderTimeout`（10s，防 slowloris 慢头发连接）与 `IdleTimeout`（120s，回收空闲连接）；
+- **禁止给这两个服务设 `WriteTimeout`**——`/api/model/stream`（SSE）与 core 的 WebSocket 是长连接，写超时会切断流式响应；
+- server 停机走 `srv.Shutdown`（10s 宽限）后再关 SQLite，避免在途请求写已关闭的 DB。

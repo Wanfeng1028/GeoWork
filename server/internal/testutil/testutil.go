@@ -14,7 +14,7 @@ import (
 
 // NewTestStore creates a temporary in-memory SQLite store for testing.
 // The store is automatically closed when the test finishes.
-func NewTestStore(t *testing.T) *storage.Store {
+func NewTestStore(t testing.TB) *storage.Store {
 	t.Helper()
 	store := storage.NewStore("")
 	if !store.DBReady() {
@@ -27,7 +27,7 @@ func NewTestStore(t *testing.T) *storage.Store {
 // SeedTestUser inserts a test user into the store and returns it.
 // The user has email "test@example.com", name "Test User", plan "free",
 // and password hash for password "Test1234".
-func SeedTestUser(t *testing.T, store *storage.Store) *storage.User {
+func SeedTestUser(t testing.TB, store *storage.Store) *storage.User {
 	t.Helper()
 	hash, err := bcrypt.GenerateFromPassword([]byte("Test1234"), bcrypt.DefaultCost)
 	if err != nil {
@@ -49,7 +49,7 @@ func SeedTestUser(t *testing.T, store *storage.Store) *storage.User {
 }
 
 // SeedSecondUser inserts a second test user (useful for team tests).
-func SeedSecondUser(t *testing.T, store *storage.Store) *storage.User {
+func SeedSecondUser(t testing.TB, store *storage.Store) *storage.User {
 	t.Helper()
 	hash, err := bcrypt.GenerateFromPassword([]byte("Test5678"), bcrypt.DefaultCost)
 	if err != nil {

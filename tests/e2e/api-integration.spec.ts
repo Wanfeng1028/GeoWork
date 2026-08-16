@@ -44,6 +44,16 @@ test.describe('API 集成测试', () => {
       expect(body.status).toBe('ok')
       expect(body).toHaveProperty('version')
     })
+
+    // 性能冒烟（P6）：宽松阈值防"中间件死循环/锁争用"级的灾难性退化，
+    // 不追求精确性能测量（CI 网络抖动大，精确基线见 server 侧 benchmark）。
+    test('GET /health 响应时间 < 2s（性能冒烟）', async ({ request }) => {
+      const start = Date.now()
+      const res = await request.get(`${API_BASE}/health`)
+      const elapsed = Date.now() - start
+      expect(res.status()).toBe(200)
+      expect(elapsed, `health 响应 ${elapsed}ms，超过 2s 冒烟阈值`).toBeLessThan(2000)
+    })
   })
 
   test.describe('Marketplace 公开接口（无需认证）', () => {

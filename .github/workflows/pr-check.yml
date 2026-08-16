@@ -42,6 +42,9 @@ jobs:
         run: |
           cd apps/desktop
           npm install --ignore-scripts
+      - name: Dependency audit (production, high+)
+        # 安全门禁（P6）：生产依赖高危及以上漏洞即红；dev 依赖漏洞不挡。
+        run: cd apps/desktop && npm audit --omit=dev --audit-level=high
       - name: Lint & Typecheck
         run: |
           cd apps/desktop
@@ -75,13 +78,17 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26.6'
       - name: Vet
         run: cd core && go vet ./...
       - name: Test with coverage
         run: |
           SKIP=$(grep -v '^#' scripts/ci/flaky-quarantine.txt | grep -v '^$' | paste -sd'|' -)
           cd core && go test ${SKIP:+-skip "$SKIP"} ./... -coverprofile=coverage.out
+      - name: Vulnerability check (govulncheck)
+        # 安全门禁（P6）：只对"代码实际调用"的漏洞红；stdlib 漏洞由本 job
+        # 的 go-version 补丁版本（1.26.6+）兜底。
+        run: cd core && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
       - name: Diff coverage gate (50%)
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
@@ -112,13 +119,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26.6'
       - name: Vet
         run: cd server && go vet ./...
       - name: Test with coverage
         run: |
           SKIP=$(grep -v '^#' scripts/ci/flaky-quarantine.txt | grep -v '^$' | paste -sd'|' -)
           cd server && go test ${SKIP:+-skip "$SKIP"} ./... -coverprofile=coverage.out
+      - name: Vulnerability check (govulncheck)
+        run: cd server && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
       - name: Diff coverage gate (50%)
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
@@ -151,7 +160,7 @@ jobs:
           node-version: 20
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26.6'
       - name: Install desktop dependencies (renderer dev server)
         run: cd apps/desktop && npm install --ignore-scripts
       - name: Install E2E dependencies
@@ -236,6 +245,11 @@ jobs:
           # python-multipart：FastAPI 表单/文件端点（上传类测试）的运行时依赖。
           pip install fastapi "uvicorn[standard]" pydantic httpx pytest pytest-cov \
             numpy pandas matplotlib python-docx openpyxl python-pptx PyPDF2 python-multipart
+      - name: Dependency audit (pip-audit)
+        # 安全门禁（P6）：环境内已知漏洞依赖即红。
+        run: |
+          pip install pip-audit
+          pip-audit --skip-editable
       - name: Unit & API tests
         run: python -m pytest -m "not integration" --cov=app --cov-report=xml --cov-report=term
       - name: Smoke contract check (real process + real HTTP)
