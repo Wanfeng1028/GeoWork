@@ -1,117 +1,40 @@
 /**
- * conversationStorage.ts
+ * conversationStorage.ts — 旧会话持久化入口（过渡兼容层）
  *
- * 会话类型定义 + localStorage 持久化。
+ * 类型定义已迁往 shared/session/types.ts（doc/21 §P2），此处反向 re-export
+ * 保持存量调用方（ConversationMessage/ChatComposer/AppShell 等）零改动。
+ *
+ * 持久化函数仍写 geowork.conversations.v1（与 session/conversationCache.ts
+ * 同 key）：NewTaskPage 每 token 全量写的路径在 P4 接线后删除，届时本文件
+ * 仅剩 re-export，P6 收编。
  */
 
-/* ── 消息角色 ── */
-export type MessageRole = 'user' | 'assistant' | 'system'
+import type { Conversation, WorkMode } from '../../../shared/session/types'
 
-/* ── 消息状态 ── */
-export type MessageStatus = 'streaming' | 'done' | 'error'
-
-/* ── 任务执行状态 ── */
-export type RunStatus =
-  | 'idle'
-  | 'thinking'
-  | 'planning'
-  | 'waiting-confirmation'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'stopped'
-
-/* ── 工作流步骤 ── */
-export type WorkflowStepStatus = 'wait' | 'process' | 'finish'
-
-export interface WorkflowStep {
-  key: string
-  title: string
-  description: string
-  status: WorkflowStepStatus
-}
-
-/* ── 工具调用日志 ── */
-export type ToolCallStatus = 'pending' | 'running' | 'success' | 'error'
-
-export interface ToolCallLog {
-  id: string
-  name: string
-  status: ToolCallStatus
-  inputSummary: string
-  outputSummary?: string
-  startedAt: number
-  endedAt?: number
-}
-
-/* ── 附件元信息 ── */
-export type AttachedFileKind = 'file' | 'image'
-
-export interface AttachedFileMeta {
-  id: string
-  name: string
-  size: number
-  type: string
-  previewUrl?: string
-  kind: AttachedFileKind
-}
-
-/* ── 上下文选择项 ── */
-export type SelectedContextKind = 'skill' | 'expert' | 'mcp'
-
-export interface SelectedContextItem {
-  id: string
-  kind: SelectedContextKind
-  name: string
-  slug?: string
-  description?: string
-  source?: string
-  meta?: Record<string, string | number | boolean | string[]>
-}
-
-/* ── 对话消息 ── */
-export interface ConversationMessage {
-  id: string
-  role: MessageRole
-  content: string
-  status?: MessageStatus
-  createdAt: number
-  workflow?: WorkflowStep[]
-  toolCalls?: ToolCallLog[]
-  attachments?: AttachedFileMeta[]
-  contexts?: SelectedContextItem[]
-}
-
-/* ── 工作模式枚举 ── */
-export type WorkMode = 'work' | 'code' | 'map'
-
-/* ── 单个会话 ── */
-export interface Conversation {
-  id: string
-  title: string
-  messages: ConversationMessage[]
-  model: string
-  mode: string
-  workMode?: WorkMode
-  workDirName?: string
-  runStatus: RunStatus
-  createdAt: number
-  updatedAt: number
-
-  workspaceId?: string
-  workspaceName?: string
-  /** 关联的 Go Core 会话 id（用于复用同一 Core 会话、跨刷新恢复）。 */
-  coreConversationId?: string
-}
-
-/* ── 会话存储根对象 ── */
-export interface ConversationStore {
-  conversations: Conversation[]
-  currentId: string | null
-}
+export type {
+  MessageRole,
+  MessageStatus,
+  RunStatus,
+  WorkflowStepStatus,
+  WorkflowStep,
+  ToolCallStatus,
+  ToolCallLog,
+  AttachedFileKind,
+  AttachedFileMeta,
+  SelectedContextKind,
+  SelectedContextItem,
+  ConversationMessage,
+  WorkMode,
+  Conversation,
+  ConversationStore,
+} from '../../../shared/session/types'
 
 /* ── 工具函数（10.3 阶段扩展） ── */
-export function createEmptyConversation(model = 'Auto', mode = '通用 GIS', workMode: WorkMode = 'work'): Conversation {
+export function createEmptyConversation(
+  model = 'Auto',
+  mode = '通用 GIS',
+  workMode: WorkMode = 'work',
+): Conversation {
   const now = Date.now()
   return {
     id: `conv_${now}_${Math.random().toString(36).slice(2, 8)}`,

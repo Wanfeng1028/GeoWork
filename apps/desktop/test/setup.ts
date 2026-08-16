@@ -43,36 +43,38 @@ vi.mock('electron', () => ({
   },
 }))
 
-// Mock window.geowork API
-window.geowork = {
-  runtime: {
-    health: vi.fn(() => Promise.resolve({ status: 'ok' })),
-    getToken: vi.fn(() => Promise.resolve(null)),
-  },
-  secrets: {
-    get: vi.fn(() => Promise.resolve(null)),
-    set: vi.fn(() => Promise.resolve({ success: true })),
-    delete: vi.fn(() => Promise.resolve({ success: true })),
-  },
-  system: {
-    getAppDataPath: vi.fn(() => Promise.resolve('/tmp/geowork')),
-    getPlatformInfo: vi.fn(() => Promise.resolve({ platform: 'win32' })),
-  },
-  fileDialogs: {
-    chooseFolder: vi.fn(() => Promise.resolve(['/tmp/workspace'])),
-    chooseFiles: vi.fn(() => Promise.resolve([])),
-    revealInFileExplorer: vi.fn(() => Promise.resolve()),
-  },
-  clipboard: {
-    readText: vi.fn(() => Promise.resolve('')),
-    writeText: vi.fn(() => Promise.resolve()),
-  },
-  notifications: {
-    show: vi.fn(() => Promise.resolve()),
-  },
-  plugin: {
-    list: vi.fn(() => Promise.resolve([])),
-  },
+// Mock window.geowork API（node 环境的对象层测试无 window，跳过 DOM 相关 stub）
+if (typeof window !== 'undefined') {
+  window.geowork = {
+    runtime: {
+      health: vi.fn(() => Promise.resolve({ status: 'ok' })),
+      getToken: vi.fn(() => Promise.resolve(null)),
+    },
+    secrets: {
+      get: vi.fn(() => Promise.resolve(null)),
+      set: vi.fn(() => Promise.resolve({ success: true })),
+      delete: vi.fn(() => Promise.resolve({ success: true })),
+    },
+    system: {
+      getAppDataPath: vi.fn(() => Promise.resolve('/tmp/geowork')),
+      getPlatformInfo: vi.fn(() => Promise.resolve({ platform: 'win32' })),
+    },
+    fileDialogs: {
+      chooseFolder: vi.fn(() => Promise.resolve(['/tmp/workspace'])),
+      chooseFiles: vi.fn(() => Promise.resolve([])),
+      revealInFileExplorer: vi.fn(() => Promise.resolve()),
+    },
+    clipboard: {
+      readText: vi.fn(() => Promise.resolve('')),
+      writeText: vi.fn(() => Promise.resolve()),
+    },
+    notifications: {
+      show: vi.fn(() => Promise.resolve()),
+    },
+    plugin: {
+      list: vi.fn(() => Promise.resolve([])),
+    },
+  }
 }
 
 // Global setup for all tests
