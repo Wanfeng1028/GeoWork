@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -52,14 +53,43 @@ func NewGuardrail(policy *Policy) *Guardrail {
 // strings.HasPrefix would let "/etcetera" match "/etc". Both separators
 // are accepted because policy entries mix POSIX ("/etc") and Windows
 // ("C:\Windows") styles regardless of host OS.
+//
+// doc/22 BP4: on Windows the comparison folds case, matching OS
+// semantics — "c:\windows" previously bypassed the "C:\Windows"
+// blocklist entry.
 func pathMatchesPrefix(abs, prefix string) bool {
 	if prefix == "" || abs == "" {
 		return false
+	}
+	if runtime.GOOS == "windows" {
+		abs = strings.ToLower(abs)
+		prefix = strings.ToLower(prefix)
 	}
 	if abs == prefix {
 		return true
 	}
 	return strings.HasPrefix(abs, prefix+"/") || strings.HasPrefix(abs, prefix+"\\")
+}
+
+// resolveSymlinksSafe resolves symlinks in path. For paths that do not
+// exist yet (a write target), it resolves the longest existing ancestor
+// and rejoins the remainder — otherwise EvalSymlinks errors on the
+// missing leaf and the check would run on the un-resolved (spoofable)
+// path. doc/22 BP4: without this, a symlink inside the workspace could
+// point at /etc or C:\Windows and pass the prefix check.
+func resolveSymlinksSafe(path string) (string, error) {
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		return resolved, nil
+	}
+	dir, file := filepath.Split(path)
+	if dir == "" || dir == string(filepath.Separator) || dir == path {
+		return filepath.Clean(path), nil
+	}
+	resolvedDir, err := resolveSymlinksSafe(filepath.Clean(dir))
+	if err != nil {
+		return filepath.Clean(path), nil
+	}
+	return filepath.Join(resolvedDir, file), nil
 }
 
 // ValidatePath checks if the given path is allowed by the policy
@@ -68,18 +98,29 @@ func (g *Guardrail) ValidatePath(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to resolve path: %w", err)
 	}
+	// doc/22 BP4: evaluate AFTER Abs so symlink chains collapse before
+	// the prefix comparison.
+	abs, err = resolveSymlinksSafe(abs)
+	if err != nil {
+		return fmt.Errorf("failed to resolve path: %w", err)
+	}
 
-	// Check blocked paths
+	// Check blocked paths (compare the resolved target)
 	for _, blocked := range g.policy.BlockedPaths {
 		if pathMatchesPrefix(abs, blocked) {
 			return fmt.Errorf("path %s is blocked by safety policy", path)
 		}
 	}
 
-	// Check allowed paths
+	// Check allowed paths — the workspace roots themselves must also be
+	// symlink-resolved so a root configured through a link still matches.
 	allowed := false
 	for _, allowedPath := range g.policy.AllowedPaths {
-		if pathMatchesPrefix(abs, allowedPath) {
+		resolvedRoot, rerr := resolveSymlinksSafe(allowedPath)
+		if rerr != nil {
+			resolvedRoot = allowedPath
+		}
+		if pathMatchesPrefix(abs, resolvedRoot) {
 			allowed = true
 			break
 		}

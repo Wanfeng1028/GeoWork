@@ -163,7 +163,9 @@ func EstimateTokens(text string) int {
 
 ---
 
-### BP4：安全加固——guardrails + worker（1.5 天，1 次提交）
+### BP4：安全加固——guardrails + worker（1.5 天，1 次提交）✅ 已完成（2026-08-17）
+
+> 实施记录：guardrails 双绕过修复（EvalSymlinks + 最长存在前缀递归解析；Windows 大小写折叠）+ 3 个回归测试（符号链接逃逸/大小写变体/保留 /etcetera）；worker 鉴权全链路（Go 铸造 GEOWORK_WORKER_TOKEN → env 注入子进程 → 客户端 X-GeoWork-Token 头；Python fail-closed 中间件 + /health 豁免 + 显式 insecure 开关 + CORS 白名单）+ 6 个鉴权测试（140 全绿）；沙箱 runner 诚实化（只声明真强制的约束，删除说谎的 max_memory_mb/network_access 字段）；Go 客户端超时 20s→10min（GIS 长任务曾被腰斩）；契约脚本适配。
 
 **修改 `safety/guardrails.go`**（S5）：
 - `ValidatePath`（L66-99）：`filepath.Abs` 后追加 `filepath.EvalSymlinks`（目标与 allowed/blocked 根都解析；目标不存在时 EvalSymlinks 报错 → 对存在的最长前缀解析后拼回）

@@ -12,7 +12,17 @@ import (
 type Client struct {
 	BaseURL string
 	HTTP    *http.Client
+
+	// token rides as X-GeoWork-Token on every request (doc/22 BP4/F6).
+	// Empty = worker started in insecure mode / legacy unauthenticated dev.
+	token string
 }
+
+// SetToken arms the worker runtime token (minted by StartProcess or
+// provided via GEOWORK_WORKER_TOKEN in the parent environment).
+func (c *Client) SetToken(token string) { c.token = token }
+
+const workerTokenHeader = "X-GeoWork-Token"
 
 // WorkerToolDef describes a tool exposed by the Python Worker.
 // Worker tool names use a namespaced format (e.g. "research.openalex.search",
@@ -44,7 +54,11 @@ func (c *Client) ListTools(ctx context.Context) ([]WorkerToolDef, error) {
 }
 
 func NewClient(baseURL string) *Client {
-	return &Client{BaseURL: baseURL, HTTP: &http.Client{Timeout: 20 * time.Second}}
+	// doc/22 BP4: GIS tool calls (GEE composites, QGIS processing,
+	// report rendering) legitimately run for minutes — 20s cut them
+	// off mid-job. 10 minutes bounds hung workers without killing
+	// real work; per-call ctx can still tighten it.
+	return &Client{BaseURL: baseURL, HTTP: &http.Client{Timeout: 10 * time.Minute}}
 }
 
 func (c *Client) Health(ctx context.Context) (map[string]any, error) {
@@ -273,6 +287,9 @@ func (c *Client) get(ctx context.Context, path string, out any) error {
 	if err != nil {
 		return err
 	}
+	if c.token != "" {
+		req.Header.Set(workerTokenHeader, c.token)
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return err
@@ -294,6 +311,9 @@ func (c *Client) post(ctx context.Context, path string, payload any, out any) er
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if c.token != "" {
+		req.Header.Set(workerTokenHeader, c.token)
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return err

@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -84,6 +85,14 @@ func main() {
 	// Failure is non-fatal: a missing/unreachable worker leaves only the
 	// builtin tools registered, which is enough for aiagent offline runs.
 	workerClient := worker.NewClient("http://127.0.0.1:8766")
+	// doc/22 BP4: share the runtime token with the worker (auto-started
+	// subprocess carries it via env; a manually started worker reads the
+	// same env var, so reuse whichever side minted it).
+	if workerProcess != nil && workerProcess.Token != "" {
+		workerClient.SetToken(workerProcess.Token)
+	} else if envToken := os.Getenv(worker.WorkerTokenEnv); envToken != "" {
+		workerClient.SetToken(envToken)
+	}
 	if err := toolregistry.RegisterWorkerTools(ctx, toolRegistry, workerClient, logger); err != nil {
 		logger.Warn("Failed to register worker tools", zap.Error(err))
 	}
@@ -213,7 +222,14 @@ func main() {
 		Auth:           auth,
 	})
 	logger.Info("GeoWork runtime listening on http://127.0.0.1:8765")
-	server := &http.Server{Addr: "127.0.0.1:8765", Handler: r}
+	// ReadHeaderTimeout 防 slowloris 慢头发连接；不设 WriteTimeout——
+	// 任务事件 SSE 与 WebSocket 是长连接，写超时会切断它们。
+	server := &http.Server{
+		Addr:              "127.0.0.1:8765",
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 	go func() {
 		<-ctx.Done()
 		_ = server.Shutdown(context.Background())

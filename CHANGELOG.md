@@ -18,6 +18,14 @@
 
 ## [Unreleased]
 
+### Security — BP4 安全加固：guardrails 双绕过 + worker 鉴权（doc/22，2026-08-17 · ZCode）
+- **修复 guardrails 符号链接逃逸（S5）**：`ValidatePath` 此前不解析符号链接——workspace 内一个指向 `/etc` 或 `C:\Windows` 的 symlink 即可穿过前缀检查；现在对目标与 allowed/blocked 根都做 EvalSymlinks（不存在的写入目标解析最长存在前缀后拼接）
+- **修复 Windows 大小写绕过（S5）**：路径前缀比较在 Windows 上改为折叠比较（`c:\windows` 此前绕过 `C:\Windows` 黑名单）；本机 TEMP 恰在 `C:\Windows\TEMP` 下，顺带暴露并修复了三个测试夹具的环境碰撞
+- **worker 鉴权全链路（F6，致命）**：Go core 铸造 `GEOWORK_WORKER_TOKEN` 注入 worker 子进程并逐请求携带 `X-GeoWork-Token`；Python 侧 fail-closed 中间件（常量时间比较、`/health` 豁免、未配置 token 即拒绝服务、`GEOWORK_INSECURE_NO_AUTH=1` 显式开发逃生口）+ CORS loopback 白名单——此前 127.0.0.1:8766 上任何本地进程可无鉴权调用 GEE/GDAL 工具写盘
+- **沙箱诚实化（D-B3）**：runner 头部改为"强制/未强制"两栏清单，删除未被任何机制执行的 `max_memory_mb`/`network_access` 字段——不再留说谎的配置项
+- **Go worker 客户端超时 20s→10min**：GEE 合成/QGIS 处理/报告渲染这类分钟级合法任务此前被 20 秒腰斩
+- 测试：safety 3 个新回归 + worker 6 个鉴权测试（worker 全套 140 通过）；core_worker_contract.py 适配 insecure 启动
+
 ### Fixed — BP3 中文 token 估算修复（doc/22，2026-08-17 · ZCode）
 - **修复 agent 中文失忆（F4，核心体验）**：旧 `EstimateTokens` 对每个汉字记约 78 token（真实约 1），中文系统提示"用掉"数万 token 预算 → `trimForTokens` 把历史砍到 3 条、L4 摘要/L5 记忆固化被疯狂误触发 → 对话中途失忆。新估算：CJK≈1 token/字、ASCII≈1/4 token/字符（覆盖假名/谚文/全角/中文标点）
 - **修复永不失败的断言**：`TestEnforceTokenBudget` 把核心裁剪行为的断言写成了 `t.Log`——该测试此前结构上不可能失败；已改为 `t.Error` 并加大测试夹具（旧夹具在正确估算下本不该超预算）

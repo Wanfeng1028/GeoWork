@@ -9,11 +9,28 @@ from app.api.knowledge import router as knowledge_router
 from app.api.ndvi import router as ndvi_router
 from app.api.papers import router as papers_router
 from app.exceptions import GeoWorkError
+from app.middleware.auth import register_auth_middleware
 from app.middleware.error_handler import generic_exception_handler, geowork_exception_handler
 from app.tool_catalog import TOOL_CATALOG, validate_catalog
 from app.validation import ValidationError, validate_bbox, validate_crs, validate_path
 
 app = FastAPI(title="GeoWork Geo Python Worker", version="1.0.0-dev")
+
+# doc/22 BP4 / F6: fail-closed runtime token auth (mirrors core/api/auth.go)
+# + explicit CORS allowlist for loopback dev origins. Registered before
+# routers so they guard every endpoint incl. /health-exempt paths.
+register_auth_middleware(app)
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-GeoWork-Token"],
+)
 
 # Fail fast at import time if the tool catalog violates the WorkerToolDef contract.
 validate_catalog()

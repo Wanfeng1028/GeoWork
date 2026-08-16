@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+import os
+
+# doc/22 BP4: the worker now enforces fail-closed runtime token auth.
+# Legacy business-logic tests call endpoints without a token; run the
+# whole session in the explicit dev-insecure mode instead of sprinkling
+# headers into 58 tests. tests/test_auth.py manages its own env per
+# request via mock.patch.dict and overrides this default as needed.
+os.environ.setdefault("GEOWORK_INSECURE_NO_AUTH", "1")
+
 import asyncio
 import inspect
 

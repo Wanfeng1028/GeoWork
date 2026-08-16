@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -266,6 +267,10 @@ func TestValidateWrite(t *testing.T) {
 func TestRoutes(t *testing.T) {
 	workspace := t.TempDir()
 	policy := DefaultPolicy(workspace)
+	// doc/22 BP4: hosts whose TEMP lives under C:\Windows hit the
+	// (now case-folding) OS blocklist with every fixture path; this
+	// route test exercises wiring, not the OS blocklist.
+	policy.BlockedPaths = []string{filepath.Join(workspace, "blocked-dir")}
 	mux := http.NewServeMux()
 	NewRoutes(NewGuardrail(policy), policy).Register(mux)
 	srv := httptest.NewServer(mux)
@@ -304,6 +309,9 @@ func TestRoutes(t *testing.T) {
 	}
 
 	t.Run("validate allowed write", func(t *testing.T) {
+		// doc/22 BP4: on hosts whose TEMP resolves under C:\Windows the
+		// (now case-folding) OS blocklist would swallow the fixture;
+		// this route test exercises allow/deny wiring, not the blocklist.
 		path := filepath.Join(workspace, "out.tif")
 		body, _ := json.Marshal(map[string]any{"path": path, "size": 10, "mimeType": "image/tiff"})
 		status, out := validate(t, string(body))
@@ -342,4 +350,59 @@ func TestRoutes(t *testing.T) {
 			t.Fatal("error message missing on 400")
 		}
 	})
+}
+
+// doc/22 BP4 / S5: symlink escape and Windows case-folding regressions.
+
+func TestValidatePath_SymlinkEscape(t *testing.T) {
+	ws := t.TempDir()
+	outside := t.TempDir() // a second root the policy does not allow
+	// BlockedPaths narrowed to a specific outside dir: on hosts whose
+	// TEMP lives under C:\Windows the OS-wide blocklist would swallow
+	// every fixture path once case-folding is enabled (doc/22 BP4).
+	g := NewGuardrail(&Policy{
+		AllowedPaths: []string{ws},
+		BlockedPaths: []string{filepath.Join(outside, "secret")},
+	})
+
+	link := filepath.Join(ws, "escape-link")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skipf("symlink creation unavailable on this host: %v", err)
+	}
+	target := filepath.Join(link, "evil.txt")
+
+	if err := g.ValidatePath(target); err == nil {
+		t.Fatalf("symlink pointing outside allowed roots must be rejected")
+	}
+	// Direct outside path stays rejected (control).
+	if err := g.ValidatePath(filepath.Join(outside, "direct.txt")); err == nil {
+		t.Fatalf("direct outside path must be rejected")
+	}
+	// A plain in-workspace path that does not exist yet stays allowed
+	// (resolveSymlinksSafe handles the missing leaf).
+	if err := g.ValidatePath(filepath.Join(ws, "new", "file.txt")); err != nil {
+		t.Fatalf("missing in-workspace path should be allowed: %v", err)
+	}
+}
+
+func TestValidatePath_WindowsCaseFolding(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("case-folding is a Windows-specific bypass")
+	}
+	ws := t.TempDir()
+	// A blocklist entry stored in UPPER case must catch the lower-cased
+	// variant of the same directory (and vice versa) — previously
+	// "c:\windows" bypassed "C:\Windows" (doc/22 BP4 / S5).
+	g := NewGuardrail(&Policy{
+		AllowedPaths: []string{ws},
+		BlockedPaths: []string{strings.ToUpper(filepath.Join(ws, "secret"))},
+	})
+
+	if err := g.ValidatePath(filepath.Join(ws, "x.tif")); err != nil {
+		t.Fatalf("plain in-workspace path must stay allowed: %v", err)
+	}
+	lowered := strings.ToLower(filepath.Join(ws, "secret", "x.tif"))
+	if err := g.ValidatePath(lowered); err == nil {
+		t.Fatalf("case-variant of a blocked path must be rejected")
+	}
 }

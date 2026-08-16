@@ -239,7 +239,7 @@ def main() -> int:
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app", "--host", HOST, "--port", str(PORT)],
         cwd=str(WORKER_DIR),
-        env=os.environ.copy(),
+        env={**os.environ, "GEOWORK_INSECURE_NO_AUTH": "1"},  # doc/22 BP4: contract script opts into dev-insecure worker auth
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )

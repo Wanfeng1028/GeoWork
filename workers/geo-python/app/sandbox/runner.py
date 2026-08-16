@@ -17,15 +17,33 @@ class SandboxError(Exception):
 
 
 class SandboxRunner:
-    """Sandbox runner for Python scripts with policy enforcement."""
+    """Sandbox runner for Python scripts and shell commands.
+
+    HONEST constraint model (doc/22 BP4 / D-B3 — 诚实降级):
+
+    ENFORCED (process level, cannot be bypassed from inside the child):
+      - timeout            — subprocess.run(timeout=…), child killed on expiry
+      - cwd                — pinned to the caller's workspace
+      - workspace allowlist— run_command refuses a workspace outside policy paths
+
+    NOT ENFORCED (documented, NOT security boundaries):
+      - memory limits      — no OS-level cap (needs Job Objects / cgroups)
+      - network isolation  — the child can open sockets
+      - command filtering  — blocked_cmds is best-effort defense in depth
+                             only; a crafted command trivially evades it
+
+    The authoritative gates for dangerous operations live in the Go core:
+    interactive approval for critical tools (run_shell is RiskLevel
+    critical), sandbox path validation on the command string, and the
+    Harness rule engine. This runner is the last line, not the first.
+    """
 
     def __init__(self, policy: Optional[Dict] = None):
         self.policy = policy or {
             "allowed_paths": [],
+            # Best-effort denylist only — see class docstring.
             "blocked_cmds": ["rm", "sudo", "mkfs", "fdisk", "dd"],
-            "network_access": False,
             "timeout": 300,
-            "max_memory_mb": 512,
             "env_whitelist": ["PATH", "HOME", "LANG", "PYTHONPATH"],
         }
 
