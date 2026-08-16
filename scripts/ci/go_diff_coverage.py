@@ -62,7 +62,13 @@ def added_lines_by_file(base: str, repo_dir: str) -> dict[str, set[int]]:
     for line in diff.splitlines():
         if line.startswith("+++ b/"):
             path = line[6:]
-            if not path.endswith(".go") or path.endswith("_test.go"):
+            # 测试基础设施（testutil）与 _test.go 一样服务于测试本身，
+            # 不计入门禁分母（doc/16 §9.1 豁免）。
+            if (
+                not path.endswith(".go")
+                or path.endswith("_test.go")
+                or "/internal/testutil/" in path
+            ):
                 current = None
                 continue
             current = path

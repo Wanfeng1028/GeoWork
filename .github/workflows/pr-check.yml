@@ -242,12 +242,15 @@ jobs:
           python -m pip install --upgrade pip
           # 纯 Python / 有 wheel 的轻量子集；rasterio/geopandas/earthengine-api 等
           # 系统级 GIS 依赖由 integration 标记的用例单独覆盖（P2）。
-          # python-multipart：FastAPI 表单/文件端点（上传类测试）的运行时依赖。
+          # pypdf：PyPDF2 已停止维护且有未修复 CVE（PYSEC-2026-1835），
+          # 官方后继 pypdf API 兼容（PdfReader 同名）。
           pip install fastapi "uvicorn[standard]" pydantic httpx pytest pytest-cov \
-            numpy pandas matplotlib python-docx openpyxl python-pptx PyPDF2 python-multipart
+            numpy pandas matplotlib python-docx openpyxl python-pptx pypdf python-multipart
       - name: Dependency audit (pip-audit)
-        # 安全门禁（P6）：环境内已知漏洞依赖即红。
+        # 安全门禁（P6）：环境内已知漏洞依赖即红。先升 setuptools——
+        # runner 预装版本（79.x）有 PYSEC-2026-3447，修复在 83+。
         run: |
+          pip install --upgrade "setuptools>=83"
           pip install pip-audit
           pip-audit --skip-editable
       - name: Unit & API tests

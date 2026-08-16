@@ -72,18 +72,18 @@ def _extract_text_from_pdf(file_path: str) -> str:
     Returns file metadata text when no PDF parser is available.
     """
     try:
-        import PyPDF2  # type: ignore
+        import pypdf  # type: ignore
 
         text_parts: List[str] = []
         with open(file_path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
+            reader = pypdf.PdfReader(f)
             for page in reader.pages:
                 page_text = page.extract_text()
                 if page_text:
                     text_parts.append(page_text)
         return "\n".join(text_parts)
     except ImportError:
-        logger.warning("PyPDF2 not installed; returning file metadata only")
+        logger.warning("pypdf not installed; returning file metadata only")
         return f"[PDF file: {file_path}]"
     except Exception as exc:
         logger.error("Failed to extract PDF text: %s", exc)

@@ -2,4 +2,4 @@
 name = "geowork-geo-python-worker"
 version = "1.0.0"
 requires-python = ">=3.11"
-dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "python-docx", "earthengine-api", "geemap", "pandas", "numpy", "pytest", "httpx", "PyPDF2", "rasterio", "geopandas", "folium", "matplotlib", "openpyxl", "python-pptx", "shapely"]
+dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "python-docx", "earthengine-api", "geemap", "pandas", "numpy", "pytest", "httpx", "pypdf", "rasterio", "geopandas", "folium", "matplotlib", "openpyxl", "python-pptx", "shapely"]
