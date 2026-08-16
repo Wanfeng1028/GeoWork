@@ -174,13 +174,15 @@ test.describe('API 集成测试', () => {
   // OpenAPI 契约（P5）：spec 中的每个端点必须在真实 server 上存在。
   // 无认证探测的合法结果是 401（保护路由）/ 400/422（公开路由参数校验）
   // / 200（公开读），404 意味着 spec 与部署的路由表漂移——正是要拦的缺陷。
-  // 路径参数替换为哑值（:id → 1）；POST 不带 body，公开端点只会得到参数
-  // 校验错误，不会产生副作用。
-  test.describe('OpenAPI 契约 — spec 端点存在性（非 404）', () => {
-    for (const ep of specEndpoints) {
+  // POST 不带 body，公开端点只会得到参数校验错误，不会产生副作用。
+  //
+  // 带路径参数的端点（如 /api/teams/:id）不参与 404 断言：handler 对
+  // 不存在的资源 ID 返回业务 404，与路由未注册的 404 无法区分。这些
+  // 端点的存在性由语义用例（teams/billing 等 CRUD 测试）覆盖。
+  test.describe('OpenAPI 契约 — 无参数端点存在性（非 404）', () => {
+    for (const ep of specEndpoints.filter((e) => !e.path.includes('/:'))) {
       test(`${ep.method} ${ep.path} [${ep.operationId}]`, async ({ request }) => {
-        const concretePath = ep.path.replace(/:[A-Za-z]+/g, '1')
-        const res = await request.fetch(`${API_BASE}${concretePath}`, {
+        const res = await request.fetch(`${API_BASE}${ep.path}`, {
           method: ep.method,
         })
         expect(
