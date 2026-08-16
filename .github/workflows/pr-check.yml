@@ -3,6 +3,9 @@ name: PR Check
 on:
   pull_request:
     branches: [main, master, dev-frontend/TraeCodeCloud-SeedCode]
+  # 直推 master 也跑（团队以直推方式协作，保证每次推送都有远端验证）
+  push:
+    branches: [master]
 
 jobs:
   # 文档检查：验证 AGENT.md 文档路由表中引用的 doc/*.md 文件真实存在。
