@@ -129,7 +129,9 @@ type approvalMemo struct { result toolregistry.ApprovalResult; at time.Time }
 
 ---
 
-### BP3：中文 token 估算与上下文预算（0.5 天，1 次提交）
+### BP3：中文 token 估算与上下文预算（0.5 天，1 次提交）✅ 已完成（2026-08-17）
+
+> 实施记录：CJK≈1 token/字、ASCII≈1/4 token/字符（覆盖 CJK 统一表意/扩展 A/假名/谚文/中文标点/全角）；修正 t.Log 假断言；旧夹具在新估算下不再超预算，已加大到真实越界；MaxPromptTokens=32000 默认值维持（新估算下更宽松，方向正确）。
 
 **修改 `aiagent/context_budget.go`**（F4）：
 ```go

@@ -18,6 +18,10 @@
 
 ## [Unreleased]
 
+### Fixed — BP3 中文 token 估算修复（doc/22，2026-08-17 · ZCode）
+- **修复 agent 中文失忆（F4，核心体验）**：旧 `EstimateTokens` 对每个汉字记约 78 token（真实约 1），中文系统提示"用掉"数万 token 预算 → `trimForTokens` 把历史砍到 3 条、L4 摘要/L5 记忆固化被疯狂误触发 → 对话中途失忆。新估算：CJK≈1 token/字、ASCII≈1/4 token/字符（覆盖假名/谚文/全角/中文标点）
+- **修复永不失败的断言**：`TestEnforceTokenBudget` 把核心裁剪行为的断言写成了 `t.Log`——该测试此前结构上不可能失败；已改为 `t.Error` 并加大测试夹具（旧夹具在正确估算下本不该超预算）
+
 ### Fixed — BP2 审批状态机修复（doc/22，2026-08-17 · ZCode）
 - **修复批准死循环（F2，致命）**：`InteractiveApprover` 新增决策记忆——按 (runID|工具|参数哈希) 记住已批准/已拒绝的调用（TTL 10 分钟），批准后的重试不再弹出重复审批请求；拒绝同样记忆、超时不记忆（超时不是用户决策）
 - **修复状态机白名单死锁（实施中新发现的致命项）**：run_shell / delete_file / git_push / run_git_reset / browser_control / network_request 被 `inferStateFromTool` 推入 Editing 状态、又被 Editing 自己不完整的显式工具清单拒绝——这些工具在 ReAct 路径**永远不可达**，交互审批流也因此从未真正触发过。Editing 清单已与推断映射对齐

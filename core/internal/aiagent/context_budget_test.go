@@ -1,6 +1,7 @@
 package aiagent
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -103,17 +104,22 @@ func TestEnforceTokenBudget(t *testing.T) {
 		MaxMessages:          20,
 	}}
 
-	// Build messages that exceed token budget
+	// Build messages that exceed token budget. Note (doc/22 BP3): the
+	// corrected estimator prices ASCII at ~1/4 token per char, so the
+	// old 5-message fixture no longer exceeds the 100-token budget —
+	// the fixture was enlarged to actually cross the threshold.
 	msgs := []ChatMessage{
 		{Role: "system", Content: "You are a helpful assistant."},
 	}
-	for i := 0; i < 5; i++ {
-		msgs = append(msgs, ChatMessage{Role: "user", Content: "This is a very long message with lots of text for testing purposes."})
+	for i := 0; i < 20; i++ {
+		msgs = append(msgs, ChatMessage{Role: "user", Content: "This is a very long message with lots of text for testing purposes and it keeps going well beyond the old fixture size."})
 	}
 
 	result := b.Enforce(msgs, nil)
+	// doc/22 BP3: this was previously a t.Log — a test that can never
+	// fail while covering the most critical budget behavior (trimming).
 	if !result.Truncated {
-		t.Log("Expected truncation for oversized token budget")
+		t.Error("expected truncation for oversized token budget")
 	}
 	if len(result.Messages) == 0 {
 		t.Error("result.Messages should not be empty")
@@ -139,9 +145,24 @@ func TestEnforceNoTruncation(t *testing.T) {
 }
 
 func TestEstimateTokens(t *testing.T) {
-	// ASCII: "hello" = 5 chars → ~20 tokens (5*4/4)
-	a := EstimateTokens("hello")
-	if a < 4 {
-		t.Errorf("EstimateTokens('hello') = %d, expected at least 4", a)
+	// doc/22 BP3: the previous formula priced one Chinese character at
+	// ~78 tokens (real ≈1), which made trimForTokens destroy history on
+	// Chinese prompts. These bounds pin the corrected behavior.
+	cases := []struct {
+		name string
+		text string
+		want int
+		tol  int
+	}{
+		{"ascii-hello", "hello", 2, 1},                     // 5 ASCII chars / 4 ≈ 1-2
+		{"chinese-100", strings.Repeat("地", 100), 100, 10}, // ~1 token per CJK char
+		{"mixed", "分析" + strings.Repeat("a", 40), 12, 3},   // 2 CJK + 40 ASCII/4=10
+		{"empty", "", 0, 0},
+	}
+	for _, c := range cases {
+		got := EstimateTokens(c.text)
+		if got < c.want-c.tol || got > c.want+c.tol {
+			t.Errorf("%s: EstimateTokens = %d, want ~%d (±%d)", c.name, got, c.want, c.tol)
+		}
 	}
 }

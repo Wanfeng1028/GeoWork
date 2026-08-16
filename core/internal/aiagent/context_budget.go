@@ -62,17 +62,39 @@ type BudgetResult struct {
 	Summary string
 }
 
-// EstimateTokens is a rough token estimator.
+// EstimateTokens is a heuristic token estimator tuned for GeoWork's
+// bilingual (Chinese + English) prompts (doc/22 BP3 / F4).
+//
+// The previous formula charged a CJK rune int(r/64)+1 tokens BEFORE the
+// global /4 — a Chinese character (r≈20000) cost ~78 tokens (real cost
+// ≈1). With a Chinese system prompt, a few hundred characters "used"
+// tens of thousands of tokens, so trimForTokens constantly slashed
+// history to the 3-message floor and the agent forgot mid-task.
+//
+// Current model (matches mainstream BPE tokenizers closely enough for
+// budgeting):
+//   - CJK ideographs, kana, hangul, CJK punctuation → 1 token each
+//   - other non-ASCII (emoji, accents)              → 1 token each
+//   - ASCII                                         → 1 token per 4 chars
 func EstimateTokens(text string) int {
-	tokens := 0
+	cjk := 0
+	ascii := 0
 	for _, r := range text {
-		if r < 128 {
-			tokens += 4
-		} else {
-			tokens += int(r/64) + 1
+		switch {
+		case r >= 0x4E00 && r <= 0x9FFF, // CJK Unified Ideographs
+			r >= 0x3400 && r <= 0x4DBF, // CJK Extension A
+			r >= 0x3040 && r <= 0x30FF, // Hiragana + Katakana
+			r >= 0xAC00 && r <= 0xD7AF, // Hangul syllables
+			r >= 0x3000 && r <= 0x303F, // CJK punctuation
+			r >= 0xFF00 && r <= 0xFFEF: // Fullwidth forms
+			cjk++
+		case r < 128:
+			ascii++
+		default:
+			cjk++ // emoji etc: ~1 token
 		}
 	}
-	return tokens / 4
+	return cjk + ascii/4
 }
 
 // EnforceMessages trims the message list to MaxMessages, keeping system + recent.
