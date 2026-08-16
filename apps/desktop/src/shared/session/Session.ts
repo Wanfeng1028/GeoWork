@@ -84,6 +84,8 @@ export interface SessionOptions {
   resyncBaseMs?: number
   /** 退避上限，默认 10s */
   resyncMaxMs?: number
+  /** D2 确认执行的 run 状态轮询间隔（毫秒），默认 1000 */
+  confirmPollMs?: number
 }
 
 /** 前端 WorkMode → orchestrator mode 映射。 */
@@ -109,6 +111,25 @@ export function mapCoreModeToWorkMode(mode?: string): WorkMode {
     case 'Work':
     default:
       return 'work'
+  }
+}
+
+/** Core Run status（aiagent.Status）→ 前端 RunStatus 映射（D2 轮询用）。 */
+export function mapRunStatus(status: string): RunStatus {
+  switch (status) {
+    case 'completed':
+      return 'completed'
+    case 'failed':
+      return 'failed'
+    case 'stopped':
+      return 'stopped'
+    case 'paused':
+      return 'waiting-confirmation'
+    case 'pending':
+    case 'running':
+    case 'recovery':
+    default:
+      return 'running'
   }
 }
 
@@ -142,6 +163,8 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
   private abortController: AbortController | null = null
   private resyncTimer: ReturnType<typeof setTimeout> | null = null
   private resyncAttempts = 0
+  private confirmPollMs: number
+  private pollToken = 0
   private disposed = false
 
   constructor(id: string, opts: SessionOptions = {}) {
@@ -150,6 +173,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
     this.coreId = opts.coreId
     this.resyncBaseMs = opts.resyncBaseMs ?? 500
     this.resyncMaxMs = opts.resyncMaxMs ?? 10_000
+    this.confirmPollMs = opts.confirmPollMs ?? 1_000
     this.snapshot = this.buildSnapshot()
   }
 
@@ -556,11 +580,56 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
     }
   }
 
-  /* ══════════ cancel / resync / dispose ══════════ */
+  /* ══════════ confirmRun（D2）/ cancel / resync / dispose ══════════ */
+
+  /**
+   * D2：确认执行——轮询 GET /api/agent/runs/{currentRunId} 真实状态，
+   * 1s 间隔、上限 5 分钟；completed/failed/stopped 终止轮询并落盘。
+   * runId 缺失时抛错（UI 层禁用按钮并提示"无可执行的运行"）。
+   */
+  async confirmRun(): Promise<void> {
+    const runId = this.currentRunId
+    if (!runId) throw new Error('无可执行的运行')
+
+    const token = ++this.pollToken
+    this.runStatus = 'running'
+    this.commit()
+
+    const deadline = Date.now() + 5 * 60_000
+    while (Date.now() < deadline && !this.disposed && token === this.pollToken) {
+      let status: string | undefined
+      try {
+        const res = await this.transport.fetchJson(`/api/agent/runs/${encodeURIComponent(runId)}`)
+        status = res.ok ? (res.data as CoreRun | undefined)?.status : undefined
+      } catch {
+        status = undefined /* 网络失败：下一轮重试 */
+      }
+      if (this.disposed || token !== this.pollToken) return
+
+      if (status) {
+        const mapped = mapRunStatus(status)
+        if (mapped !== this.runStatus) {
+          this.runStatus = mapped
+          this.commit()
+        }
+        if (mapped === 'completed' || mapped === 'failed' || mapped === 'stopped') {
+          this.persist()
+          return
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, this.confirmPollMs))
+    }
+
+    if (token === this.pollToken && !this.disposed) {
+      this.lastError = '运行状态查询超时（5 分钟）'
+      this.commit()
+    }
+  }
 
   /** 停止生成：关闭 SSE + 占位消息定格为停止态并落盘。 */
   cancel(): void {
     this.clearResyncTimer()
+    this.pollToken += 1 /* 终止 confirmRun 轮询 */
     this.abortController?.abort()
     this.abortController = null
     this.es?.close()

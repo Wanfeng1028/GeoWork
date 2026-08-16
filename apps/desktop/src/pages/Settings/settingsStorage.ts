@@ -46,6 +46,9 @@ export interface GeoWorkSettings {
 
   /* 引导 */
   guideVisited: boolean
+
+  /* 工作目录 — 最近选择（新任务页"最近的目录"菜单数据源） */
+  recentWorkDirs: string[]
 }
 
 export const DEFAULT_SETTINGS: GeoWorkSettings = {
@@ -76,6 +79,7 @@ export const DEFAULT_SETTINGS: GeoWorkSettings = {
   floatingWorkspace: false,
   browserContext: false,
   guideVisited: false,
+  recentWorkDirs: [],
 }
 
 const STORAGE_KEY = 'geowork.settings.v1'
@@ -105,9 +109,7 @@ export function saveSettings(settings: GeoWorkSettings): void {
  * 读取当前设置 → 合并 patch → 写回 → 返回最新完整设置。
  * 读取失败时回退 DEFAULT_SETTINGS 再合并。
  */
-export function updateSettingsPatch(
-  patch: Partial<GeoWorkSettings>,
-): GeoWorkSettings {
+export function updateSettingsPatch(patch: Partial<GeoWorkSettings>): GeoWorkSettings {
   const current = loadSettings()
   const next = { ...current, ...patch }
   saveSettings(next)

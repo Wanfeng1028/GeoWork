@@ -93,8 +93,8 @@ interface TransportScript {
   /** GET /api/conversations/{id}（open 用） */
   getConversation?: { ok: boolean; conv?: CoreConversation; status?: number }
   getMessages?: { messages?: CoreMessageListResponse['messages'] }
-  /** GET /api/agent/runs/{id} */
-  getRun?: CoreRun | null
+  /** GET /api/agent/runs/{id}（数组时按调用次序依次返回，供轮询测试） */
+  getRun?: CoreRun | null | Array<CoreRun | null>
 }
 
 function makeTransport(script: TransportScript = {}): SessionTransport & {
@@ -114,6 +114,10 @@ function makeTransport(script: TransportScript = {}): SessionTransport & {
         return { ok: s.ok, status: s.status ?? 200, data: { runId: s.runId, error: s.error } }
       }
       if (/\/api\/agent\/runs\//.test(path)) {
+        if (Array.isArray(script.getRun)) {
+          const next = script.getRun.shift() ?? null
+          return { ok: true, status: 200, data: next }
+        }
         return { ok: true, status: 200, data: script.getRun ?? null }
       }
       if (/\/messages\?limit=/.test(path)) {
@@ -366,6 +370,46 @@ describe('Session 对象层', () => {
     session.flushSync()
     expect(session.getSnapshot().messages.at(-1)!.status).toBe('done')
     expect(session.getSnapshot().phase).toBe('frozen')
+  })
+})
+
+describe('Session.confirmRun（D2 真实 run 轮询）', () => {
+  it('11. 轮询 run 状态到终态 completed 停止并落盘', async () => {
+    const transport = makeTransport({
+      getRun: [
+        { id: 'run-1', status: 'running' },
+        { id: 'run-1', status: 'running' },
+        { id: 'run-1', status: 'completed' },
+      ],
+    })
+    const session = new Session('conv-k', { transport, confirmPollMs: 5 })
+    const es = await sendUntilSubscribed(session)
+    es.emit('done', { data: { runId: 'run-1' } })
+    await tick()
+    expect(session.getSnapshot().runStatus).toBe('completed')
+
+    /* 模拟确认执行：currentRunId 已在快照中，轮询经 running 到 completed */
+    const transport2 = makeTransport({
+      getRun: [
+        { id: 'run-1', status: 'pending' },
+        { id: 'run-1', status: 'completed' },
+      ],
+    })
+    const session2 = new Session('conv-k2', { transport: transport2, confirmPollMs: 5 })
+    const es2 = await sendUntilSubscribed(session2)
+    es2.emit('done', { data: { runId: 'run-1' } })
+    await tick()
+    void session2.confirmRun()
+    await tick(10)
+    expect(session2.getSnapshot().runStatus).toBe('completed')
+    expect(
+      transport2.calls.filter((c) => c.path.includes('/api/agent/runs/')).length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('12. 无 runId 时 confirmRun 抛错（按钮禁用 + 提示语义）', async () => {
+    const session = new Session('conv-l', { transport: makeTransport() })
+    await expect(session.confirmRun()).rejects.toThrow('无可执行的运行')
   })
 })
 

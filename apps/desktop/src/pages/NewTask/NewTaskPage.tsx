@@ -1,40 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useSearchParams, useNavigate } from 'react-router'
-import { App, Button, Dropdown, Tour, Typography, theme } from 'antd'
+import { Alert, App, Button, Dropdown, Tour, Typography, theme } from 'antd'
 import { Loader2, FolderOpen, Boxes, Code, MapPin } from 'lucide-react'
 import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
 import { ConversationMessageView } from './components/ConversationMessage'
-import {
-  activeAdapter,
-  getCoreConversationId,
-  setCoreConversationId,
-} from './components/streamAdapters'
-import type {
-  ConversationMessage,
-  RunStatus,
-  ToolCallLog,
-  SelectedContextItem,
-  SelectedContextKind,
-  WorkMode,
-} from './components/conversationStorage'
-import {
-  createEmptyConversation,
-  getConversation,
-  upsertConversation,
-} from './components/conversationStorage'
-import type { Conversation } from './components/conversationStorage'
-import { apiGet } from '../../shared/api/client'
-import type { CoreConversation, CoreMessageListResponse } from '../../shared/api/types'
+import { sessionManager } from '../../shared/session/SessionManager'
+import { useSession } from '../../shared/session/react'
+import { readConversation } from '../../shared/session/conversationCache'
+import type { SelectedContextItem, WorkMode } from '../../shared/session/types'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
-import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
+import { loadSettings, updateSettingsPatch } from '../Settings/settingsStorage'
 import { CapsuleTabs } from '../../shell/components/CapsuleTabs'
 import { CapsuleTag } from '../../shell/components/CapsuleTag'
 import { PageSkeleton } from '../../shell/feedback'
 import styles from './NewTaskPage.module.css'
-// 主界面大 logo 已注释，暂不需要该资源
-// import logoAnimated from '../../assets/brand/geowork-logo-horizontal-gradient.svg'
 
 const { Title, Text } = Typography
 
@@ -63,62 +44,10 @@ const WORK_MODE_OPTIONS = [
   { value: 'map', icon: <MapPin />, label: 'Map' },
 ] as const
 
-/** Core mode → 前端 WorkMode 映射。 */
-function mapCoreModeToWorkMode(mode?: string): WorkMode {
-  switch (mode) {
-    case 'Code':
-      return 'code'
-    case 'Analysis':
-      return 'map'
-    case 'Work':
-    default:
-      return 'work'
-  }
-}
+const MAX_RECENT_DIRS = 5
 
-/**
- * 从 Core API 加载会话 + 消息历史。
- * 任何错误（网络/404/解析）都返回 null，由调用方降级到 localStorage。
- */
-async function loadConversationFromCore(convId: string): Promise<Conversation | null> {
-  try {
-    const coreConv = await apiGet<CoreConversation>(
-      `/api/conversations/${encodeURIComponent(convId)}`,
-    )
-    if (!coreConv || !coreConv.id) return null
-
-    const msgsRes = await apiGet<CoreMessageListResponse>(
-      `/api/conversations/${encodeURIComponent(convId)}/messages?limit=500`,
-    )
-    const coreMsgs = msgsRes?.messages ?? []
-
-    const messages: ConversationMessage[] = coreMsgs
-      .filter((m) => m.role === 'user' || m.role === 'assistant')
-      .map((m) => ({
-        id: m.id,
-        role: m.role as 'user' | 'assistant',
-        content: m.content ?? '',
-        status: 'done' as const,
-        createdAt: m.createdAt ? Date.parse(m.createdAt) : Date.now(),
-      }))
-
-    const now = Date.now()
-    return {
-      id: convId,
-      title: coreConv.title || '新任务',
-      messages,
-      model: 'Auto',
-      mode: coreConv.mode ?? '通用 GIS',
-      workMode: mapCoreModeToWorkMode(coreConv.mode),
-      runStatus: 'idle',
-      createdAt: coreConv.createdAt ? Date.parse(coreConv.createdAt) : now,
-      updatedAt: coreConv.updatedAt ? Date.parse(coreConv.updatedAt) : now,
-      workspaceId: coreConv.workspaceId,
-      coreConversationId: coreConv.id,
-    }
-  } catch {
-    return null
-  }
+function makeConversationId(): string {
+  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }
 
 export function NewTaskPage() {
@@ -127,32 +56,33 @@ export function NewTaskPage() {
   const messageRef = useRef(message)
   messageRef.current = message
 
-  /* ── 核心状态 ── */
+  /* ── 会话接线：流式状态住进对象层，组件只订阅快照 ── */
+  const [convId, setConvId] = useState<string | null>(null)
+  const convIdRef = useRef<string | null>(null)
+  const snap = useSession(convId)
+  const messages = snap.messages
+  const runStatus = snap.runStatus
+  const isStreaming =
+    runStatus === 'thinking' || runStatus === 'planning' || runStatus === 'running'
+  const isConversationLoading = snap.phase === 'loading' && messages.length === 0
+
+  /* ── 本地 UI 瞬时态（输入/选择，不进对象层） ── */
   const [prompt, setPrompt] = useState('')
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
-  const [messages, setMessages] = useState<ConversationMessage[]>([])
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [runStatus, setRunStatus] = useState<RunStatus>('idle')
   const [workMode, setWorkMode] = useState<WorkMode>('work')
-  const [isConversationLoading, setIsConversationLoading] = useState(false)
-
-  /* ── 上下文选择状态 ── */
   const [selectedContexts, setSelectedContexts] = useState<SelectedContextItem[]>([])
   const [contextPickerType, setContextPickerType] = useState<ContextPickerType | null>(null)
+  const [recentDirs, setRecentDirs] = useState<string[]>(() => loadSettings().recentWorkDirs)
 
   const MAX_TOTAL_CONTEXTS = 8
   const MAX_PER_KIND: Record<ContextPickerType, number> = { skill: 5, expert: 3, mcp: 5 }
 
   const hasConversation = messages.length > 0
-  const abortRef = useRef<AbortController | null>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
-  const currentTaskIdRef = useRef<string | null>(null)
-  const taskTitleRef = useRef<string>('新任务')
 
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const currentConvIdRef = useRef<string | null>(null)
 
   /* ── 工作空间上下文（可从 location.state 继承） ── */
   const [workspaceOverride, setWorkspaceOverride] = useState<{
@@ -175,19 +105,14 @@ export function NewTaskPage() {
       workDirName?: string
     } | null
 
-    /* resetKey：侧栏"新任务"点击时重置会话 */
+    /* resetKey：侧栏"新任务"点击时销毁会话对象并重置 UI */
     if (state?.resetKey && state.resetKey !== lastResetKeyRef.current) {
       lastResetKeyRef.current = state.resetKey
-      abortRef.current?.abort()
-      setMessages([])
-      setIsStreaming(false)
-      setRunStatus('idle')
+      if (convIdRef.current) sessionManager.reset(convIdRef.current)
+      convIdRef.current = null
+      setConvId(null)
       setPrompt('')
       setWorkMode('work')
-      /* 重置会话引用，不删除侧栏任务 */
-      currentTaskIdRef.current = null
-      currentConvIdRef.current = null
-      taskTitleRef.current = '新任务'
       /* 清除 URL 中的 conversationId */
       if (searchParams.has('conversationId')) {
         const params = new URLSearchParams(searchParams)
@@ -202,9 +127,7 @@ export function NewTaskPage() {
           workspaceName: state.workspaceName,
           workDirName: state.workDirName,
         })
-        if (state.workDirName) {
-          setWorkDir(state.workDirName)
-        }
+        if (state.workDirName) setWorkDir(state.workDirName)
       } else {
         setWorkspaceOverride(null)
       }
@@ -221,70 +144,26 @@ export function NewTaskPage() {
         return prev
       })
     }
-  }, [location.state])
+  }, [location.state, searchParams, navigate])
 
-  /* ── 从 URL conversationId 加载历史会话（先 Core，失败降级 localStorage） ── */
+  /* ── 从 URL conversationId 加载历史会话（对象层 open：core → cache → error） ── */
   useEffect(() => {
-    const convId = searchParams.get('conversationId')
-    if (!convId) return
-    if (currentConvIdRef.current === convId) return
+    const urlId = searchParams.get('conversationId')
+    if (!urlId || urlId === convIdRef.current) return
+    convIdRef.current = urlId
+    setConvId(urlId)
+    void sessionManager.ensure(urlId).open()
+  }, [searchParams])
 
-    let cancelled = false
-    setIsConversationLoading(true)
-
-    const applyConv = (conv: Conversation) => {
-      if (cancelled) return
-      currentConvIdRef.current = convId
-      currentTaskIdRef.current = convId
-      taskTitleRef.current = conv.title
-      setMessages(conv.messages)
-      setModel(conv.model)
-      setRunStatus(conv.runStatus)
-      setWorkDir(conv.workDirName ?? null)
-      setWorkMode(conv.workMode ?? 'work')
-      if (conv.coreConversationId) {
-        setCoreConversationId(convId, conv.coreConversationId)
-      }
-      setIsConversationLoading(false)
-    }
-
-    const fail = () => {
-      if (cancelled) return
-      setIsConversationLoading(false)
-      messageRef.current.error('未找到该会话记录')
-      navigate('/new-task', { replace: true })
-    }
-
-    loadConversationFromCore(convId)
-      .then((coreConv) => {
-        if (cancelled) return
-        if (coreConv) {
-          setCoreConversationId(convId, coreConv.coreConversationId ?? convId)
-          upsertConversation(coreConv)
-          applyConv(coreConv)
-          return
-        }
-        const localConv = getConversation(convId)
-        if (localConv) {
-          applyConv(localConv)
-        } else {
-          fail()
-        }
-      })
-      .catch(() => {
-        if (cancelled) return
-        const localConv = getConversation(convId)
-        if (localConv) {
-          applyConv(localConv)
-        } else {
-          fail()
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [searchParams, navigate])
+  /* ── 会话元数据恢复（model/workDir/workMode 从缓存回填 UI 选择器） ── */
+  useEffect(() => {
+    if (!convId || (snap.phase !== 'live' && snap.phase !== 'frozen')) return
+    const cached = readConversation(convId)
+    if (!cached) return
+    setModel(cached.model || 'Auto')
+    setWorkDir(cached.workDirName ?? null)
+    setWorkMode(cached.workMode ?? 'work')
+  }, [convId, snap.phase])
 
   /* ── 自动滚动到底部 ── */
   useEffect(() => {
@@ -297,64 +176,7 @@ export function NewTaskPage() {
     workspaceOverride?.workspaceId ?? (workDir ? `workdir:${workDir}` : 'default')
   const currentWorkspaceName = workspaceOverride?.workspaceName ?? (workDir || '默认')
 
-  /* ── 侧栏任务同步 ── */
-  useEffect(() => {
-    const taskId = currentTaskIdRef.current
-    if (!taskId) return
-    let sidebarStatus: SidebarTaskStatus = 'idle'
-    if (isStreaming) {
-      sidebarStatus = 'streaming'
-    } else if (runStatus === 'completed') {
-      sidebarStatus = 'completed'
-    } else if (runStatus === 'stopped') {
-      sidebarStatus = 'stopped'
-    } else if (runStatus === 'failed') {
-      sidebarStatus = 'failed'
-    } else {
-      return
-    }
-    upsertSidebarTask({
-      id: taskId,
-      title: taskTitleRef.current,
-      lastMessage: messages.length > 0 ? messages[messages.length - 1].content.slice(0, 50) : '',
-      status: sidebarStatus,
-      updatedAt: Date.now(),
-      workspaceId: currentWorkspaceId,
-      workspaceName: currentWorkspaceName,
-      workDirName: workDir ?? undefined,
-    })
-  }, [runStatus, isStreaming, messages, currentWorkspaceId, currentWorkspaceName, workDir])
-
-  /* ── 会话持久化到 localStorage ── */
-  useEffect(() => {
-    const convId = currentConvIdRef.current
-    if (!convId) return
-    if (messages.length === 0) return
-    upsertConversation({
-      id: convId,
-      title: taskTitleRef.current,
-      messages,
-      model,
-      mode: '通用 GIS',
-      workMode,
-      workDirName: workDir ?? undefined,
-      runStatus,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      workspaceId: currentWorkspaceId,
-      workspaceName: currentWorkspaceName,
-      /* 同步持久化 Core 会话映射，刷新后仍可复用同一 Core 会话 */
-      coreConversationId: getCoreConversationId(convId),
-    })
-  }, [
-    messages,
-    runStatus,
-    isStreaming,
-    currentWorkspaceId,
-    currentWorkspaceName,
-    workDir,
-    workMode,
-  ])
+  /* TODO(P5)：会话状态 → 侧栏任务的同步将迁入 taskStore 订阅，替代旧 effect */
 
   /* ── Tour refs ── */
   const [tourOpen, setTourOpen] = useState(false)
@@ -376,180 +198,84 @@ export function NewTaskPage() {
   const heroText = WORK_MODE_COPY[workMode].title
 
   /* ── 上下文管理 ── */
-  const handleOpenContextPicker = (type: ContextPickerType) => {
-    setContextPickerType(type)
-  }
-
   const handleContextConfirm = (items: SelectedContextItem[]) => {
     const type = contextPickerType
     if (!type) return
-
-    /* 移除同类型的旧选项 */
     const filtered = selectedContexts.filter((ctx) => ctx.kind !== type)
-    /* 合并新选项，检查限制 */
-    const perKindLimit = MAX_PER_KIND[type]
-    const newItems = items.slice(0, perKindLimit)
-    const merged = [...filtered, ...newItems]
-
+    const merged = [...filtered, ...items.slice(0, MAX_PER_KIND[type])]
     if (merged.length > MAX_TOTAL_CONTEXTS) {
       message.warning(`上下文总数最多 ${MAX_TOTAL_CONTEXTS} 个`)
       setSelectedContexts(merged.slice(0, MAX_TOTAL_CONTEXTS))
     } else {
       setSelectedContexts(merged)
     }
-
     setContextPickerType(null)
   }
 
-  const handleRemoveContext = (id: string, kind: SelectedContextKind) => {
+  const handleRemoveContext = (id: string, kind: SelectedContextItem['kind']) => {
     setSelectedContexts((prev) => prev.filter((ctx) => !(ctx.id === id && ctx.kind === kind)))
   }
 
-  const handleClearContexts = () => {
-    setSelectedContexts([])
-  }
-
-  /* ── 发送消息 ── */
+  /* ── 发送消息：乐观插入与流式状态均由 Session 驱动 ── */
   const handleSend = () => {
-    if (!prompt.trim()) return
+    const text = prompt.trim()
+    if (!text) return
 
-    /* 首次发送：创建会话和侧栏任务 */
-    if (!currentConvIdRef.current) {
-      const conv = createEmptyConversation(model, '通用 GIS', workMode)
-      conv.title = prompt.trim().slice(0, 20) || '新任务'
-      conv.workDirName = workDir ?? undefined
-      conv.workspaceId = currentWorkspaceId
-      conv.workspaceName = currentWorkspaceName
-      currentConvIdRef.current = conv.id
-      currentTaskIdRef.current = conv.id
-      taskTitleRef.current = conv.title
+    let id = convIdRef.current
+    if (!id) {
+      id = makeConversationId()
+      convIdRef.current = id
+      setConvId(id)
       upsertSidebarTask({
-        id: conv.id,
-        title: conv.title,
-        lastMessage: prompt.trim().slice(0, 50),
+        id,
+        title: text.slice(0, 20) || '新任务',
+        lastMessage: text.slice(0, 50),
         status: 'streaming',
         updatedAt: Date.now(),
         workspaceId: currentWorkspaceId,
         workspaceName: currentWorkspaceName,
         workDirName: workDir ?? undefined,
       })
-      /* 同步 URL */
-      navigate(`/new-task?conversationId=${encodeURIComponent(conv.id)}`, { replace: true })
+      navigate(`/new-task?conversationId=${encodeURIComponent(id)}`, { replace: true })
     }
 
-    const userMsg: ConversationMessage = {
-      id: `msg_${Date.now()}_u`,
-      role: 'user',
-      content: prompt.trim(),
-      createdAt: Date.now(),
-      contexts: selectedContexts.length > 0 ? [...selectedContexts] : undefined,
-    }
-    const assistantMsg: ConversationMessage = {
-      id: `msg_${Date.now()}_a`,
-      role: 'assistant',
-      content: '',
-      status: 'streaming',
-      createdAt: Date.now(),
-    }
-
-    setMessages((prev) => [...prev, userMsg, assistantMsg])
+    void sessionManager.ensure(id).send(text, {
+      model,
+      mode: '通用 GIS',
+      workMode,
+      workDirName: workDir ?? undefined,
+      workspaceId: currentWorkspaceId,
+      workspaceName: currentWorkspaceName,
+      contexts: selectedContexts.length > 0 ? selectedContexts : undefined,
+    })
     setPrompt('')
-    setIsStreaming(true)
-    setRunStatus('thinking')
-
-    /* 启动 mock streaming */
-    const controller = new AbortController()
-    abortRef.current = controller
-
-    activeAdapter.start(
-      {
-        conversationId: currentConvIdRef.current ?? 'current',
-        input: userMsg.content,
-        model,
-        mode: '通用 GIS',
-        workMode,
-        workDirName: workDir ?? undefined,
-        contexts: selectedContexts.length > 0 ? selectedContexts : undefined,
-      },
-      {
-        onDelta: (delta) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? { ...m, content: m.content + delta } : m)),
-          )
-        },
-        onStatus: (status: RunStatus) => {
-          setRunStatus(status)
-        },
-        onToolCall: (log: ToolCallLog) => {
-          setMessages((prev) =>
-            prev.map((m) => {
-              if (m.id !== assistantMsg.id) return m
-              const existing = m.toolCalls ?? []
-              const idx = existing.findIndex((t) => t.id === log.id)
-              if (idx >= 0) {
-                /* 同 id 合并更新 */
-                const updated = [...existing]
-                updated[idx] = log
-                return { ...m, toolCalls: updated }
-              }
-              return { ...m, toolCalls: [...existing, log] }
-            }),
-          )
-        },
-        onWorkflow: (steps) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? { ...m, workflow: steps } : m)),
-          )
-        },
-        onDone: () => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantMsg.id ? { ...m, status: 'done' as const } : m)),
-          )
-          setIsStreaming(false)
-        },
-        onError: (error) => {
-          setRunStatus('failed')
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? {
-                    ...m,
-                    status: 'error' as const,
-                    content: m.content + '\n\n执行出错：' + error.message,
-                  }
-                : m,
-            ),
-          )
-          setIsStreaming(false)
-        },
-      },
-      controller.signal,
-    )
   }
 
   /* ── 停止生成 ── */
   const handleStop = () => {
-    abortRef.current?.abort()
-    setRunStatus('stopped')
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.status === 'streaming'
-          ? { ...m, status: 'done' as const, content: m.content + '\n\n生成已停止。' }
-          : m,
-      ),
-    )
-    setIsStreaming(false)
+    const id = convIdRef.current
+    if (!id) return
+    sessionManager.ensure(id).cancel()
     message.info('已停止生成')
   }
 
-  /* ── 确认执行 ── */
-  const handleConfirmRun = () => {
-    setRunStatus('running')
-    message.info('GeoWork 已开始前端模拟执行')
-    window.setTimeout(() => {
-      setRunStatus('completed')
-      message.success('工作流已完成前端模拟执行')
-    }, 1000)
+  /* ── 确认执行（D2）：轮询真实 run 状态，不再 setTimeout 假完成 ── */
+  const handleConfirmRun = async () => {
+    const id = convIdRef.current
+    const runId = id ? sessionManager.get(id)?.getSnapshot().currentRunId : undefined
+    if (!id || !runId) {
+      message.warning('无可执行的运行（Core 未返回 runId）')
+      return
+    }
+    message.info('已开始执行，正在跟踪运行状态')
+    try {
+      await sessionManager.ensure(id).confirmRun()
+      if (sessionManager.get(id)?.getSnapshot().runStatus === 'completed') {
+        message.success('工作流已执行完成')
+      }
+    } catch {
+      message.error('运行状态查询失败')
+    }
   }
 
   /* ── 调整计划 ── */
@@ -557,7 +283,13 @@ export function NewTaskPage() {
     message.info('计划调整功能后续接入')
   }
 
-  /* ── 工作目录选择 ── */
+  /* ── 工作目录选择（最近目录来自 settingsStorage，不再硬编码开发机路径） ── */
+  const rememberWorkDir = (dir: string) => {
+    const next = [dir, ...recentDirs.filter((d) => d !== dir)].slice(0, MAX_RECENT_DIRS)
+    setRecentDirs(next)
+    updateSettingsPatch({ recentWorkDirs: next })
+  }
+
   const handlePickDirectory = async () => {
     const pickerWindow = window as {
       showDirectoryPicker?: (opts?: { mode?: string }) => Promise<{ kind: string; name: string }>
@@ -569,6 +301,7 @@ export function NewTaskPage() {
     try {
       const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
       setWorkDir(handle.name)
+      rememberWorkDir(handle.name)
       message.success(`工作目录已设置为：${handle.name}`)
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
@@ -596,42 +329,41 @@ export function NewTaskPage() {
       {
         type: 'group' as const,
         label: '最近的目录',
-        children: [
-          {
-            key: 'geo-frontend',
-            label: 'E:\\code\\javascript\\project\\GeoFrontend2.0',
-            onClick: () => {
-              setWorkDir('E:\\code\\javascript\\project\\GeoFrontend2.0')
-              message.success('工作目录已设置')
-            },
-          },
-          {
-            key: 'geowork',
-            label: 'E:\\code\\javascript\\project\\GeoWork',
-            onClick: () => {
-              setWorkDir('E:\\code\\javascript\\project\\GeoWork')
-              message.success('工作目录已设置')
-            },
-          },
-        ],
+        children:
+          recentDirs.length > 0
+            ? recentDirs.map((dir) => ({
+                key: dir,
+                label: dir,
+                onClick: () => {
+                  setWorkDir(dir)
+                  message.success('工作目录已设置')
+                },
+              }))
+            : [{ key: 'empty', label: '暂无最近目录', disabled: true }],
       },
     ],
   }
 
-  /* ── 清理 ── */
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort()
-    }
-  }, [])
+  /* ── 通道提示条：演示模式标注（D1）与离线黄条（frozen/error） ── */
+  const channelBanner = snap.isDemo ? (
+    <Alert
+      type="warning"
+      showIcon
+      banner
+      message="演示模式（未连接后端）——当前输出为本地模拟，不代表真实执行"
+    />
+  ) : snap.phase === 'frozen' || snap.phase === 'error' ? (
+    <Alert
+      type="warning"
+      showIcon
+      banner
+      message={snap.lastError ?? 'GeoWork Core 不可达，已暂停接收新输出'}
+    />
+  ) : null
 
   /* ══════════════ Home 态 ══════════════ */
   const homeView = (
     <div className={styles.homeView}>
-      {/* Animated Logo (顶部居中，循环播放) —— 主界面大 logo，暂不需要，注释掉
-      <img className={styles.logoAnimated} src={logoAnimated} alt="GeoWork" />
-      */}
-
       {/* Mode Switcher —— 使用 CapsuleTabs 胶囊组件 */}
       <div ref={modeSwitcherRef} className={styles.modeSwitcherWrap}>
         <CapsuleTabs
@@ -648,19 +380,6 @@ export function NewTaskPage() {
 
       {/* Hero */}
       <div className={styles.hero}>
-        {/* heroLogo 暂时隐藏
-        <svg className={styles.heroLogo} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="4" width="56" height="56" rx="8" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-          <line x1="4" y1="24" x2="60" y2="24" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
-          <line x1="4" y1="44" x2="60" y2="44" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
-          <line x1="24" y1="4" x2="24" y2="60" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
-          <line x1="44" y1="4" x2="44" y2="60" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
-          <circle cx="32" cy="28" r="5" fill={token.colorPrimary} opacity="0.85" />
-          <path d="M32 33 L28 28 A4 4 0 1 1 36 28 Z" fill={token.colorPrimary} />
-          <path d="M12 50 L32 40 L52 50 L32 60 Z" stroke="currentColor" strokeWidth="1.5" fill={token.colorPrimary} opacity="0.12" />
-          <path d="M12 46 L32 36 L52 46" stroke="currentColor" strokeWidth="1.5" opacity="0.3" fill="none" />
-        </svg>
-        */}
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
           {heroText}
         </Title>
@@ -681,11 +400,11 @@ export function NewTaskPage() {
             model={model}
             onModelChange={setModel}
             placeholder={WORK_MODE_COPY[workMode].placeholder}
-            onOpenContextPicker={handleOpenContextPicker}
+            onOpenContextPicker={setContextPickerType}
             onPickDirectory={handlePickDirectory}
             selectedContexts={selectedContexts}
             onRemoveContext={handleRemoveContext}
-            onClearContexts={handleClearContexts}
+            onClearContexts={() => setSelectedContexts([])}
           />
         </div>
       </div>
@@ -719,7 +438,7 @@ export function NewTaskPage() {
       >
         <div className={styles.convHeaderLeft}>
           <Title level={5} className={styles.convHeaderTitle}>
-            新任务
+            {snap.title}
           </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {model} · {workDir ?? '未选择目录'}
@@ -730,16 +449,11 @@ export function NewTaskPage() {
                 ? '理解任务'
                 : runStatus === 'planning'
                   ? '生成计划'
-                  : '思考中'}
+                  : '执行中'}
             </CapsuleTag>
           )}
           {!isStreaming && runStatus === 'waiting-confirmation' && (
             <CapsuleTag color="warning">等待确认</CapsuleTag>
-          )}
-          {!isStreaming && runStatus === 'running' && (
-            <CapsuleTag color="processing" icon={<Loader2 />}>
-              执行中
-            </CapsuleTag>
           )}
           {!isStreaming && runStatus === 'completed' && (
             <CapsuleTag color="success">已完成</CapsuleTag>
@@ -802,11 +516,11 @@ export function NewTaskPage() {
           onModelChange={setModel}
           conversationMode
           placeholder={WORK_MODE_COPY[workMode].placeholder}
-          onOpenContextPicker={handleOpenContextPicker}
+          onOpenContextPicker={setContextPickerType}
           onPickDirectory={handlePickDirectory}
           selectedContexts={selectedContexts}
           onRemoveContext={handleRemoveContext}
-          onClearContexts={handleClearContexts}
+          onClearContexts={() => setSelectedContexts([])}
         />
       </div>
     </div>
@@ -814,6 +528,7 @@ export function NewTaskPage() {
 
   return (
     <div className={styles.root} style={{ background: token.colorBgLayout }}>
+      {channelBanner}
       {isConversationLoading && !isStreaming && messages.length === 0 ? (
         <PageSkeleton variant="conversation" />
       ) : hasConversation ? (
