@@ -41,9 +41,11 @@ test.describe('认证流程测试', () => {
   })
 
   test.describe('Token 刷新接口 POST /api/auth/refresh', () => {
-    test('无 body 请求刷新返回 400', async ({ request }) => {
+    test('无 token 请求刷新返回 401', async ({ request }) => {
+      // Refresh 先从 Authorization/body 提取 token，缺失即认证失败（401），
+      // 与 login 的 JSON 绑定失败（400）语义不同。
       const res = await request.post(`${API_BASE}/api/auth/refresh`)
-      expect(res.status()).toBe(400)
+      expect(res.status()).toBe(401)
     })
 
     test('无效 refresh_token 返回 401', async ({ request }) => {
