@@ -37,8 +37,10 @@ func (e *Engine) SetPolicy(taskID string, policy *PermissionPolicy) {
 }
 
 func (e *Engine) Evaluate(taskID string, action DangerousAction, context map[string]string) (string, error) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	// Full lock (not RLock): this method may delete an expired entry from
+	// e.decisions, which is a write and would race with concurrent readers.
+	e.mu.Lock()
+	defer e.mu.Unlock()
 
 	policy, ok := e.policies[taskID]
 	if !ok {
