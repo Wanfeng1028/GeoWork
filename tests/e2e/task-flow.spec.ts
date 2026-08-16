@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { createHelpers } from './helpers/app-helpers'
+import { AppShellPage } from './pages/app-shell.page'
+import { ChatComposerPage } from './pages/chat-composer.page'
 
 /**
  * 任务流程 E2E 测试
@@ -13,29 +14,26 @@ import { createHelpers } from './helpers/app-helpers'
 
 test.describe('Task Flow Tests', () => {
   test.beforeEach(async ({ page }) => {
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') console.error('[E2E] Page error:', msg.text())
-      if (msg.type() === 'warning') console.warn('[E2E] Page warning:', msg.text())
-    })
     page.on('pageerror', (err) => {
       console.error('[E2E] Page exception:', err.message)
     })
   })
 
   test('app loads and composer input is visible', async ({ page }) => {
-    await page.goto('/')
-    const helpers = createHelpers(page)
-    await helpers.waitForAppReady()
+    const shell = new AppShellPage(page)
+    await shell.goto('/new-task')
 
     // Composer 是新建任务的入口，必须存在且可见。
-    const composer = page.locator('.geo-composer, textarea, [contenteditable]').first()
-    await expect(composer).toBeVisible({ timeout: 10000 })
+    const composer = new ChatComposerPage(page)
+    await composer.expectVisible()
+    await expect(composer.input).toBeVisible()
   })
 
-  // Class B（P0 分级）：以下用例需要真实后端 + LLM 驱动一次任务执行，
-  // 才能观察到监控面板 / 实时进度 / 交付清单。在任务 fixture（mock SSE 流
-  // 或种子任务）落地之前无法确定性运行，显式 skip 并保留意图。
-  test.describe.skip('任务执行流程 — 待任务 fixture（mock SSE / 种子任务）', () => {
+  // Class B：以下用例需要真实 Go core（8765）+ LLM 驱动一次任务执行，
+  // 才能观察到监控面板 / 实时进度 / 交付清单。当前 E2E 拓扑只启动渲染层
+  // （vite.e2e.config.ts），不启动 core/worker。待 mock SSE 流或种子任务
+  // fixture 落地后启用（依赖项见 doc/20-Engineering-E2E-Testing.md §1）。
+  test.describe.skip('任务执行流程 — 待 mock SSE / 种子任务 fixture（需 Go core）', () => {
     test.skip('create a task and see it in the monitor', async () => {
       // TODO: 提交任务后，断言任务监控面板出现该任务条目（硬断言）。
     })

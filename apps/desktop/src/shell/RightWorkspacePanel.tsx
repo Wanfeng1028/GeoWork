@@ -463,6 +463,7 @@ export function RightWorkspacePanel({
           type="text"
           icon={<PanelRightOpen style={{ fontSize: 16 }} />}
           onClick={() => setCollapsed(false)}
+          data-testid="right-workspace-expand"
           style={{
             position: 'fixed',
             right: 8,

@@ -20,6 +20,8 @@ export interface CapsuleTabsProps {
   size?: 'small' | 'middle' | 'large'
   className?: string
   style?: CSSProperties
+  /** E2E 锚点前缀：生成 data-testid={`${testId}-${opt.value}`} */
+  testId?: string
 }
 
 /**
@@ -36,6 +38,7 @@ export function CapsuleTabs({
   size = 'middle',
   className,
   style,
+  testId,
 }: CapsuleTabsProps) {
   const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
   const isDark = resolvedAppearance === 'dark'
@@ -146,6 +149,7 @@ export function CapsuleTabs({
             role="tab"
             aria-selected={active}
             disabled={opt.disabled}
+            data-testid={testId ? `${testId}-${opt.value}` : undefined}
             ref={(el) => {
               if (el) btnRefs.current.set(opt.value, el)
               else btnRefs.current.delete(opt.value)

@@ -310,6 +310,7 @@ export function ChatComposer({
         return (
           <div
             key={opt.key}
+            data-testid={`mode-option-${opt.key}`}
             className={styles.modeItem}
             style={isActive ? { background: token.colorPrimaryBg } : undefined}
             onMouseEnter={(e) => {

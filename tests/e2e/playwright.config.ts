@@ -1,8 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 // desktop 应用目录（renderer 独立 dev server 从这里启动）
-const desktopDir = resolve(__dirname, '../../apps/desktop')
+// package.json 为 "type": "module"，ESM 下没有 __dirname。
+const here = dirname(fileURLToPath(import.meta.url))
+const desktopDir = resolve(here, '../../apps/desktop')
 
 export default defineConfig({
   testDir: '.',

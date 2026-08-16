@@ -709,6 +709,7 @@ export function AppShell() {
             <div className={styles.sidebarSegmented}>
               <CapsuleTabs
                 block
+                testId="sidebar-segment"
                 value={segment}
                 onChange={(val) => {
                   if (val === 'tasks') navigate('/tasks')
