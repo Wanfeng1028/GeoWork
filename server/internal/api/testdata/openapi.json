@@ -1,0 +1,394 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GeoWork Cloud API",
+    "version": "endpoint-spec"
+  },
+  "paths": {
+    "/api/account/me": {
+      "delete": {
+        "operationId": "accounts.(*Service).DeleteAccount"
+      }
+    },
+    "/api/account/me/password": {
+      "put": {
+        "operationId": "accounts.(*Service).ChangePassword"
+      }
+    },
+    "/api/account/me/stats": {
+      "get": {
+        "operationId": "accounts.(*Service).GetAccountStats"
+      }
+    },
+    "/api/account/permissions": {
+      "get": {
+        "operationId": "rbac.(*Service).GetPermissions"
+      }
+    },
+    "/api/account/profile": {
+      "get": {
+        "operationId": "accounts.(*Service).GetProfile"
+      },
+      "patch": {
+        "operationId": "accounts.(*Service).UpdateProfile"
+      }
+    },
+    "/api/account/subscription": {
+      "get": {
+        "operationId": "accounts.(*Service).GetSubscription"
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "auth.(*Service).Login"
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "auth.(*Service).Logout"
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "auth.(*Service).Me"
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "auth.(*Service).Refresh"
+      }
+    },
+    "/api/billing/checkout/mock": {
+      "post": {
+        "operationId": "billing.(*Service).CheckoutSession"
+      }
+    },
+    "/api/billing/credits": {
+      "get": {
+        "operationId": "billing.(*Service).GetCredits"
+      }
+    },
+    "/api/billing/credits/check": {
+      "post": {
+        "operationId": "billing.(*Service).CheckCredits"
+      }
+    },
+    "/api/billing/credits/deduct": {
+      "post": {
+        "operationId": "billing.(*Service).DeductCredits"
+      }
+    },
+    "/api/billing/invoices": {
+      "get": {
+        "operationId": "billing.(*Service).GetInvoices"
+      }
+    },
+    "/api/billing/invoices/:id": {
+      "get": {
+        "operationId": "billing.(*Service).GetInvoice"
+      }
+    },
+    "/api/billing/invoices/generate": {
+      "post": {
+        "operationId": "billing.(*Service).GenerateInvoice"
+      }
+    },
+    "/api/billing/plan": {
+      "get": {
+        "operationId": "billing.(*Service).GetPlan"
+      }
+    },
+    "/api/billing/usage": {
+      "get": {
+        "operationId": "billing.(*Service).GetUsage"
+      }
+    },
+    "/api/channels": {
+      "get": {
+        "operationId": "channels.(*Service).ListChannels"
+      },
+      "post": {
+        "operationId": "channels.(*Service).CreateChannel"
+      }
+    },
+    "/api/channels/:id": {
+      "delete": {
+        "operationId": "channels.(*Service).DeleteChannel"
+      }
+    },
+    "/api/channels/:id/events": {
+      "get": {
+        "operationId": "channels.(*Service).ListChannelEvents"
+      }
+    },
+    "/api/channels/:id/toggle": {
+      "patch": {
+        "operationId": "channels.(*Service).ToggleChannel"
+      }
+    },
+    "/api/channels/webhook/:channelId": {
+      "post": {
+        "operationId": "channels.(*Service).WebhookReceiver"
+      }
+    },
+    "/api/comments/:id": {
+      "delete": {
+        "operationId": "collaboration.(*Service).DeleteComment"
+      },
+      "put": {
+        "operationId": "collaboration.(*Service).EditComment"
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "operationId": "conversations.(*Service).List"
+      },
+      "post": {
+        "operationId": "conversations.(*Service).Create"
+      }
+    },
+    "/api/conversations/:id": {
+      "delete": {
+        "operationId": "conversations.(*Service).Delete"
+      },
+      "get": {
+        "operationId": "conversations.(*Service).Get"
+      }
+    },
+    "/api/conversations/:id/messages": {
+      "get": {
+        "operationId": "conversations.(*Service).ListMessages"
+      },
+      "post": {
+        "operationId": "conversations.(*Service).AppendMessage"
+      }
+    },
+    "/api/conversations/:id/usage": {
+      "get": {
+        "operationId": "conversations.(*Service).TokenUsage"
+      }
+    },
+    "/api/crash/report": {
+      "post": {
+        "operationId": "crash.(*Service).Report"
+      }
+    },
+    "/api/marketplace/connectors": {
+      "get": {
+        "operationId": "marketplace.(*Service).ListConnectors"
+      }
+    },
+    "/api/marketplace/items/:id": {
+      "get": {
+        "operationId": "marketplace.(*Service).GetItem"
+      }
+    },
+    "/api/marketplace/items/:id/install": {
+      "post": {
+        "operationId": "marketplace.(*Service).InstallItem"
+      }
+    },
+    "/api/marketplace/items/:id/reviews": {
+      "get": {
+        "operationId": "marketplace.(*Service).GetItemReviews"
+      },
+      "post": {
+        "operationId": "marketplace.(*Service).SubmitReview"
+      }
+    },
+    "/api/marketplace/items/:id/uninstall": {
+      "post": {
+        "operationId": "marketplace.(*Service).UninstallItem"
+      }
+    },
+    "/api/marketplace/plugins": {
+      "get": {
+        "operationId": "marketplace.(*Service).ListPlugins"
+      }
+    },
+    "/api/marketplace/skills": {
+      "get": {
+        "operationId": "marketplace.(*Service).ListSkills"
+      }
+    },
+    "/api/model/chat": {
+      "post": {
+        "operationId": "modelproxy.(*Service).Chat"
+      }
+    },
+    "/api/model/models": {
+      "get": {
+        "operationId": "modelproxy.(*Service).ListModels"
+      }
+    },
+    "/api/model/providers": {
+      "get": {
+        "operationId": "modelproxy.(*Service).ListProviders"
+      },
+      "post": {
+        "operationId": "modelproxy.(*Service).AddProvider"
+      }
+    },
+    "/api/model/providers/:id": {
+      "delete": {
+        "operationId": "modelproxy.(*Service).DeleteProvider"
+      }
+    },
+    "/api/model/providers/:id/test": {
+      "post": {
+        "operationId": "modelproxy.(*Service).TestProvider"
+      }
+    },
+    "/api/model/stream": {
+      "post": {
+        "operationId": "modelproxy.(*Service).Stream"
+      }
+    },
+    "/api/rbac/assign-role": {
+      "post": {
+        "operationId": "rbac.(*Service).AssignRole"
+      }
+    },
+    "/api/rbac/check": {
+      "post": {
+        "operationId": "rbac.(*Service).CheckPermission"
+      }
+    },
+    "/api/rbac/check-resource": {
+      "post": {
+        "operationId": "rbac.(*Service).CheckResourcePermission"
+      }
+    },
+    "/api/rbac/roles": {
+      "get": {
+        "operationId": "rbac.(*Service).GetRoles"
+      }
+    },
+    "/api/sync/cleanup": {
+      "post": {
+        "operationId": "sync.(*Service).Cleanup"
+      }
+    },
+    "/api/sync/history": {
+      "get": {
+        "operationId": "sync.(*Service).GetSyncHistory"
+      }
+    },
+    "/api/sync/pull": {
+      "get": {
+        "operationId": "sync.(*Service).Pull"
+      }
+    },
+    "/api/sync/push": {
+      "post": {
+        "operationId": "sync.(*Service).Push"
+      }
+    },
+    "/api/sync/resolve-conflict": {
+      "post": {
+        "operationId": "sync.(*Service).ResolveConflict"
+      }
+    },
+    "/api/sync/state": {
+      "get": {
+        "operationId": "sync.(*Service).GetState"
+      }
+    },
+    "/api/tasks/:id/assign": {
+      "post": {
+        "operationId": "collaboration.(*Service).AssignTask"
+      }
+    },
+    "/api/tasks/:id/comments": {
+      "post": {
+        "operationId": "collaboration.(*Service).AddComment"
+      }
+    },
+    "/api/teams": {
+      "get": {
+        "operationId": "teams.(*Service).ListTeams"
+      },
+      "post": {
+        "operationId": "teams.(*Service).CreateTeam"
+      }
+    },
+    "/api/teams/:id": {
+      "delete": {
+        "operationId": "teams.(*Service).DeleteTeam"
+      }
+    },
+    "/api/teams/:id/invite": {
+      "post": {
+        "operationId": "teams.(*Service).InviteMember"
+      }
+    },
+    "/api/teams/:id/members": {
+      "get": {
+        "operationId": "teams.(*Service).GetTeamMembers"
+      }
+    },
+    "/api/teams/:id/members/:userid": {
+      "delete": {
+        "operationId": "teams.(*Service).RemoveMember"
+      },
+      "patch": {
+        "operationId": "teams.(*Service).UpdateMember"
+      }
+    },
+    "/api/teams/:id/transfer": {
+      "post": {
+        "operationId": "teams.(*Service).TransferOwnership"
+      }
+    },
+    "/api/teams/:id/workspaces": {
+      "get": {
+        "operationId": "teams.(*Service).GetTeamWorkspaces"
+      }
+    },
+    "/api/telemetry/batch": {
+      "post": {
+        "operationId": "telemetry.(*Service).ReportBatch"
+      }
+    },
+    "/api/telemetry/events": {
+      "post": {
+        "operationId": "telemetry.(*Service).ReportEvent"
+      }
+    },
+    "/api/usage/events": {
+      "post": {
+        "operationId": "usage.(*Service).ReportEvents"
+      }
+    },
+    "/api/usage/models": {
+      "get": {
+        "operationId": "usage.(*Service).GetModels"
+      }
+    },
+    "/api/usage/summary": {
+      "get": {
+        "operationId": "usage.(*Service).GetSummary"
+      }
+    },
+    "/api/workspaces/:id/activity": {
+      "get": {
+        "operationId": "collaboration.(*Service).GetActivity"
+      }
+    },
+    "/api/workspaces/:id/comments": {
+      "get": {
+        "operationId": "collaboration.(*Service).ListComments"
+      }
+    },
+    "/api/workspaces/:id/share": {
+      "post": {
+        "operationId": "collaboration.(*Service).Share"
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "api.BuildEndpointSpec.func1"
+      }
+    }
+  }
+}

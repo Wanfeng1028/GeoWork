@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { test as authTest } from './fixtures/auth.fixture'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 /**
  * API 集成 E2E 测试
@@ -11,7 +14,24 @@ import { test as authTest } from './fixtures/auth.fixture'
  * 断言纪律（P0）：
  * - 每个断言都有明确的失败语义，禁止 "接受 500/503" 式的宽泛断言。
  * - 服务器不可达时测试应当失败（连接错误），而不是静默通过。
+ *
+ * OpenAPI 契约（P5）：端点清单读取 server/internal/api/testdata/openapi.json
+ * （单一事实源，由 server 侧 TestOpenAPISpecInSync 保证与代码一致）。
  */
+
+const here = dirname(fileURLToPath(import.meta.url))
+const specPath = resolve(here, '../../server/internal/api/testdata/openapi.json')
+const endpointSpec = JSON.parse(readFileSync(specPath, 'utf-8')) as {
+  paths: Record<string, Record<string, { operationId: string }>>
+}
+
+// 展开为 (method, path, operationId) 平面清单。
+const specEndpoints: Array<{ method: string; path: string; operationId: string }> = []
+for (const [path, ops] of Object.entries(endpointSpec.paths)) {
+  for (const [method, op] of Object.entries(ops)) {
+    specEndpoints.push({ method: method.toUpperCase(), path, operationId: op.operationId })
+  }
+}
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:8767'
 
@@ -149,5 +169,25 @@ test.describe('API 集成测试', () => {
       const body = await res.json()
       expect(typeof body).toBe('object')
     })
+  })
+
+  // OpenAPI 契约（P5）：spec 中的每个端点必须在真实 server 上存在。
+  // 无认证探测的合法结果是 401（保护路由）/ 400/422（公开路由参数校验）
+  // / 200（公开读），404 意味着 spec 与部署的路由表漂移——正是要拦的缺陷。
+  // 路径参数替换为哑值（:id → 1）；POST 不带 body，公开端点只会得到参数
+  // 校验错误，不会产生副作用。
+  test.describe('OpenAPI 契约 — spec 端点存在性（非 404）', () => {
+    for (const ep of specEndpoints) {
+      test(`${ep.method} ${ep.path} [${ep.operationId}]`, async ({ request }) => {
+        const concretePath = ep.path.replace(/:[A-Za-z]+/g, '1')
+        const res = await request.fetch(`${API_BASE}${concretePath}`, {
+          method: ep.method,
+        })
+        expect(
+          res.status(),
+          `${ep.operationId}: spec 声明存在但返回 404，路由表与 openapi.json 漂移`,
+        ).not.toBe(404)
+      })
+    }
   })
 })

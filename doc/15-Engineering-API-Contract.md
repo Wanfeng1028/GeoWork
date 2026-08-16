@@ -11,6 +11,7 @@
 |---|---|---|
 | v1.0 | 2026-08-12 | 初稿：接口契约维护方式、类型生成、版本管理、错误码规范 |
 | v1.1 | 2026-08-16 | 新增 §2.5 前端统一客户端约定（coreApi + client 双层、超时、ApiError 三分类）；§3.3 补 `X-GeoWork-Token` 请求头 |
+| v1.2 | 2026-08-17 | P5：§2.4 落地——OpenAPI 端点单一事实源（openapi.json + 双侧契约测试） |
 
 ---
 
@@ -52,13 +53,28 @@
 4. 如有 breaking change，走版本管理（见 §4）
 ```
 
-### 2.4 未来改进（TODO）
+### 2.4 OpenAPI 单一事实源（P5 已落地端点级）
 
-考虑引入 OpenAPI/Swagger 自动生成前端类型：
+**`server/internal/api/testdata/openapi.json` 是端点清单的唯一权威**，由代码生成、双侧契约测试守护：
 
-- Go 侧用 `swag` 或 `go-swagger` 从注释生成 OpenAPI spec
-- 前端用 `openapi-typescript` 从 spec 生成 TypeScript 类型
-- CI 中检查 spec 与代码是否同步
+| 环节 | 实现 |
+|---|---|
+| 生成 | `go run ./cmd/openapi-gen > internal/api/testdata/openapi.json`（遍历 gin 路由表，无需起 server / DB） |
+| server 侧守护 | `TestOpenAPISpecInSync`——路由改动未重新生成 spec 即测试失败（server-check 挡） |
+| E2E 侧守护 | `tests/e2e/api-integration.spec.ts` 读取 spec，对全部端点做存在性探测（404 = 漂移，CI e2e-smoke 挡） |
+
+规则：
+
+- **改路由必跑生成命令**，spec 与代码同一个提交落地；
+- spec 当前是**端点级**（path + method + operationId），请求/响应 schema 的类型级生成（swaggo 注解 + `openapi-typescript`）留作下一阶段——在类型级落地前，类型仍按 §2.1 的手动流程维护；
+- operationId 来自 gin handler 名（如 `auth.(*Service).Login`），只作定位，不是对外稳定 API。
+
+### 2.4.1 后续改进（TODO）
+
+端点级事实源之上，类型级生成：
+
+- Go 侧用 `swag` 或 `go-swagger` 从注释生成请求/响应 schema
+- 前端用 `openapi-typescript` 从 spec 生成 TypeScript 类型，替换 `src/shared/api/types.ts` 的手写类型
 
 ### 2.5 前端统一客户端（唯一入口）
 
