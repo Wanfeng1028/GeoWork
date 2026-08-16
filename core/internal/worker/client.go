@@ -200,10 +200,15 @@ func (c *Client) ExportMapLayout(ctx context.Context, payload map[string]any) (m
 	return out, err
 }
 
-// GetNdvHistory retrieves NDVI analysis history from the Python worker.
-func (c *Client) GetNdvHistory(ctx context.Context, payload map[string]any) (map[string]any, error) {
-	var out map[string]any
-	err := c.post(ctx, "/ndvi/history", payload, &out)
+// NdvHistory retrieves NDVI analysis history for a project from the Python
+// worker. The worker implements GET /ndvi/history/{project_id} and returns a
+// JSON array of history entries.
+func (c *Client) NdvHistory(ctx context.Context, projectID string) ([]map[string]any, error) {
+	if projectID == "" {
+		return nil, fmt.Errorf("projectID is required")
+	}
+	var out []map[string]any
+	err := c.get(ctx, "/ndvi/history/"+projectID, &out)
 	return out, err
 }
 

@@ -419,25 +419,8 @@ func (h *globalHandler) handleNDVIAHistory(w http.ResponseWriter, r *http.Reques
 		http.Error(w, `{"error":"project_id is required"}`, http.StatusBadRequest)
 		return
 	}
-	workerURL := h.app.WorkerClient().BaseURL + "/ndvi/history/" + projectID
-	workerReq, err := http.NewRequestWithContext(r.Context(), http.MethodGet, workerURL, nil)
-	if err != nil {
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
-		return
-	}
-	workerResp, err := h.app.WorkerClient().HTTP.Do(workerReq)
-	if err != nil {
-		http.Error(w, `{"error":"NDVI history failed: `+err.Error()+`"}`, http.StatusInternalServerError)
-		return
-	}
-	defer workerResp.Body.Close()
-	if workerResp.StatusCode >= 400 {
-		http.Error(w, `{"error":"NDVI history worker error"}`, http.StatusInternalServerError)
-		return
-	}
-	var workerResult map[string]any
-	_ = json.NewDecoder(workerResp.Body).Decode(&workerResult)
-	writeJSON(w, workerResult)
+	result, err := h.app.WorkerClient().NdvHistory(r.Context(), projectID)
+	writeResult(w, result, err)
 }
 func (h *globalHandler) handleWorkflowsList(w http.ResponseWriter, r *http.Request) {
 	engine := h.app.AgentEngine()

@@ -115,33 +115,10 @@ func (h *NdvHandler) handleHistory(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("NDVI history request", zap.String("projectId", projectID))
 
-	// Call Python worker's GET /ndvi/history/{project_id}
-	workerURL := h.Worker.BaseURL + "/ndvi/history/" + projectID
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, workerURL, nil)
-	if err != nil {
-		h.Logger.Error("NDVI history request creation failed", zap.Error(err))
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
-		return
-	}
-
-	resp, err := h.Worker.HTTP.Do(req)
+	result, err := h.Worker.NdvHistory(r.Context(), projectID)
 	if err != nil {
 		h.Logger.Error("NDVI history worker call failed", zap.Error(err))
 		http.Error(w, `{"error":"NDVI history failed: `+err.Error()+`"}`, http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		h.Logger.Error("NDVI history worker returned error", zap.Int("status", resp.StatusCode))
-		http.Error(w, `{"error":"NDVI history worker error"}`, http.StatusInternalServerError)
-		return
-	}
-
-	var result map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		h.Logger.Error("NDVI history decode failed", zap.Error(err))
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
 

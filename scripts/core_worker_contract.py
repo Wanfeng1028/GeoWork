@@ -47,7 +47,7 @@ CORE_CALLED_ENDPOINTS: list[tuple[str, str]] = [
     ("GET", "/health"),
     ("GET", "/tools"),
     ("POST", "/ndvi/analyze"),
-    ("POST", "/ndvi/history"),
+    ("GET", "/ndvi/history/test-project"),
     ("POST", "/tools/gdal/inspect-dataset"),
     ("POST", "/tools/gee/check-auth"),
     ("POST", "/tools/gee/generate-ndvi-script"),
@@ -76,10 +76,123 @@ CORE_CALLED_ENDPOINTS: list[tuple[str, str]] = [
 # Endpoints the core calls that the worker does not implement yet. Tracked here
 # so the check is honest about the gap without blocking on it. Each entry must
 # carry a reason; deleting an entry re-arms the assertion.
-KNOWN_MISSING: dict[tuple[str, str], str] = {
-    ("GET", "/tools"): "worker tool catalog endpoint not implemented; core degrades to builtin-only tools (toolregistry/worker_tools.go)",
-    ("POST", "/ndvi/history"): "contract mismatch: core POSTs /ndvi/history with JSON body, but worker implements GET /ndvi/history/{project_id}; core GetNdvHistory always 404s. Needs a canonical-side decision before fixing.",
+KNOWN_MISSING: dict[tuple[str, str], str] = {}
+
+# Tool names the Go core's RunTool dispatch table (client.go) can execute.
+# The GET /tools catalog must be a subset of these: a catalog entry the core
+# cannot dispatch would register a tool that always fails at runtime.
+CORE_RUNTOOL_NAMES: set[str] = {
+    "geo.gee.search_dataset",
+    "geo.gee.check_auth",
+    "geo.gee.generate_ndvi_script",
+    "geo.ndvi.analyze",
+    "geo.office.write_report",
+    "geo.office.write_ppt",
+    "geo.office.write_excel",
+    "geo.office.write_notebook",
+    "geo.gdal.inspect_dataset",
+    "geo.raster.metadata",
+    "geo.raster.clip",
+    "geo.raster.reproject",
+    "geo.raster.cog",
+    "geo.vector.metadata",
+    "geo.vector.buffer",
+    "geo.vector.clip",
+    "geo.vector.reproject",
+    "research.openalex.search",
+    "papers.parse_pdf",
+    "knowledge.index",
+    "qgis.check",
+    "qgis.check_env",
+    "qgis.processing.run",
+    "geo.map.layout_export",
 }
+
+VALID_RISK_LEVELS = {"low", "medium", "high"}
+
+
+def _fetch_json(method: str, path: str) -> tuple[int, object]:
+    """Send a minimal request and return (status, parsed JSON body or None)."""
+    url = BASE + path
+    data = None
+    headers = {}
+    if method == "POST":
+        data = json.dumps({}).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = resp.read()
+            try:
+                return resp.status, json.loads(body)
+            except json.JSONDecodeError:
+                return resp.status, None
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read()
+            parsed = json.loads(body)
+        except Exception:
+            parsed = None
+        return exc.code, parsed
+
+
+def check_tools_schema() -> list[str]:
+    """Schema-level assertions for GET /tools (WorkerToolDef contract)."""
+    errors: list[str] = []
+    status, body = _fetch_json("GET", "/tools")
+    if status != 200:
+        return [f"GET /tools: expected 200, got {status}"]
+    if not isinstance(body, dict) or set(body.keys()) != {"tools"}:
+        return ['GET /tools: response must be exactly {"tools": [...]}']
+    tools = body["tools"]
+    if not isinstance(tools, list) or not tools:
+        return ["GET /tools: 'tools' must be a non-empty array"]
+
+    names: set[str] = set()
+    for entry in tools:
+        if not isinstance(entry, dict):
+            errors.append(f"GET /tools: entry is not an object: {entry!r}")
+            continue
+        if set(entry.keys()) != {"name", "description", "input_schema", "risk_level"}:
+            errors.append(f"GET /tools: entry keys must be exactly WorkerToolDef fields, got {sorted(entry.keys())}")
+            continue
+        name = entry["name"]
+        if not isinstance(name, str) or not name:
+            errors.append(f"GET /tools: entry has invalid name: {name!r}")
+            continue
+        if name in names:
+            errors.append(f"GET /tools: duplicate tool name {name}")
+        names.add(name)
+        if not isinstance(entry["description"], str) or not entry["description"]:
+            errors.append(f"GET /tools: {name} has invalid description")
+        if entry["risk_level"] not in VALID_RISK_LEVELS:
+            errors.append(f"GET /tools: {name} has invalid risk_level {entry['risk_level']!r}")
+        schema = entry["input_schema"]
+        if not isinstance(schema, dict) or schema.get("type") != "object":
+            errors.append(f"GET /tools: {name} input_schema must be an object schema")
+
+    unknown = names - CORE_RUNTOOL_NAMES
+    if unknown:
+        errors.append(f"GET /tools: catalog names not dispatchable by core RunTool: {sorted(unknown)}")
+    return errors
+
+
+def check_ndvi_history_schema() -> list[str]:
+    """Schema-level assertions for GET /ndvi/history/{project_id}."""
+    errors: list[str] = []
+    status, body = _fetch_json("GET", "/ndvi/history/test-project")
+    if status != 200:
+        return [f"GET /ndvi/history/{{project_id}}: expected 200, got {status}"]
+    if not isinstance(body, list):
+        return ["GET /ndvi/history/{project_id}: response must be a JSON array"]
+    for entry in body:
+        if not isinstance(entry, dict):
+            errors.append(f"GET /ndvi/history: entry is not an object: {entry!r}")
+            continue
+        for field in ("file", "project_id", "timestamp", "statistics"):
+            if field not in entry:
+                errors.append(f"GET /ndvi/history: entry missing field {field!r}")
+    return errors
 
 
 def _port_free() -> bool:
@@ -157,6 +270,22 @@ def main() -> int:
             else:
                 broken.append(f"{method} {path}: route missing (HTTP {status})")
                 print(f"  [BROKEN]  {method:4} {path} -> {status}")
+
+        # Schema-level contract checks on top of route existence.
+        print()
+        print("Schema checks:")
+        for label, check in (
+            ("GET /tools (WorkerToolDef)", check_tools_schema),
+            ("GET /ndvi/history/{id}", check_ndvi_history_schema),
+        ):
+            schema_errors = check()
+            if schema_errors:
+                broken.extend(f"{label}: {e}" for e in schema_errors)
+                print(f"  [BROKEN]  {label}")
+                for e in schema_errors:
+                    print(f"            - {e}")
+            else:
+                print(f"  [ok]      {label}")
 
         print()
         if missing_tracked:

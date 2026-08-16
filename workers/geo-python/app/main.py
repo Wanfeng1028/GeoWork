@@ -10,9 +10,13 @@ from app.api.ndvi import router as ndvi_router
 from app.api.papers import router as papers_router
 from app.exceptions import GeoWorkError
 from app.middleware.error_handler import generic_exception_handler, geowork_exception_handler
+from app.tool_catalog import TOOL_CATALOG, validate_catalog
 from app.validation import ValidationError, validate_bbox, validate_crs, validate_path
 
 app = FastAPI(title="GeoWork Geo Python Worker", version="1.0.0-dev")
+
+# Fail fast at import time if the tool catalog violates the WorkerToolDef contract.
+validate_catalog()
 
 # Register unified exception handlers
 app.add_exception_handler(GeoWorkError, geowork_exception_handler)
@@ -96,6 +100,12 @@ def health():
             "cog-map-layout",
         ],
     }
+
+
+@app.get("/tools")
+def list_tools():
+    """Tool catalog consumed by the Go core (worker.Client.ListTools)."""
+    return {"tools": TOOL_CATALOG}
 
 
 @app.post("/tools/gee/search-dataset")
