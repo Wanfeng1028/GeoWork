@@ -109,6 +109,80 @@ jobs:
           path: server/coverage.out
           if-no-files-found: warn
 
+  # E2E 冒烟：Playwright 拉起 renderer dev server（纯 Chromium，不含 Electron），
+  # 另起 cloud server（自动注册 + 临时 SQLite）跑 API 集成用例。
+  # 约定见 doc/20-Engineering-E2E-Testing.md。
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Install desktop dependencies (renderer dev server)
+        run: cd apps/desktop && npm install --ignore-scripts
+      - name: Install E2E dependencies
+        run: cd tests/e2e && npm install
+      - name: Install Playwright Chromium
+        run: cd tests/e2e && npx playwright install --with-deps chromium
+      - name: Start cloud server (auto-register + temp SQLite)
+        shell: bash
+        run: |
+          cd server
+          GEOWORK_AUTO_REGISTER_ENABLED=true GEOWORK_DB_PATH=/tmp/geowork-e2e.db \
+            go run ./cmd/geowork-api > /tmp/geowork-api.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8767/health > /dev/null; then
+              echo "cloud server ready"
+              break
+            fi
+            sleep 1
+            if [ "$i" -eq 60 ]; then
+              echo "::error::cloud server not ready in 60s"
+              cat /tmp/geowork-api.log
+              exit 1
+            fi
+          done
+      - name: Run UI smoke E2E (@smoke)
+        run: cd tests/e2e && npx playwright test --grep @smoke --reporter=line
+      - name: Run API integration E2E
+        run: cd tests/e2e && npx playwright test api-integration.spec.ts auth-flow.spec.ts --reporter=line
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report
+          if-no-files-found: warn
+
+  # Windows E2E：主用户平台是 Windows，渲染层差异只在这里能暴露。
+  # 与 e2e-smoke 相同矩阵，跑 @smoke 子集。
+  e2e-smoke-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install desktop dependencies (renderer dev server)
+        run: cd apps/desktop; npm install --ignore-scripts
+      - name: Install E2E dependencies
+        run: cd tests/e2e; npm install
+      - name: Install Playwright Chromium
+        run: cd tests/e2e; npx playwright install chromium
+      - name: Run UI smoke E2E (@smoke)
+        run: cd tests/e2e; npx playwright test --grep @smoke --reporter=line
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-windows
+          path: tests/e2e/playwright-report
+          if-no-files-found: warn
+
   # Python Worker 检查：pytest（排除需要系统 GIS 栈的 integration 用例）
   # + 真实进程级冒烟契约检查（启动 uvicorn，走真实 HTTP，断言响应 schema）。
   worker-check:

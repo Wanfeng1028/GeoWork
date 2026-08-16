@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { test as authTest } from './fixtures/auth.fixture'
 
 /**
  * API 集成 E2E 测试
@@ -105,24 +106,48 @@ test.describe('API 集成测试', () => {
     })
   })
 
-  // Class B（P0 分级）：以下 CRUD 用例意图明确（验证带认证的增删查），
-  // 但依赖一个已注册/已播种的测试账号才能拿到 token。在测试数据 fixture
-  // 落地（P3）之前，它们无法确定性运行，故显式 skip 并保留意图，
-  // 而不是用 "如有 token" 的条件分支静默通过。
-  test.describe.skip('CRUD 操作（需登录）— 待 P3 测试账号 fixture', () => {
-    test.skip('创建和获取 Model Provider', async () => {
-      // TODO(P3): 用播种账号登录拿 token 后：
-      //   GET  /api/model/providers -> 200 数组
-      //   POST /api/model/providers -> 200/201
+  // CRUD 用例依赖已登录态：由 fixtures/auth.fixture.ts 通过
+  // GEOWORK_AUTO_REGISTER_ENABLED=true 的自动注册登录提供 authedRequest。
+  authTest.describe('CRUD 操作（需登录）', () => {
+    authTest('创建和获取 Model Provider', async ({ authedRequest }) => {
+      const create = await authedRequest.post('/api/model/providers', {
+        data: {
+          id: 'e2e-provider',
+          name: 'E2E Provider',
+          base_url: 'http://localhost:11434/v1',
+          api_key: 'sk-e2e-test-key',
+        },
+      })
+      expect(create.status()).toBe(201)
+      const created = await create.json()
+      expect(created.api_key).toBe('***') // 密钥必须脱敏返回
+
+      const list = await authedRequest.get('/api/model/providers')
+      expect(list.status()).toBe(200)
+      const providers = await list.json()
+      expect(Array.isArray(providers)).toBe(true)
+      expect(providers.some((p: { name: string }) => p.name === 'E2E Provider')).toBe(true)
     })
-    test.skip('列出 Teams', async () => {
-      // TODO(P3): GET /api/teams -> 200 数组
+
+    authTest('列出 Teams', async ({ authedRequest }) => {
+      const res = await authedRequest.get('/api/teams')
+      expect(res.status()).toBe(200)
+      const teams = await res.json()
+      expect(Array.isArray(teams)).toBe(true)
     })
-    test.skip('获取 Usage Summary', async () => {
-      // TODO(P3): GET /api/usage/summary -> 200
+
+    authTest('获取 Usage Summary', async ({ authedRequest }) => {
+      const res = await authedRequest.get('/api/usage/summary')
+      expect(res.status()).toBe(200)
+      const body = await res.json()
+      expect(typeof body).toBe('object')
     })
-    test.skip('获取 Billing Plan', async () => {
-      // TODO(P3): GET /api/billing/plan -> 200
+
+    authTest('获取 Billing Plan', async ({ authedRequest }) => {
+      const res = await authedRequest.get('/api/billing/plan')
+      expect(res.status()).toBe(200)
+      const body = await res.json()
+      expect(typeof body).toBe('object')
     })
   })
 })
