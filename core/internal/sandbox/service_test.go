@@ -88,15 +88,18 @@ func TestRunCommand_DevMode(t *testing.T) {
 		t.Fatalf("RunCommand failed: %v", err)
 	}
 
-	if proc.Status != "running" {
-		t.Errorf("expected status running, got %s", proc.Status)
+	// A fast command may finish before we get here, so accept either the
+	// in-flight or the terminal state — but never a start failure.
+	if st := proc.Snapshot().Status; st != "running" && st != "completed" {
+		t.Errorf("expected status running or completed, got %s", st)
 	}
 
-	// wait for completion
+	// wait for completion; cancel fires after the final status is written,
+	// so the snapshot taken after Done() is guaranteed to be terminal.
 	<-proc.ctx.Done()
 
-	if proc.Status != "completed" {
-		t.Errorf("expected status completed, got %s", proc.Status)
+	if proc.Snapshot().Status != "completed" {
+		t.Errorf("expected status completed, got %s", proc.Snapshot().Status)
 	}
 }
 
@@ -141,8 +144,8 @@ func TestStopProcess(t *testing.T) {
 		t.Fatalf("StopProcess failed: %v", err)
 	}
 
-	if proc.Status != "stopped" {
-		t.Errorf("expected status stopped, got %s", proc.Status)
+	if proc.Snapshot().Status != "stopped" {
+		t.Errorf("expected status stopped, got %s", proc.Snapshot().Status)
 	}
 }
 

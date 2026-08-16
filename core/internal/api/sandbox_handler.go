@@ -71,6 +71,10 @@ func (h *sandboxHandler) handleRunCommand(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Serialize a snapshot: the monitor goroutine mutates the live process
+	// concurrently with this response.
+	snap := proc.Snapshot()
+
 	// Emit tool.call.completed
 	if h.bridge != nil {
 		h.bridge.Publish(TaskEventPayload{
@@ -78,14 +82,14 @@ func (h *sandboxHandler) handleRunCommand(w http.ResponseWriter, r *http.Request
 			TaskID: input.TaskID,
 			Tool:   "run_command",
 			Data: map[string]any{
-				"processId": proc.ID,
-				"status":    proc.Status,
-				"exitCode":  proc.ExitCode,
+				"processId": snap.ID,
+				"status":    snap.Status,
+				"exitCode":  snap.ExitCode,
 			},
 		})
 	}
 
-	writeResult(w, proc, err)
+	writeResult(w, snap, err)
 }
 
 // POST /api/sandbox/run-python
@@ -132,6 +136,10 @@ func (h *sandboxHandler) handleRunPython(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Serialize a snapshot: the monitor goroutine mutates the live process
+	// concurrently with this response.
+	snap := proc.Snapshot()
+
 	// Emit tool.call.completed
 	if h.bridge != nil {
 		h.bridge.Publish(TaskEventPayload{
@@ -139,14 +147,14 @@ func (h *sandboxHandler) handleRunPython(w http.ResponseWriter, r *http.Request)
 			TaskID: input.TaskID,
 			Tool:   "run_python",
 			Data: map[string]any{
-				"processId": proc.ID,
-				"status":    proc.Status,
-				"exitCode":  proc.ExitCode,
+				"processId": snap.ID,
+				"status":    snap.Status,
+				"exitCode":  snap.ExitCode,
 			},
 		})
 	}
 
-	writeResult(w, proc, err)
+	writeResult(w, snap, err)
 }
 
 // GET /api/sandbox/processes?taskId=xxx

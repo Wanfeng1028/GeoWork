@@ -66,6 +66,7 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 		Workspace: workspace,
 		Status:    "running",
 		StartedAt: time.Now(),
+		mu:        &sync.Mutex{},
 	}
 	proc.ctx, proc.cancel = context.WithTimeout(context.Background(), time.Duration(s.policy.Timeout)*time.Second)
 
@@ -97,8 +98,10 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 	setSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
+		proc.mu.Lock()
 		proc.Status = "failed"
 		proc.Stderr = err.Error()
+		proc.mu.Unlock()
 		return proc, err
 	}
 
@@ -119,6 +122,7 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 		Workspace: workspace,
 		Status:    "running",
 		StartedAt: time.Now(),
+		mu:        &sync.Mutex{},
 	}
 	proc.ctx, proc.cancel = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 
@@ -142,8 +146,10 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 	setSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
+		proc.mu.Lock()
 		proc.Status = "failed"
 		proc.Stderr = err.Error()
+		proc.mu.Unlock()
 		return proc, err
 	}
 
@@ -153,26 +159,36 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 
 func (s *Service) monitorProcess(proc *SandboxProcess, cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	err := cmd.Wait()
+
+	proc.mu.Lock()
 	proc.Stdout = stdout.String()
 	proc.Stderr = stderr.String()
 	proc.FinishedAt = time.Now()
 
+	// Only transition if still running: StopProcess may have already moved
+	// the process to "stopped", and a user-initiated stop must not be
+	// overwritten by the monitor's view of the kill's exit error.
+	if proc.Status == "running" {
+		if err != nil {
+			if exitError, ok := err.(*exec.ExitError); ok {
+				code := exitError.ExitCode()
+				proc.ExitCode = &code
+				proc.Status = "failed"
+			} else {
+				proc.Status = "stopped"
+			}
+		} else {
+			code := 0
+			proc.ExitCode = &code
+			proc.Status = "completed"
+		}
+	}
+	proc.mu.Unlock()
+
+	// Cancel after the final status is written so waiters on ctx.Done()
+	// always observe the terminal state.
 	if proc.cancel != nil {
 		proc.cancel()
-	}
-
-	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			code := exitError.ExitCode()
-			proc.ExitCode = &code
-			proc.Status = "failed"
-		} else {
-			proc.Status = "stopped"
-		}
-	} else {
-		code := 0
-		proc.ExitCode = &code
-		proc.Status = "completed"
 	}
 }
 
@@ -189,8 +205,14 @@ func (s *Service) StopProcess(id string) error {
 		proc.cancel()
 	}
 
-	proc.Status = "stopped"
-	proc.FinishedAt = time.Now()
+	proc.mu.Lock()
+	// Only transition running processes; a process that already reached a
+	// terminal state keeps its real outcome.
+	if proc.Status == "running" {
+		proc.Status = "stopped"
+		proc.FinishedAt = time.Now()
+	}
+	proc.mu.Unlock()
 	return nil
 }
 
@@ -201,7 +223,10 @@ func (s *Service) ListProcesses(taskID string) []*SandboxProcess {
 	var result []*SandboxProcess
 	for _, proc := range s.procs {
 		if proc.TaskID == taskID {
-			result = append(result, proc)
+			// Hand out snapshots: callers JSON-encode these while the monitor
+			// goroutine may still be mutating the live process.
+			snap := proc.Snapshot()
+			result = append(result, &snap)
 		}
 	}
 	return result

@@ -4,10 +4,16 @@ package sandbox
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
-// SandboxProcess represents a running sandbox process
+// SandboxProcess represents a running sandbox process.
+//
+// The mutable fields (Status, Stdout, Stderr, ExitCode, FinishedAt) are
+// written by the monitor goroutine and by StopProcess concurrently with HTTP
+// handlers that serialize the process to JSON. They are guarded by mu. Callers
+// outside the monitor must read a consistent view via Snapshot.
 type SandboxProcess struct {
 	ID         string    `json:"id"`
 	TaskID     string    `json:"taskId"`
@@ -20,8 +26,23 @@ type SandboxProcess struct {
 	ExitCode   *int      `json:"exitCode,omitempty"`
 	StartedAt  time.Time `json:"startedAt"`
 	FinishedAt time.Time `json:"finishedAt,omitempty"`
-	ctx        context.Context
-	cancel     context.CancelFunc
+
+	// mu guards the mutable fields above. It is a pointer so Snapshot can copy
+	// the struct without tripping the copylocks vet check.
+	mu     *sync.Mutex
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+// Snapshot returns a point-in-time copy of the process state that is safe to
+// read and JSON-encode without holding any locks. The returned value shares no
+// mutable state with the live process.
+func (p *SandboxProcess) Snapshot() SandboxProcess {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	snap := *p
+	snap.mu = &sync.Mutex{}
+	return snap
 }
 
 // SandboxPolicy defines sandbox constraints

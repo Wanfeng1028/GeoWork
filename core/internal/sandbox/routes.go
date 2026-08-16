@@ -36,7 +36,7 @@ func (r *Routes) handleRunCommand(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeJSON(w, proc)
+	writeJSON(w, proc.Snapshot())
 }
 
 func (r *Routes) handleRunPython(w http.ResponseWriter, req *http.Request) {
@@ -54,7 +54,7 @@ func (r *Routes) handleRunPython(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	writeJSON(w, proc)
+	writeJSON(w, proc.Snapshot())
 }
 
 func (r *Routes) handleListProcesses(w http.ResponseWriter, req *http.Request) {
