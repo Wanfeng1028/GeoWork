@@ -18,6 +18,7 @@ import type {
   WorkMode,
 } from './conversationStorage'
 import { coreFetch, coreEventSource } from '../../../shared/api/coreApi'
+import type { CoreEventPayload, CoreRunStep } from '../../../shared/api/types'
 
 /* ── 统一接口 ── */
 
@@ -441,23 +442,6 @@ function mapWorkModeToMode(workMode?: WorkMode): string {
     default:
       return 'Work'
   }
-}
-
-/** Core 端 TaskEventPayload 的 JSON 形状。 */
-interface CoreEventPayload {
-  type: string
-  taskId?: string
-  message?: string
-  data?: Record<string, unknown>
-  error?: string
-}
-
-/** Core 端 Run.Plan.Step 形状（用于 onWorkflow 映射）。 */
-interface CoreRunStep {
-  id: string
-  title: string
-  tool?: string
-  status?: string
 }
 
 /** 确保 Core 会话存在：本地 temp id 首次发送时创建 Core 会话并缓存。 */

@@ -17,20 +17,13 @@ import {
 } from 'antd'
 import type { MenuProps } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import {
-  Plus,
-  RotateCw,
-  ArrowUpAZ,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Square,
-} from 'lucide-react'
+import { Plus, RotateCw, ArrowUpAZ, CheckCircle2, XCircle, RefreshCw, Square } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { EmptyState } from '../../shell/feedback'
 import { ScheduledTaskCard } from './components/ScheduledTaskCard'
 import { ScheduledTaskModal } from './components/ScheduledTaskModal'
 import { apiGet, apiPost, apiDelete, apiPatch } from '../../shared/api/client'
+import type { CoreTask, CoreTaskListResponse } from '../../shared/api/types'
 import styles from './TasksPage.module.css'
 
 const { Title, Text } = Typography
@@ -79,11 +72,9 @@ const INITIAL_TASKS: ScheduledTask[] = [
   {
     id: '3',
     name: '每周竞品动态追踪',
-    description:
-      '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
+    description: '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
     schedule: '每周一 10:00',
-    prompt:
-      '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
+    prompt: '请帮我追踪 GIS、AI 工具和前端工程相关竞品动态，整理为每周摘要。',
     enabled: false,
   },
   {
@@ -161,33 +152,23 @@ const MOCK_EXECUTIONS: ExecutionRecord[] = [
   },
 ]
 
-const statusConfig: Record<ExecutionStatus, { label: string; color: string; icon: React.ReactNode }> = {
+const statusConfig: Record<
+  ExecutionStatus,
+  { label: string; color: string; icon: React.ReactNode }
+> = {
   success: { label: '成功', color: 'success', icon: <CheckCircle2 /> },
   failed: { label: '失败', color: 'error', icon: <XCircle /> },
-  running: { label: '运行中', color: 'processing', icon: <RefreshCw style={{ animation: 'spin 1s linear infinite' }} /> },
+  running: {
+    label: '运行中',
+    color: 'processing',
+    icon: <RefreshCw style={{ animation: 'spin 1s linear infinite' }} />,
+  },
   cancelled: { label: '已取消', color: 'default', icon: <Square /> },
 }
 
 /* ── Core Task 对接（/api/db/tasks） ── */
 
 const TASKS_CACHE_KEY = 'geowork.tasks.cache.v1'
-
-/** Core 端 Task 形状（tasks.go Task 的 JSON 投影）。 */
-interface CoreTask {
-  id: string
-  workspaceId: string
-  name: string
-  description?: string
-  status: string // pending | running | completed | failed | cancelled | paused | recovered
-  mode: string
-  prompt?: string
-  plan?: string
-  progress: number
-  startedAt?: string
-  completedAt?: string
-  createdAt: string
-  updatedAt: string
-}
 
 /** Core Task → 前端 ScheduledTask 映射。 */
 function mapCoreTaskToScheduled(t: CoreTask): ScheduledTask {
@@ -243,35 +224,37 @@ function formatCoreTime(iso: string): string {
   }
 }
 
-interface CoreTasksBundle {
+interface TasksBundle {
   tasks: ScheduledTask[]
   executions: ExecutionRecord[]
 }
 
 /** 从 Core 加载任务列表 + 执行记录。 */
-async function loadTasksFromCore(): Promise<CoreTasksBundle> {
-  const res = await apiGet<{ total: number; tasks: CoreTask[] }>('/api/db/tasks?workspaceId=default')
+async function loadTasksFromCore(): Promise<TasksBundle> {
+  const res = await apiGet<CoreTaskListResponse>('/api/db/tasks?workspaceId=default')
   const coreTasks = res?.tasks ?? []
   return {
     tasks: coreTasks.map(mapCoreTaskToScheduled),
     executions: coreTasks
-      .filter((t) => ['completed', 'failed', 'cancelled', 'running', 'recovered', 'paused'].includes(t.status))
+      .filter((t) =>
+        ['completed', 'failed', 'cancelled', 'running', 'recovered', 'paused'].includes(t.status),
+      )
       .map(mapCoreTaskToExecution),
   }
 }
 
 /** 读取 localStorage 缓存的任务数据（Core 不可用时的降级数据源）。 */
-function loadCachedTasks(): CoreTasksBundle | null {
+function loadCachedTasks(): TasksBundle | null {
   try {
     const raw = window.localStorage.getItem(TASKS_CACHE_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as CoreTasksBundle
+    return JSON.parse(raw) as TasksBundle
   } catch {
     return null
   }
 }
 
-function saveCachedTasks(data: CoreTasksBundle): void {
+function saveCachedTasks(data: TasksBundle): void {
   try {
     window.localStorage.setItem(TASKS_CACHE_KEY, JSON.stringify(data))
   } catch {
@@ -370,7 +353,13 @@ export function TasksPage() {
       setTasks((prev) =>
         prev.map((t) =>
           t.id === editingTask.id
-            ? { ...t, name: data.name, description: data.description, schedule: data.schedule, prompt: data.prompt }
+            ? {
+                ...t,
+                name: data.name,
+                description: data.description,
+                schedule: data.schedule,
+                prompt: data.prompt,
+              }
             : t,
         ),
       )
@@ -451,7 +440,11 @@ export function TasksPage() {
       width: 100,
       render: (status: ExecutionStatus) => {
         const cfg = statusConfig[status]
-        return <Tag icon={cfg.icon} color={cfg.color}>{cfg.label}</Tag>
+        return (
+          <Tag icon={cfg.icon} color={cfg.color}>
+            {cfg.label}
+          </Tag>
+        )
       },
     },
     {
@@ -489,17 +482,15 @@ export function TasksPage() {
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <Title level={3} style={{ margin: 0 }}>定时任务</Title>
+          <Title level={3} style={{ margin: 0 }}>
+            定时任务
+          </Title>
           <Text type="secondary">
             按计划自动执行任务，也可随时手动触发。在任意对话中描述你想定期做的事，即可快速创建。
           </Text>
         </div>
         <Space>
-          <Button
-            icon={<RotateCw />}
-            loading={loading}
-            onClick={refreshFromCore}
-          />
+          <Button icon={<RotateCw />} loading={loading} onClick={refreshFromCore} />
           <Button color="primary" variant="filled" onClick={handleCreateViaGeoWork}>
             通过 GeoWork 创建
           </Button>
@@ -524,17 +515,15 @@ export function TasksPage() {
           style={{ flex: 1, background: 'transparent', border: 'none' }}
         />
         <Space>
-          <Text type="secondary" style={{ fontSize: 13 }}>保持系统唤醒</Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            保持系统唤醒
+          </Text>
           <Switch
             size="small"
             checked={keepAwake}
             onChange={(checked) => {
               setKeepAwake(checked)
-              message.info(
-                checked
-                  ? '保持系统唤醒功能后续接入'
-                  : '已关闭保持系统唤醒占位开关',
-              )
+              message.info(checked ? '保持系统唤醒功能后续接入' : '已关闭保持系统唤醒占位开关')
             }}
           />
         </Space>
@@ -574,7 +563,11 @@ export function TasksPage() {
                     <EmptyState
                       title="暂无定时任务"
                       description="创建定时任务，让 GeoWork 按计划自动执行地理分析"
-                      action={<Button type="primary" onClick={handleCreateNew}>创建任务</Button>}
+                      action={
+                        <Button type="primary" onClick={handleCreateNew}>
+                          创建任务
+                        </Button>
+                      }
                     />
                   ) : (
                     sortedTasks.map((task) => (

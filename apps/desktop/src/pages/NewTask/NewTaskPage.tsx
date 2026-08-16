@@ -1,23 +1,32 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useSearchParams, useNavigate } from 'react-router'
-import {
-  App,
-  Button,
-  Dropdown,
-  Tour,
-  Typography,
-  theme,
-} from 'antd'
+import { App, Button, Dropdown, Tour, Typography, theme } from 'antd'
 import { Loader2, FolderOpen, Boxes, Code, MapPin } from 'lucide-react'
 import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
 import { ConversationMessageView } from './components/ConversationMessage'
-import { activeAdapter, getCoreConversationId, setCoreConversationId } from './components/streamAdapters'
-import type { ConversationMessage, RunStatus, ToolCallLog, SelectedContextItem, SelectedContextKind, WorkMode } from './components/conversationStorage'
-import { createEmptyConversation, getConversation, upsertConversation } from './components/conversationStorage'
+import {
+  activeAdapter,
+  getCoreConversationId,
+  setCoreConversationId,
+} from './components/streamAdapters'
+import type {
+  ConversationMessage,
+  RunStatus,
+  ToolCallLog,
+  SelectedContextItem,
+  SelectedContextKind,
+  WorkMode,
+} from './components/conversationStorage'
+import {
+  createEmptyConversation,
+  getConversation,
+  upsertConversation,
+} from './components/conversationStorage'
 import type { Conversation } from './components/conversationStorage'
 import { apiGet } from '../../shared/api/client'
+import type { CoreConversation, CoreMessageListResponse } from '../../shared/api/types'
 import { upsertSidebarTask } from '../../shared/stores/taskSidebarStore'
 import type { SidebarTaskStatus } from '../../shared/stores/taskSidebarStore'
 import { CapsuleTabs } from '../../shell/components/CapsuleTabs'
@@ -54,28 +63,6 @@ const WORK_MODE_OPTIONS = [
   { value: 'map', icon: <MapPin />, label: 'Map' },
 ] as const
 
-/* ── Core API 响应类型 ── */
-interface CoreConversation {
-  id: string
-  workspaceId?: string
-  title?: string
-  mode?: string
-  status?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-interface CoreMessage {
-  id: string
-  conversationId?: string
-  role: string
-  content: string
-  toolCalls?: string
-  metadata?: string
-  tokenCount?: number
-  createdAt?: string
-}
-
 /** Core mode → 前端 WorkMode 映射。 */
 function mapCoreModeToWorkMode(mode?: string): WorkMode {
   switch (mode) {
@@ -95,10 +82,12 @@ function mapCoreModeToWorkMode(mode?: string): WorkMode {
  */
 async function loadConversationFromCore(convId: string): Promise<Conversation | null> {
   try {
-    const coreConv = await apiGet<CoreConversation>(`/api/conversations/${encodeURIComponent(convId)}`)
+    const coreConv = await apiGet<CoreConversation>(
+      `/api/conversations/${encodeURIComponent(convId)}`,
+    )
     if (!coreConv || !coreConv.id) return null
 
-    const msgsRes = await apiGet<{ total: number; messages: CoreMessage[] }>(
+    const msgsRes = await apiGet<CoreMessageListResponse>(
       `/api/conversations/${encodeURIComponent(convId)}/messages?limit=500`,
     )
     const coreMsgs = msgsRes?.messages ?? []
@@ -304,7 +293,8 @@ export function NewTaskPage() {
   }, [messages])
 
   /* ── 计算当前工作空间信息 ── */
-  const currentWorkspaceId = workspaceOverride?.workspaceId ?? (workDir ? `workdir:${workDir}` : 'default')
+  const currentWorkspaceId =
+    workspaceOverride?.workspaceId ?? (workDir ? `workdir:${workDir}` : 'default')
   const currentWorkspaceName = workspaceOverride?.workspaceName ?? (workDir || '默认')
 
   /* ── 侧栏任务同步 ── */
@@ -356,7 +346,15 @@ export function NewTaskPage() {
       /* 同步持久化 Core 会话映射，刷新后仍可复用同一 Core 会话 */
       coreConversationId: getCoreConversationId(convId),
     })
-  }, [messages, runStatus, isStreaming, currentWorkspaceId, currentWorkspaceName, workDir, workMode])
+  }, [
+    messages,
+    runStatus,
+    isStreaming,
+    currentWorkspaceId,
+    currentWorkspaceName,
+    workDir,
+    workMode,
+  ])
 
   /* ── Tour refs ── */
   const [tourOpen, setTourOpen] = useState(false)
@@ -476,11 +474,7 @@ export function NewTaskPage() {
       {
         onDelta: (delta) => {
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: m.content + delta }
-                : m,
-            ),
+            prev.map((m) => (m.id === assistantMsg.id ? { ...m, content: m.content + delta } : m)),
           )
         },
         onStatus: (status: RunStatus) => {
@@ -504,16 +498,12 @@ export function NewTaskPage() {
         },
         onWorkflow: (steps) => {
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id ? { ...m, workflow: steps } : m,
-            ),
+            prev.map((m) => (m.id === assistantMsg.id ? { ...m, workflow: steps } : m)),
           )
         },
         onDone: () => {
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id ? { ...m, status: 'done' as const } : m,
-            ),
+            prev.map((m) => (m.id === assistantMsg.id ? { ...m, status: 'done' as const } : m)),
           )
           setIsStreaming(false)
         },
@@ -522,7 +512,11 @@ export function NewTaskPage() {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsg.id
-                ? { ...m, status: 'error' as const, content: m.content + '\n\n执行出错：' + error.message }
+                ? {
+                    ...m,
+                    status: 'error' as const,
+                    content: m.content + '\n\n执行出错：' + error.message,
+                  }
                 : m,
             ),
           )
@@ -565,7 +559,9 @@ export function NewTaskPage() {
 
   /* ── 工作目录选择 ── */
   const handlePickDirectory = async () => {
-    const pickerWindow = window as { showDirectoryPicker?: (opts?: { mode?: string }) => Promise<{ kind: string; name: string }> }
+    const pickerWindow = window as {
+      showDirectoryPicker?: (opts?: { mode?: string }) => Promise<{ kind: string; name: string }>
+    }
     if (!pickerWindow.showDirectoryPicker) {
       message.warning('当前浏览器不支持直接选择文件夹，请使用 Chrome 或 Edge')
       return
@@ -589,15 +585,34 @@ export function NewTaskPage() {
         type: 'group' as const,
         label: '选择目录',
         children: [
-          { key: 'choose-folder', icon: <FolderOpen />, label: '选择目录', onClick: handlePickDirectory },
+          {
+            key: 'choose-folder',
+            icon: <FolderOpen />,
+            label: '选择目录',
+            onClick: handlePickDirectory,
+          },
         ],
       },
       {
         type: 'group' as const,
         label: '最近的目录',
         children: [
-          { key: 'geo-frontend', label: 'E:\\code\\javascript\\project\\GeoFrontend2.0', onClick: () => { setWorkDir('E:\\code\\javascript\\project\\GeoFrontend2.0'); message.success('工作目录已设置') } },
-          { key: 'geowork', label: 'E:\\code\\javascript\\project\\GeoWork', onClick: () => { setWorkDir('E:\\code\\javascript\\project\\GeoWork'); message.success('工作目录已设置') } },
+          {
+            key: 'geo-frontend',
+            label: 'E:\\code\\javascript\\project\\GeoFrontend2.0',
+            onClick: () => {
+              setWorkDir('E:\\code\\javascript\\project\\GeoFrontend2.0')
+              message.success('工作目录已设置')
+            },
+          },
+          {
+            key: 'geowork',
+            label: 'E:\\code\\javascript\\project\\GeoWork',
+            onClick: () => {
+              setWorkDir('E:\\code\\javascript\\project\\GeoWork')
+              message.success('工作目录已设置')
+            },
+          },
         ],
       },
     ],
@@ -605,7 +620,9 @@ export function NewTaskPage() {
 
   /* ── 清理 ── */
   useEffect(() => {
-    return () => { abortRef.current?.abort() }
+    return () => {
+      abortRef.current?.abort()
+    }
   }, [])
 
   /* ══════════════ Home 态 ══════════════ */
@@ -675,7 +692,12 @@ export function NewTaskPage() {
 
       {/* Work Dir */}
       <div className={styles.workDirRow}>
-        <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
+        <Dropdown
+          menu={workDirMenu}
+          trigger={['click']}
+          placement="topLeft"
+          getPopupContainer={() => document.body}
+        >
           <Button type="text" size="small" icon={<FolderOpen />} shape="round">
             {workDir ? workDir : '选择工作目录'}
           </Button>
@@ -696,30 +718,34 @@ export function NewTaskPage() {
         style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}
       >
         <div className={styles.convHeaderLeft}>
-          <Title level={5} className={styles.convHeaderTitle}>新任务</Title>
+          <Title level={5} className={styles.convHeaderTitle}>
+            新任务
+          </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {model} · {workDir ?? '未选择目录'}
           </Text>
           {isStreaming && (
             <CapsuleTag color="processing" icon={<Loader2 />}>
-              {runStatus === 'thinking' ? '理解任务' : runStatus === 'planning' ? '生成计划' : '思考中'}
+              {runStatus === 'thinking'
+                ? '理解任务'
+                : runStatus === 'planning'
+                  ? '生成计划'
+                  : '思考中'}
             </CapsuleTag>
           )}
           {!isStreaming && runStatus === 'waiting-confirmation' && (
             <CapsuleTag color="warning">等待确认</CapsuleTag>
           )}
           {!isStreaming && runStatus === 'running' && (
-            <CapsuleTag color="processing" icon={<Loader2 />}>执行中</CapsuleTag>
+            <CapsuleTag color="processing" icon={<Loader2 />}>
+              执行中
+            </CapsuleTag>
           )}
           {!isStreaming && runStatus === 'completed' && (
             <CapsuleTag color="success">已完成</CapsuleTag>
           )}
-          {!isStreaming && runStatus === 'stopped' && (
-            <CapsuleTag>已停止</CapsuleTag>
-          )}
-          {!isStreaming && runStatus === 'failed' && (
-            <CapsuleTag color="error">失败</CapsuleTag>
-          )}
+          {!isStreaming && runStatus === 'stopped' && <CapsuleTag>已停止</CapsuleTag>}
+          {!isStreaming && runStatus === 'failed' && <CapsuleTag color="error">失败</CapsuleTag>}
         </div>
       </div>
 
@@ -749,7 +775,12 @@ export function NewTaskPage() {
 
       {/* Work Dir Row */}
       <div className={styles.workDirRowConv}>
-        <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
+        <Dropdown
+          menu={workDirMenu}
+          trigger={['click']}
+          placement="topLeft"
+          getPopupContainer={() => document.body}
+        >
           <Button type="text" size="small" icon={<FolderOpen />} shape="round">
             {workDir ? workDir : '选择工作目录'}
           </Button>
@@ -782,13 +813,14 @@ export function NewTaskPage() {
   )
 
   return (
-    <div
-      className={styles.root}
-      style={{ background: token.colorBgLayout }}
-    >
+    <div className={styles.root} style={{ background: token.colorBgLayout }}>
       {isConversationLoading && !isStreaming && messages.length === 0 ? (
         <PageSkeleton variant="conversation" />
-      ) : hasConversation ? conversationView : homeView}
+      ) : hasConversation ? (
+        conversationView
+      ) : (
+        homeView
+      )}
 
       {/* Tour */}
       <Tour
@@ -804,7 +836,8 @@ export function NewTaskPage() {
           {
             target: () => modeSwitcherRef.current!,
             title: '选择工作模式',
-            description: '根据任务类型在 Work / Code / Map 之间切换，GeoWork 会匹配对应的空间分析工具。',
+            description:
+              '根据任务类型在 Work / Code / Map 之间切换，GeoWork 会匹配对应的空间分析工具。',
             placement: 'bottom',
           },
         ]}
@@ -815,7 +848,9 @@ export function NewTaskPage() {
         <ContextPickerModal
           open={contextPickerType !== null}
           type={contextPickerType}
-          selectedIds={selectedContexts.filter((c) => c.kind === contextPickerType).map((c) => c.id)}
+          selectedIds={selectedContexts
+            .filter((c) => c.kind === contextPickerType)
+            .map((c) => c.id)}
           onCancel={() => setContextPickerType(null)}
           onConfirm={handleContextConfirm}
         />

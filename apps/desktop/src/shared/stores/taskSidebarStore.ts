@@ -1,4 +1,5 @@
 import { apiGet } from '../api/client'
+import type { CoreTaskListResponse } from '../api/types'
 
 export const SIDEBAR_TASKS_KEY = 'geowork.sidebar.tasks.v1'
 export const SIDEBAR_WORKSPACES_KEY = 'geowork.sidebar.workspaces.v1'
@@ -30,19 +31,6 @@ export interface SidebarWorkspaceMeta {
 
 /* ── Core Task 对接（/api/db/tasks） ── */
 
-/** Core 端 Task 形状（仅取侧栏需要的字段）。 */
-interface CoreTask {
-  id: string
-  workspaceId: string
-  name: string
-  description?: string
-  status: string
-  mode?: string
-  prompt?: string
-  updatedAt: string
-  completedAt?: string
-}
-
 /** Core Task status → 侧栏 SidebarTaskStatus 映射。 */
 function mapCoreStatusToSidebar(status: string): SidebarTaskStatus {
   switch (status) {
@@ -71,9 +59,7 @@ function mapCoreStatusToSidebar(status: string): SidebarTaskStatus {
  */
 export async function refreshSidebarTasksFromCore(): Promise<void> {
   try {
-    const res = await apiGet<{ total: number; tasks: CoreTask[] }>(
-      '/api/db/tasks?workspaceId=default',
-    )
+    const res = await apiGet<CoreTaskListResponse>('/api/db/tasks?workspaceId=default')
     const coreTasks = res?.tasks ?? []
     if (coreTasks.length === 0) return
 
@@ -130,8 +116,12 @@ export function loadSidebarTasks(): SidebarTaskItem[] {
       )
       .map((item) => ({
         ...item,
-        workspaceId: (typeof item.workspaceId === 'string' ? item.workspaceId : 'default') as string,
-        workspaceName: (typeof item.workspaceName === 'string' && item.workspaceName !== '' ? item.workspaceName : '默认') as string,
+        workspaceId: (typeof item.workspaceId === 'string'
+          ? item.workspaceId
+          : 'default') as string,
+        workspaceName: (typeof item.workspaceName === 'string' && item.workspaceName !== ''
+          ? item.workspaceName
+          : '默认') as string,
       })) as SidebarTaskItem[]
   } catch {
     return []
