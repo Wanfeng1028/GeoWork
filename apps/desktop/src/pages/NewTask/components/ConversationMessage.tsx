@@ -7,6 +7,7 @@ import type {
   SelectedContextKind,
 } from './conversationStorage'
 import { MarkdownStream } from './MarkdownStream'
+import { ThinkingPanel } from './ThinkingPanel'
 import { ToolCallTimeline } from './ToolCallTimeline'
 import { WorkflowRunCard } from './WorkflowRunCard'
 import styles from './ConversationMessage.module.css'
@@ -61,6 +62,14 @@ export const ConversationMessageView = memo(function ConversationMessageView({
     >
       {/* 内容区：bubble + timeline + workflow 纵向排列 */}
       <div className={styles.contentColumn}>
+        {/* ── 思考面板（A3：state_change / message 推理流，assistant 消息） ── */}
+        {!isUser && data.thinkingSteps && data.thinkingSteps.length > 0 && (
+          <ThinkingPanel
+            thinkingSteps={data.thinkingSteps}
+            streaming={data.status === 'streaming'}
+          />
+        )}
+
         {/* 消息气泡 */}
         <div
           className={`${styles.bubble} ${isUser ? styles.bubbleUser : styles.bubbleAssistant}`}

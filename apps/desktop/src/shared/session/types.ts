@@ -48,6 +48,20 @@ export interface ToolCallLog {
   endedAt?: number
 }
 
+/* ── 思考步骤（A3，doc/23：消费 state_change / message 事件） ── */
+export type ThinkingStepKind = 'state' | 'reasoning'
+
+export interface ThinkingStep {
+  id: string
+  kind: ThinkingStepKind
+  /** state：状态中文标签；reasoning：「模型推理」 */
+  title: string
+  /** state：迁移原因；reasoning：累积的推理文本 */
+  content: string
+  startedAt: number
+  endedAt?: number
+}
+
 /* ── 附件元信息 ── */
 export type AttachedFileKind = 'file' | 'image'
 
@@ -82,6 +96,8 @@ export interface ConversationMessage {
   createdAt: number
   workflow?: WorkflowStep[]
   toolCalls?: ToolCallLog[]
+  /** A3：思考步骤（state_change 状态迁移 + message 推理流） */
+  thinkingSteps?: ThinkingStep[]
   attachments?: AttachedFileMeta[]
   contexts?: SelectedContextItem[]
 }

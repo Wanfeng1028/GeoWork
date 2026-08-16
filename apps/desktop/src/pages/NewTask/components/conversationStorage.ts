@@ -20,6 +20,8 @@ export type {
   WorkflowStep,
   ToolCallStatus,
   ToolCallLog,
+  ThinkingStepKind,
+  ThinkingStep,
   AttachedFileKind,
   AttachedFileMeta,
   SelectedContextKind,

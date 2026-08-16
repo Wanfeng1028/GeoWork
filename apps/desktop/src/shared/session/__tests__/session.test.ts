@@ -511,6 +511,90 @@ describe('Session 审批流（A1，doc/23）', () => {
   })
 })
 
+describe('Session 思考步骤（A3，doc/23）', () => {
+  it('17. state_change 事件生成 state 类思考步骤（中文标签 + reason）', async () => {
+    const session = new Session('conv-th1', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('state_change', { data: { from: 'idle', to: 'planning', reason: '任务开始' } })
+    es.emit('state_change', { data: { from: 'planning', to: 'inspecting', reason: '读取数据' } })
+    session.flushSync()
+
+    const steps = session.getSnapshot().messages.at(-1)!.thinkingSteps!
+    expect(steps).toHaveLength(2)
+    expect(steps[0]).toMatchObject({ kind: 'state', title: '规划中', content: '任务开始' })
+    expect(steps[1]).toMatchObject({ kind: 'state', title: '分析数据', content: '读取数据' })
+    expect(steps[0].endedAt).toBeDefined()
+  })
+
+  it('18. 连续相同状态去噪：不新增步骤，只更新 reason', async () => {
+    const session = new Session('conv-th2', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('state_change', { data: { to: 'editing', reason: '写文件 a' } })
+    es.emit('state_change', { data: { to: 'editing', reason: '写文件 b' } })
+    es.emit('state_change', { data: { to: 'verifying', reason: '校验' } })
+    session.flushSync()
+
+    const steps = session.getSnapshot().messages.at(-1)!.thinkingSteps!
+    expect(steps).toHaveLength(2)
+    expect(steps[0]).toMatchObject({ kind: 'state', title: '执行操作', content: '写文件 b' })
+    expect(steps[1]).toMatchObject({ kind: 'state', title: '验证结果', content: '校验' })
+  })
+
+  it('19. message isDelta 累积进 reasoning 步骤；完整帧关闭步骤并并入气泡', async () => {
+    const session = new Session('conv-th3', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('message', { data: { content: '我需要', role: 'assistant', isDelta: true } })
+    es.emit('message', { data: { content: '先做缓冲区分析', role: 'assistant', isDelta: true } })
+    session.flushSync()
+
+    let msg = session.getSnapshot().messages.at(-1)!
+    expect(msg.thinkingSteps).toHaveLength(1)
+    expect(msg.thinkingSteps![0]).toMatchObject({ kind: 'reasoning', title: '模型推理' })
+    expect(msg.thinkingSteps![0].content).toBe('我需要先做缓冲区分析')
+    expect(msg.thinkingSteps![0].endedAt).toBeUndefined()
+
+    /* 完整帧：关闭 reasoning 步骤，全文进消息气泡 */
+    es.emit('message', { data: { content: '我需要先做缓冲区分析', role: 'assistant' } })
+    session.flushSync()
+
+    msg = session.getSnapshot().messages.at(-1)!
+    expect(msg.thinkingSteps![0].endedAt).toBeDefined()
+    expect(msg.content).toContain('我需要先做缓冲区分析')
+
+    /* 下一轮 delta 新建第二个 reasoning 步骤 */
+    es.emit('message', { data: { content: '接下来验证', role: 'assistant', isDelta: true } })
+    session.flushSync()
+    msg = session.getSnapshot().messages.at(-1)!
+    expect(msg.thinkingSteps).toHaveLength(2)
+    expect(msg.thinkingSteps![1]).toMatchObject({ kind: 'reasoning', content: '接下来验证' })
+  })
+
+  it('20. done / cancel 关闭开放的 reasoning 步骤（补 endedAt）', async () => {
+    const session = new Session('conv-th4', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('message', { data: { content: '思考中…', role: 'assistant', isDelta: true } })
+    session.flushSync()
+    expect(session.getSnapshot().messages.at(-1)!.thinkingSteps![0].endedAt).toBeUndefined()
+
+    es.emit('done', { data: { runId: 'run-1' } })
+    await tick()
+    expect(session.getSnapshot().messages.at(-1)!.thinkingSteps![0].endedAt).toBeDefined()
+
+    /* cancel 路径：新会话流式中取消 */
+    const session2 = new Session('conv-th5', { transport: makeTransport() })
+    const es2 = await sendUntilSubscribed(session2)
+    es2.emit('message', { data: { content: '半截推理', role: 'assistant', isDelta: true } })
+    session2.flushSync()
+    session2.cancel()
+    session2.flushSync()
+    expect(session2.getSnapshot().messages.at(-1)!.thinkingSteps![0].endedAt).toBeDefined()
+  })
+})
+
 describe('SessionManager', () => {
   it('ensure 惰性建且常驻：同 id 返回同实例；reset 后重建并 dispose', () => {
     const manager = new SessionManager()

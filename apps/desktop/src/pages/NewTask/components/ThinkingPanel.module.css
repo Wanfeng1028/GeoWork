@@ -1,0 +1,64 @@
+.root {
+  margin-top: 8px;
+}
+
+.header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerText {
+  font-size: 12px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stepTitle {
+  font-size: 12px;
+}
+
+.stepReason {
+  font-size: 12px;
+}
+
+.reasoningContent {
+  margin: 2px 0 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+}

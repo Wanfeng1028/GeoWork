@@ -2,7 +2,7 @@
 
 > **文档路径**：`doc/23-Frontend-AI-Components-Plan.md`
 > **关联文档**：`doc/21-Frontend-Refactor-Plan.md`（六阶段重构已完成，本计划是其后续）
-> **状态**：A1+A2 已完成（2026-08-17，提交 b35e570）；A3/A4/A5 待执行
+> **状态**：A1+A2+A3 已完成（2026-08-17）；A4/A5 待执行
 > **背景**：设计参考 TurboProduct 的 Beautiful UI 组件清单（beautifului.dev，MIT/copy-paste，无公开仓库）；因源码需邮件订阅，本计划以 antd token 体系自研，其组件清单作设计规格参考。
 
 ---
@@ -36,8 +36,11 @@ core 已建好的能力有三个在前端零消费：
 4. ConversationMessage 挂 `React.memo`（流式 delta 只重渲末条消息）
 5. 删除 MarkdownLite
 
-### A3 Thinking 面板（后续）
+### A3 Thinking 面板 ✅ 已完成（2026-08-17）
 消费 `message`/`state_change` 事件折叠为 assistant 消息的 thinkingSteps，antd Collapse 展示。
+- Session：`state_change` → state 类步骤（中文标签 + reason，连续重复去噪）；`message` isDelta → reasoning 步骤累积；完整帧关闭步骤并把全文并入气泡（修复真实模式 assistant 气泡只有完成摘要的内容缺失）；done/error/cancel 关闭开放步骤
+- `ThinkingPanel.tsx`：antd Collapse，流式自动展开、结束自动收起，Brain 图标 + 步数 + 活动 spinner
+- 4 条测试（state 步骤/去噪/reasoning 累积与关闭/终态关闭）
 
 ### A4 Diff 查看器（后续）
 消费 `diff.created` 事件，`@git-diff-view/react` 内联渲染。

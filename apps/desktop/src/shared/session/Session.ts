@@ -36,6 +36,7 @@ import type {
   SendOptions,
   SessionPhase,
   StreamAdapterCallbacks,
+  ThinkingStep,
   ToolCallLog,
   WorkflowStep,
   WorkMode,
@@ -134,6 +135,26 @@ export function mapRunStatus(status: string): RunStatus {
   }
 }
 
+/**
+ * A3：core 状态机（aiagent.State）→ 思考步骤中文标签。
+ * 未收录的状态回退原文，保证不丢信息。
+ */
+const STATE_LABELS: Record<string, string> = {
+  idle: '空闲',
+  planning: '规划中',
+  inspecting: '分析数据',
+  editing: '执行操作',
+  verifying: '验证结果',
+  waiting_for_user: '等待用户',
+  recovering: '恢复中',
+  failed: '已失败',
+  completed: '已完成',
+}
+
+export function stateLabel(state: string): string {
+  return STATE_LABELS[state] ?? state
+}
+
 let messageSeq = 0
 function nextMessageId(suffix: string): string {
   messageSeq += 1
@@ -168,6 +189,8 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
   private confirmPollMs: number
   private pollToken = 0
   private disposed = false
+  /** A3：当前开放的 reasoning 思考步骤 id（message isDelta 累积目标） */
+  private openReasoningStepId: string | undefined
 
   constructor(id: string, opts: SessionOptions = {}) {
     this.id = id
@@ -538,6 +561,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
       // 完成：输出摘要、终态落盘（唯一常规写点）
       es.addEventListener('done', (e) => {
         const evt = parse(e)
+        this.closeReasoningStep()
         this.appendDelta(assistantId, `\n\n✅ 执行完成（run: ${runIdOf(evt, runId)}）`, cb)
         this.finishAssistantMessage(assistantId, 'completed', cb)
         this.phase = 'live'
@@ -557,6 +581,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
         if (me && typeof me.data === 'string') {
           const evt = parse(me)
           const message = evt.error || evt.message || '执行失败'
+          this.closeReasoningStep()
           this.runStatus = 'failed'
           this.failAssistantMessage(assistantId, message)
           this.persist()
@@ -599,6 +624,33 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
           this.lastError = '审批等待超时（5 分钟），运行已暂停'
           this.commit()
         }
+      })
+
+      // A3 思考面板：状态机迁移 → state 类思考步骤（连续重复去噪）
+      es.addEventListener('state_change', (e) => {
+        const d = (parse(e).data ?? {}) as Record<string, unknown>
+        const to = String(d.to ?? '')
+        if (!to) return
+        this.appendStateStep(assistantId, to, d.reason !== undefined ? String(d.reason) : '')
+      })
+
+      // A3 思考面板：模型输出流。
+      // isDelta 帧累积进开放的 reasoning 步骤（思考面板实时流）；
+      // 完整帧（turn 结束）关闭 reasoning 步骤并把全文并入消息气泡——
+      // 真实模式下 assistant 回复文本只存在于 message 事件，此前气泡只有完成摘要。
+      es.addEventListener('message', (e) => {
+        const d = (parse(e).data ?? {}) as Record<string, unknown>
+        const content = String(d.content ?? '')
+        if (!content) return
+        if (d.isDelta === true) {
+          this.appendReasoningDelta(assistantId, content)
+          return
+        }
+        this.closeReasoningStep()
+        this.updateMessages(
+          (m) => ({ ...m, content: m.content ? `${m.content}\n\n${content}` : content }),
+          assistantId,
+        )
       })
     })
   }
@@ -699,6 +751,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
       this.runStatus === 'planning' ||
       this.runStatus === 'running'
     ) {
+      this.closeReasoningStep()
       this.runStatus = 'stopped'
       this.updateMessages((m) =>
         m.status === 'streaming'
@@ -721,6 +774,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
     this.messages = []
     this.runStatus = 'idle'
     this.pendingApproval = undefined
+    this.openReasoningStepId = undefined
     this.commit()
     await this.open()
   }
@@ -789,6 +843,72 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
 
   private applyWorkflow(assistantId: string, steps: WorkflowStep[]): void {
     this.updateMessages((m) => ({ ...m, workflow: steps }), assistantId)
+  }
+
+  /* ══════════ A3：思考步骤（state_change / message 事件） ══════════ */
+
+  /** state_change → state 类步骤；连续相同状态去噪（只更新 reason）。 */
+  private appendStateStep(assistantId: string, to: string, reason: string): void {
+    this.closeReasoningStep()
+    const title = stateLabel(to)
+    this.updateMessages((m) => {
+      const steps = m.thinkingSteps ?? []
+      const last = steps.at(-1)
+      if (last && last.kind === 'state' && last.title === title) {
+        const updated = [...steps]
+        updated[updated.length - 1] = { ...last, content: reason || last.content }
+        return { ...m, thinkingSteps: updated }
+      }
+      const step: ThinkingStep = {
+        id: `think_${Date.now()}_${steps.length}`,
+        kind: 'state',
+        title,
+        content: reason,
+        startedAt: Date.now(),
+        endedAt: Date.now(),
+      }
+      return { ...m, thinkingSteps: [...steps, step] }
+    }, assistantId)
+  }
+
+  /** message isDelta → 累积进开放的 reasoning 步骤（无则新建）。 */
+  private appendReasoningDelta(assistantId: string, delta: string): void {
+    this.updateMessages((m) => {
+      const steps = m.thinkingSteps ?? []
+      const openIdx = this.openReasoningStepId
+        ? steps.findIndex((s) => s.id === this.openReasoningStepId)
+        : -1
+      if (openIdx >= 0) {
+        const updated = [...steps]
+        const cur = updated[openIdx]
+        updated[openIdx] = { ...cur, content: cur.content + delta }
+        return { ...m, thinkingSteps: updated }
+      }
+      const step: ThinkingStep = {
+        id: `think_${Date.now()}_${steps.length}`,
+        kind: 'reasoning',
+        title: '模型推理',
+        content: delta,
+        startedAt: Date.now(),
+      }
+      this.openReasoningStepId = step.id
+      return { ...m, thinkingSteps: [...steps, step] }
+    }, assistantId)
+  }
+
+  /** 关闭开放的 reasoning 步骤（补 endedAt）；无开放步骤时空操作。 */
+  private closeReasoningStep(): void {
+    if (!this.openReasoningStepId) return
+    const closingId = this.openReasoningStepId
+    this.openReasoningStepId = undefined
+    this.updateMessages((m) => {
+      const steps = m.thinkingSteps ?? []
+      const idx = steps.findIndex((s) => s.id === closingId)
+      if (idx < 0) return m
+      const updated = [...steps]
+      updated[idx] = { ...updated[idx], endedAt: Date.now() }
+      return { ...m, thinkingSteps: updated }
+    })
   }
 
   private finishAssistantMessage(
