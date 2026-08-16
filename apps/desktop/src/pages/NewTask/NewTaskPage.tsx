@@ -6,6 +6,7 @@ import { ChatComposer } from './components/ChatComposer'
 import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
 import { ConversationMessageView } from './components/ConversationMessage'
+import { ApprovalCard } from './components/ApprovalCard'
 import { sessionManager } from '../../shared/session/SessionManager'
 import { useSession } from '../../shared/session/react'
 import { readConversation } from '../../shared/session/conversationCache'
@@ -486,6 +487,18 @@ export function NewTaskPage() {
           )
         })}
       </div>
+
+      {/* A1 审批卡片：governar approval_request 事件驱动 */}
+      {snap.pendingApproval && (
+        <ApprovalCard
+          approval={snap.pendingApproval}
+          onResolve={(approved, reason) => {
+            const id = convIdRef.current
+            if (!id) return Promise.reject(new Error('无活动会话'))
+            return sessionManager.ensure(id).resolveApproval(approved, reason)
+          }}
+        />
+      )}
 
       {/* Work Dir Row */}
       <div className={styles.workDirRowConv}>

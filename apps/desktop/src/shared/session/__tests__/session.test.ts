@@ -95,6 +95,8 @@ interface TransportScript {
   getMessages?: { messages?: CoreMessageListResponse['messages'] }
   /** GET /api/agent/runs/{id}（数组时按调用次序依次返回，供轮询测试） */
   getRun?: CoreRun | null | Array<CoreRun | null>
+  /** POST /api/agent/approvals/{id}/approve|reject */
+  resolveApproval?: { ok: boolean; status?: number }
 }
 
 function makeTransport(script: TransportScript = {}): SessionTransport & {
@@ -112,6 +114,14 @@ function makeTransport(script: TransportScript = {}): SessionTransport & {
       if (init?.method === 'POST' && /\/messages$/.test(path)) {
         const s = script.postMessage ?? { ok: true, runId: 'run-1' }
         return { ok: s.ok, status: s.status ?? 200, data: { runId: s.runId, error: s.error } }
+      }
+      if (/\/api\/agent\/approvals\//.test(path)) {
+        const s = script.resolveApproval ?? { ok: true }
+        return {
+          ok: s.ok,
+          status: s.status ?? (s.ok ? 200 : 404),
+          data: { status: 'resolved' },
+        }
       }
       if (/\/api\/agent\/runs\//.test(path)) {
         if (Array.isArray(script.getRun)) {
@@ -410,6 +420,94 @@ describe('Session.confirmRun（D2 真实 run 轮询）', () => {
   it('12. 无 runId 时 confirmRun 抛错（按钮禁用 + 提示语义）', async () => {
     const session = new Session('conv-l', { transport: makeTransport() })
     await expect(session.confirmRun()).rejects.toThrow('无可执行的运行')
+  })
+})
+
+describe('Session 审批流（A1，doc/23）', () => {
+  it('13. approval_request 事件填充快照 pendingApproval', async () => {
+    const session = new Session('conv-ap1', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('approval_request', {
+      data: {
+        approvalId: 'appr-1',
+        runId: 'run-1',
+        toolName: 'run_shell',
+        args: { command: 'rm -rf build' },
+        riskLevel: 'high',
+      },
+    })
+    session.flushSync()
+
+    expect(session.getSnapshot().pendingApproval).toMatchObject({
+      id: 'appr-1',
+      toolName: 'run_shell',
+      riskLevel: 'high',
+    })
+  })
+
+  it('14. resolveApproval 批准：POST approve + 卡片乐观清除', async () => {
+    const transport = makeTransport()
+    const session = new Session('conv-ap2', { transport })
+    const es = await sendUntilSubscribed(session)
+    es.emit('approval_request', { data: { approvalId: 'appr-2', toolName: 'write_file' } })
+    session.flushSync()
+    expect(session.getSnapshot().pendingApproval?.id).toBe('appr-2')
+
+    await session.resolveApproval(true)
+    expect(session.getSnapshot().pendingApproval).toBeUndefined()
+    expect(
+      transport.calls.find((c) => c.path === '/api/agent/approvals/appr-2/approve'),
+    ).toBeDefined()
+  })
+
+  it('15. resolveApproval 拒绝：POST reject 且 body 携带 reason；失败恢复卡片', async () => {
+    const transport = makeTransport({ resolveApproval: { ok: false, status: 404 } })
+    const session = new Session('conv-ap3', { transport })
+    const es = await sendUntilSubscribed(session)
+    es.emit('approval_request', { data: { approvalId: 'appr-3', toolName: 'run_shell' } })
+    session.flushSync()
+
+    await expect(session.resolveApproval(false, '危险操作')).rejects.toThrow()
+    expect(session.getSnapshot().pendingApproval?.id).toBe('appr-3')
+
+    /* 换成功 transport 语义：直接验证 reject 路径调用 */
+    const okTransport = makeTransport()
+    const session2 = new Session('conv-ap3b', { transport: okTransport })
+    const es2 = await sendUntilSubscribed(session2)
+    es2.emit('approval_request', { data: { approvalId: 'appr-3b', toolName: 'run_shell' } })
+    session2.flushSync()
+    await session2.resolveApproval(false, '危险操作')
+    expect(
+      okTransport.calls.find((c) => c.path === '/api/agent/approvals/appr-3b/reject'),
+    ).toBeDefined()
+    expect(session2.getSnapshot().pendingApproval).toBeUndefined()
+  })
+
+  it('16. approval_resolved / approval_timeout / cancel 均清除卡片', async () => {
+    const session = new Session('conv-ap4', { transport: makeTransport() })
+    const es = await sendUntilSubscribed(session)
+
+    es.emit('approval_request', { data: { approvalId: 'appr-4', toolName: 'run_shell' } })
+    session.flushSync()
+    expect(session.getSnapshot().pendingApproval).toBeDefined()
+
+    es.emit('approval_resolved', {})
+    session.flushSync()
+    expect(session.getSnapshot().pendingApproval).toBeUndefined()
+
+    es.emit('approval_request', { data: { approvalId: 'appr-5', toolName: 'run_shell' } })
+    session.flushSync()
+    es.emit('approval_timeout', {})
+    session.flushSync()
+    expect(session.getSnapshot().pendingApproval).toBeUndefined()
+    expect(session.getSnapshot().lastError).toContain('超时')
+
+    es.emit('approval_request', { data: { approvalId: 'appr-6', toolName: 'run_shell' } })
+    session.flushSync()
+    session.cancel()
+    session.flushSync()
+    expect(session.getSnapshot().pendingApproval).toBeUndefined()
   })
 })
 

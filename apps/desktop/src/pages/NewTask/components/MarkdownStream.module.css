@@ -1,0 +1,167 @@
+/* MarkdownStream — GFM 渲染样式（颜色经 CSS 变量注入 antd token） */
+
+.md {
+  color: var(--md-text);
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p {
+  margin: 0.5em 0;
+}
+
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  margin: 1em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.md h1 {
+  font-size: 1.3em;
+}
+.md h2 {
+  font-size: 1.2em;
+}
+.md h3 {
+  font-size: 1.1em;
+}
+.md h4 {
+  font-size: 1em;
+}
+
+.md ul,
+.md ol {
+  margin: 0.4em 0;
+  padding-left: 1.4em;
+}
+
+.md li {
+  margin: 0.2em 0;
+}
+
+.md blockquote {
+  margin: 0.6em 0;
+  padding: 0.2em 0.9em;
+  border-left: 3px solid var(--md-primary);
+  background: var(--md-primary-bg);
+  border-radius: 0 6px 6px 0;
+  color: var(--md-text-secondary);
+}
+
+.md a {
+  color: var(--md-primary);
+  text-decoration: none;
+}
+
+.md a:hover {
+  text-decoration: underline;
+}
+
+.md table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  font-size: 13px;
+}
+
+.md th,
+.md td {
+  border: 1px solid var(--md-border);
+  padding: 5px 10px;
+  text-align: left;
+}
+
+.md th {
+  background: var(--md-bg-hover);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.md tr:nth-child(even) td {
+  background: var(--md-primary-bg);
+}
+
+.md hr {
+  border: none;
+  border-top: 1px solid var(--md-border);
+  margin: 0.8em 0;
+}
+
+.md :not(pre) > code {
+  background: var(--md-code-bg);
+  color: var(--md-primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+.md img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* ── 代码块 ── */
+
+.codeBlock {
+  margin: 0.6em 0;
+  border: 1px solid var(--md-border, #d0d7de);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px 3px 12px;
+  min-height: 30px;
+}
+
+.copyBtn {
+  opacity: 0.65;
+}
+
+.copyBtn:hover {
+  opacity: 1;
+}
+
+.codeRaw {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+.codeHighlighted {
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.codeHighlighted pre {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+.codeHighlighted code {
+  font-family: inherit;
+}

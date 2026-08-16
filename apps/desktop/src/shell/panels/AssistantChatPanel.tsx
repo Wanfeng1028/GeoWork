@@ -15,7 +15,7 @@ import { Button, Input, Tag, Tooltip, theme } from 'antd'
 import { Send, Link, Plus, Square, Lightbulb } from 'lucide-react'
 import { getCoreConversationId } from '../../pages/NewTask/components/streamAdapters'
 import { getConversation } from '../../pages/NewTask/components/conversationStorage'
-import { MarkdownLite } from '../../pages/NewTask/components/MarkdownLite'
+import { MarkdownStream } from '../../pages/NewTask/components/MarkdownStream'
 import { coreFetch, coreEventSource } from '../../shared/api/coreApi'
 import styles from './AssistantChatPanel.module.css'
 
@@ -384,7 +384,7 @@ export function AssistantChatPanel({ sessionId, parentConversationId }: Assistan
                   <div className={styles.messageErrorContent}>{m.content}</div>
                 ) : (
                   <div className={styles.messageMarkdown}>
-                    <MarkdownLite content={m.content} />
+                    <MarkdownStream content={m.content} />
                   </div>
                 )}
               </div>

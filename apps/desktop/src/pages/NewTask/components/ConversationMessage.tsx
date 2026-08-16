@@ -1,7 +1,12 @@
+import { memo } from 'react'
 import { App, Button, Tag, Typography, theme } from 'antd'
 import { Copy, Zap, Bot, Globe } from 'lucide-react'
-import type { ConversationMessage as ConversationMessageType, RunStatus, SelectedContextKind } from './conversationStorage'
-import { MarkdownLite } from './MarkdownLite'
+import type {
+  ConversationMessage as ConversationMessageType,
+  RunStatus,
+  SelectedContextKind,
+} from './conversationStorage'
+import { MarkdownStream } from './MarkdownStream'
 import { ToolCallTimeline } from './ToolCallTimeline'
 import { WorkflowRunCard } from './WorkflowRunCard'
 import styles from './ConversationMessage.module.css'
@@ -30,7 +35,8 @@ interface ConversationMessageProps {
   isLastAssistant?: boolean
 }
 
-export function ConversationMessageView({
+/* memo：流式 delta 只重渲末条消息（Session 差分快照保证其余消息引用稳定） */
+export const ConversationMessageView = memo(function ConversationMessageView({
   data,
   runStatus,
   onConfirmRun,
@@ -50,7 +56,9 @@ export function ConversationMessageView({
   }
 
   return (
-    <div className={`${styles.messageRow} ${isUser ? styles.messageRowUser : styles.messageRowAssistant}`}>
+    <div
+      className={`${styles.messageRow} ${isUser ? styles.messageRowUser : styles.messageRowAssistant}`}
+    >
       {/* 内容区：bubble + timeline + workflow 纵向排列 */}
       <div className={styles.contentColumn}>
         {/* 消息气泡 */}
@@ -63,12 +71,10 @@ export function ConversationMessageView({
           }}
         >
           {isUser ? (
-            <Text style={{ whiteSpace: 'pre-wrap', color: 'inherit' }}>
-              {data.content}
-            </Text>
+            <Text style={{ whiteSpace: 'pre-wrap', color: 'inherit' }}>{data.content}</Text>
           ) : (
             <>
-              <MarkdownLite content={data.content} />
+              <MarkdownStream content={data.content} />
               {data.status === 'streaming' && (
                 <span
                   className={styles.streamingCursor}
@@ -121,4 +127,4 @@ export function ConversationMessageView({
       </div>
     </div>
   )
-}
+})

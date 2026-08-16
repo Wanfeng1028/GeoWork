@@ -123,6 +123,22 @@ export interface CoreRun {
   updatedAt?: string
 }
 
+/* ══════════ 审批（toolregistry.ApprovalRequest，/api/agent/approvals） ══════════ */
+
+/**
+ * 镜像 governor 审批请求（aiagent/routes.go handleListApprovals 的稳定投影）。
+ * SSE `approval_request` 事件 data 形状：{ approvalId, runId, toolName, args, riskLevel }。
+ */
+export interface CoreApprovalRequest {
+  id: string
+  runId?: string
+  toolName: string
+  args?: Record<string, unknown>
+  riskLevel?: string
+  createdAt?: string
+  decision?: string
+}
+
 /* ══════════ DB 任务（tasks/models.go，/api/db/tasks） ══════════ */
 
 /** 镜像 tasks.Status。 */

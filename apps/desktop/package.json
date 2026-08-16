@@ -27,14 +27,17 @@
     "lucide-react": "^0.469.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
     "react-router": "^8.0.1",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^4.4.3",
     "zustand": "^5.0.14"
   },
   "optionalDependencies": {
-    "node-pty": "^1.0.0",
     "@esbuild/linux-x64": "0.25.12",
+    "@oxlint/binding-linux-x64-gnu": "1.76.0",
     "@rollup/rollup-linux-x64-gnu": "4.61.1",
-    "@oxlint/binding-linux-x64-gnu": "1.76.0"
+    "node-pty": "^1.0.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",

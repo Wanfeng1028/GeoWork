@@ -15,6 +15,7 @@
 
 import { coreEventSource, coreFetch } from '../api/coreApi'
 import type {
+  CoreApprovalRequest,
   CoreConversation,
   CoreEventPayload,
   CoreMessageListResponse,
@@ -155,6 +156,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
   private demo = false
   private lastError: string | undefined
   private currentRunId: string | undefined
+  private pendingApproval: CoreApprovalRequest | undefined
   private createdAt = Date.now()
 
   private notifier = new Notifier()
@@ -568,7 +570,62 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
         }
         finish()
       })
+
+      // A1 审批：governor 请求用户确认（doc/23），卡片由快照 pendingApproval 驱动
+      es.addEventListener('approval_request', (e) => {
+        const d = (parse(e).data ?? {}) as Record<string, unknown>
+        const id = String(d.approvalId ?? '')
+        if (!id) return
+        this.pendingApproval = {
+          id,
+          runId: d.runId !== undefined ? String(d.runId) : runId,
+          toolName: String(d.toolName ?? '未命名工具'),
+          args: (d.args as Record<string, unknown> | undefined) ?? undefined,
+          riskLevel: d.riskLevel !== undefined ? String(d.riskLevel) : undefined,
+        }
+        this.commit()
+      })
+
+      // 审批已被解决（本端或其他端）/ 超时（伴随 run_paused）：清卡片
+      es.addEventListener('approval_resolved', () => {
+        if (this.pendingApproval) {
+          this.pendingApproval = undefined
+          this.commit()
+        }
+      })
+      es.addEventListener('approval_timeout', () => {
+        if (this.pendingApproval) {
+          this.pendingApproval = undefined
+          this.lastError = '审批等待超时（5 分钟），运行已暂停'
+          this.commit()
+        }
+      })
     })
+  }
+
+  /**
+   * A1：回传审批决定——POST /api/agent/approvals/{id}/approve|reject。
+   * 乐观清除卡片，HTTP 失败时恢复并提示。
+   */
+  async resolveApproval(approved: boolean, reason?: string): Promise<void> {
+    const approval = this.pendingApproval
+    if (!approval) return
+    this.pendingApproval = undefined
+    this.commit()
+    try {
+      const path = `/api/agent/approvals/${encodeURIComponent(approval.id)}/${approved ? 'approve' : 'reject'}`
+      const res = await this.transport.fetchJson(path, {
+        method: 'POST',
+        body: approved ? undefined : { reason: reason ?? 'user denied' },
+      })
+      if (!res.ok) throw new Error(`resolve approval failed: HTTP ${res.status}`)
+    } catch (err) {
+      if (this.disposed) return
+      this.pendingApproval = approval
+      this.lastError = err instanceof Error ? err.message : String(err)
+      this.commit()
+      throw err
+    }
   }
 
   private mapRunStepToWorkflowStep(s: CoreRunStep, idx: number): WorkflowStep {
@@ -634,6 +691,8 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
     this.abortController = null
     this.es?.close()
     this.es = null
+    const hadApproval = this.pendingApproval !== undefined
+    this.pendingApproval = undefined
 
     if (
       this.runStatus === 'thinking' ||
@@ -647,8 +706,8 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
           : m,
       )
       this.persist()
-      this.commit()
     }
+    if (hadApproval) this.commit()
   }
 
   /** 清窗口重建（SSE 断线恢复）。 */
@@ -661,6 +720,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
     this.abortController = null
     this.messages = []
     this.runStatus = 'idle'
+    this.pendingApproval = undefined
     this.commit()
     await this.open()
   }
@@ -814,6 +874,7 @@ export class Session implements ObservableSnapshot<ConversationSnapshot> {
       title: this.title,
       coreConversationId: this.coreId,
       currentRunId: this.currentRunId,
+      pendingApproval: this.pendingApproval,
       isDemo: this.demo || undefined,
       lastError: this.lastError,
     }

@@ -6,6 +6,8 @@
  * P4 接线完成后调用方统一切到本文件。
  */
 
+import type { CoreApprovalRequest } from '../api/types'
+
 /* ── 消息角色 ── */
 export type MessageRole = 'user' | 'assistant' | 'system'
 
@@ -131,6 +133,8 @@ export interface ConversationSnapshot {
   readonly coreConversationId?: string
   /** D2：确认执行轮询 GET /api/agent/runs/{id} 用 */
   readonly currentRunId?: string
+  /** A1：governor 待审批请求（存在时 UI 渲染审批卡片） */
+  readonly pendingApproval?: CoreApprovalRequest
   /** D1：演示模式标注（core 不可达时由显式开关触发的 mock 流） */
   readonly isDemo?: boolean
   readonly lastError?: string
