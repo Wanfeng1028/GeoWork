@@ -19,7 +19,11 @@ func NewService(db *sql.DB) *Service {
 	return &Service{db: db}
 }
 
-// Init creates the tasks and task_events tables if they don't exist
+// Init creates the tasks and task_events tables if they don't exist, then
+// reconciles the tasks schema so columns added after the original migration
+// (description / started_at / completed_at) exist even on databases created by
+// storage.RunMigrations, whose v2 tasks table predates them. CREATE TABLE IF
+// NOT EXISTS is a no-op on an existing table, so we ALTER missing columns in.
 func (s *Service) Init() error {
 	_, err := s.db.Exec(`
 		CREATE TABLE IF NOT EXISTS tasks (
@@ -45,7 +49,55 @@ func (s *Service) Init() error {
 			created_at TEXT NOT NULL
 		);
 	`)
-	return err
+	if err != nil {
+		return err
+	}
+	return s.ensureTaskColumns()
+}
+
+// ensureTaskColumns adds any columns the service reads/writes that are missing
+// from the tasks table. Idempotent: existing columns are left untouched.
+func (s *Service) ensureTaskColumns() error {
+	present := map[string]bool{}
+	rows, err := s.db.Query(`PRAGMA table_info(tasks)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			return err
+		}
+		present[name] = true
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	// Columns the service depends on that the original migration may lack.
+	missing := []struct {
+		name string
+		def  string
+	}{
+		{"description", "TEXT DEFAULT ''"},
+		{"progress", "REAL DEFAULT 0"},
+		{"started_at", "TEXT"},
+		{"completed_at", "TEXT"},
+	}
+	for _, col := range missing {
+		if present[col.name] {
+			continue
+		}
+		if _, err := s.db.Exec(`ALTER TABLE tasks ADD COLUMN ` + col.name + ` ` + col.def); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Create registers a new task in pending state.
