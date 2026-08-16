@@ -18,6 +18,13 @@
 
 ## [Unreleased]
 
+### Fixed — BP1 装配止血：agent 端到端真正可写可执行（doc/22，2026-08-17 · ZCode）
+- **修复生产装配断层（F1，致命）**：orchestrator 构造 toolCtx 只注入 runID、全仓库无人调用 `WithPolicy`，导致真实装配下 write_file/run_python/run_shell/delete_file 全部 "permission denied"——agent 只能读。新增 `aiagent.DefaultDesktopPolicy()`（D-B1：full 级，critical 工具仍走审批+Harness）并经 `WithPermissionPolicy` 接入 main.go 与每次工具调用的 ctx
+- **修复高风险检查语义 bug**：`CheckPermission(ctx, name)` 传工具名，永远匹配不上按权限类（read/write/exec）键控的 Actions 表；改为 `CheckPermission(ctx, t.Permission())`
+- **run_shell 沙箱最小止血（F5）**：命令串内嵌绝对路径（POSIX 与 Windows 盘符形态）逐一过 `validateSandboxPath`（`rm -rf /` 根路径用例覆盖）；run_shell/run_python 的 `cmd.Dir` 钉在运行 workspace（新增 `toolregistry.WithWorkspacePath` ctx 注入）
+- **修复 retryRequest (nil,nil) 返回（F3，崩溃级）**：最后一次尝试为可重试状态时返回明确错误而非让调用方解引用 nil response
+- **新增生产装配 E2E 测试**：`assembly_e2e_test.go` 复刻 main.go 装配链（builtin 工具+沙箱根+策略+Harness+PolicyTable+workspace），write_file 真实落盘/沙箱逃逸拒绝/命令扫描三测——**先红后绿**验证（无策略时复现"文件静默未写"生产症状）；现有 orchestrator 测试只注册无权限 read 工具、恰好绕开此路径的系统性盲区由此补上
+
 ### Removed — 删除第二套死代码 API 客户端，统一前端请求入口（2026-08-16 · ZCode）
 - 删除 `apps/desktop/src/utils/apiClient.ts`（318 行零引用死代码）：默认指向无服务监听的 `localhost:8080`、按 `{ok, data, error}` 信封解包与 Go Core 裸 JSON 响应不兼容、鉴权读取全前端无人写入的 `access_token`、无 SSE 能力——留着必被未来开发（尤其 AI 辅助编码）误 import，是一颗"接口全部连不上"的地雷
 - `shared/api/client.ts` 成为唯一 HTTP 入口（底层 `coreApi.ts` 负责 token，见下条 Security）：apiGet/apiPost/apiPut/apiDelete/apiPatch 签名不变、新增可选 `RequestOptions`（`timeoutMs` 超时覆盖、`signal` 外部取消）；`ApiError` 三分类 `kind = timeout | network | http`，`network` 可用于触发本地缓存降级、`http` 自动解析 core 业务错误码（`core/internal/api/errors.go`）
