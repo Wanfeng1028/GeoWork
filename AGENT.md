@@ -58,7 +58,7 @@
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | **全局工程规范**      | `doc/10-Engineering-Git-Workflow.md` · `11-Engineering-CI-CD.md` · `12-Engineering-Security.md` · `13-Engineering-TypeScript.md` · `14-Engineering-ESLint-Prettier.md` · `15-Engineering-API-Contract.md` · `16-Engineering-Testing.md` · `17-Engineering-Release.md` · `18-Engineering-Monitoring.md` | 全部 v1.0 |
 | `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0 |
-| `tests/e2e/`          | `doc/20-Engineering-E2E-Testing.md`（data-testid 约定 / Page Objects / fixtures / CI） | v1.0             |
+| `tests/e2e/`          | `doc/20-Engineering-E2E-Testing.md`（data-testid 约定 / Page Objects / fixtures / CI）+ `doc/24-Engineering-Testing-P7-Plan.md`（P7 联调 E2E + 变异试点计划） | v1.0 / 待开工 |
 | `core/`               | `doc/04-GeoWorkAgent.md` + `doc/09-GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/05-GeoWorkAgent-P0-Detailed-Design.md` + `06-GeoWorkAgent-P1-Detailed-Design.md` + `07-GeoWorkAgent-P2-Detailed-Design.md` + `08-GeoWorkAgent-P3-Detailed-Design.md` | 施工图           |
 | `core/` 历史参考      | `doc/过程参考文档归档/Agent 架构对比与模块规划 v1.0.md`                             | 归档             |
