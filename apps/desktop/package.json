@@ -31,7 +31,9 @@
     "zustand": "^5.0.14"
   },
   "optionalDependencies": {
-    "node-pty": "^1.0.0"
+    "node-pty": "^1.0.0",
+    "@esbuild/linux-x64": "0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "4.61.1"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",

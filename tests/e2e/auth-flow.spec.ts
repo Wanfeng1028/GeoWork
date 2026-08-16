@@ -9,8 +9,6 @@ import { test as authTest, API_BASE, TEST_EMAIL, TEST_PASSWORD } from './fixture
  * 与 server/cmd/geowork-api/main.go 的默认端口一致）。
  */
 
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:8767'
-
 test.describe('认证流程测试', () => {
   test.describe('登录接口 POST /api/auth/login', () => {
     test('缺少 email 字段返回 400', async ({ request }) => {
