@@ -31,15 +31,6 @@ test.describe('认证流程测试', () => {
       })
       expect(res.status()).toBe(400)
     })
-
-    test('错误密码返回 401', async ({ request }) => {
-      const res = await request.post(`${API_BASE}/api/auth/login`, {
-        data: { email: 'nonexistent@example.com', password: 'wrongpassword' },
-      })
-      // Login 对未知邮箱（未开启自动注册）与错误密码统一返回 401，
-      // 不泄露用户是否存在。
-      expect(res.status()).toBe(401)
-    })
   })
 
   test.describe('登出接口 POST /api/auth/logout', () => {
@@ -94,6 +85,17 @@ test.describe('认证流程测试', () => {
       expect(me.status()).toBe(200)
       const user = await me.json()
       expect(user.email).toBe(TEST_EMAIL)
+    })
+
+    authTest('已知用户错误密码返回 401', async ({ request }) => {
+      // accessToken fixture 已注册 TEST_EMAIL，这里验证的是已存在账号
+      // 的密码校验失败路径。未知邮箱的负向用例在自动注册开启下无法
+      // 稳定构造（弱密码注册返回 400、强密码直接注册成功），故不复用。
+      const res = await request.post(`${API_BASE}/api/auth/login`, {
+        data: { email: TEST_EMAIL, password: 'WrongPassword999' },
+      })
+      // Login 对错误密码统一返回 401，不泄露密码是否正确。
+      expect(res.status()).toBe(401)
     })
   })
 })

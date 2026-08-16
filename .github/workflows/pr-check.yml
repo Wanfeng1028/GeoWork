@@ -135,7 +135,9 @@ jobs:
         shell: bash
         run: |
           cd server
-          GEOWORK_AUTO_REGISTER_ENABLED=true GEOWORK_DB_PATH=/tmp/geowork-e2e.db \
+          # 放宽 auth 限流（默认 5 次/分钟）：E2E 从单一 IP 集中登录会触发 429。
+          GEOWORK_AUTH_RATE_PER_SEC=1000 GEOWORK_AUTH_BURST=1000 \
+            GEOWORK_AUTO_REGISTER_ENABLED=true GEOWORK_DB_PATH=/tmp/geowork-e2e.db \
             go run ./cmd/geowork-api > /tmp/geowork-api.log 2>&1 &
           for i in $(seq 1 60); do
             if curl -sf http://localhost:8767/health > /dev/null; then
@@ -150,7 +152,7 @@ jobs:
             fi
           done
       - name: Run UI smoke E2E (@smoke)
-        run: cd tests/e2e && npx playwright test --grep @smoke --reporter=line
+        run: cd tests/e2e && npx playwright test --grep "@smoke" --reporter=line
       - name: Run API integration E2E
         run: cd tests/e2e && npx playwright test api-integration.spec.ts auth-flow.spec.ts --reporter=line
       - name: Upload Playwright report
@@ -177,7 +179,8 @@ jobs:
       - name: Install Playwright Chromium
         run: cd tests/e2e; npx playwright install chromium
       - name: Run UI smoke E2E (@smoke)
-        run: cd tests/e2e; npx playwright test --grep @smoke --reporter=line
+        # pwsh 会把裸 @smoke 当 splatting 吞掉，必须加引号。
+        run: cd tests/e2e; npx playwright test --grep "@smoke" --reporter=line
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

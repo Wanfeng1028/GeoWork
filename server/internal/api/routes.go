@@ -2,6 +2,9 @@
 package api
 
 import (
+	"os"
+	"strconv"
+
 	"server/internal/accounts"
 	"server/internal/auth"
 	"server/internal/billing"
@@ -39,9 +42,14 @@ func SetupRoutes(
 	channelSvc *channels.Service,
 	conversationSvc *conversations.Service,
 ) {
-	// Rate limiters: global (100 req/s per IP), auth (5 req/min), chat (10 req/min)
+	// Rate limiters: global (100 req/s per IP), auth (5 req/min), chat (10 req/min).
+	// Auth limits are env-overridable so E2E runs (many logins from one IP)
+	// can run against a fresh server without tripping the limiter.
 	globalLimiter := ratelimit.NewLimiter(100, 100)
-	authLimiter := ratelimit.NewLimiter(5.0/60.0, 5)
+	authLimiter := ratelimit.NewLimiter(
+		envFloat("GEOWORK_AUTH_RATE_PER_SEC", 5.0/60.0),
+		envFloat("GEOWORK_AUTH_BURST", 5),
+	)
 	chatLimiter := ratelimit.NewLimiter(10.0/60.0, 10)
 
 	// API v1 root
@@ -216,4 +224,15 @@ func SetupRoutes(
 			webhook.POST("/:channelId", channelSvc.WebhookReceiver)
 		}
 	}
+}
+
+// envFloat reads a float64 from the environment, falling back to def when the
+// variable is unset or not a valid number.
+func envFloat(name string, def float64) float64 {
+	if raw, ok := os.LookupEnv(name); ok {
+		if v, err := strconv.ParseFloat(raw, 64); err == nil {
+			return v
+		}
+	}
+	return def
 }

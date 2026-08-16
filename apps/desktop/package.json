@@ -33,7 +33,8 @@
   "optionalDependencies": {
     "node-pty": "^1.0.0",
     "@esbuild/linux-x64": "0.25.12",
-    "@rollup/rollup-linux-x64-gnu": "4.61.1"
+    "@rollup/rollup-linux-x64-gnu": "4.61.1",
+    "@oxlint/binding-linux-x64-gnu": "1.76.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
