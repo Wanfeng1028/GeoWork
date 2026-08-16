@@ -90,7 +90,14 @@ func NewStateMachine() *StateMachine {
 		NetworkAllowed: true,
 	}
 	sm.allowed[StateEditing] = AllowedToolSet{
-		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "git_commit", "run_git_add", "spawn_subagent"},
+		// doc/22 BP2: the explicit list must cover every tool that
+		// inferStateFromTool routes to Editing — the previous list was
+		// missing run_shell/delete_file/git_push/run_git_reset/
+		// browser_control/network_request, so those tools inferred
+		// themselves INTO Editing and were then rejected by Editing's
+		// own (incomplete) list: unreachable in the ReAct path, and the
+		// interactive-approval flow could never trigger for run_shell.
+		Tools:        []string{"read_file", "write_file", "list_files", "create_artifact", "run_python", "run_shell", "delete_file", "git_commit", "git_push", "run_git_add", "run_git_reset", "browser_control", "network_request", "spawn_subagent"},
 		ReadAllowed:  true,
 		WriteAllowed: true,
 		ShellAllowed: true,

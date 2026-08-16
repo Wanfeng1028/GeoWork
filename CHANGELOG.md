@@ -18,6 +18,12 @@
 
 ## [Unreleased]
 
+### Fixed — BP2 审批状态机修复（doc/22，2026-08-17 · ZCode）
+- **修复批准死循环（F2，致命）**：`InteractiveApprover` 新增决策记忆——按 (runID|工具|参数哈希) 记住已批准/已拒绝的调用（TTL 10 分钟），批准后的重试不再弹出重复审批请求；拒绝同样记忆、超时不记忆（超时不是用户决策）
+- **修复状态机白名单死锁（实施中新发现的致命项）**：run_shell / delete_file / git_push / run_git_reset / browser_control / network_request 被 `inferStateFromTool` 推入 Editing 状态、又被 Editing 自己不完整的显式工具清单拒绝——这些工具在 ReAct 路径**永远不可达**，交互审批流也因此从未真正触发过。Editing 清单已与推断映射对齐
+- **D-B2 双 Governor 重命名**：`toolregistry.Governor`（频次/配额）→ `QuotaGovernor`；`aiagent.GovernorImpl`（交互审批）→ `InteractiveApprover`——两个同名不同物的 Governor 曾让审批问题排查指向错误文件
+- **审批测试从 0 到 8**：批准-重试不再重复询问（F2 回归钉）、拒绝触达模型、参数变化重新审批、拒绝记忆、超时不记忆、TTL 过期、双重 Resolve 幂等、真实 run_shell 端到端批准执行
+
 ### Fixed — BP1 装配止血：agent 端到端真正可写可执行（doc/22，2026-08-17 · ZCode）
 - **修复生产装配断层（F1，致命）**：orchestrator 构造 toolCtx 只注入 runID、全仓库无人调用 `WithPolicy`，导致真实装配下 write_file/run_python/run_shell/delete_file 全部 "permission denied"——agent 只能读。新增 `aiagent.DefaultDesktopPolicy()`（D-B1：full 级，critical 工具仍走审批+Harness）并经 `WithPermissionPolicy` 接入 main.go 与每次工具调用的 ctx
 - **修复高风险检查语义 bug**：`CheckPermission(ctx, name)` 传工具名，永远匹配不上按权限类（read/write/exec）键控的 Actions 表；改为 `CheckPermission(ctx, t.Permission())`

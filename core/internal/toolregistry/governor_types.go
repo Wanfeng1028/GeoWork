@@ -1,4 +1,4 @@
-// GeoWork Go Core - Approval Governor Types (consumer-side contract)
+// GeoWork Go Core - Approval QuotaGovernor Types (consumer-side contract)
 //
 // Defines ExecutionMode, ApprovalDecision, ApprovalRequest, ApprovalResult,
 // ApprovalGovernor interface and ErrApprovalRequired. Lives in package
@@ -100,11 +100,11 @@ type ApprovalResult struct {
 
 // ApprovalGovernor manages interactive approval for critical tools.
 //
-// Naming note: this interface is intentionally NOT called Governor,
-// because package toolregistry already has a `type Governor struct`
+// Naming note: this interface is intentionally NOT called QuotaGovernor,
+// because package toolregistry already has a `type QuotaGovernor struct`
 // (the rate-limit / policy manager in governor.go). The two are
 // orthogonal:
-//   - Governor (existing): call-frequency / quota / policy checks
+//   - QuotaGovernor (existing): call-frequency / quota / policy checks
 //     (RecordCall / CheckBeforeCall / IsGoverned).
 //   - ApprovalGovernor (this interface): interactive approval flow
 //     (CheckPermission / ResolveApproval).

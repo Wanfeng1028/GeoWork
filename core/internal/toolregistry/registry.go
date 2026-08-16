@@ -32,18 +32,18 @@ type Registry struct {
 	mu           sync.RWMutex
 	tools        map[string]Tool
 	log          *zap.Logger
-	governor     *Governor        // existing call-rate / policy Governor (frequency, quota)
+	quota        *QuotaGovernor   // existing call-rate / policy QuotaGovernor (frequency, quota)
 	approvalGov  ApprovalGovernor // P1-1: interactive approval-flow governor (aiagent.GovernorImpl)
 	auditLog     *AuditLog
-	policies     map[string]*GovernorPolicy // cached governor policies
-	allowedRoots []string                   // P1-1: sandbox path roots for write/exec tools
+	policies     map[string]*QuotaPolicy // cached governor policies
+	allowedRoots []string                // P1-1: sandbox path roots for write/exec tools
 }
 
 func NewRegistry(log *zap.Logger) *Registry {
 	return &Registry{
 		tools:    make(map[string]Tool),
 		log:      log,
-		policies: make(map[string]*GovernorPolicy),
+		policies: make(map[string]*QuotaPolicy),
 	}
 }
 
@@ -128,10 +128,10 @@ func (r *Registry) Remove(name string) error {
 	return nil
 }
 
-// WithGovernor attaches a Governor to the registry for runtime governance.
-func (r *Registry) WithGovernor(g *Governor) *Registry {
+// WithQuotaGovernor attaches a QuotaGovernor to the registry for runtime governance.
+func (r *Registry) WithQuotaGovernor(g *QuotaGovernor) *Registry {
 	r.mu.Lock()
-	r.governor = g
+	r.quota = g
 	r.mu.Unlock()
 	return r
 }
@@ -144,11 +144,11 @@ func (r *Registry) WithAuditLog(a *AuditLog) *Registry {
 	return r
 }
 
-// GetGovernor returns the attached Governor, if any.
-func (r *Registry) GetGovernor() *Governor {
+// GetQuotaGovernor returns the attached QuotaGovernor, if any.
+func (r *Registry) GetQuotaGovernor() *QuotaGovernor {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.governor
+	return r.quota
 }
 
 // GetAuditLog returns the attached AuditLog, if any.
@@ -182,7 +182,7 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 	// Snapshot fields under the read lock so the rest of Execute can run
 	// without holding the registry mutex.
 	r.mu.RLock()
-	governor := r.governor
+	governor := r.quota
 	auditLog := r.auditLog
 	approvalGov := r.approvalGov
 	allowedRoots := append([]string(nil), r.allowedRoots...)

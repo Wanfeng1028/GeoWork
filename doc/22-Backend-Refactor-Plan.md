@@ -100,7 +100,9 @@ func DefaultDesktopPolicy() *toolregistry.PermissionPolicy
 
 ---
 
-### BP2：审批状态机修复（1 天，1 次提交）
+### BP2：审批状态机修复（1 天，1 次提交）✅ 已完成（2026-08-17）
+
+> 实施记录：决策记忆按 (runID|tool|argsHash) 键、TTL 10 分钟、上限 256 条；deny 同样记忆、timeout 不记忆；双 Governor 已改名（QuotaGovernor / InteractiveApprover）。实施中发现并顺带修复**状态机白名单死锁**——run_shell 等 7 个工具被 inferStateFromTool 推入 Editing 又被 Editing 自己的不完整清单拒绝，ReAct 路径永远不可达（审批流也因此从未可达）。8 个审批测试 + 修正 1 个把 bug 当规格的旧断言。
 
 **修改 `aiagent/governor.go`**（F2）：
 - `GovernorImpl` 增加已决策记忆：

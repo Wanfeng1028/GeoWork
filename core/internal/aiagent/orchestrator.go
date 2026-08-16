@@ -227,7 +227,7 @@ type Orchestrator struct {
 	log          *zap.Logger
 	budget       ContextBudget
 	maxTurns     int
-	governor     *GovernorImpl             // P1-1: interactive approval for critical tools
+	approver     *InteractiveApprover      // P1-1: interactive approval for critical tools
 	trajectory   *TrajectoryRecorder       // P1-2: per-run execution trace recorder (nil = disabled)
 	usageMeter   *modelgateway.UsageMeter  // P1-2: token usage audit (nil = disabled)
 	hooks        *HookManager              // P2-3: lifecycle hooks (nil = disabled)
@@ -257,10 +257,10 @@ func NewOrchestrator(
 	// the registry via WithApprovalGovernor. The registry only sees the
 	// toolregistry.ApprovalGovernor interface, so this stays a one-way
 	// dependency (aiagent → toolregistry). The orchestrator also keeps
-	// a direct *GovernorImpl reference so it can call ResolveApproval /
+	// a direct *InteractiveApprover reference so it can call ResolveApproval /
 	// PendingApprovals without an interface dispatch.
-	governor := NewGovernorImpl(log, registry)
-	registry.WithApprovalGovernor(governor)
+	approver := NewInteractiveApprover(log, registry)
+	registry.WithApprovalGovernor(approver)
 
 	o := &Orchestrator{
 		registry:     registry,
@@ -276,7 +276,7 @@ func NewOrchestrator(
 		runContexts:  make(map[string]*RunContext),
 		budget:       DefaultContextBudget(),
 		maxTurns:     50,
-		governor:     governor,
+		approver:     approver,
 	}
 	o.contextBld = NewContextBuilder(log, registry)
 	o.contextBld.WithBudget(o.budget)
@@ -294,7 +294,7 @@ func NewChildOrchestrator(
 	registry *toolregistry.Registry,
 	gateway modelgateway.ModelGateway,
 	provider *modelgateway.ModelProvider,
-	parentGovernor *GovernorImpl,
+	parentApprover *InteractiveApprover,
 	log *zap.Logger,
 ) *Orchestrator {
 	o := &Orchestrator{
@@ -314,7 +314,7 @@ func NewChildOrchestrator(
 		// Reuse the parent's governor so approvals from child runs are
 		// visible via the same PendingApprovals(runID) API. The governor
 		// is keyed by runID, so there's no collision.
-		governor: parentGovernor,
+		approver: parentApprover,
 	}
 	o.contextBld = NewContextBuilder(log, registry)
 	o.contextBld.WithBudget(o.budget)
@@ -1229,6 +1229,7 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 		}
 	}
 
+
 	return contentBuilder.String(), toolCalls, usage, nil
 }
 
@@ -1436,8 +1437,8 @@ func (o *Orchestrator) getRunContext(runID string) *RunContext {
 // can call PendingApprovals(runID) and ResolveApproval(reqID, decision,
 // reason) without re-implementing the lookup. Returns nil when no
 // orchestrator is wired (e.g. in tests).
-func (o *Orchestrator) Governor() *GovernorImpl {
-	return o.governor
+func (o *Orchestrator) Approver() *InteractiveApprover {
+	return o.approver
 }
 
 // PauseRun pauses a run, blocking the ReAct loop at the next turn boundary.
@@ -1575,13 +1576,13 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, rc *RunContext, req 
 	// 3. Wait for one of: user decision, timeout, or run cancellation.
 	select {
 	case <-ctx.Done():
-		_ = o.governor.ResolveApproval(req.ID, toolregistry.ApprovalDenied, "context cancelled")
-		o.governor.RemoveApproval(req.ID)
+		_ = o.approver.ResolveApproval(req.ID, toolregistry.ApprovalDenied, "context cancelled")
+		o.approver.RemoveApproval(req.ID)
 		return fmt.Errorf("approval cancelled: %w", ctx.Err())
 
 	case <-timer.C:
-		_ = o.governor.ResolveApproval(req.ID, toolregistry.ApprovalTimeout, "5min timeout")
-		o.governor.RemoveApproval(req.ID)
+		_ = o.approver.ResolveApproval(req.ID, toolregistry.ApprovalTimeout, "5min timeout")
+		o.approver.RemoveApproval(req.ID)
 		o.emitEvent(rc, Event{
 			Type:      "approval_timeout",
 			Timestamp: time.Now(),
@@ -1597,7 +1598,7 @@ func (o *Orchestrator) waitForApproval(ctx context.Context, rc *RunContext, req 
 		return fmt.Errorf("approval timeout after %s for tool %s", timeout, req.ToolName)
 
 	case decision := <-req.DecisionCh:
-		o.governor.RemoveApproval(req.ID)
+		o.approver.RemoveApproval(req.ID)
 		o.emitEvent(rc, Event{
 			Type:      "approval_resolved",
 			Timestamp: time.Now(),
@@ -1696,8 +1697,8 @@ func (o *Orchestrator) BuildStateSnapshot(runID string) map[string]any {
 	if rc.Memory != nil {
 		snapshot["recentMessages"] = rc.Memory.Summary(2000)
 	}
-	if o.governor != nil {
-		pending := o.governor.PendingApprovals(runID)
+	if o.approver != nil {
+		pending := o.approver.PendingApprovals(runID)
 		if len(pending) > 0 {
 			// Surface the first pending approval so the client can
 			// re-render the approval dialog.

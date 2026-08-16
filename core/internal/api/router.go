@@ -157,7 +157,7 @@ func NewRouter(deps RouterDeps) *Router {
 		wsManager := NewWsSessionManager(logger)
 		wsHandler := NewWsHandler(wsManager, logger, deps.Auth)
 		wsHandler.SetApprovalResolver(func(approvalID, decision, reason string) error {
-			gov := deps.Orchestrator.Governor()
+			gov := deps.Orchestrator.Approver()
 			if gov == nil {
 				return fmt.Errorf("approval governor not configured")
 			}

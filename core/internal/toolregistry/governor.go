@@ -1,4 +1,4 @@
-// GeoWork Go Core - Tool Governor
+// GeoWork Go Core - Tool QuotaGovernor
 
 package toolregistry
 
@@ -8,34 +8,34 @@ import (
 	"time"
 )
 
-// GovernorPolicy is a runtime-evaluated policy that the Governor uses.
-type GovernorPolicy struct {
+// QuotaPolicy is a runtime-evaluated policy that the QuotaGovernor uses.
+type QuotaPolicy struct {
 	ToolPolicy
 	CallsThisTurn int
 	CallsThisTask int
 	LastCallTime  time.Time
 }
 
-// Governor enforces tool call limits and governance rules.
-type Governor struct {
+// QuotaGovernor enforces tool call limits and governance rules.
+type QuotaGovernor struct {
 	mu        sync.RWMutex
-	policies  map[string]*GovernorPolicy // tool name -> policy
-	taskCalls map[string]int             // tool name -> calls this task
-	turnCalls map[string]int             // tool name -> calls this turn
-	approved  map[string]bool            // tool name + taskID -> approved
+	policies  map[string]*QuotaPolicy // tool name -> policy
+	taskCalls map[string]int          // tool name -> calls this task
+	turnCalls map[string]int          // tool name -> calls this turn
+	approved  map[string]bool         // tool name + taskID -> approved
 	taskID    string
-	log       GovernorLogger
+	log       QuotaLogger
 }
 
-// GovernorLogger is a minimal logging interface for the Governor.
-type GovernorLogger interface {
+// QuotaLogger is a minimal logging interface for the QuotaGovernor.
+type QuotaLogger interface {
 	Warn(format string, args ...any)
 }
 
-// NewGovernor creates a new Governor for the given task.
-func NewGovernor(taskID string, logger GovernorLogger) *Governor {
-	g := &Governor{
-		policies:  make(map[string]*GovernorPolicy),
+// NewQuotaGovernor creates a new QuotaGovernor for the given task.
+func NewQuotaGovernor(taskID string, logger QuotaLogger) *QuotaGovernor {
+	g := &QuotaGovernor{
+		policies:  make(map[string]*QuotaPolicy),
 		taskCalls: make(map[string]int),
 		turnCalls: make(map[string]int),
 		approved:  make(map[string]bool),
@@ -45,7 +45,7 @@ func NewGovernor(taskID string, logger GovernorLogger) *Governor {
 
 	// Register default policies
 	for _, p := range DefaultToolPolicies() {
-		g.policies[p.Name] = &GovernorPolicy{
+		g.policies[p.Name] = &QuotaPolicy{
 			ToolPolicy: p,
 		}
 	}
@@ -54,11 +54,11 @@ func NewGovernor(taskID string, logger GovernorLogger) *Governor {
 }
 
 // SetCustomPolicy allows overriding or adding a policy for a tool.
-func (g *Governor) SetCustomPolicy(policy ToolPolicy) {
+func (g *QuotaGovernor) SetCustomPolicy(policy ToolPolicy) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	if _, ok := g.policies[policy.Name]; !ok {
-		g.policies[policy.Name] = &GovernorPolicy{ToolPolicy: policy}
+		g.policies[policy.Name] = &QuotaPolicy{ToolPolicy: policy}
 	} else {
 		g.policies[policy.Name].ToolPolicy = policy
 	}
@@ -66,7 +66,7 @@ func (g *Governor) SetCustomPolicy(policy ToolPolicy) {
 
 // CheckBeforeCall evaluates whether a tool call is allowed without actually recording it.
 // Returns: (allowed, reason, remainingCalls)
-func (g *Governor) CheckBeforeCall(toolName string) (bool, string, int) {
+func (g *QuotaGovernor) CheckBeforeCall(toolName string) (bool, string, int) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -116,7 +116,7 @@ func (g *Governor) CheckBeforeCall(toolName string) (bool, string, int) {
 
 // RecordCall records a tool call, enforcing the policy first.
 // Returns an error if the call is not allowed.
-func (g *Governor) RecordCall(toolName string) error {
+func (g *QuotaGovernor) RecordCall(toolName string) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -168,7 +168,7 @@ func (g *Governor) RecordCall(toolName string) error {
 }
 
 // ApproveTool approves a tool for the current task.
-func (g *Governor) ApproveTool(toolName string) {
+func (g *QuotaGovernor) ApproveTool(toolName string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := fmt.Sprintf("%s:%s", toolName, g.taskID)
@@ -176,7 +176,7 @@ func (g *Governor) ApproveTool(toolName string) {
 }
 
 // ApprovePermission approves a specific dangerous action for a tool in a task.
-func (g *Governor) ApprovePermission(toolName string, action DangerousAction) {
+func (g *QuotaGovernor) ApprovePermission(toolName string, action DangerousAction) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := fmt.Sprintf("%s:%s:%s", toolName, string(action), g.taskID)
@@ -184,21 +184,21 @@ func (g *Governor) ApprovePermission(toolName string, action DangerousAction) {
 }
 
 // StartNewTurn resets per-turn counters.
-func (g *Governor) StartNewTurn() {
+func (g *QuotaGovernor) StartNewTurn() {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	g.turnCalls = make(map[string]int)
 }
 
 // GetCallsThisTask returns how many times a tool has been called this task.
-func (g *Governor) GetCallsThisTask(toolName string) int {
+func (g *QuotaGovernor) GetCallsThisTask(toolName string) int {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	return g.taskCalls[toolName]
 }
 
 // IsGoverned returns true if a tool has a governance policy.
-func (g *Governor) IsGoverned(toolName string) bool {
+func (g *QuotaGovernor) IsGoverned(toolName string) bool {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	_, ok := g.policies[toolName]
@@ -206,7 +206,7 @@ func (g *Governor) IsGoverned(toolName string) bool {
 }
 
 // GetPolicy returns the policy for a tool.
-func (g *Governor) GetPolicy(toolName string) (*ToolPolicy, bool) {
+func (g *QuotaGovernor) GetPolicy(toolName string) (*ToolPolicy, bool) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	p, ok := g.policies[toolName]
@@ -218,7 +218,7 @@ func (g *Governor) GetPolicy(toolName string) (*ToolPolicy, bool) {
 }
 
 // ApproveAction approves a dangerous action (e.g., run_shell) for the current task.
-func (g *Governor) ApproveAction(action DangerousAction) {
+func (g *QuotaGovernor) ApproveAction(action DangerousAction) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := fmt.Sprintf("action:%s:%s", string(action), g.taskID)
@@ -226,7 +226,7 @@ func (g *Governor) ApproveAction(action DangerousAction) {
 }
 
 // CheckActionApproval checks if a dangerous action is approved.
-func (g *Governor) CheckActionApproval(action DangerousAction) (bool, string) {
+func (g *QuotaGovernor) CheckActionApproval(action DangerousAction) (bool, string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := fmt.Sprintf("action:%s:%s", string(action), g.taskID)
@@ -237,7 +237,7 @@ func (g *Governor) CheckActionApproval(action DangerousAction) (bool, string) {
 }
 
 // ResetTask resets all counters for a new task (called internally when task ID changes).
-func (g *Governor) ResetTask(taskID string) {
+func (g *QuotaGovernor) ResetTask(taskID string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	g.taskID = taskID

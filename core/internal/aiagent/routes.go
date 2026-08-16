@@ -220,7 +220,7 @@ func (r *Routes) handleResumeRun(w http.ResponseWriter, req *http.Request) {
 // approval_request SSE event arrives.
 func (r *Routes) handleListApprovals(w http.ResponseWriter, req *http.Request) {
 	runID := req.PathValue("runId")
-	governor := r.orchestrator.Governor()
+	governor := r.orchestrator.Approver()
 	if governor == nil {
 		writeJSON(w, []any{})
 		return
@@ -250,7 +250,7 @@ func (r *Routes) handleListApprovals(w http.ResponseWriter, req *http.Request) {
 // request's DecisionCh and retries the tool call.
 func (r *Routes) handleApprove(w http.ResponseWriter, req *http.Request) {
 	reqID := req.PathValue("reqId")
-	governor := r.orchestrator.Governor()
+	governor := r.orchestrator.Approver()
 	if governor == nil {
 		writeError(w, http.StatusServiceUnavailable, "approval governor not configured")
 		return
@@ -267,7 +267,7 @@ func (r *Routes) handleApprove(w http.ResponseWriter, req *http.Request) {
 // can react ("user denied the call").
 func (r *Routes) handleReject(w http.ResponseWriter, req *http.Request) {
 	reqID := req.PathValue("reqId")
-	governor := r.orchestrator.Governor()
+	governor := r.orchestrator.Approver()
 	if governor == nil {
 		writeError(w, http.StatusServiceUnavailable, "approval governor not configured")
 		return

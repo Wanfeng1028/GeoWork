@@ -29,7 +29,7 @@ func TestDefaultToolPolicies(t *testing.T) {
 }
 
 func TestGovernor_AlwaysDeny(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	err := g.RecordCall("git_push")
 	if err == nil {
@@ -38,7 +38,7 @@ func TestGovernor_AlwaysDeny(t *testing.T) {
 }
 
 func TestGovernor_PerTurnLimit(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// read_file has MaxCallsPerTurn=5
 	for i := 0; i < 5; i++ {
@@ -53,7 +53,7 @@ func TestGovernor_PerTurnLimit(t *testing.T) {
 }
 
 func TestGovernor_PerTaskLimit(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// write_file has MaxCallsPerTask=50, MaxCallsPerTurn=3, RequiresApproval=true
 	// and requires "write_file" permission. We need to approve first.
@@ -80,7 +80,7 @@ func TestGovernor_PerTaskLimit(t *testing.T) {
 }
 
 func TestGovernor_RequiresApproval(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// run_shell requires approval
 	err := g.RecordCall("run_shell")
@@ -98,7 +98,7 @@ func TestGovernor_RequiresApproval(t *testing.T) {
 }
 
 func TestGovernor_CheckBeforeCall(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	allowed, reason, remaining := g.CheckBeforeCall("git_push")
 	if allowed {
@@ -120,7 +120,7 @@ func TestGovernor_CheckBeforeCall(t *testing.T) {
 }
 
 func TestGovernor_StartNewTurn(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// Use up per-turn limit
 	for i := 0; i < 5; i++ {
@@ -144,7 +144,7 @@ func TestGovernor_StartNewTurn(t *testing.T) {
 }
 
 func TestGovernor_ApprovePermission(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// write_file requires "write_file" permission
 	allowed, reason, _ := g.CheckBeforeCall("write_file")
@@ -163,7 +163,7 @@ func TestGovernor_ApprovePermission(t *testing.T) {
 }
 
 func TestGovernor_TaskReset(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// Make some calls
 	for i := 0; i < 10; i++ {
@@ -246,7 +246,7 @@ func TestAuditLog_Clear(t *testing.T) {
 }
 
 func TestGovernor_NoPolicyAllowsCall(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	// A tool without a policy (e.g. "create_artifact" — actually it has one)
 	// Let's test with a completely unknown tool
@@ -258,10 +258,10 @@ func TestGovernor_NoPolicyAllowsCall(t *testing.T) {
 }
 
 func TestGovernor_WaitingForUserNoExecution(t *testing.T) {
-	// This test verifies that the Governor doesn't block tools on its own —
+	// This test verifies that the QuotaGovernor doesn't block tools on its own —
 	// it's the state machine that prevents execution during waiting_for_user.
-	// The Governor just enforces numerical limits.
-	g := NewGovernor("task-1", nil)
+	// The QuotaGovernor just enforces numerical limits.
+	g := NewQuotaGovernor("task-1", nil)
 
 	// No call limits yet
 	err := g.RecordCall("read_file")
@@ -305,7 +305,7 @@ func TestGetGovernedToolNames(t *testing.T) {
 }
 
 func TestGovernor_Concurrent(t *testing.T) {
-	g := NewGovernor("task-1", nil)
+	g := NewQuotaGovernor("task-1", nil)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
@@ -324,7 +324,7 @@ func TestGovernor_Concurrent(t *testing.T) {
 	}
 }
 
-// Helper mock logger for GovernorLogger
+// Helper mock logger for QuotaLogger
 type mockLogger struct {
 	mu   sync.Mutex
 	msgs []string

@@ -78,7 +78,7 @@ func (m *SubAgentManager) SpawnSubAgent(ctx context.Context, cfg *SubAgentConfig
 		m.parent.registry,
 		m.parent.gateway,
 		m.parent.provider,
-		m.parent.governor,
+		m.parent.approver,
 		m.log,
 	)
 	if cfg.MaxTurns > 0 {

@@ -200,12 +200,15 @@ func TestStateMachine_ToolIsAllowed_Editing(t *testing.T) {
 		t.Error("read_file should be allowed in editing")
 	}
 
-	// run_shell is NOT in StateEditing's explicit Tools list (only
-	// run_python is). ShellAllowed=true on the AllowedToolSet is
-	// reserved for the permission-category fallback path used when
-	// no explicit Tools list is present.
-	if sm.ToolIsAllowed(StateEditing, "run_shell") {
-		t.Error("run_shell should NOT be allowed in editing (not in explicit Tools list)")
+	// doc/22 BP2: Editing's explicit list now covers every tool that
+	// inferStateFromTool routes to Editing. Previously run_shell
+	// inferred itself INTO Editing and was then rejected by Editing's
+	// own incomplete list — permanently unreachable in the ReAct path
+	// (and the approval flow could never trigger for it).
+	for _, tool := range []string{"run_shell", "delete_file", "git_push", "run_git_reset", "browser_control", "network_request"} {
+		if !sm.ToolIsAllowed(StateEditing, tool) {
+			t.Errorf("%s should be allowed in editing (inferStateFromTool routes it there)", tool)
+		}
 	}
 }
 
