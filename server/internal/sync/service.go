@@ -57,7 +57,7 @@ func (s *Service) Push(c *gin.Context) {
 		return
 	}
 
-	now := time.Now().UnixNano()
+	now := time.Now().UnixMilli()
 
 	// Conflict detection: check if existing record has been modified since client's last sync
 	existing, err := s.store.GetSyncRecordByObject(user.ID, req.ObjectType, req.ObjectID)
@@ -154,7 +154,7 @@ func (s *Service) Pull(c *gin.Context) {
 	}
 
 	// Detect conflicts in pull response
-	now := time.Now().UnixNano()
+	now := time.Now().UnixMilli()
 	result := make([]gin.H, 0, len(records))
 	for _, r := range records {
 		item := gin.H{
@@ -237,7 +237,7 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 		ObjectType: req.ObjectType,
 		ObjectID:   req.ObjectID,
 		Data:       req.Data,
-		Cursor:     time.Now().UnixNano(),
+		Cursor:     time.Now().UnixMilli(),
 	}
 
 	if err := s.store.UpsertSyncRecord(record); err != nil {

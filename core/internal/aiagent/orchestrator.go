@@ -572,16 +572,10 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 		RunCtx: rc,
 		Cancel: rc.Cancel,
 	})
-	defer func() {
-		// P2-3: fire OnRunEnd after the loop exits (covers normal
-		// completion, ctx cancel, and panic-recovered failure).
-		o.fireHook(HookOnRunEnd, &HookContext{
-			RunID:  run.ID,
-			Run:    run,
-			RunCtx: rc,
-			Cancel: rc.Cancel,
-		})
-	}()
+	// P2-3: OnRunEnd is fired by the teardown defer below, before
+	// close(run.done) — waiters of done must be able to assume the full
+	// lifecycle (including hooks) has completed. A separate defer here
+	// would run after the teardown (LIFO) and race the waiters.
 
 	// P1-7: declared before the deferred teardown below so the final
 	// checkpoint can stamp the real turn counter (and history).
@@ -632,6 +626,16 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 			Data:      doneData,
 		})
 		o.removeRunContext(run.ID)
+		// P2-3: fire OnRunEnd after the loop exits (covers normal
+		// completion, ctx cancel, and panic-recovered failure). It must
+		// happen before close(run.done): waiters treat done as "the run's
+		// entire lifecycle, hooks included, has finished".
+		o.fireHook(HookOnRunEnd, &HookContext{
+			RunID:  run.ID,
+			Run:    run,
+			RunCtx: rc,
+			Cancel: rc.Cancel,
+		})
 		close(run.done)
 	}()
 
