@@ -116,6 +116,10 @@ def main() -> int:
         return 2
 
     env = os.environ.copy()
+    # doc/22 BP4: the worker enforces token auth by default. We set
+    # insecure mode for the smoke check so the contract script can
+    # exercise the tool endpoints without a real token.
+    env["GEOWORK_INSECURE_NO_AUTH"] = "1"
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "app.main:app", "--host", HOST, "--port", str(PORT)],
         cwd=str(WORKER_DIR),

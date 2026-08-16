@@ -50,6 +50,11 @@ def register_auth_middleware(app: FastAPI) -> None:
         token = get_worker_token()
         insecure = is_insecure_mode()
 
+        # Health endpoint must always be reachable, even when auth is
+        # not configured, so process managers can monitor the worker.
+        if request.url.path in EXEMPT_PATHS:
+            return await call_next(request)
+
         if token is None and not insecure:
             # Fail-closed: no token configured and no explicit dev opt-in.
             return JSONResponse(
@@ -63,9 +68,6 @@ def register_auth_middleware(app: FastAPI) -> None:
                     "AUTH DISABLED via %s=1: any local process can drive the worker — dev only",
                     INSECURE_ENV,
                 )
-            return await call_next(request)
-
-        if request.url.path in EXEMPT_PATHS:
             return await call_next(request)
 
         presented = request.headers.get(TOKEN_HEADER, "")

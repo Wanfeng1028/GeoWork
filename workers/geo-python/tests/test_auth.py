@@ -73,3 +73,13 @@ def test_health_exempt():
     with mock.patch.dict(os.environ, _env("secret-token")):
         resp = client.get("/health")
     assert resp.status_code in (200, 404)
+
+
+def test_health_open_when_auth_unconfigured():
+    # Process managers (and the CI smoke contract) must be able to reach
+    # /health even when GEOWORK_WORKER_TOKEN is unset — the fail-closed
+    # 503 applies to tool endpoints only.
+    with mock.patch.dict(os.environ, _env(None)):
+        resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
