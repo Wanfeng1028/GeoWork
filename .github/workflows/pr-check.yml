@@ -63,18 +63,31 @@ jobs:
           path: apps/desktop/coverage
           if-no-files-found: warn
 
-  # Go 核心检查：go vet + 全量测试 + 覆盖率。
+  # Go 核心检查：go vet + 全量测试 + 覆盖率 + 增量覆盖率门禁（P4）。
   core-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 增量覆盖率门禁需要 diff 基线 commit（github.event.before）
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25'
       - name: Vet
         run: cd core && go vet ./...
       - name: Test with coverage
-        run: cd core && go test ./... -coverprofile=coverage.out
+        run: |
+          SKIP=$(grep -v '^#' scripts/ci/flaky-quarantine.txt | grep -v '^$' | paste -sd'|' -)
+          cd core && go test ${SKIP:+-skip "$SKIP"} ./... -coverprofile=coverage.out
+      - name: Diff coverage gate (50%)
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          python scripts/ci/go_diff_coverage.py \
+            --profile core/coverage.out \
+            --module geowork/core --repo-dir core \
+            --base "${GITHUB_EVENT_BEFORE:-HEAD~1}" --threshold 50
       - name: Test with race detector
         # ubuntu runners ship a C toolchain, so -race works here even
         # though local Windows dev boxes may lack cgo. Guards the
@@ -88,18 +101,30 @@ jobs:
           path: core/coverage.out
           if-no-files-found: warn
 
-  # Go 云端检查：go vet + 全量测试 + 覆盖率。
+  # Go 云端检查：go vet + 全量测试 + 覆盖率 + 增量覆盖率门禁（P4）。
   server-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25'
       - name: Vet
         run: cd server && go vet ./...
       - name: Test with coverage
-        run: cd server && go test ./... -coverprofile=coverage.out
+        run: |
+          SKIP=$(grep -v '^#' scripts/ci/flaky-quarantine.txt | grep -v '^$' | paste -sd'|' -)
+          cd server && go test ${SKIP:+-skip "$SKIP"} ./... -coverprofile=coverage.out
+      - name: Diff coverage gate (50%)
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          python scripts/ci/go_diff_coverage.py \
+            --profile server/coverage.out \
+            --module server --repo-dir server \
+            --base "${GITHUB_EVENT_BEFORE:-HEAD~1}" --threshold 50
       - name: Test with race detector
         # ubuntu runners ship a C toolchain, so -race works here even
         # though local Windows dev boxes may lack cgo.
