@@ -129,8 +129,9 @@ func TestMiddlewareLetsDistinctClientsThrough(t *testing.T) {
 	}
 }
 
-func TestStopTerminatesCleanup(t *testing.T) {
+func TestStopIsIdempotent(t *testing.T) {
 	l := NewLimiter(1, 1)
 	l.Allow("a")
-	l.Stop() // must not panic; stops the background goroutine
+	l.Stop()
+	l.Stop() // second call must not panic (close of closed channel)
 }

@@ -27,6 +27,7 @@ type Limiter struct {
 	rate     float64 // tokens added per second
 	capacity float64 // maximum tokens in a bucket
 	stopCh   chan struct{}
+	stopOnce sync.Once
 }
 
 // NewLimiter creates a new rate limiter with the specified token refill rate
@@ -76,9 +77,11 @@ func (l *Limiter) Allow(key string) bool {
 	return true
 }
 
-// Stop terminates the background cleanup goroutine.
+// Stop terminates the background cleanup goroutine. Safe to call multiple times.
 func (l *Limiter) Stop() {
-	close(l.stopCh)
+	l.stopOnce.Do(func() {
+		close(l.stopCh)
+	})
 }
 
 // cleanup periodically removes buckets that have been idle for more than 10 minutes.
