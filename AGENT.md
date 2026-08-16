@@ -12,6 +12,7 @@
 | v1.6 | 2026-08-16 | ZCode 提交 P0-4 runtime token 前端全链路 + 安全加固 + 17 个测试文件（08-15 夜批次）；前端 API 客户端统一：删除 utils/apiClient.ts 死代码、client.ts 增加超时/ApiError 三分类/取消支持、doc/15 v1.1 契约同步 |
 | v1.6 | 2026-08-16 | ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
 | v1.7 | 2026-08-17 | ZCode 前端六阶段重构（doc/21）全部完成：协议类型镜像、React-free 会话对象层（D1 演示模式开关）、useSession/useInvoke 绑定、NewTaskPage 接线（D2 真实 run 轮询）、zustand taskStore、shared/storage 统一入口 + CI 边界检查；删除静默 mock 降级/假执行/每 token 全量写 localStorage 三大病灶 |
+| v1.8 | 2026-08-17 | A1 审批卡片闭环（CoreApprovalRequest 镜像 + Session approval SSE 监听 + resolveApproval 方法 + ApprovalCard 组件）+ A2 Markdown 升级（react-markdown + remark-gfm + Shiki 细粒度懒加载 + 删除 MarkdownLite）；94/94 测试 + build + 边界检查全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -28,7 +29,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 88 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成：会话对象层 + taskStore + storage 统一入口 + CI 边界守护；待 E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 94 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）；待 A3（Thinking 面板）、E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -449,6 +450,16 @@ Level 3 — 记录（持续追加）
 ---
 
 ## 14. AI Agent 施工记录
+
+### 2026-08-17 · ZCode · A1 审批卡片闭环 + A2 Markdown 升级（doc/23，A1+A2 完成）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| A1 审批卡片 | b35e570 | CoreApprovalRequest 类型镜像 + Session approval SSE 监听（approval_request/resolved/timeout）+ resolveApproval() 方法 + ApprovalCard 组件（riskLevel 标签/命令预览/args 摘要）+ NewTaskPage 集成 + 4 条审批测试 | ✅ |
+| A2 Markdown | b35e570 | react-markdown + remark-gfm 替换自研 MarkdownLite；Shiki 细粒度懒加载（shiki/core + engine/javascript + 8 .mjs 语言）；CodeBlockInner 200ms 去抖 + aliveRef + 明暗主题；PreRenderer 拦截 pre>code 提取语言；ConversationMessage React.memo；AssistantChatPanel 同步切换；4 条渲染测试；删除 MarkdownLite.tsx/.module.css | ✅ |
+
+**验收**：tsc + vitest 94/94 + build + 边界检查 121 源文件全绿；17 文件变更 +2571/-323 行。
+**后续**：A3（Thinking 面板）、A4（Diff 查看器）、A5（性能：代码分割 + 虚拟滚动）。
 
 ### 2026-08-17 · ZCode · 前端六阶段重构（doc/21，P1→P6 全部完成）
 

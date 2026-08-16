@@ -2,7 +2,7 @@
 
 > **文档路径**：`doc/23-Frontend-AI-Components-Plan.md`
 > **关联文档**：`doc/21-Frontend-Refactor-Plan.md`（六阶段重构已完成，本计划是其后续）
-> **状态**：已批准执行中（2026-08-17 起草并同日开工）
+> **状态**：A1+A2 已完成（2026-08-17，提交 b35e570）；A3/A4/A5 待执行
 > **背景**：设计参考 TurboProduct 的 Beautiful UI 组件清单（beautifului.dev，MIT/copy-paste，无公开仓库）；因源码需邮件订阅，本计划以 antd token 体系自研，其组件清单作设计规格参考。
 
 ---
@@ -21,7 +21,7 @@ core 已建好的能力有三个在前端零消费：
 
 ## 阶段划分（每阶段独立提交、独立验收）
 
-### A1 审批流闭环（Approval Card）★本轮
+### A1 审批流闭环（Approval Card）✅ 已完成（b35e570）
 纯 HTTP+SSE，不需要 `/api/ws`（WS 是可选通道，HTTP resolve 与 WS 共享同一 resolver）：
 1. `shared/api/types.ts` 加 `CoreApprovalRequest`（镜像 toolregistry.ApprovalRequest 的 JSON 投影）
 2. Session：SSE `approval_request` → 快照 `pendingApproval`；`approval_resolved`/`approval_timeout` → 清除；`cancel()` 清除；新方法 `resolveApproval(approved, reason?)` POST `/api/agent/approvals/{id}/approve|reject`（乐观清除，失败恢复）
@@ -29,7 +29,7 @@ core 已建好的能力有三个在前端零消费：
 4. NewTaskPage：`snap.pendingApproval` 存在时消息列表上方渲染卡片
 5. 测试：事件填充 / approve 调用+清除 / reject 带 reason / resolved 事件清卡片
 
-### A2 流式 Markdown 升级（替换 MarkdownLite）★本轮
+### A2 流式 Markdown 升级（替换 MarkdownLite）✅ 已完成（b35e570）
 1. 依赖：`react-markdown` + `remark-gfm` + `shiki`（高亮懒加载，动态 import 不进主包）
 2. `MarkdownStream.tsx`：GFM 表格/列表/标题/链接 + 代码块组件（语言标签 + 复制按钮 + Shiki 高亮，未就绪时纯文本）
 3. 流式容错：未闭合 ``` fence 按代码块渲染（流式的自然形态）
