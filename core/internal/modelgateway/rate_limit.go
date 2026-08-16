@@ -43,7 +43,9 @@ func (rl *RateLimiter) ConfigureProvider(providerID string, qps int, profile Spe
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
-	tokens := int64(qps) * int64(profile.RateLimitMul)
+	// Multiply in float space first: int64(RateLimitMul) would truncate
+	// fractional multipliers (e.g. 1.5) to 1 and silently drop the boost.
+	tokens := int64(float64(qps) * profile.RateLimitMul)
 	if tokens < 1 {
 		tokens = 1
 	}
