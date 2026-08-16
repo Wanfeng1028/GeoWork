@@ -904,8 +904,11 @@ def parse_pdf(req: ToolRequest):
         notes["abstract"] = _extract_abstract(full_text)
         notes["sections"] = _extract_sections(full_text)
         notes["full_text"] = full_text[:10000]
-    except ImportError:
-        # PyPDF2 not available — try text-based extraction from raw bytes
+    except Exception as exc:
+        # ImportError: PyPDF2 not available. Any other exception means the
+        # bytes are not a parseable PDF (e.g. PdfReadError on a corrupted or
+        # plain-text file) — either way fall back to text heuristics instead
+        # of failing the request.
         try:
             raw_text = pdf_bytes.decode("utf-8", errors="replace")
         except Exception:
@@ -915,7 +918,7 @@ def parse_pdf(req: ToolRequest):
         notes["sections"] = _extract_sections(raw_text)
         notes["full_text"] = raw_text[:10000]
         notes["status"] = "degraded"
-        notes["warning"] = "PyPDF2 not installed; using raw text extraction"
+        notes["warning"] = f"PyPDF2 extraction unavailable ({exc}); using raw text extraction"
 
     # Write structured notes
     output_path = workspace / "knowledge" / f"{req.taskId}_paper_notes.md"
