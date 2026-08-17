@@ -280,6 +280,18 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 	result, err := t.Execute(ctx, args)
 	duration := time.Since(start).Milliseconds()
 
+	// doc/25 W2: extract the sandbox isolation degrade note (if the tool
+	// attached one under the reserved key) and strip it from the result so
+	// the model and OutputSchema never see it. The note lands in the audit
+	// entry instead, keeping the "isolation not in effect" record honest.
+	isolationNote := ""
+	if result != nil {
+		if note, ok := result[sandboxIsolationNoteKey].(string); ok {
+			isolationNote = note
+			delete(result, sandboxIsolationNoteKey)
+		}
+	}
+
 	// doc/22 BP5: single audit entry per call, written after execution
 	// with the real outcome (covers exec failure and, further below,
 	// OutputSchema rejection).
@@ -289,13 +301,14 @@ func (r *Registry) Execute(ctx context.Context, name string, args map[string]any
 		}
 		argsJSON, _ := json.Marshal(args)
 		auditLog.Record(AuditEntry{
-			TaskID:     governor.taskID,
-			ToolName:   name,
-			Args:       string(argsJSON),
-			Success:    success,
-			Approved:   governor.IsGoverned(name),
-			Error:      errMsg,
-			DurationMs: duration,
+			TaskID:        governor.taskID,
+			ToolName:      name,
+			Args:          string(argsJSON),
+			Success:       success,
+			Approved:      governor.IsGoverned(name),
+			Error:         errMsg,
+			DurationMs:    duration,
+			IsolationNote: isolationNote,
 		})
 	}
 

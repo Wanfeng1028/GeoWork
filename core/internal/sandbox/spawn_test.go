@@ -25,7 +25,7 @@ func TestSpawnPlainCommand(t *testing.T) {
 	}
 
 	var stdout, stderr bytes.Buffer
-	cmd, cleanup, err := Spawn(SpawnConfig{
+	cmd, cleanup, note, err := Spawn(SpawnConfig{
 		Ctx:    context.Background(),
 		Name:   name,
 		Args:   args,
@@ -34,6 +34,9 @@ func TestSpawnPlainCommand(t *testing.T) {
 	}, nil)
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
+	}
+	if note != "" {
+		t.Errorf("expected no degrade note for a plain command, got %q", note)
 	}
 	if err := cmd.Wait(); err != nil {
 		t.Fatalf("Wait: %v (stderr=%s)", err, stderr.String())
@@ -70,7 +73,7 @@ func TestSpawnKillsProcessTree(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	var stdout, stderr bytes.Buffer
-	cmd, cleanup, err := Spawn(SpawnConfig{
+	cmd, cleanup, _, err := Spawn(SpawnConfig{
 		Ctx:    ctx,
 		Name:   name,
 		Args:   args,
@@ -116,7 +119,7 @@ func TestSpawnMemoryLimit(t *testing.T) {
 
 	// Control: without a cap the allocation succeeds.
 	var stdout, stderr bytes.Buffer
-	cmd, cleanup, err := Spawn(SpawnConfig{
+	cmd, cleanup, _, err := Spawn(SpawnConfig{
 		Ctx:    context.Background(),
 		Name:   python,
 		Args:   []string{"-c", script},
@@ -137,7 +140,7 @@ func TestSpawnMemoryLimit(t *testing.T) {
 	// Capped: the 512MB allocation must fail under the 256MB job cap.
 	stdout.Reset()
 	stderr.Reset()
-	cmd, cleanup, err = Spawn(SpawnConfig{
+	cmd, cleanup, _, err = Spawn(SpawnConfig{
 		Ctx:        context.Background(),
 		Name:       python,
 		Args:       []string{"-c", script},
@@ -152,5 +155,40 @@ func TestSpawnMemoryLimit(t *testing.T) {
 	cleanup()
 	if waitErr == nil {
 		t.Fatalf("allocation beyond the job memory cap must fail; stdout=%q", stdout.String())
+	}
+}
+
+// TestSpawnLowIntegrity pins the doc/25 W2 fix: with LowIntegrity set,
+// the child process runs at Low mandatory integrity level. Verified via
+// `whoami /groups`, which lists the process's mandatory label. Windows
+// only — the token is a Windows security mechanism.
+func TestSpawnLowIntegrity(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("low-integrity tokens are Windows-only (honestly unenforced elsewhere)")
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd, cleanup, note, err := Spawn(SpawnConfig{
+		Ctx:          context.Background(),
+		Name:         "cmd",
+		Args:         []string{"/C", "whoami /groups"},
+		Stdout:       &stdout,
+		Stderr:       &stderr,
+		LowIntegrity: true,
+	}, nil)
+	if err != nil {
+		t.Fatalf("Spawn: %v", err)
+	}
+	waitErr := cmd.Wait()
+	cleanup()
+	if waitErr != nil {
+		t.Fatalf("whoami failed: %v (stderr=%s)", waitErr, stderr.String())
+	}
+	if note != "" {
+		t.Errorf("expected no degrade note when the token is available, got %q", note)
+	}
+	// The mandatory label line must report Low integrity.
+	if !bytes.Contains(stdout.Bytes(), []byte("Mandatory Label\\Low")) {
+		t.Errorf("child did not run at Low integrity; whoami output:\n%s", stdout.String())
 	}
 }

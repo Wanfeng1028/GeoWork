@@ -37,6 +37,7 @@ import (
 	"go.uber.org/zap"
 
 	"geowork/core/internal/sandbox/jobobject"
+	"geowork/core/internal/sandbox/lowintegrity"
 )
 
 // SpawnConfig describes the child process to start.
@@ -52,12 +53,21 @@ type SpawnConfig struct {
 	// MemLimitMB caps per-process committed memory on Windows (job
 	// object). 0 = no cap. Ignored on Unix — honestly unenforced there.
 	MemLimitMB int
+
+	// LowIntegrity starts the child with a Low-integrity token on
+	// Windows (doc/25 W2), restricting its writes to Low-IL locations.
+	// Best-effort: if the token cannot be created the child still runs
+	// (honest degrade) and the returned note records that isolation is
+	// NOT in effect. Ignored on Unix — honestly unenforced there.
+	LowIntegrity bool
 }
 
 // Spawn starts the child process under sandbox isolation and returns the
-// running cmd plus a cleanup function that kills anything still alive in
-// the process tree and releases the job object.
-func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), error) {
+// running cmd, a cleanup function that kills anything still alive in the
+// process tree and releases the job object, and a note. The note is empty
+// when full isolation is in effect; otherwise it records which isolation
+// degraded so callers can annotate audit trails honestly (doc/25 W2).
+func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), string, error) {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -68,6 +78,8 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), error) {
 	cmd.Stdout = cfg.Stdout
 	cmd.Stderr = cfg.Stderr
 
+	var note string
+
 	job, err := jobobject.New(cfg.MemLimitMB)
 	if err != nil {
 		// Honest degrade: run without tree-kill isolation rather than
@@ -75,15 +87,44 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), error) {
 		log.Warn("sandbox: job object unavailable, process-tree isolation degraded",
 			zap.Error(err))
 		job = nil
+		note = "process-tree isolation not in effect: " + err.Error()
 	}
 
 	setSysProcAttr(cmd)
 
+	// doc/25 W2: low-integrity token (Windows). Created before Start so
+	// it can be set on SysProcAttr; closed right after Start because the
+	// OS hands the child its own copy. On non-Windows New returns
+	// (nil, nil) — not applicable, not an error.
+	var token *lowintegrity.Token
+	if cfg.LowIntegrity {
+		token, err = lowintegrity.New()
+		if err != nil {
+			log.Warn("sandbox: low-integrity token unavailable, write-scope isolation degraded",
+				zap.Error(err))
+			token = nil
+			if note != "" {
+				note += "; "
+			}
+			note += "low-integrity isolation not in effect: " + err.Error()
+		} else if token != nil {
+			token.Apply(cmd)
+		}
+	}
+
 	if err := cmd.Start(); err != nil {
+		if token != nil {
+			_ = token.Close()
+		}
 		if job != nil {
 			_ = job.Close()
 		}
-		return nil, func() {}, err
+		return nil, func() {}, note, err
+	}
+
+	// The child now holds its own copy of the token; release ours.
+	if token != nil {
+		_ = token.Close()
 	}
 
 	if job != nil {
@@ -93,6 +134,10 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), error) {
 				zap.Error(err))
 			_ = job.Close()
 			job = nil
+			if note != "" {
+				note += "; "
+			}
+			note += "process-tree isolation not in effect: " + err.Error()
 		}
 	}
 
@@ -106,5 +151,5 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), error) {
 			_ = job.Close()
 		}
 	}
-	return cmd, cleanup, nil
+	return cmd, cleanup, note, nil
 }

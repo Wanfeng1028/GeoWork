@@ -80,6 +80,13 @@
 - **诚实降级**：job 创建/assign 失败记 warn 日志并继续执行，不假装拥有隔离能力
 - 测试：孙进程随超时被杀（Windows start /b + Unix 后台 &）、256MB job 上限拦截 512MB 分配（含无上限对照）、基线命令正常完成
 
+### Added — Windows 沙箱 W2：低完整性令牌启动子进程，失败诚实降级（doc/25，2026-08-17 · ZCode）
+- **低完整性令牌**：新包 `sandbox/lowintegrity`（build tag 分平台）——OpenProcessToken→DuplicateTokenEx→SetTokenInformation(TokenIntegrityLevel, S-1-16-4096)→SysProcAttr.Token；子进程只能写 Low IL 路径（如 %LOCALAPPDATA%\Low），无法写用户正常文件与大部分注册表。非 Windows 返回 (nil, nil)（不适用，非错误）
+- **默认关 + 诚实降级**：`SandboxPolicy.LowIntegrity`（Service 路径）与 `GEOWORK_SANDBOX_LOW_INTEGRITY=1`（builtin tools 路径）双开关，默认 OFF——Low IL 子进程写不了 Medium IL 的 workspace，会破坏 agent 产出文件的核心工作，仅在 workspace 重标 Low IL 或纯计算场景启用。令牌创建失败记 warn 日志 + 返回降级 note，不阻塞执行
+- **降级 note 贯通审计**：`Spawn` 返回 note（空=隔离完整生效）；Service 路径写入 `SandboxProcess.IsolationNote`（API 可见），builtin tools 路径经保留 key `_sandbox_isolation_note` 由 Registry.Execute 提取进 `AuditEntry.IsolationNote` 并从模型可见结果中剥离——审计永远诚实记录"隔离未生效"
+- **修复堆损坏**：x/sys `StringToSid` 返回 Go 堆副本且自行释放原生缓冲，首版误对其 LocalFree 导致 STATUS_HEAP_CORRUPTION（0xc0000374）进程崩溃，已修
+- 测试：`whoami /groups` 断言子进程 Mandatory Label\Low（S-1-16-4096）真实生效
+
 ### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
 - **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
 - **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）

@@ -25,20 +25,37 @@ import (
 // object, honestly unenforced on Unix.
 const builtinToolMemLimitMB = 512
 
+// sandboxLowIntegrityEnabled reports whether sandboxed children should
+// start with a Windows Low-integrity token (doc/25 W2). Opt-in via
+// GEOWORK_SANDBOX_LOW_INTEGRITY=1; default OFF because a Low-IL child
+// cannot write to the (Medium-IL) workspace, which would break the
+// agent's file-producing work. Enable only if the workspace is relabeled
+// Low IL or the sandbox is meant for write-free compute.
+func sandboxLowIntegrityEnabled() bool {
+	return os.Getenv("GEOWORK_SANDBOX_LOW_INTEGRITY") == "1"
+}
+
+// sandboxIsolationNoteKey is a reserved result key carrying the sandbox
+// isolation degrade note (doc/25 W2). Registry.Execute extracts it into
+// the audit entry and strips it from the model-facing result, so the
+// OutputSchema and the model never see it.
+const sandboxIsolationNoteKey = "_sandbox_isolation_note"
+
 // runSandboxed executes a command under the unified sandbox spawn
-// (doc/25 W1) and returns stdout, stderr, and the exit code. It is the
-// single choke point for the model-driven run_shell / run_python tools,
-// so both share the Job Object / process-group tree-kill. Before this,
-// these tools spawned with no SysProcAttr at all, so a timeout killed
-// only the direct child and grandchildren escaped.
-func runSandboxed(ctx context.Context, log *zap.Logger, cfg sandbox.SpawnConfig) (string, string, int) {
+// (doc/25 W1) and returns stdout, stderr, the exit code, and an
+// isolation degrade note (empty when full isolation is in effect). It is
+// the single choke point for the model-driven run_shell / run_python
+// tools, so both share the Job Object / process-group tree-kill. Before
+// this, these tools spawned with no SysProcAttr at all, so a timeout
+// killed only the direct child and grandchildren escaped.
+func runSandboxed(ctx context.Context, log *zap.Logger, cfg sandbox.SpawnConfig) (string, string, int, string) {
 	var stdout, stderr bytes.Buffer
 	cfg.Ctx = ctx
 	cfg.Stdout = &stdout
 	cfg.Stderr = &stderr
-	cmd, cleanup, err := sandbox.Spawn(cfg, log)
+	cmd, cleanup, note, err := sandbox.Spawn(cfg, log)
 	if err != nil {
-		return "", err.Error(), -1
+		return "", err.Error(), -1, note
 	}
 	waitErr := cmd.Wait()
 	cleanup()
@@ -52,7 +69,23 @@ func runSandboxed(ctx context.Context, log *zap.Logger, cfg sandbox.SpawnConfig)
 			stderr.WriteString(waitErr.Error())
 		}
 	}
-	return stdout.String(), stderr.String(), exitCode
+	return stdout.String(), stderr.String(), exitCode, note
+}
+
+// sandboxResult builds the tool result map for run_shell / run_python,
+// attaching the isolation degrade note under the reserved key when it is
+// non-empty (doc/25 W2). Registry.Execute extracts that key into the
+// audit entry and strips it before the result reaches the model.
+func sandboxResult(stdout, stderr string, exitCode int, note string) map[string]any {
+	result := map[string]any{
+		"stdout": stdout,
+		"stderr": stderr,
+		"exit":   exitCode,
+	}
+	if note != "" {
+		result[sandboxIsolationNoteKey] = note
+	}
+	return result
 }
 
 // workspaceDirKey is the context key for the workspace directory used by
@@ -272,18 +305,15 @@ func RegisterBuiltinTools(reg *Registry) error {
 				dir := WorkspacePathFromContext(ctx)
 				// doc/25 W1: unified sandbox spawn (Job Object / process
 				// group) so a timeout kills the whole tree, not just the
-				// direct child.
-				stdout, stderr, exitCode := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
-					Name:       pythonCmd,
-					Args:       []string{"-c", script},
-					Dir:        dir,
-					MemLimitMB: builtinToolMemLimitMB,
+				// direct child. W2: LowIntegrity is env-gated (default off).
+				stdout, stderr, exitCode, note := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
+					Name:         pythonCmd,
+					Args:         []string{"-c", script},
+					Dir:          dir,
+					MemLimitMB:   builtinToolMemLimitMB,
+					LowIntegrity: sandboxLowIntegrityEnabled(),
 				})
-				return map[string]any{
-					"stdout": stdout,
-					"stderr": stderr,
-					"exit":   exitCode,
-				}, nil
+				return sandboxResult(stdout, stderr, exitCode, note), nil
 			}).
 			Build(),
 
@@ -322,18 +352,15 @@ func RegisterBuiltinTools(reg *Registry) error {
 				dir := WorkspacePathFromContext(ctx)
 				// doc/25 W1: unified sandbox spawn (Job Object / process
 				// group) so a timeout kills the whole tree, not just the
-				// direct child.
-				stdout, stderr, exitCode := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
-					Name:       name,
-					Args:       shellArgs,
-					Dir:        dir,
-					MemLimitMB: builtinToolMemLimitMB,
+				// direct child. W2: LowIntegrity is env-gated (default off).
+				stdout, stderr, exitCode, note := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
+					Name:         name,
+					Args:         shellArgs,
+					Dir:          dir,
+					MemLimitMB:   builtinToolMemLimitMB,
+					LowIntegrity: sandboxLowIntegrityEnabled(),
 				})
-				return map[string]any{
-					"stdout": stdout,
-					"stderr": stderr,
-					"exit":   exitCode,
-				}, nil
+				return sandboxResult(stdout, stderr, exitCode, note), nil
 			}).
 			Build(),
 

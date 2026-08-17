@@ -21,6 +21,12 @@ type AuditEntry struct {
 	DurationMs int64     `json:"durationMs"`
 	Approved   bool      `json:"approved"`
 	Timestamp  time.Time `json:"timestamp"`
+
+	// IsolationNote records which sandbox isolation degraded and is NOT in
+	// effect for this call (doc/25 W2 honest degrade). Empty when full
+	// isolation applied. Extracted from the tool result's reserved key by
+	// Registry.Execute so the model never sees it.
+	IsolationNote string `json:"isolationNote,omitempty"`
 }
 
 // AuditLog provides append-only recording of tool invocations.

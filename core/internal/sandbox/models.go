@@ -27,6 +27,11 @@ type SandboxProcess struct {
 	StartedAt  time.Time `json:"startedAt"`
 	FinishedAt time.Time `json:"finishedAt,omitempty"`
 
+	// IsolationNote records which sandbox isolation degraded and is NOT in
+	// effect (doc/25 W2 honest degrade). Empty when full isolation applies.
+	// Surfaced in the API so callers never assume protection they lack.
+	IsolationNote string `json:"isolationNote,omitempty"`
+
 	// mu guards the mutable fields above. It is a pointer so Snapshot can copy
 	// the struct without tripping the copylocks vet check.
 	mu     *sync.Mutex
@@ -59,4 +64,14 @@ type SandboxPolicy struct {
 	Timeout          int      `json:"timeout"` // seconds
 	MaxMemoryMB      int      `json:"maxMemoryMB"`
 	EnvWhitelist     []string `json:"envWhitelist"`
+
+	// LowIntegrity starts sandboxed children with a Windows Low-integrity
+	// token (doc/25 W2), restricting their writes to Low-IL locations.
+	//
+	// Default OFF, deliberately: a Low-IL child cannot write to the
+	// workspace (an unlabeled/Medium-IL directory), which would break the
+	// agent's core file-producing work. Enable only if the workspace is
+	// relabeled to Low IL or the sandbox is meant for write-free compute.
+	// Degrades honestly (warn log + note) if the token cannot be created.
+	LowIntegrity bool `json:"lowIntegrity"`
 }

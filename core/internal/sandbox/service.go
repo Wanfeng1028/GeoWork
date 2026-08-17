@@ -105,17 +105,20 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 	var stdout, stderr bytes.Buffer
 	// doc/25 W1: spawn through the unified helper so the child (and its
 	// whole tree) is bound to a Job Object / process group. MaxMemoryMB
-	// becomes a real per-process commit cap on Windows.
-	cmd, cleanup, err := Spawn(SpawnConfig{
-		Ctx:        proc.ctx,
-		Name:       shell,
-		Args:       args,
-		Dir:        workspace,
-		Stdout:     &stdout,
-		Stderr:     &stderr,
-		MemLimitMB: s.policy.MaxMemoryMB,
+	// becomes a real per-process commit cap on Windows. W2: LowIntegrity
+	// (policy-driven, default off) starts the child with a Low-IL token.
+	cmd, cleanup, note, err := Spawn(SpawnConfig{
+		Ctx:          proc.ctx,
+		Name:         shell,
+		Args:         args,
+		Dir:          workspace,
+		Stdout:       &stdout,
+		Stderr:       &stderr,
+		MemLimitMB:   s.policy.MaxMemoryMB,
+		LowIntegrity: s.policy.LowIntegrity,
 	}, s.log)
 	proc.cleanup = cleanup
+	proc.IsolationNote = note
 	if err != nil {
 		proc.mu.Lock()
 		proc.Status = "failed"
@@ -157,18 +160,21 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 	}
 
 	var stdout, stderr bytes.Buffer
-	// doc/25 W1: unified spawn (Job Object / process group).
-	cmd, cleanup, err := Spawn(SpawnConfig{
-		Ctx:        proc.ctx,
-		Name:       "python",
-		Args:       []string{scriptPath},
-		Dir:        workspace,
-		Env:        envList,
-		Stdout:     &stdout,
-		Stderr:     &stderr,
-		MemLimitMB: s.policy.MaxMemoryMB,
+	// doc/25 W1: unified spawn (Job Object / process group). W2: policy
+	// LowIntegrity flag (default off).
+	cmd, cleanup, note, err := Spawn(SpawnConfig{
+		Ctx:          proc.ctx,
+		Name:         "python",
+		Args:         []string{scriptPath},
+		Dir:          workspace,
+		Env:          envList,
+		Stdout:       &stdout,
+		Stderr:       &stderr,
+		MemLimitMB:   s.policy.MaxMemoryMB,
+		LowIntegrity: s.policy.LowIntegrity,
 	}, s.log)
 	proc.cleanup = cleanup
+	proc.IsolationNote = note
 	if err != nil {
 		proc.mu.Lock()
 		proc.Status = "failed"
