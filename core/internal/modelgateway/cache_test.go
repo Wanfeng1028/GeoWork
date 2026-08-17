@@ -1,6 +1,7 @@
 package modelgateway
 
 import (
+	"regexp"
 	"testing"
 	"time"
 )
@@ -116,6 +117,57 @@ func TestKeyDeterministicAndDistinct(t *testing.T) {
 	}
 	if len(k1) < 3 || k1[:3] != "mw:" {
 		t.Errorf("key must carry the mw: prefix, got %q", k1)
+	}
+}
+
+// TestKeyIsHexEncoded pins the doc/25 R3 fix: the old Key returned raw
+// sha256 bytes after the "mw:" prefix — arbitrary bytes that break any
+// consumer treating keys as text (logs, JSON, future disk persistence).
+func TestKeyIsHexEncoded(t *testing.T) {
+	k := Key("model", "prompt", "tools", "ctx")
+	suffix := k[len("mw:"):]
+	if !regexp.MustCompile(`^[0-9a-f]+$`).MatchString(suffix) {
+		t.Fatalf("key suffix must be lowercase hex, got %q", suffix)
+	}
+	if len(suffix) != 32 { // 16 bytes → 32 hex chars
+		t.Errorf("hex suffix length = %d, want 32", len(suffix))
+	}
+}
+
+// TestCacheGetPurgesExpired pins the doc/25 R3 fix: an expired entry used
+// to stay in the map forever (Get returned miss but never deleted), so a
+// cache that only reads stale keys grew without bound.
+func TestCacheGetPurgesExpired(t *testing.T) {
+	c := NewCache(time.Minute, 10)
+	c.Set("old", entryAt(time.Now().Add(-2*time.Minute)))
+	if _, ok := c.Get("old"); ok {
+		t.Fatalf("expected expired entry to miss")
+	}
+	if c.Size() != 0 {
+		t.Fatalf("expired entry must be purged on Get, size=%d", c.Size())
+	}
+}
+
+// TestCacheGetRefreshesTimestamp pins the doc/25 R3 LRU semantics: a Get
+// must mark the entry as recently used, otherwise eviction at capacity
+// throws out hot entries (FIFO, not LRU).
+func TestCacheGetRefreshesTimestamp(t *testing.T) {
+	c := NewCache(time.Minute, 2)
+	c.Set("a", entryAt(time.Now().Add(-3*time.Second)))
+	c.Set("b", entryAt(time.Now().Add(-2*time.Second)))
+
+	// Touch "a" so it becomes the most-recently-used entry.
+	if _, ok := c.Get("a"); !ok {
+		t.Fatalf("expected hit on a")
+	}
+
+	// Inserting c must now evict "b" (the least recently used), not "a".
+	c.Set("c", entryAt(time.Now()))
+	if _, ok := c.Get("a"); !ok {
+		t.Fatalf("recently-read entry a must survive eviction")
+	}
+	if _, ok := c.Get("b"); ok {
+		t.Fatalf("least-recently-used entry b must be evicted")
 	}
 }
 

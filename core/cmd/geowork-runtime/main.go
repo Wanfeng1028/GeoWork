@@ -197,7 +197,19 @@ func main() {
 
 		limiter := modelgateway.NewRateLimiter()
 		limiter.ConfigureProvider(provider.ID, 5, modelgateway.SpeedProfile{ID: "1x", MaxParallel: 2, TokenBudgetMul: 1.0, RateLimitMul: 1.0})
-		agentGateway = modelgateway.NewRateLimitedGateway(router, limiter)
+
+		// doc/25 R3: response cache, opt-in via GEOWORK_LLM_CACHE=1.
+		// Stack order is Cache → Router → RateLimit: a cache hit skips
+		// routing, budget, and rate limiting entirely (no provider call
+		// happens, so none of them apply). Only non-streaming, tool-free
+		// Chat responses are cached — see CachedGateway for the rules.
+		var stack modelgateway.ModelGateway = router
+		if os.Getenv("GEOWORK_LLM_CACHE") == "1" {
+			stack = modelgateway.NewCachedGateway(router, modelgateway.NewCache(15*time.Minute, 256), logger)
+			logger.Info("LLM response cache enabled (GEOWORK_LLM_CACHE=1)")
+		}
+
+		agentGateway = modelgateway.NewRateLimitedGateway(stack, limiter)
 	}
 
 	// --- Agent Orchestrator ---

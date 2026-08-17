@@ -56,6 +56,12 @@
 - **MaxRetries 落地**：`RoutingRule.MaxRetries` 此前声明未用；现为主 provider 失败后的路由级重试次数（ctx 取消立即停止），再走 fallback
 - 测试：流式 usage 进 CostController、流式预算拦截、MaxRetries=2 共 3 次尝试、ctx 取消不重试
 
+### Added — Router/Cache 产品化 R3：CachedGateway 装饰器，Router/Cache 转正（doc/25，2026-08-17 · ZCode）
+- **CachedGateway**：新增 ModelGateway 装饰器（复制 RateLimitedGateway 形态），生产栈变为 Cache→Router→RateLimit；`GEOWORK_LLM_CACHE=1` 启用（默认关，TTL 15min/256 条）。只缓存非流式、无 tools 请求、响应无 tool_calls 的 Chat——摘要类重复调用是主要受益者；mode 参与 key，Paper 模式答案不会在 Code 模式重放
+- **cache 缺陷修复**：key 改 hex 编码（此前 "mw:" 后是任意字节）；Get 命中刷新时间戳（LRU 语义，此前是 FIFO 会逐出热条目）；Get 时清除过期项（此前过期条目永驻内存）；HashTools/HashContext 同步 hex 化
+- **转正**：cache.go 头部 EXPERIMENTAL 注释移除；doc/22 D-B4 与 §6 对应条目更新为已完成
+- 测试：命中/未命中、TTL 过期、tools 请求不缓存、tool_calls 响应不缓存、流式直通、mode 分区、hex key、LRU 逐出、过期清除
+
 ### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
 - **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
 - **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）

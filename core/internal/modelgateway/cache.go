@@ -1,14 +1,19 @@
-// GeoWork Go Core - Model Request Cache
+// GeoWork Go Core - Model Request Cache (productized in doc/25 R3)
 //
-// EXPERIMENTAL: not wired into production (doc/22 D-B4, v0.6 decision).
-// The desktop runtime does not construct a Cache; modelgateway.NewRoutes
-// (its only consumer) is likewise unregistered. Kept complete and tested
-// so v0.6 can adopt prompt-caching without a rewrite.
+// Cache backs CachedGateway: repeat non-streaming Chat requests with the
+// same (mode, messages) are served locally instead of re-billing the
+// provider. Opt-in via GEOWORK_LLM_CACHE=1 in the desktop runtime.
+//
+// Semantics:
+//   - Keys are hex-encoded sha256 prefixes (safe in logs/JSON).
+//   - Get purges expired entries (a read of a stale key frees it).
+//   - Get refreshes the entry timestamp, so eviction at capacity is LRU.
 
 package modelgateway
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"sync"
 	"time"
@@ -60,26 +65,33 @@ func (c *Cache) SetEnabled(enabled bool) {
 }
 
 // Key generates a cache key from model, prompt, tools, and context.
+// The suffix is hex-encoded so keys are safe in logs, JSON, and any
+// future text-based persistence (raw sha256 bytes are not).
 func Key(model string, prompt string, toolsHash string, contextHash string) string {
 	h := sha256.New()
 	h.Write([]byte(model))
 	h.Write([]byte(prompt))
 	h.Write([]byte(toolsHash))
 	h.Write([]byte(contextHash))
-	return "mw:" + string(h.Sum(nil)[:16])
+	return "mw:" + hex.EncodeToString(h.Sum(nil)[:16])
 }
 
-// Get retrieves a cached entry.
+// Get retrieves a cached entry. Expired entries are purged on read so a
+// cache that only touches stale keys doesn't grow without bound. A hit
+// refreshes the entry timestamp — eviction at capacity is LRU, not FIFO.
 func (c *Cache) Get(k string) (*CacheEntry, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	entry, ok := c.entries[k]
 	if !ok {
 		return nil, false
 	}
 	if time.Since(entry.Timestamp) > c.ttl {
+		delete(c.entries, k)
 		return nil, false
 	}
+	entry.Timestamp = time.Now()
+	c.entries[k] = entry
 	return &entry, true
 }
 
@@ -136,16 +148,16 @@ func (c *Cache) evictOldest() {
 	}
 }
 
-// HashTools serializes tool definitions to a hash string.
+// HashTools serializes tool definitions to a hex hash string.
 func HashTools(tools []ToolDef) string {
 	data, _ := json.Marshal(tools)
 	h := sha256.Sum256(data)
-	return string(h[:])
+	return hex.EncodeToString(h[:])
 }
 
-// HashContext serializes messages to a hash string.
+// HashContext serializes messages to a hex hash string.
 func HashContext(messages []ChatMessage) string {
 	data, _ := json.Marshal(messages)
 	h := sha256.Sum256(data)
-	return string(h[:])
+	return hex.EncodeToString(h[:])
 }

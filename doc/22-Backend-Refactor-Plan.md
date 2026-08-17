@@ -15,7 +15,7 @@
 | **D-B1** | 桌面版默认权限级别 | ✅ `DefaultLevel="full"`——本机单用户产品，critical 工具仍被交互审批 + Harness + guardrails 拦截 |
 | **D-B2** | 两个 Governor 重命名 | ✅ `toolregistry.Governor` → `QuotaGovernor`；`aiagent.GovernorImpl` → `InteractiveApprover` |
 | **D-B3** | Python sandbox runner 处置 | ✅ 诚实降级——只声明真正强制的约束（timeout、cwd、workspace 白名单），内存/网络明确标注"未强制"，run_command 走 Go 层审批；Windows 级隔离独立立项 |
-| **D-B4** | modelgateway 四件套 | ✅ RateLimiter + UsageMeter 本轮接线（BP6）；Router/Cache 延后 v0.6 并标注 experimental |
+| **D-B4** | modelgateway 四件套 | ✅ RateLimiter + UsageMeter 本轮接线（BP6）；Router/Cache 延后 v0.6 → **doc/25 R1-R3 已转正**（Router 进生产链路，CachedGateway 默认关 `GEOWORK_LLM_CACHE=1` 启用，EXPERIMENTAL 标注已移除） |
 
 ## 1. 原则（来自审查结论）
 
@@ -271,7 +271,7 @@ BP1(1.5d 装配止血) → BP2(1d 审批) → BP3(0.5d token) → BP4(1.5d 安�
 
 ## 6. 明确不做（本轮）
 
-- Windows 内存/网络级沙箱隔离（Job Object / 容器）——D-B3-B 独立立项
-- Router 多模型智能路由产品化——D-B4 延后 v0.6
-- server/ 云端模块（rbac/billing/sync 已有真实 SQLite 底子，无致命项，待桌面端稳定后专项审查）
+- Windows 内存/网络级沙箱隔离（Job Object / 容器）——D-B3-B 独立立项 → **doc/25 W1-W3 落地中**（Job Object + 低完整性令牌路线，WFP/Docker 明确不做）
+- Router 多模型智能路由产品化——D-B4 延后 v0.6 → **doc/25 R1-R3 已完成**（ctx 显式 mode、流式成本、预算、MaxRetries、CachedGateway 默认关）
+- server/ 云端模块（rbac/billing/sync 已有真实 SQLite 底子，无致命项，待桌面端稳定后专项审查）→ **doc/25 S1-S3 已完成**（安全/数据完整性/诚实化三阶段）
 - `Scheduler.Stop` 二次 panic（7bc7eae 已修 ratelimit 同款；scheduler 侧 BP5 顺带 `sync.Once` 化，若未涉及则列入遗留清单）
