@@ -69,6 +69,13 @@
 - **转正**：cache.go 头部 EXPERIMENTAL 注释移除；doc/22 D-B4 与 §6 对应条目更新为已完成
 - 测试：命中/未命中、TTL 过期、tools 请求不缓存、tool_calls 响应不缓存、流式直通、mode 分区、hex key、LRU 逐出、过期清除
 
+### Added — Windows 沙箱 W1：Job Object 进程树终止 + 统一 spawn helper（doc/25，2026-08-17 · ZCode）
+- **Job Object 地基**：新包 `sandbox/jobobject`（build tag 分平台）——`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` 关句柄即杀全进程树，`JOB_OBJECT_LIMIT_PROCESS_MEMORY` 可选每进程提交上限；非 Windows 为诚实 no-op stub（内存限制明确标注未强制）
+- **统一 spawn helper**：`sandbox.Spawn` 成为两条执行路径的唯一咽喉——sandbox.Service（HTTP API）与 toolregistry builtin tools（run_shell/run_python，模型真正驱动的路径）共用；此前 builtin tools 完全没有 SysProcAttr，超时只杀直接子进程、孙进程逃逸。git 类工具不进 job（低风险且需正常权限）
+- **Unix 对等**：Setpgid 基础上补进程组杀——启动时捕获 PGID（Wait 回收后 Getpgid 会失败，必须提前捕获），cleanup 时 kill(-PGID)
+- **诚实降级**：job 创建/assign 失败记 warn 日志并继续执行，不假装拥有隔离能力
+- 测试：孙进程随超时被杀（Windows start /b + Unix 后台 &）、256MB job 上限拦截 512MB 分配（含无上限对照）、基线命令正常完成
+
 ### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
 - **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
 - **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）

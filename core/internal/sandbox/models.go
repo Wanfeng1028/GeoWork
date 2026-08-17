@@ -32,6 +32,10 @@ type SandboxProcess struct {
 	mu     *sync.Mutex
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	// cleanup kills the process tree and releases the job object (doc/25
+	// W1). Set by Spawn; invoked by the monitor after Wait returns.
+	cleanup func()
 }
 
 // Snapshot returns a point-in-time copy of the process state that is safe to

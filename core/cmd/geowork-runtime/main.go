@@ -76,7 +76,9 @@ func main() {
 	wsSvc := workspace.NewService(wsRepo)
 
 	permEngine := permissions.NewEngine()
-	sbSvc := sandbox.NewService()
+	// doc/25 W1: logger carries the honest-degrade warnings from the
+	// spawn helper (job object unavailable → tree-kill degraded).
+	sbSvc := sandbox.NewService().WithLogger(logger)
 
 	// Register built-in tools
 	toolRegistry := toolregistry.NewRegistry(logger)

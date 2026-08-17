@@ -15,12 +15,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Service struct {
 	mu     sync.Mutex
 	procs  map[string]*SandboxProcess
 	policy *SandboxPolicy
+	log    *zap.Logger
 }
 
 func NewService() *Service {
@@ -36,7 +38,17 @@ func NewService() *Service {
 			MaxMemoryMB:      512,
 			EnvWhitelist:     []string{"PATH", "HOME", "LANG"},
 		},
+		log: zap.NewNop(),
 	}
+}
+
+// WithLogger attaches a logger used for honest-degrade warnings from the
+// spawn helper (job object unavailable, tree-kill degraded).
+func (s *Service) WithLogger(log *zap.Logger) *Service {
+	if log != nil {
+		s.log = log
+	}
+	return s
 }
 
 func (s *Service) SetPolicy(policy *SandboxPolicy) {
@@ -89,15 +101,22 @@ func (s *Service) RunCommand(taskID, workspace, command string) (*SandboxProcess
 		shell = "bash"
 		args = []string{"-c", command}
 	}
-	cmd := exec.CommandContext(proc.ctx, shell, args...)
-	cmd.Dir = workspace
+
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	setSysProcAttr(cmd)
-
-	if err := cmd.Start(); err != nil {
+	// doc/25 W1: spawn through the unified helper so the child (and its
+	// whole tree) is bound to a Job Object / process group. MaxMemoryMB
+	// becomes a real per-process commit cap on Windows.
+	cmd, cleanup, err := Spawn(SpawnConfig{
+		Ctx:        proc.ctx,
+		Name:       shell,
+		Args:       args,
+		Dir:        workspace,
+		Stdout:     &stdout,
+		Stderr:     &stderr,
+		MemLimitMB: s.policy.MaxMemoryMB,
+	}, s.log)
+	proc.cleanup = cleanup
+	if err != nil {
 		proc.mu.Lock()
 		proc.Status = "failed"
 		proc.Stderr = err.Error()
@@ -130,22 +149,27 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 	s.procs[proc.ID] = proc
 	s.mu.Unlock()
 
-	cmd := exec.CommandContext(proc.ctx, "python", scriptPath)
-	cmd.Dir = workspace
-
+	var envList []string
 	for _, k := range s.policy.EnvWhitelist {
 		if v, ok := env[k]; ok {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+			envList = append(envList, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	setSysProcAttr(cmd)
-
-	if err := cmd.Start(); err != nil {
+	// doc/25 W1: unified spawn (Job Object / process group).
+	cmd, cleanup, err := Spawn(SpawnConfig{
+		Ctx:        proc.ctx,
+		Name:       "python",
+		Args:       []string{scriptPath},
+		Dir:        workspace,
+		Env:        envList,
+		Stdout:     &stdout,
+		Stderr:     &stderr,
+		MemLimitMB: s.policy.MaxMemoryMB,
+	}, s.log)
+	proc.cleanup = cleanup
+	if err != nil {
 		proc.mu.Lock()
 		proc.Status = "failed"
 		proc.Stderr = err.Error()
@@ -159,6 +183,13 @@ func (s *Service) RunPythonScript(taskID, workspace, scriptPath string, env map[
 
 func (s *Service) monitorProcess(proc *SandboxProcess, cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	err := cmd.Wait()
+
+	// doc/25 W1: release the job object / kill any survivors in the tree.
+	// On Windows this is the kill-on-close that makes timeout kills reach
+	// grandchildren; on Unix it signals the captured process group.
+	if proc.cleanup != nil {
+		proc.cleanup()
+	}
 
 	proc.mu.Lock()
 	proc.Stdout = stdout.String()

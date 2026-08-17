@@ -13,8 +13,47 @@ import (
 	"runtime"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"geowork/core/internal/idgen"
+	"geowork/core/internal/sandbox"
 )
+
+// builtinToolMemLimitMB caps per-process committed memory for the
+// model-driven run_shell / run_python tools (doc/25 W1). Matches the
+// sandbox Service's default policy; enforced on Windows via the job
+// object, honestly unenforced on Unix.
+const builtinToolMemLimitMB = 512
+
+// runSandboxed executes a command under the unified sandbox spawn
+// (doc/25 W1) and returns stdout, stderr, and the exit code. It is the
+// single choke point for the model-driven run_shell / run_python tools,
+// so both share the Job Object / process-group tree-kill. Before this,
+// these tools spawned with no SysProcAttr at all, so a timeout killed
+// only the direct child and grandchildren escaped.
+func runSandboxed(ctx context.Context, log *zap.Logger, cfg sandbox.SpawnConfig) (string, string, int) {
+	var stdout, stderr bytes.Buffer
+	cfg.Ctx = ctx
+	cfg.Stdout = &stdout
+	cfg.Stderr = &stderr
+	cmd, cleanup, err := sandbox.Spawn(cfg, log)
+	if err != nil {
+		return "", err.Error(), -1
+	}
+	waitErr := cmd.Wait()
+	cleanup()
+	exitCode := 0
+	if waitErr != nil {
+		var exitErr *exec.ExitError
+		if errors.As(waitErr, &exitErr) {
+			exitCode = exitErr.ExitCode()
+		} else {
+			exitCode = -1
+			stderr.WriteString(waitErr.Error())
+		}
+	}
+	return stdout.String(), stderr.String(), exitCode
+}
 
 // workspaceDirKey is the context key for the workspace directory used by
 // git tools. doc/22 BP5: aliased onto workspaceKey (context.go) so
@@ -228,32 +267,21 @@ func RegisterBuiltinTools(reg *Registry) error {
 				if runtime.GOOS == "windows" {
 					pythonCmd = "python"
 				}
-				cmd := exec.CommandContext(ctx, pythonCmd, "-c", script)
 				// doc/22 BP1: pin execution to the run's workspace so
 				// relative paths resolve inside the sandbox boundary.
-				if dir := WorkspacePathFromContext(ctx); dir != "" {
-					cmd.Dir = dir
-				}
-				// doc/22 BP5: real stdout/stderr split and exit code —
-				// CombinedOutput+exit:0 previously hid every failure from
-				// the model, which then reasoned on top of lies.
-				var stdout, stderr bytes.Buffer
-				cmd.Stdout = &stdout
-				cmd.Stderr = &stderr
-				err := cmd.Run()
-				exitCode := 0
-				if err != nil {
-					var exitErr *exec.ExitError
-					if errors.As(err, &exitErr) {
-						exitCode = exitErr.ExitCode()
-					} else {
-						exitCode = -1
-						stderr.WriteString(err.Error())
-					}
-				}
+				dir := WorkspacePathFromContext(ctx)
+				// doc/25 W1: unified sandbox spawn (Job Object / process
+				// group) so a timeout kills the whole tree, not just the
+				// direct child.
+				stdout, stderr, exitCode := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
+					Name:       pythonCmd,
+					Args:       []string{"-c", script},
+					Dir:        dir,
+					MemLimitMB: builtinToolMemLimitMB,
+				})
 				return map[string]any{
-					"stdout": stdout.String(),
-					"stderr": stderr.String(),
+					"stdout": stdout,
+					"stderr": stderr,
 					"exit":   exitCode,
 				}, nil
 			}).
@@ -281,35 +309,29 @@ func RegisterBuiltinTools(reg *Registry) error {
 			Sandbox(true).
 			Execute(func(ctx context.Context, args map[string]any) (map[string]any, error) {
 				command, _ := args["command"].(string)
-				var cmd *exec.Cmd
+				var name string
+				var shellArgs []string
 				if runtime.GOOS == "windows" {
-					cmd = exec.CommandContext(ctx, "cmd", "/C", command)
+					name, shellArgs = "cmd", []string{"/C", command}
 				} else {
-					cmd = exec.CommandContext(ctx, "sh", "-c", command)
+					name, shellArgs = "sh", []string{"-c", command}
 				}
 				// doc/22 BP1 / F5: pin the shell to the run's workspace —
 				// relative paths and bare filenames resolve inside the
 				// sandbox boundary instead of the process cwd.
-				if dir := WorkspacePathFromContext(ctx); dir != "" {
-					cmd.Dir = dir
-				}
-				var stdout, stderr bytes.Buffer
-				cmd.Stdout = &stdout
-				cmd.Stderr = &stderr
-				err := cmd.Run()
-				exitCode := 0
-				if err != nil {
-					var exitErr *exec.ExitError
-					if errors.As(err, &exitErr) {
-						exitCode = exitErr.ExitCode()
-					} else {
-						exitCode = -1
-						stderr.WriteString(err.Error())
-					}
-				}
+				dir := WorkspacePathFromContext(ctx)
+				// doc/25 W1: unified sandbox spawn (Job Object / process
+				// group) so a timeout kills the whole tree, not just the
+				// direct child.
+				stdout, stderr, exitCode := runSandboxed(ctx, reg.log, sandbox.SpawnConfig{
+					Name:       name,
+					Args:       shellArgs,
+					Dir:        dir,
+					MemLimitMB: builtinToolMemLimitMB,
+				})
 				return map[string]any{
-					"stdout": stdout.String(),
-					"stderr": stderr.String(),
+					"stdout": stdout,
+					"stderr": stderr,
 					"exit":   exitCode,
 				}, nil
 			}).
