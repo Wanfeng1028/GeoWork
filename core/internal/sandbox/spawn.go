@@ -11,14 +11,22 @@
 // Service path set any SysProcAttr — the builtin tools had none, so a
 // timeout there killed only the direct child and grandchildren escaped.
 //
-// Isolation provided here:
+// Isolation provided here (doc/25 W3 honest list):
 //
-//   - Windows: the child is assigned to a Job Object with
-//     JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE; closing the job in cleanup
-//     kills the entire process tree. Optional per-process memory cap.
-//   - Unix: the child gets its own process group (Setpgid); cleanup
-//     kills the whole group (-PGID). Memory limits are honestly NOT
-//     enforced on Unix (would need cgroups/rlimits — out of scope).
+//   - process-tree kill ✅ both platforms. Windows: the child is assigned
+//     to a Job Object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE; closing the
+//     job in cleanup kills the entire process tree. Unix: the child gets
+//     its own process group (Setpgid); cleanup kills the whole group
+//     (-PGID).
+//   - memory cap ✅ Windows only. MemLimitMB becomes the Job Object
+//     per-process commit cap (SandboxPolicy.MaxMemoryMB is its real source
+//     on the Service path). NOT enforced on Unix — would need
+//     cgroups/rlimits, out of scope; honestly documented, not pretended.
+//   - low-integrity write scope ✅ best-effort, Windows only (doc/25 W2).
+//     Degrades honestly with a note if the token cannot be created.
+//   - network isolation ❌ NOT enforced anywhere. Job Objects do not
+//     control network and WFP filtering is out of scope (needs admin).
+//     Callers must not assume sandboxed children are network-restricted.
 //
 // Degradation is honest: if the job object cannot be created or
 // assigned, a warning is logged and the process still runs — without

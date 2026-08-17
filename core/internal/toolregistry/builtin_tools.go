@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -19,11 +20,23 @@ import (
 	"geowork/core/internal/sandbox"
 )
 
-// builtinToolMemLimitMB caps per-process committed memory for the
-// model-driven run_shell / run_python tools (doc/25 W1). Matches the
-// sandbox Service's default policy; enforced on Windows via the job
-// object, honestly unenforced on Unix.
-const builtinToolMemLimitMB = 512
+// defaultBuiltinToolMemLimitMB is the fallback per-process committed-memory
+// cap for the model-driven run_shell / run_python tools (doc/25 W1/W3).
+// Matches the sandbox Service's default policy.
+const defaultBuiltinToolMemLimitMB = 512
+
+// sandboxMemLimitMB returns the per-process committed-memory cap for the
+// model-driven run_shell / run_python tools (doc/25 W3). Override via
+// GEOWORK_SANDBOX_MEM_MB; falls back to the Service default. Enforced on
+// Windows via the job object, honestly unenforced on Unix.
+func sandboxMemLimitMB() int {
+	if v := os.Getenv("GEOWORK_SANDBOX_MEM_MB"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return defaultBuiltinToolMemLimitMB
+}
 
 // sandboxLowIntegrityEnabled reports whether sandboxed children should
 // start with a Windows Low-integrity token (doc/25 W2). Opt-in via
@@ -310,7 +323,7 @@ func RegisterBuiltinTools(reg *Registry) error {
 					Name:         pythonCmd,
 					Args:         []string{"-c", script},
 					Dir:          dir,
-					MemLimitMB:   builtinToolMemLimitMB,
+					MemLimitMB:   sandboxMemLimitMB(),
 					LowIntegrity: sandboxLowIntegrityEnabled(),
 				})
 				return sandboxResult(stdout, stderr, exitCode, note), nil
@@ -357,7 +370,7 @@ func RegisterBuiltinTools(reg *Registry) error {
 					Name:         name,
 					Args:         shellArgs,
 					Dir:          dir,
-					MemLimitMB:   builtinToolMemLimitMB,
+					MemLimitMB:   sandboxMemLimitMB(),
 					LowIntegrity: sandboxLowIntegrityEnabled(),
 				})
 				return sandboxResult(stdout, stderr, exitCode, note), nil

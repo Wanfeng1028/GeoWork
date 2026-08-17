@@ -18,6 +18,12 @@
 
 ## [Unreleased]
 
+### Added — Windows 沙箱 W3：MaxMemoryMB 真实强制 + NetworkAccess 删除 + 诚实清单更新（doc/25 收官，2026-08-17 · ZCode）
+- **MaxMemoryMB 真实强制**：`SandboxPolicy.MaxMemoryMB` 从死字段变为 Job Object 每进程提交上限的真实来源（policy → Spawn → jobobject.New）；新增 Service 级钉桩测试（256MB 上限拦截 512MB 分配，Windows）。builtin tools 的硬编码 512MB 改为 `GEOWORK_SANDBOX_MEM_MB` 环境变量可覆盖（与 LOW_INTEGRITY 开关同模式）
+- **NetworkAccess 字段删除**：Job Object 不管网络，保留该字段是说谎的旋钮——删除而非假装。`network_policy.go` 的 NetworkValidator 保留（上层校验器，非子进程强制），SandboxPolicy 注释说明二者关系
+- **诚实清单三处同步**：SandboxPolicy 结构体注释 + spawn.go 头注释 + Python runner docstring——内存上限✅(Windows)、进程树终止✅、低完整性写盘✅(best-effort)、网络隔离❌未强制（WFP 需管理员，明确不做）
+- 测试：`go test ./...` 全绿（含新增 TestRunPythonScript_MemoryLimitEnforced）
+
 ### Fixed — E2E smoke 适配 antdx 默认输入区：testid 漂移修复（doc/20，2026-08-17 · ZCode）
 - **根因**：doc/26 迁移后 `aiComponentsV2` 默认 true，`/new-task` 渲染 SenderX（testid `sender-x`），smoke 仍断言旧 `chat-composer` 锚点，e2e-smoke / e2e-smoke-windows 自 R1 起持续红
 - **修复**：新增 `tests/e2e/pages/sender-x.page.ts`（根锚点 `sender-x` + antd-x Sender 内部稳定 class 锚点 `textarea.ant-sender-input` / `.ant-sender-actions-list button.ant-btn-primary`），desktop-smoke 与 task-flow 两个 spec 切换；doc/20 §2.2 锚点表补 sender-x 条目、§2.3 补充第三方库 class 锚点例外规则

@@ -54,13 +54,29 @@ func (p *SandboxProcess) Snapshot() SandboxProcess {
 	return snap
 }
 
-// SandboxPolicy defines sandbox constraints
+// SandboxPolicy defines sandbox constraints.
+//
+// Honest enforcement status (doc/25 W3):
+//
+//   - MaxMemoryMB      ✅ enforced on Windows (Job Object per-process commit
+//     cap, wired policy -> Spawn -> jobobject.New). NOT enforced on Unix
+//     (would need cgroups/rlimits) — honestly documented, not pretended.
+//   - process-tree kill ✅ enforced (Job Object kill-on-close on Windows,
+//     process-group kill on Unix) via the unified Spawn helper.
+//   - LowIntegrity     ✅ best-effort on Windows (Low-IL token restricts the
+//     child's write scope); degrades honestly with a note if unavailable.
+//   - network isolation ❌ NOT enforced. Job Objects do not control network;
+//     WFP filtering needs admin rights and is out of scope (doc/25 §"明确不
+//     做"). The former NetworkAccess field was deleted rather than kept as a
+//     lying knob — see NetworkPolicy for the (separately unenforced-on-child)
+//     validator used by higher layers.
+//   - Timeout / BlockedCmds / AllowedCmds / AllowedPaths are enforced by the
+//     Service before and during spawn.
 type SandboxPolicy struct {
 	AllowedPaths     []string `json:"allowedPaths"`
 	BlockedCmds      []string `json:"blockedCmds"`
 	AllowedCmds      []string `json:"allowed_cmds"`
 	AllowAllCommands bool     `json:"allow_all_commands"` // dev mode bypass
-	NetworkAccess    bool     `json:"networkAccess"`
 	Timeout          int      `json:"timeout"` // seconds
 	MaxMemoryMB      int      `json:"maxMemoryMB"`
 	EnvWhitelist     []string `json:"envWhitelist"`

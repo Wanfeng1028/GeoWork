@@ -1,6 +1,9 @@
 package sandbox
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"testing"
 )
@@ -170,5 +173,44 @@ func TestListProcesses(t *testing.T) {
 	procs = svc.ListProcesses("task-3")
 	if len(procs) != 0 {
 		t.Errorf("expected 0 processes for task-3, got %d", len(procs))
+	}
+}
+
+// TestRunPythonScript_MemoryLimitEnforced pins the doc/25 W3 fix: the
+// SandboxPolicy.MaxMemoryMB field is the real source of the job-object
+// memory cap (policy -> Spawn -> jobobject.New). Before W3 the field was
+// dead; a script allocating beyond the cap must now fail. Windows only —
+// the cap is a Job Object limit, honestly unenforced on Unix.
+func TestRunPythonScript_MemoryLimitEnforced(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("job object memory limits are Windows-only (honestly unenforced elsewhere)")
+	}
+	if _, err := exec.LookPath("python"); err != nil {
+		t.Skip("python not on PATH")
+	}
+
+	dir := t.TempDir()
+	script := filepath.Join(dir, "alloc.py")
+	body := "x = bytearray(512 * 1024 * 1024)\nprint('allocated')\n"
+	if err := os.WriteFile(script, []byte(body), 0o644); err != nil {
+		t.Fatalf("write script: %v", err)
+	}
+
+	svc := NewService()
+	policy := *svc.policy // copy the default policy, then tighten the cap
+	policy.MaxMemoryMB = 256
+	svc.SetPolicy(&policy)
+
+	proc, err := svc.RunPythonScript("test-task", dir, script, nil, 60)
+	if err != nil {
+		t.Fatalf("RunPythonScript: %v", err)
+	}
+	<-proc.ctx.Done()
+
+	snap := proc.Snapshot()
+	// The 512MB allocation must fail under the 256MB cap: the process exits
+	// nonzero (MemoryError) rather than printing "allocated".
+	if snap.Status == "completed" && snap.ExitCode != nil && *snap.ExitCode == 0 {
+		t.Fatalf("allocation beyond the policy memory cap must fail; stdout=%q", snap.Stdout)
 	}
 }

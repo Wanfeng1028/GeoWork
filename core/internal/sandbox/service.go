@@ -33,7 +33,6 @@ func NewService() *Service {
 			BlockedCmds:      []string{"rm", "sudo", "mkfs", "fdisk"},
 			AllowedCmds:      []string{"ls", "dir", "cat", "type", "echo", "pwd", "whoami", "date", "python", "pip", "git", "node", "npm", "go"},
 			AllowAllCommands: true, // dev mode: backward compatible
-			NetworkAccess:    false,
 			Timeout:          300,
 			MaxMemoryMB:      512,
 			EnvWhitelist:     []string{"PATH", "HOME", "LANG"},
