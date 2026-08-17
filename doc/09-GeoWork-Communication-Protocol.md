@@ -385,3 +385,20 @@ function NewTaskPage() {
 | 7 | 更新文档 | 全栈 | 步骤 6 | 0.5 天 |
 
 **总计约 6 天**，其中后端 3 天、前端 1.5 天、联调+文档 1.5 天。
+
+---
+
+## 10. 云端同步协议语义（server/ `/api/sync`，doc/25 S3 落档）
+
+桌面端 ↔ 云端的多设备同步走 REST（非 WS/SSE），语义如下，与 `server/internal/sync` 实现一一对应：
+
+| 语义点 | 现状 | 说明 |
+|---|---|---|
+| 冲突解决 | **Last-Write-Wins（LWW）** | push 无条件 upsert；仅当客户端携带 `X-Sync-Cursor` 且服务端记录更新时**标记** conflict，但写入仍执行 |
+| 游标 | 服务端时间戳（**毫秒**，migration 006 归一化纳秒遗留行） | `GET /sync/state` 返回 `MAX(cursor)`；纳秒超出 JS Number 53 位安全整数，故用毫秒 |
+| 删除传播 | **无 tombstone** | 本地删除不会同步为云端删除；`POST /sync/cleanup` 按 TTL 清理过期记录（严格 per-user，doc/25 S1） |
+| 设备身份 | **无** | 不区分来源设备，pull 返回全量 |
+| 对象类型 | 白名单（settings/conversation/message 等，见 migration 005 CHECK） | 非白名单类型 push 被拒 |
+| 载荷守卫 | 拒绝含 `API_KEY=` 子串与 >5MB 载荷 | 防密钥误同步与超大对象 |
+
+**明确不做（当前版本）**：tombstone 删除传播、多设备版本化/向量时钟、字段级合并。冲突敏感的数据（如协作编辑）不应依赖本通道，应走专用协作接口。

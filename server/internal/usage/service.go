@@ -27,6 +27,12 @@ type ReportEventRequest struct {
 	Model  string `json:"model"`
 }
 
+// maxReportAmount caps a single reported amount (doc/25 S3). Metering is
+// client-trusted (honor system — plan limits are informational, not
+// enforced server-side), but obviously broken values are rejected so a
+// buggy or hostile client cannot poison the aggregates.
+const maxReportAmount = int64(1_000_000_000)
+
 // ReportEvents handles POST /api/usage/events
 func (s *Service) ReportEvents(c *gin.Context) {
 	user, ok := servercontext.RequireUser(c)
@@ -37,6 +43,15 @@ func (s *Service) ReportEvents(c *gin.Context) {
 	var req ReportEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		apierrors.Respond(c, apierrors.ErrBadRequest)
+		return
+	}
+
+	if req.Amount < 0 {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "amount must be non-negative")
+		return
+	}
+	if req.Amount > maxReportAmount {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "amount exceeds single-report limit")
 		return
 	}
 

@@ -11,7 +11,10 @@ CREATE TABLE IF NOT EXISTS workspace_roles (
     UNIQUE(workspace_id, user_id)
 );
 
--- Role permissions cache (seeded from the in-memory matrix on first run)
+-- Role permissions cache.
+-- UNUSED (doc/25 S3): the permission matrix lives in Go code
+-- (internal/rbac/service.go) and this table is never read or written.
+-- Kept (not dropped) so the migration chain stays stable for existing DBs.
 CREATE TABLE IF NOT EXISTS role_permissions (
     role       TEXT NOT NULL,
     permission TEXT NOT NULL,

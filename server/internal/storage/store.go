@@ -105,7 +105,8 @@ type MarketplaceItem struct {
 	Author       string   `json:"author"`
 	Permissions  []string `json:"permissions"`
 	InstallCount int      `json:"install_count"`
-	Signature    string   `json:"signature"`
+	// Signature is a placeholder — verification is not implemented (doc/25 S3).
+	Signature string `json:"signature"`
 }
 
 // TelemetryEvent tracks performance metrics.
@@ -373,6 +374,10 @@ func (s *Store) EnsureDefaults() error {
 		return err
 	}
 	if mcount == 0 {
+		// NOTE (doc/25 S3): the signature values below are PLACEHOLDERS.
+		// Signature verification is not implemented anywhere — items are
+		// served as-is. Real signing/verification is a future workstream;
+		// do not treat these strings as security evidence.
 		items := []struct {
 			id, name, typ, version, desc, author, sig string
 			perms                                     string
