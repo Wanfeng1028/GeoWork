@@ -18,6 +18,25 @@
 
 ## [Unreleased]
 
+### Security — server/ 专项审查 S1：六项安全缺陷修复（doc/25，2026-08-17 · ZCode）
+- **软删用户仍可登录**：Login/Refresh/auth 中间件现在都检查 `DeletedAt`；DeleteAccount 同步吊销全部 token（此前软删账号的旧 token 可用到自然过期）
+- **sync cleanup 越权**：`POST /sync/cleanup` 此前执行无 user 条件的 DELETE（admin 检查是空注释），任何登录用户可清空所有人的过期 sync 数据；改为严格 per-user（新增 `DeleteUserSyncRecordsBefore`）
+- **billing mock 自我升级**：`/checkout/mock` 任何登录用户可自升 team + 铸 credits；现由 `GEOWORK_BILLING_MOCK=1` 门禁，未开启返回 404
+- **crash 报告 ID 碰撞**：秒级时间戳 ID 并发改为 idgen 随机 hex；无鉴权的 crash 端点挂专用限流器
+- **token 表无限增长**：auth 服务启动时清理过期 token（新增 `DeleteExpiredTokens`）
+- **CORS file:// 全放行**：收紧为仅 `GEOWORK_DEV=1` 允许 file:// 源
+- 测试：每项修复一条回归测试（auth 4 条、sync/billing/crash/CORS 各 1-4 条）
+
+### Fixed — server/ 专项审查 S2：数据完整性（doc/25，2026-08-17 · ZCode）
+- **迁移 006 从未执行**：`006_cursor_milliseconds.sql` 在磁盘上但未注册进 migrations.go，ns→ms sync cursor 归一化对任何数据库都不生效；已注册
+- **modelproxy 配置重启即丢**：providers 从内存 map 持久化到 SQLite（迁移 007 建 `model_providers` 表），启动时加载回内存
+- **modelproxy Chat/Stream 恒 400**：`provider_id` 此前读无人写入的 context key；改从请求体读取并在转发前剥离；补 modelproxy 测试（此前为零）
+
+### Changed — server/ 专项审查 S3：诚实化收尾（doc/25，2026-08-17 · ZCode）
+- usage 上报 sanity 校验：拒绝负数与单次 >1e9 的异常值（计量仍是 honor-system，plan limits 为信息性，已注释注明）
+- `role_permissions` 死表在迁移 004 标注 unused（不删表，保迁移链稳定）；marketplace 占位签名双处标注"未实现验签"
+- doc/09 新增 §10 云端同步协议语义：LWW、毫秒游标、无 tombstone、无设备身份——与代码现状对齐
+
 ### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
 - **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
 - **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）
