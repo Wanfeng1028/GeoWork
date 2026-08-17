@@ -210,3 +210,4 @@ S1(0.5d 安全) → S2(0.5d 数据) → S3(0.5d 诚实化)
 | S2 数据完整性 | a67c7ad | 无；modelproxy 持久化用 upsert + 启动加载，内存 map 保持进程内权威 |
 | S3 诚实化 | a2c9722 | 无；marketplace 占位签名在 store.go 种子处 + 结构体字段双标注 |
 | R1 Router 接线 | c6b0e6e | ⚠️ 提交事故记录：并行会话（doc/26 AntDesignX 迁移）已把其文件 staged 在共享 index 中，本次 commit 将其一并带入（23 文件）。其代码完整无损、前端测试随提交全绿，但归属混入本提交。后续阶段 commit 前先查 `git diff --cached` 防再犯 |
+| R2 流式成本+预算+重试 | （本次） | 无；R1 的 CHANGELOG 条目当时漏记，随 R2 一并补上。测试 SSE body 需空行分隔事件（parser 只在空行 dispatch），首版测试常量漏掉导致零 chunk，已修 |

@@ -179,6 +179,22 @@ func main() {
 	var agentGateway modelgateway.ModelGateway
 	if gateway != nil {
 		router := modelgateway.NewRouter(provider.ID, logger).AddProvider(provider)
+
+		// doc/25 R2: budget guard. GEOWORK_LLM_DAILY_BUDGET /
+		// GEOWORK_LLM_MONTHLY_BUDGET are dollar caps; 0 or unset disables
+		// that bound. When spend would exceed a cap the router rejects the
+		// call with ErrBudgetExceeded before any HTTP request — the run
+		// fails with a visible reason instead of silently burning money.
+		dailyBudget, _ := strconv.ParseFloat(os.Getenv("GEOWORK_LLM_DAILY_BUDGET"), 64)
+		monthlyBudget, _ := strconv.ParseFloat(os.Getenv("GEOWORK_LLM_MONTHLY_BUDGET"), 64)
+		if dailyBudget > 0 || monthlyBudget > 0 {
+			router.SetCostController(modelgateway.NewCostController(dailyBudget, monthlyBudget))
+			logger.Info("LLM cost budget enabled",
+				zap.Float64("dailyUSD", dailyBudget),
+				zap.Float64("monthlyUSD", monthlyBudget),
+			)
+		}
+
 		limiter := modelgateway.NewRateLimiter()
 		limiter.ConfigureProvider(provider.ID, 5, modelgateway.SpeedProfile{ID: "1x", MaxParallel: 2, TokenBudgetMul: 1.0, RateLimitMul: 1.0})
 		agentGateway = modelgateway.NewRateLimitedGateway(router, limiter)

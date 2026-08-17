@@ -336,3 +336,121 @@ func TestModeFromContext(t *testing.T) {
 		t.Errorf("nil ctx mode = %q, want \"\"", got)
 	}
 }
+
+// streamBodyWithUsage is an SSE stream whose trailing event carries usage
+// (10 prompt + 5 completion tokens), mirroring the OpenAI
+// stream_options.include_usage shape. Blank lines delimit SSE events —
+// the parser only dispatches accumulated data: lines on a blank line.
+const streamBodyWithUsage = "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"},\"finish_reason\":\"stop\"}]}\n" +
+	"\n" +
+	"data: {\"choices\":[],\"usage\":{\"prompt_tokens\":10,\"completion_tokens\":5,\"total_tokens\":15}}\n" +
+	"\n" +
+	"data: [DONE]\n" +
+	"\n"
+
+// TestStreamChatRecordsCost pins the doc/25 R2 fix: streaming calls used
+// to bypass cost recording entirely (recordCost only ran on the
+// non-streaming path). The trailing usage chunk must reach the
+// CostController once the stream completes.
+func TestStreamChatRecordsCost(t *testing.T) {
+	srv := sseServer(t, streamBodyWithUsage, nil)
+	defer srv.Close()
+
+	prov := providerFor("primary", srv.URL)
+	prov.PricePer1KInput = 1.0 // $1/1K tokens → 10 tokens = $0.01
+	prov.PricePer1KOutput = 2.0 // 5 tokens = $0.01
+
+	r := NewRouter("primary", zap.NewNop()).AddProvider(prov)
+	cc := NewCostController(10, 10)
+	r.SetCostController(cc)
+
+	ch, err := r.StreamChat(context.Background(), []ChatMessage{{Role: "user", Content: "hi"}}, nil)
+	if err != nil {
+		t.Fatalf("StreamChat: %v", err)
+	}
+	for range ch {
+		// drain until close
+	}
+
+	// 10*1.0/1000 + 5*2.0/1000 = 0.02
+	if got := cc.DailySpend(); got != 0.02 {
+		t.Errorf("daily spend after stream = %.4f, want 0.02", got)
+	}
+}
+
+// TestStreamChatBudgetExceededSkipsHTTP: the budget guard must gate
+// streaming calls too, not just non-streaming Chat.
+func TestStreamChatBudgetExceededSkipsHTTP(t *testing.T) {
+	called := 0
+	srv := sseServer(t, streamBodyWithUsage, func(r *http.Request) { called++ })
+	defer srv.Close()
+
+	r := NewRouter("primary", zap.NewNop()).AddProvider(providerFor("primary", srv.URL))
+	cc := NewCostController(0.05, 0)
+	cc.Record(0.05) // exhaust the daily budget
+	r.SetCostController(cc)
+
+	_, err := r.StreamChat(context.Background(), []ChatMessage{{Role: "user", Content: "hi"}}, nil)
+	if !errors.Is(err, ErrBudgetExceeded) {
+		t.Fatalf("expected ErrBudgetExceeded, got: %v", err)
+	}
+	if called != 0 {
+		t.Errorf("provider must not be contacted when over budget, called %d times", called)
+	}
+}
+
+// TestChatWithFallbackMaxRetries pins the doc/25 R2 fix: RoutingRule.MaxRetries
+// was declared but never consulted. With MaxRetries=2 a failing primary is
+// attempted 3 times (1 initial + 2 retries) before the fallback is used.
+func TestChatWithFallbackMaxRetries(t *testing.T) {
+	primaryCalls := 0
+	fallbackCalls := 0
+	// 400 is non-retryable at the HTTP-client level, so each router-level
+	// attempt fails fast without backoff sleeps.
+	primary := failServer(t, http.StatusBadRequest, &primaryCalls)
+	defer primary.Close()
+	fallback := chatServer(t, "from-fallback", 50, &fallbackCalls)
+	defer fallback.Close()
+
+	r := NewRouter("primary", zap.NewNop())
+	r.AddProvider(providerFor("primary", primary.URL))
+	r.AddProvider(providerFor("fallback", fallback.URL))
+	r.SetRules([]RoutingRule{{Mode: "work", TaskType: "", ProviderID: "primary", FallbackID: "fallback", MaxRetries: 2}})
+
+	resp, err := r.ChatWithFallback(context.Background(), "work", "", []ChatMessage{{Role: "user", Content: "hi"}}, nil, false)
+	if err != nil {
+		t.Fatalf("expected fallback to succeed, got error: %v", err)
+	}
+	if resp.Choices[0].Message.Content != "from-fallback" {
+		t.Errorf("unexpected response: %+v", resp)
+	}
+	if primaryCalls != 3 {
+		t.Errorf("primary called %d times, want 3 (1 + MaxRetries=2)", primaryCalls)
+	}
+	if fallbackCalls != 1 {
+		t.Errorf("fallback called %d times, want 1", fallbackCalls)
+	}
+}
+
+// TestChatWithFallbackMaxRetriesStopsOnContextCancel: retries must stop
+// immediately once the context is done — no point burning budget on a
+// call the caller already abandoned.
+func TestChatWithFallbackMaxRetriesStopsOnContextCancel(t *testing.T) {
+	primaryCalls := 0
+	primary := failServer(t, http.StatusBadRequest, &primaryCalls)
+	defer primary.Close()
+
+	r := NewRouter("primary", zap.NewNop())
+	r.AddProvider(providerFor("primary", primary.URL))
+	r.SetRules([]RoutingRule{{Mode: "work", TaskType: "", ProviderID: "primary", MaxRetries: 5}})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // already canceled before the call
+
+	if _, err := r.ChatWithFallback(ctx, "work", "", []ChatMessage{{Role: "user", Content: "hi"}}, nil, false); err == nil {
+		t.Fatalf("expected error with canceled context")
+	}
+	if primaryCalls > 1 {
+		t.Errorf("primary called %d times, want at most 1 after cancel", primaryCalls)
+	}
+}

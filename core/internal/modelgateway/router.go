@@ -212,6 +212,12 @@ func (r *Router) ProviderID() string {
 // ChatWithFallback is the routing entry point for non-streaming chat.
 // mode + taskType select the rule; on primary failure the rule's
 // FallbackID is tried once.
+//
+// doc/25 R2: if the matched rule sets MaxRetries, the primary is
+// retried that many extra times before the fallback is consulted.
+// Retries stop immediately when the context is done. Default (0) keeps
+// the historical single-attempt behavior — note the underlying client
+// already retries transient HTTP errors internally.
 func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, messages []ChatMessage, tools []ToolDef, stream bool) (*ChatCompletionResponse, error) {
 	if err := r.checkBudgetGuard(); err != nil {
 		return nil, err
@@ -227,10 +233,27 @@ func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, me
 		return nil, fmt.Errorf("provider %q not registered", primaryID)
 	}
 
-	resp, err := client.Chat(ctx, messages, tools, stream)
-	if err == nil {
-		r.recordCost(primaryID, resp)
-		return resp, nil
+	maxRetries := 0
+	if rule != nil && rule.MaxRetries > 0 {
+		maxRetries = rule.MaxRetries
+	}
+
+	var resp *ChatCompletionResponse
+	var err error
+	for attempt := 0; ; attempt++ {
+		resp, err = client.Chat(ctx, messages, tools, stream)
+		if err == nil {
+			r.recordCost(primaryID, resp)
+			return resp, nil
+		}
+		if attempt >= maxRetries || ctx.Err() != nil {
+			break
+		}
+		r.log.Warn("provider call failed, retrying",
+			zap.String("provider", primaryID),
+			zap.Int("attempt", attempt+1),
+			zap.Int("maxRetries", maxRetries),
+			zap.Error(err))
 	}
 
 	// Primary failed — try fallback if the rule has one.
@@ -256,6 +279,11 @@ func (r *Router) ChatWithFallback(ctx context.Context, mode, taskType string, me
 // StreamChatWithFallback is the streaming counterpart of ChatWithFallback.
 // Fallback applies when opening the stream fails; mid-stream errors
 // are surfaced to the caller (we can't cleanly restart a partial stream).
+//
+// doc/25 R2: the returned channel is wrapped in an observer that
+// captures the trailing usage chunk and records its cost when the
+// stream completes. Before this, streaming calls accrued zero cost —
+// the budget guard could never trip on real spend.
 func (r *Router) StreamChatWithFallback(ctx context.Context, mode, taskType string, messages []ChatMessage, tools []ToolDef) (<-chan StreamChunk, error) {
 	if err := r.checkBudgetGuard(); err != nil {
 		return nil, err
@@ -273,7 +301,7 @@ func (r *Router) StreamChatWithFallback(ctx context.Context, mode, taskType stri
 
 	ch, err := client.StreamChat(ctx, messages, tools)
 	if err == nil {
-		return ch, nil
+		return r.observeStream(primaryID, ch), nil
 	}
 
 	if rule != nil && rule.FallbackID != "" {
@@ -285,10 +313,37 @@ func (r *Router) StreamChatWithFallback(ctx context.Context, mode, taskType stri
 				zap.String("primary", primaryID),
 				zap.String("fallback", rule.FallbackID),
 				zap.Error(err))
-			return fbClient.StreamChat(ctx, messages, tools)
+			fbCh, fbErr := fbClient.StreamChat(ctx, messages, tools)
+			if fbErr != nil {
+				return nil, fbErr
+			}
+			return r.observeStream(rule.FallbackID, fbCh), nil
 		}
 	}
 	return ch, err
+}
+
+// observeStream forwards every chunk from src to a new channel and, when
+// src closes, records the cost of the last usage chunk seen. OpenAI-style
+// providers send usage as a dedicated trailing event
+// (stream_options.include_usage); providers that never send one simply
+// record nothing — cost stays 0, same as before, but honestly.
+func (r *Router) observeStream(providerID string, src <-chan StreamChunk) <-chan StreamChunk {
+	out := make(chan StreamChunk)
+	go func() {
+		defer close(out)
+		var usage *UsageInfo
+		for chunk := range src {
+			if chunk.Usage != nil {
+				usage = chunk.Usage
+			}
+			out <- chunk
+		}
+		if usage != nil {
+			r.recordStreamCost(providerID, usage)
+		}
+	}()
+	return out
 }
 
 // primaryID returns the provider ID a rule selects, or the router's
@@ -329,6 +384,16 @@ func (r *Router) recordCost(providerID string, resp *ChatCompletionResponse) {
 	if resp == nil || resp.Usage == nil {
 		return
 	}
+	r.recordStreamCost(providerID, resp.Usage)
+}
+
+// recordStreamCost computes the dollar cost of a usage report against the
+// provider's own pricing and feeds it to the cost controller. Shared by
+// the non-streaming (recordCost) and streaming (observeStream) paths.
+func (r *Router) recordStreamCost(providerID string, usage *UsageInfo) {
+	if usage == nil {
+		return
+	}
 	r.mu.RLock()
 	c := r.cost
 	p := r.providers[providerID]
@@ -338,8 +403,8 @@ func (r *Router) recordCost(providerID string, resp *ChatCompletionResponse) {
 	}
 	var cost float64
 	if p != nil {
-		cost = float64(resp.Usage.PromptTokens)/1000.0*p.PricePer1KInput +
-			float64(resp.Usage.CompletionTokens)/1000.0*p.PricePer1KOutput
+		cost = float64(usage.PromptTokens)/1000.0*p.PricePer1KInput +
+			float64(usage.CompletionTokens)/1000.0*p.PricePer1KOutput
 	}
 	c.Record(cost)
 }

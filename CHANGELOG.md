@@ -44,6 +44,18 @@
 - `role_permissions` 死表在迁移 004 标注 unused（不删表，保迁移链稳定）；marketplace 占位签名双处标注"未实现验签"
 - doc/09 新增 §10 云端同步协议语义：LWW、毫秒游标、无 tombstone、无设备身份——与代码现状对齐
 
+### Changed — Router/Cache 产品化 R1：显式 mode 贯通 + Router 接线（doc/25，2026-08-17 · ZCode）
+- **mode 走 context**：新增 `modelgateway.WithMode(ctx, mode)`，orchestrator 在流式/兜底模型调用前注入 `run.Mode`；Router 从 ctx 读 mode 路由——删除 `inferMode` 死代码（系统提示从未嵌入 "Mode:" 标记，扫描永远返回空）
+- **Router 进生产链路**：gateway 栈改为 Router(AddProvider) → RateLimitedGateway；单 provider 无规则走默认，加第二个 provider 或 mode 规则变成纯配置改动
+- **成本不再恒 0**：`ProviderRegistry.Add` 更新路径此前丢弃 `PricePer1KInput/Output`，已修；`initModelGateway` 新增 `GEOWORK_LLM_PRICE_INPUT/OUTPUT` 环境变量填价格
+- 测试：ctx mode 路由命中/默认/fallback + ModeFromContext 边界
+
+### Added — Router/Cache 产品化 R2：流式成本记录 + 预算控制接线 + MaxRetries 实现（doc/25，2026-08-17 · ZCode）
+- **流式成本记录**：`StreamChatWithFallback` 返回的 channel 包一层观察 goroutine，捕获尾部 usage chunk（stream_options.include_usage），流结束后按 provider 自身定价记入 CostController——此前流式调用零成本记录，预算守卫永远看不到真实花费
+- **预算接线**：`GEOWORK_LLM_DAILY_BUDGET`/`GEOWORK_LLM_MONTHLY_BUDGET`（美元，0/未设=不启用）→ `router.SetCostController`；超限调用在发 HTTP 前以 `ErrBudgetExceeded` 拒绝，run 失败带明确原因
+- **MaxRetries 落地**：`RoutingRule.MaxRetries` 此前声明未用；现为主 provider 失败后的路由级重试次数（ctx 取消立即停止），再走 fallback
+- 测试：流式 usage 进 CostController、流式预算拦截、MaxRetries=2 共 3 次尝试、ctx 取消不重试
+
 ### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
 - **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
 - **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）
