@@ -214,6 +214,20 @@ type WorkspaceRole struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// ModelProvider is a persisted modelproxy provider config (doc/25 S2).
+// APIKey holds ciphertext (AES-256-GCM) when GEOWORK_ENCRYPTION_KEY is set,
+// plaintext otherwise (dev mode, logged warning).
+type ModelProvider struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	BaseURL   string    `json:"base_url"`
+	APIKey    string    `json:"api_key"`
+	Enabled   bool      `json:"enabled"`
+	Fallback  bool      `json:"fallback"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 // Conversation represents a cloud-synced chat session owned by a user.
 // Mirrors core/internal/conversation.Conversation with an added UserID for
 // multi-device ownership.

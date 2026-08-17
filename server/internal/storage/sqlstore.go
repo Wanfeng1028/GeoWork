@@ -1352,6 +1352,90 @@ func (s *Store) ListWorkspaceRoles(workspaceID string) ([]*WorkspaceRole, error)
 }
 
 // ===========================
+// ModelProvider repository (doc/25 S2)
+// ===========================
+
+// UpsertModelProvider inserts or replaces a modelproxy provider config.
+func (s *Store) UpsertModelProvider(p *ModelProvider) error {
+	now := time.Now().Unix()
+	if p.CreatedAt.IsZero() {
+		p.CreatedAt = time.Unix(now, 0)
+	}
+	p.UpdatedAt = time.Unix(now, 0)
+	enabled, fallback := 0, 0
+	if p.Enabled {
+		enabled = 1
+	}
+	if p.Fallback {
+		fallback = 1
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO model_providers (id, name, base_url, api_key, enabled, fallback, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name=excluded.name, base_url=excluded.base_url, api_key=excluded.api_key,
+			enabled=excluded.enabled, fallback=excluded.fallback, updated_at=excluded.updated_at`,
+		p.ID, p.Name, p.BaseURL, p.APIKey, enabled, fallback, p.CreatedAt.Unix(), p.UpdatedAt.Unix(),
+	)
+	return err
+}
+
+// GetModelProvider returns a provider by ID, or nil when absent.
+func (s *Store) GetModelProvider(id string) (*ModelProvider, error) {
+	p := &ModelProvider{}
+	var enabled, fallback int
+	var createdAt, updatedAt int64
+	err := s.db.QueryRow(`
+		SELECT id, name, base_url, api_key, enabled, fallback, created_at, updated_at
+		FROM model_providers WHERE id = ?`, id).Scan(
+		&p.ID, &p.Name, &p.BaseURL, &p.APIKey, &enabled, &fallback, &createdAt, &updatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	p.Enabled = enabled == 1
+	p.Fallback = fallback == 1
+	p.CreatedAt = scanTime(createdAt)
+	p.UpdatedAt = scanTime(updatedAt)
+	return p, nil
+}
+
+// ListModelProviders returns all persisted provider configs.
+func (s *Store) ListModelProviders() ([]*ModelProvider, error) {
+	rows, err := s.db.Query(`
+		SELECT id, name, base_url, api_key, enabled, fallback, created_at, updated_at
+		FROM model_providers ORDER BY created_at`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*ModelProvider
+	for rows.Next() {
+		p := &ModelProvider{}
+		var enabled, fallback int
+		var createdAt, updatedAt int64
+		if err := rows.Scan(&p.ID, &p.Name, &p.BaseURL, &p.APIKey, &enabled, &fallback, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		p.Enabled = enabled == 1
+		p.Fallback = fallback == 1
+		p.CreatedAt = scanTime(createdAt)
+		p.UpdatedAt = scanTime(updatedAt)
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+// DeleteModelProvider removes a provider config by ID.
+func (s *Store) DeleteModelProvider(id string) error {
+	_, err := s.db.Exec("DELETE FROM model_providers WHERE id = ?", id)
+	return err
+}
+
+// ===========================
 // Helpers
 // ===========================
 

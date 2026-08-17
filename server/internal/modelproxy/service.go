@@ -51,7 +51,50 @@ func NewService(store *storage.Store) *Service {
 		svc.encryptionKey = key
 		log.Println("[modelproxy] API key encryption enabled (AES-256-GCM)")
 	}
+
+	// doc/25 S2: providers were previously an in-memory map only, so every
+	// restart lost all configs including encrypted API keys. Load persisted
+	// rows into the map at startup; writes go to both map and SQLite.
+	if store != nil {
+		rows, err := store.ListModelProviders()
+		if err != nil {
+			log.Printf("[modelproxy] WARNING: failed to load persisted providers: %v", err)
+		}
+		for _, row := range rows {
+			svc.providers[row.ID] = &ProviderConfig{
+				ID:       row.ID,
+				Name:     row.Name,
+				BaseURL:  row.BaseURL,
+				APIKey:   row.APIKey,
+				Enabled:  row.Enabled,
+				Fallback: row.Fallback,
+			}
+		}
+		if len(rows) > 0 {
+			log.Printf("[modelproxy] loaded %d persisted provider(s)", len(rows))
+		}
+	}
 	return svc
+}
+
+// persistProvider writes a provider config to SQLite (doc/25 S2).
+// Best-effort: the in-memory map stays authoritative for the process
+// lifetime, so a persistence failure is logged, not fatal.
+func (s *Service) persistProvider(p *ProviderConfig) {
+	if s.store == nil {
+		return
+	}
+	err := s.store.UpsertModelProvider(&storage.ModelProvider{
+		ID:       p.ID,
+		Name:     p.Name,
+		BaseURL:  p.BaseURL,
+		APIKey:   p.APIKey,
+		Enabled:  p.Enabled,
+		Fallback: p.Fallback,
+	})
+	if err != nil {
+		log.Printf("[modelproxy] WARNING: failed to persist provider %s: %v", p.ID, err)
+	}
 }
 
 // AddProvider handles adding a provider config.
@@ -85,6 +128,7 @@ func (s *Service) AddProvider(c *gin.Context) {
 	s.mu.Lock()
 	s.providers[req.ID] = &req
 	s.mu.Unlock()
+	s.persistProvider(&req)
 
 	// Return response with masked key
 	respCopy := req
@@ -114,6 +158,12 @@ func (s *Service) DeleteProvider(c *gin.Context) {
 	if !exists {
 		apierrors.RespondWithMessage(c, apierrors.ErrNotFound, "provider not found")
 		return
+	}
+
+	if s.store != nil {
+		if err := s.store.DeleteModelProvider(providerID); err != nil {
+			log.Printf("[modelproxy] WARNING: failed to delete persisted provider %s: %v", providerID, err)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "provider deleted"})
@@ -227,12 +277,6 @@ func (s *Service) ListModels(c *gin.Context) {
 
 // Chat handles POST /api/model/chat
 func (s *Service) Chat(c *gin.Context) {
-	providerID := c.GetString("provider_id")
-	if providerID == "" {
-		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider required")
-		return
-	}
-
 	// Limit request body size
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodySize)
 
@@ -242,12 +286,24 @@ func (s *Service) Chat(c *gin.Context) {
 		return
 	}
 
+	// doc/25 S2: provider_id comes from the request body. The previous code
+	// read c.GetString("provider_id"), a context key nothing ever set, so
+	// this endpoint always returned 400.
+	providerID, _ := req["provider_id"].(string)
+	if providerID == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider_id is required")
+		return
+	}
+
 	// Type assertion safety for model field
 	model, ok := req["model"].(string)
 	if !ok || model == "" {
 		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "model field is required and must be a string")
 		return
 	}
+
+	// provider_id is a routing field, not part of the upstream OpenAI payload.
+	delete(req, "provider_id")
 
 	s.mu.RLock()
 	provider, ok := s.providers[providerID]
@@ -294,12 +350,6 @@ func (s *Service) Chat(c *gin.Context) {
 
 // Stream handles POST /api/model/stream
 func (s *Service) Stream(c *gin.Context) {
-	providerID := c.GetString("provider_id")
-	if providerID == "" {
-		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider required")
-		return
-	}
-
 	// Limit request body size
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodySize)
 
@@ -309,12 +359,22 @@ func (s *Service) Stream(c *gin.Context) {
 		return
 	}
 
+	// doc/25 S2: provider_id comes from the request body (same fix as Chat).
+	providerID, _ := req["provider_id"].(string)
+	if providerID == "" {
+		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "provider_id is required")
+		return
+	}
+
 	// Type assertion safety for model field
 	_, ok := req["model"].(string)
 	if !ok {
 		apierrors.RespondWithMessage(c, apierrors.ErrBadRequest, "model field is required and must be a string")
 		return
 	}
+
+	// provider_id is a routing field, not part of the upstream OpenAI payload.
+	delete(req, "provider_id")
 
 	s.mu.RLock()
 	provider, ok := s.providers[providerID]

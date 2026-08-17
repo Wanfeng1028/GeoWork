@@ -27,6 +27,12 @@ var rbacBillingV2 string
 //go:embed 005_conversations.sql
 var conversationsSchema string
 
+//go:embed 006_cursor_milliseconds.sql
+var cursorMilliseconds string
+
+//go:embed 007_model_providers.sql
+var modelProvidersSchema string
+
 // Run executes all pending migrations on the given database.
 func Run(db *sql.DB) error {
 	if err := createSchemaTable(db); err != nil {
@@ -44,6 +50,10 @@ func Run(db *sql.DB) error {
 		{ID: "003", Name: "channel_enhancements", SQL: channelEnhancements},
 		{ID: "004", Name: "rbac_billing", SQL: rbacBillingV2},
 		{ID: "005", Name: "conversations", SQL: conversationsSchema},
+		// 006 existed on disk but was never registered, so the ns→ms sync
+		// cursor normalization never ran on any database (doc/25 S2).
+		{ID: "006", Name: "cursor_milliseconds", SQL: cursorMilliseconds},
+		{ID: "007", Name: "model_providers", SQL: modelProvidersSchema},
 	}
 
 	for _, m := range migrations {
