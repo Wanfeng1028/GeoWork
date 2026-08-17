@@ -190,11 +190,14 @@ func allowedOrigins() []string {
 	return origins
 }
 
-// isOriginAllowed checks whether origin is in the whitelist or is a file://
-// origin (used by Electron).
+// isOriginAllowed checks whether origin is in the whitelist. file:// origins
+// (Electron) are only accepted in dev mode (GEOWORK_DEV=1): a blanket
+// file:// allow lets any local HTML file opened in a webview talk to the
+// cloud API (doc/25 S1). Production Electron builds send no Origin on IPC
+// fetches, so this does not break the desktop client.
 func isOriginAllowed(origin string, whitelist []string) bool {
 	if strings.HasPrefix(origin, "file://") {
-		return true
+		return os.Getenv("GEOWORK_DEV") == "1"
 	}
 	for _, allowed := range whitelist {
 		if origin == allowed {

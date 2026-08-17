@@ -51,6 +51,10 @@ func SetupRoutes(
 		envFloat("GEOWORK_AUTH_BURST", 5),
 	)
 	chatLimiter := ratelimit.NewLimiter(10.0/60.0, 10)
+	// Crash reports are unauthenticated (opt-in header only), so they get a
+	// dedicated per-IP limiter to stop the endpoint being used as an
+	// unbounded, unauthenticated write sink (doc/25 S1).
+	crashLimiter := ratelimit.NewLimiter(10.0/60.0, 5)
 
 	// API v1 root
 	api := r.Group("/api")
@@ -188,8 +192,9 @@ func SetupRoutes(
 			telemetryGroup.POST("/batch", telemetrySvc.ReportBatch)
 		}
 
-		// Crash reporting routes (opt-in)
+		// Crash reporting routes (opt-in, rate-limited: unauthenticated)
 		crashGroup := api.Group("/crash")
+		crashGroup.Use(ratelimit.Middleware(crashLimiter))
 		{
 			crashGroup.POST("/report", crashSvc.Report)
 		}

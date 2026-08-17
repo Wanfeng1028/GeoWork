@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"server/internal/apierrors"
@@ -375,7 +376,15 @@ func (s *Service) CheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Mock mode: directly update plan
+	// Mock mode: directly update plan. Gated behind GEOWORK_BILLING_MOCK=1
+	// (doc/25 S1): without the gate any authenticated user could self-upgrade
+	// to team and mint credits. 404 (not 403) so the endpoint is invisible
+	// when disabled.
+	if os.Getenv("GEOWORK_BILLING_MOCK") != "1" {
+		apierrors.Respond(c, apierrors.ErrNotFound)
+		return
+	}
+
 	oldPlan := user.Plan
 	user.Plan = req.Plan
 	if err := s.store.UpdateUser(user); err != nil {

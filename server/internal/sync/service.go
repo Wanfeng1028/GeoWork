@@ -253,14 +253,15 @@ func (s *Service) ResolveConflict(c *gin.Context) {
 
 // Cleanup handles TTL-based cleanup of expired sync records.
 // Can be called via POST /api/sync/cleanup or scheduled internally.
+//
+// Scope is strictly per-user (doc/25 S1): the previous implementation ran an
+// unscoped DELETE, so any authenticated caller could wipe every user's stale
+// sync data (the admin check was a no-op comment).
 func (s *Service) Cleanup(c *gin.Context) {
 	user, ok := servercontext.RequireUser(c)
 	if !ok {
 		return
 	}
-
-	// Only allow admin/system users to trigger cleanup
-	_ = user
 
 	ttlStr := c.DefaultQuery("ttl_days", "30")
 	ttlDays, err := strconv.Atoi(ttlStr)
@@ -269,7 +270,7 @@ func (s *Service) Cleanup(c *gin.Context) {
 	}
 
 	cutoff := time.Now().Add(-time.Duration(ttlDays) * 24 * time.Hour).Unix()
-	deleted, err := s.store.DeleteSyncRecordsBefore(cutoff)
+	deleted, err := s.store.DeleteUserSyncRecordsBefore(user.ID, cutoff)
 	if err != nil {
 		apierrors.RespondWithMessage(c, apierrors.ErrInternal, "cleanup failed")
 		return

@@ -123,6 +123,11 @@ func (s *Service) DeleteAccount(c *gin.Context) {
 		return
 	}
 
+	// Revoke all live sessions so a soft-deleted account cannot keep using
+	// pre-existing tokens (doc/25 S1). Best-effort: the auth middleware also
+	// rejects soft-deleted users, so this is defense in depth.
+	_ = s.store.InvalidateUserTokens(user.ID)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":           "account marked for deletion",
 		"deleted_at":        time.Now(),

@@ -3,9 +3,9 @@ package crash
 
 import (
 	"net/http"
-	"time"
 
 	"server/internal/apierrors"
+	"server/internal/idgen"
 	"server/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -62,5 +62,7 @@ func isOptIn(c *gin.Context) bool {
 }
 
 func generateID() string {
-	return "crash_" + time.Now().Format("20060102150405")
+	// Random hex, not a timestamp (doc/25 S1): second-resolution timestamps
+	// collide under concurrent reports and overwrite each other.
+	return idgen.NewPrefixed("crash")
 }

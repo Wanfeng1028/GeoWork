@@ -271,6 +271,17 @@ func (s *Store) InvalidateUserTokens(userID string) error {
 	return err
 }
 
+// DeleteExpiredTokens purges tokens whose expires_at is older than the given
+// unix timestamp. Returns the number of rows removed. Tokens are only checked
+// on read, so without this GC the table grows unbounded.
+func (s *Store) DeleteExpiredTokens(beforeUnix int64) (int64, error) {
+	result, err := s.db.Exec("DELETE FROM tokens WHERE expires_at < ?", beforeUnix)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 // ===========================
 // Team repository
 // ===========================
@@ -536,6 +547,18 @@ func (s *Store) GetSyncRecordsByTypes(userID string, cursor int64, types []strin
 
 func (s *Store) DeleteSyncRecordsBefore(cutoff int64) (int64, error) {
 	result, err := s.db.Exec("DELETE FROM sync_records WHERE created_at < ?", cutoff)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+// DeleteUserSyncRecordsBefore is the user-scoped variant of
+// DeleteSyncRecordsBefore. The unscoped version must not be exposed to
+// end-user endpoints: any authenticated caller could wipe every user's
+// stale sync data (doc/25 S1).
+func (s *Store) DeleteUserSyncRecordsBefore(userID string, cutoff int64) (int64, error) {
+	result, err := s.db.Exec("DELETE FROM sync_records WHERE user_id = ? AND created_at < ?", userID, cutoff)
 	if err != nil {
 		return 0, err
 	}

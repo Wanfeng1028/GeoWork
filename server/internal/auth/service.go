@@ -28,7 +28,14 @@ type Service struct {
 }
 
 func NewService(store *storage.Store) *Service {
-	return &Service{store: store}
+	s := &Service{store: store}
+	// Tokens are only checked for expiry on read, so the table grows
+	// unbounded without a sweep. Purge already-expired rows at startup
+	// (doc/25 S1); best-effort — a failure here must not block boot.
+	if _, err := store.DeleteExpiredTokens(time.Now().Unix()); err != nil {
+		fmt.Printf("auth: expired-token cleanup failed: %v\n", err)
+	}
+	return s
 }
 
 // LoginRequest represents a login request body.
@@ -109,6 +116,13 @@ func (s *Service) Login(c *gin.Context) {
 			return
 		}
 	} else {
+		// Soft-deleted accounts must not authenticate (doc/25 S1). Same
+		// opaque error as a bad password — don't leak account status.
+		if user.DeletedAt != nil {
+			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid credentials")
+			return
+		}
+
 		// Dual-mode password verification: bcrypt first, then legacy SHA-256
 		if !verifyPassword(user.PasswordHash, req.Password) {
 			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid credentials")
@@ -200,10 +214,10 @@ func (s *Service) Refresh(c *gin.Context) {
 		return
 	}
 
-	// Verify user still exists
+	// Verify user still exists and is not soft-deleted (doc/25 S1).
 	user, err := s.store.GetUserByID(tok.UserID)
-	if err != nil || user == nil {
-		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "user not found")
+	if err != nil || user == nil || user.DeletedAt != nil {
+		apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "invalid refresh token")
 		return
 	}
 
@@ -278,7 +292,9 @@ func (s *Service) Middleware() gin.HandlerFunc {
 		}
 
 		user, err := s.store.GetUserByID(tok.UserID)
-		if err != nil || user == nil {
+		if err != nil || user == nil || user.DeletedAt != nil {
+			// Soft-deleted users lose all access immediately (doc/25 S1);
+			// their tokens are revoked by DeleteAccount.
 			apierrors.RespondWithMessage(c, apierrors.ErrUnauthorized, "user not found")
 			c.Abort()
 			return
