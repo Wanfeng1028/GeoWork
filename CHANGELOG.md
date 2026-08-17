@@ -18,6 +18,13 @@
 
 ## [Unreleased]
 
+### Added — AI 组件 Ant Design X 迁移一期：自研组件入口关闭，antdx 渲染树接管主对话页（doc/26，2026-08-17 · ZCode）
+- **开关分流**：`GeoWorkSettings.aiComponentsV2`（默认开）+ 设置页「实验特性」区 Switch；关闭即回退自研组件（doc/23 资产保留不删，入口关闭 ≠ 删除）
+- **antdx 渲染树**（`pages/NewTask/components/antdx/`）：MessageBubbleX（Bubble + ThoughtChain，assistant 内容复用 MarkdownStream，thinkingSteps → ThoughtChain loading 态）/ ConversationX（Bubble.List 无内置虚拟化，自持 @tanstack/react-virtual 保住 A5 长会话性能，贴底跟随；审批卡片复用 ApprovalCard）/ SenderX（Sender + allowSpeech 内置语音替代手写 Web Speech + 附件菜单 + 模式/模型选择）/ WelcomeX（Welcome + Prompts 按工作模式推荐 GIS 任务）
+- **数据层零改动**：Session 对象层 / SSE 状态机 / conversationCache 不动，useSession 快照是唯一数据源，仅换渲染层；MarkdownStream/DiffViewer/ToolCallTimeline/WorkflowRunCard 等自研组件挂进 X 组件复用
+- **包体积**：@ant-design/x 进 vendor-antd chunk（+284KB），仅 NewTaskPage 懒加载 chunk 引用，不进首屏
+- 测试：新增 antdx 7 条，前端 110/110 全绿；test/setup.ts 补 ResizeObserver polyfill（jsdom 缺失）
+
 ### Security — server/ 专项审查 S1：六项安全缺陷修复（doc/25，2026-08-17 · ZCode）
 - **软删用户仍可登录**：Login/Refresh/auth 中间件现在都检查 `DeletedAt`；DeleteAccount 同步吊销全部 token（此前软删账号的旧 token 可用到自然过期）
 - **sync cleanup 越权**：`POST /sync/cleanup` 此前执行无 user 条件的 DELETE（admin 检查是空注释），任何登录用户可清空所有人的过期 sync 数据；改为严格 per-user（新增 `DeleteUserSyncRecordsBefore`）

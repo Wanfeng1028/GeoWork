@@ -1,15 +1,14 @@
-// GeoWork Go Core - Model Router (P2-5)
-//
-// EXPERIMENTAL: not wired into production (doc/22 D-B4, v0.6 decision).
-// The desktop runtime uses a single OpenAICompatibleClient wrapped by
-// RateLimitedGateway; multi-provider routing is deferred. This file is
-// kept complete and tested so v0.6 can adopt it without a rewrite, but
-// nothing in cmd/geowork-runtime constructs a Router today.
+// GeoWork Go Core - Model Router (P2-5, productized in doc/25 R1)
 //
 // Router is a ModelGateway that picks a provider per call based on
 // (mode, taskType) routing rules and falls back to a secondary provider
 // when the primary fails. It composes OpenAICompatibleClient instances
 // rather than reimplementing the OpenAI wire format.
+//
+// The mode travels on the context (WithMode / ModeFromContext) — set by
+// the orchestrator from run.Mode. The old prompt-scanning inferMode was
+// dead code (no system prompt ever embedded a "Mode:" marker) and is
+// removed.
 //
 // The Router satisfies modelgateway.ModelGateway so the orchestrator
 // can drop it in where it previously held a single *OpenAICompatibleClient.
@@ -181,23 +180,18 @@ func (r *Router) clientFor(id string) (*OpenAICompatibleClient, bool) {
 	return c, ok
 }
 
-// Chat implements ModelGateway.Chat. It routes by (mode inferred from
-// the first message, taskType="") — the full (mode, taskType) routing
-// is exposed via ChatWithFallback for internal callers that know the
-// task type. For the interface contract, we default taskType to "" so
-// wildcard rules match.
+// Chat implements ModelGateway.Chat. The mode is read from the context
+// (WithMode); taskType defaults to "" so wildcard rules match. Full
+// (mode, taskType) routing is exposed via ChatWithFallback for internal
+// callers that know the task type.
 func (r *Router) Chat(ctx context.Context, messages []ChatMessage, tools []ToolDef, stream bool) (*ChatCompletionResponse, error) {
-	// The interface doesn't carry mode/taskType; infer mode from the
-	// system message if present, else "" (wildcard).
-	mode := inferMode(messages)
-	return r.ChatWithFallback(ctx, mode, "", messages, tools, stream)
+	return r.ChatWithFallback(ctx, ModeFromContext(ctx), "", messages, tools, stream)
 }
 
 // StreamChat implements ModelGateway.StreamChat with the same routing
 // semantics as Chat. On stream-open failure, falls back per rule.
 func (r *Router) StreamChat(ctx context.Context, messages []ChatMessage, tools []ToolDef) (<-chan StreamChunk, error) {
-	mode := inferMode(messages)
-	return r.StreamChatWithFallback(ctx, mode, "", messages, tools)
+	return r.StreamChatWithFallback(ctx, ModeFromContext(ctx), "", messages, tools)
 }
 
 // ProviderID returns the currently-selected default provider ID.
@@ -348,37 +342,6 @@ func (r *Router) recordCost(providerID string, resp *ChatCompletionResponse) {
 			float64(resp.Usage.CompletionTokens)/1000.0*p.PricePer1KOutput
 	}
 	c.Record(cost)
-}
-
-// inferMode extracts the agent Mode from the system message if the
-// caller embedded it as "Mode: <mode>" (the planner does this). Returns
-// "" if not found, which routes to wildcard rules.
-func inferMode(messages []ChatMessage) string {
-	for _, m := range messages {
-		if m.Role == "system" {
-			// Look for "Mode: <x>" token in the system prompt.
-			s := m.Content
-			for i := 0; i+5 < len(s); i++ {
-				if s[i] == 'M' && s[i:i+5] == "Mode:" {
-					rest := s[i+5:]
-					// skip spaces
-					j := 0
-					for j < len(rest) && (rest[j] == ' ' || rest[j] == '\t') {
-						j++
-					}
-					// read until whitespace
-					start := j
-					for j < len(rest) && rest[j] != ' ' && rest[j] != '\n' && rest[j] != '\t' {
-						j++
-					}
-					if j > start {
-						return rest[start:j]
-					}
-				}
-			}
-		}
-	}
-	return ""
 }
 
 // Compile-time assertion: Router must implement ModelGateway.

@@ -39,5 +39,6 @@ describe('routes 懒加载（A5，doc/23）', () => {
       const mod = await route.lazy!()
       expect(mod.Component, `route ${route.path ?? '(index)'} 未解析出 Component`).toBeTruthy()
     }
-  })
+    /* NewTaskPage 引入 @ant-design/x 后全量解析变慢，单独放宽时限 */
+  }, 30000)
 })

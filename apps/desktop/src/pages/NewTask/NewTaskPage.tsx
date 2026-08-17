@@ -8,6 +8,10 @@ import { ContextPickerModal } from './components/ContextPickerModal'
 import type { ContextPickerType } from './components/ContextPickerModal'
 import { ConversationMessageView } from './components/ConversationMessage'
 import { ApprovalCard } from './components/ApprovalCard'
+/* doc/26：Ant Design X 渲染树（aiComponentsV2 开关分流，自研组件保留为回退） */
+import { ConversationX } from './components/antdx/ConversationX'
+import { SenderX } from './components/antdx/SenderX'
+import { WelcomeX } from './components/antdx/WelcomeX'
 import { sessionManager } from '../../shared/session/SessionManager'
 import { useSession } from '../../shared/session/react'
 import { readConversation } from '../../shared/session/conversationCache'
@@ -57,6 +61,9 @@ export function NewTaskPage() {
   const { token } = theme.useToken()
   const messageRef = useRef(message)
   messageRef.current = message
+
+  /* doc/26：AI 组件 V2 开关（settings 快照读取，切换后重新进入页面生效） */
+  const useAntdx = loadSettings().aiComponentsV2
 
   /* ── 会话接线：流式状态住进对象层，组件只订阅快照 ── */
   const [convId, setConvId] = useState<string | null>(null)
@@ -289,6 +296,13 @@ export function NewTaskPage() {
     message.info('已停止生成')
   }
 
+  /* ── A1 审批决议（自研 / antdx 两个分支共用） ── */
+  const handleResolveApproval = (approved: boolean, reason?: string) => {
+    const id = convIdRef.current
+    if (!id) return Promise.reject(new Error('无活动会话'))
+    return sessionManager.ensure(id).resolveApproval(approved, reason)
+  }
+
   /* ── 确认执行（D2）：轮询真实 run 状态，不再 setTimeout 假完成 ── */
   const handleConfirmRun = async () => {
     const id = convIdRef.current
@@ -408,34 +422,61 @@ export function NewTaskPage() {
         />
       </div>
 
-      {/* Hero */}
-      <div className={styles.hero}>
-        <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
-          {heroText}
-        </Title>
-        <Text type="secondary" className={styles.heroSubtitle}>
-          {WORK_MODE_COPY[workMode].subtitle}
-        </Text>
-      </div>
+      {/* Hero / Welcome（doc/26：aiComponentsV2 开关分流） */}
+      {useAntdx ? (
+        <WelcomeX
+          workMode={workMode}
+          title={heroText}
+          subtitle={WORK_MODE_COPY[workMode].subtitle}
+          onPickPrompt={setPrompt}
+        />
+      ) : (
+        <div className={styles.hero}>
+          <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
+            {heroText}
+          </Title>
+          <Text type="secondary" className={styles.heroSubtitle}>
+            {WORK_MODE_COPY[workMode].subtitle}
+          </Text>
+        </div>
+      )}
 
-      {/* Composer */}
+      {/* Composer（doc/26：SenderX / ChatComposer 分流） */}
       <div ref={composerRef} className={styles.homeComposerWrap}>
         <div className={styles.homeComposerInner}>
-          <ChatComposer
-            prompt={prompt}
-            onPromptChange={setPrompt}
-            onSend={handleSend}
-            onStop={handleStop}
-            isStreaming={isStreaming}
-            model={model}
-            onModelChange={setModel}
-            placeholder={WORK_MODE_COPY[workMode].placeholder}
-            onOpenContextPicker={setContextPickerType}
-            onPickDirectory={handlePickDirectory}
-            selectedContexts={selectedContexts}
-            onRemoveContext={handleRemoveContext}
-            onClearContexts={() => setSelectedContexts([])}
-          />
+          {useAntdx ? (
+            <SenderX
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              onSend={handleSend}
+              onStop={handleStop}
+              isStreaming={isStreaming}
+              model={model}
+              onModelChange={setModel}
+              placeholder={WORK_MODE_COPY[workMode].placeholder}
+              onOpenContextPicker={setContextPickerType}
+              onPickDirectory={handlePickDirectory}
+              selectedContexts={selectedContexts}
+              onRemoveContext={handleRemoveContext}
+              onClearContexts={() => setSelectedContexts([])}
+            />
+          ) : (
+            <ChatComposer
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              onSend={handleSend}
+              onStop={handleStop}
+              isStreaming={isStreaming}
+              model={model}
+              onModelChange={setModel}
+              placeholder={WORK_MODE_COPY[workMode].placeholder}
+              onOpenContextPicker={setContextPickerType}
+              onPickDirectory={handlePickDirectory}
+              selectedContexts={selectedContexts}
+              onRemoveContext={handleRemoveContext}
+              onClearContexts={() => setSelectedContexts([])}
+            />
+          )}
         </div>
       </div>
 
@@ -493,49 +534,56 @@ export function NewTaskPage() {
         </div>
       </div>
 
-      {/* Message List（A5：虚拟滚动，仅挂载可视区 + overscan 的消息节点） */}
-      <div className={styles.messageList} ref={messageListRef} onScroll={handleListScroll}>
-        <div style={{ height: totalSize, width: '100%', position: 'relative' }}>
-          {virtualizer.getVirtualItems().map((vItem) => {
-            const msg = messages[vItem.index]
-            const isLastAssistant = vItem.index === lastAssistantIdx
-            return (
-              <div
-                key={vItem.key}
-                data-index={vItem.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${vItem.start}px)`,
-                  paddingBottom: 8,
-                }}
-              >
-                <ConversationMessageView
-                  data={msg}
-                  runStatus={isLastAssistant ? runStatus : undefined}
-                  onConfirmRun={isLastAssistant ? handleConfirmRun : undefined}
-                  onAdjustPlan={isLastAssistant ? handleAdjustPlan : undefined}
-                  isLastAssistant={isLastAssistant}
-                />
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* A1 审批卡片：governar approval_request 事件驱动 */}
-      {snap.pendingApproval && (
-        <ApprovalCard
-          approval={snap.pendingApproval}
-          onResolve={(approved, reason) => {
-            const id = convIdRef.current
-            if (!id) return Promise.reject(new Error('无活动会话'))
-            return sessionManager.ensure(id).resolveApproval(approved, reason)
-          }}
+      {/* Message List + 审批卡片（doc/26：ConversationX / 自研虚拟列表分流） */}
+      {useAntdx ? (
+        <ConversationX
+          messages={messages}
+          runStatus={runStatus}
+          pendingApproval={snap.pendingApproval}
+          onResolveApproval={handleResolveApproval}
+          onConfirmRun={handleConfirmRun}
+          onAdjustPlan={handleAdjustPlan}
         />
+      ) : (
+        <>
+          {/* Message List（A5：虚拟滚动，仅挂载可视区 + overscan 的消息节点） */}
+          <div className={styles.messageList} ref={messageListRef} onScroll={handleListScroll}>
+            <div style={{ height: totalSize, width: '100%', position: 'relative' }}>
+              {virtualizer.getVirtualItems().map((vItem) => {
+                const msg = messages[vItem.index]
+                const isLastAssistant = vItem.index === lastAssistantIdx
+                return (
+                  <div
+                    key={vItem.key}
+                    data-index={vItem.index}
+                    ref={virtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${vItem.start}px)`,
+                      paddingBottom: 8,
+                    }}
+                  >
+                    <ConversationMessageView
+                      data={msg}
+                      runStatus={isLastAssistant ? runStatus : undefined}
+                      onConfirmRun={isLastAssistant ? handleConfirmRun : undefined}
+                      onAdjustPlan={isLastAssistant ? handleAdjustPlan : undefined}
+                      isLastAssistant={isLastAssistant}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* A1 审批卡片：governar approval_request 事件驱动 */}
+          {snap.pendingApproval && (
+            <ApprovalCard approval={snap.pendingApproval} onResolve={handleResolveApproval} />
+          )}
+        </>
       )}
 
       {/* Work Dir Row */}
@@ -555,24 +603,42 @@ export function NewTaskPage() {
         </Text>
       </div>
 
-      {/* Composer */}
+      {/* Composer（doc/26：SenderX / ChatComposer 分流） */}
       <div className={styles.composerArea}>
-        <ChatComposer
-          prompt={prompt}
-          onPromptChange={setPrompt}
-          onSend={handleSend}
-          onStop={handleStop}
-          isStreaming={isStreaming}
-          model={model}
-          onModelChange={setModel}
-          conversationMode
-          placeholder={WORK_MODE_COPY[workMode].placeholder}
-          onOpenContextPicker={setContextPickerType}
-          onPickDirectory={handlePickDirectory}
-          selectedContexts={selectedContexts}
-          onRemoveContext={handleRemoveContext}
-          onClearContexts={() => setSelectedContexts([])}
-        />
+        {useAntdx ? (
+          <SenderX
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onSend={handleSend}
+            onStop={handleStop}
+            isStreaming={isStreaming}
+            model={model}
+            onModelChange={setModel}
+            placeholder={WORK_MODE_COPY[workMode].placeholder}
+            onOpenContextPicker={setContextPickerType}
+            onPickDirectory={handlePickDirectory}
+            selectedContexts={selectedContexts}
+            onRemoveContext={handleRemoveContext}
+            onClearContexts={() => setSelectedContexts([])}
+          />
+        ) : (
+          <ChatComposer
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onSend={handleSend}
+            onStop={handleStop}
+            isStreaming={isStreaming}
+            model={model}
+            onModelChange={setModel}
+            conversationMode
+            placeholder={WORK_MODE_COPY[workMode].placeholder}
+            onOpenContextPicker={setContextPickerType}
+            onPickDirectory={handlePickDirectory}
+            selectedContexts={selectedContexts}
+            onRemoveContext={handleRemoveContext}
+            onClearContexts={() => setSelectedContexts([])}
+          />
+        )}
       </div>
     </div>
   )

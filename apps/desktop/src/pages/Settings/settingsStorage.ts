@@ -44,6 +44,8 @@ export interface GeoWorkSettings {
   generativeUi: boolean
   floatingWorkspace: boolean
   browserContext: boolean
+  /** AI 组件 V2（doc/26）：true 用 Ant Design X 渲染树，false 回退自研组件 */
+  aiComponentsV2: boolean
 
   /* 引导 */
   guideVisited: boolean
@@ -79,6 +81,7 @@ export const DEFAULT_SETTINGS: GeoWorkSettings = {
   generativeUi: false,
   floatingWorkspace: false,
   browserContext: false,
+  aiComponentsV2: true,
   guideVisited: false,
   recentWorkDirs: [],
 }

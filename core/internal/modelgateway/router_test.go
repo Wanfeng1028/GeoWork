@@ -276,54 +276,63 @@ func TestChatWithFallbackBudgetExceededSkipsHTTP(t *testing.T) {
 	}
 }
 
-func TestInferMode(t *testing.T) {
-	cases := []struct {
-		name     string
-		messages []ChatMessage
-		want     string
-	}{
-		{
-			name:     "mode in system message",
-			messages: []ChatMessage{{Role: "system", Content: "You are helpful. Mode: code"}},
-			want:     "code",
-		},
-		{
-			name:     "mode with tabs and extra spaces",
-			messages: []ChatMessage{{Role: "system", Content: "Mode:\t  research now"}},
-			want:     "research",
-		},
-		{
-			name:     "no system message",
-			messages: []ChatMessage{{Role: "user", Content: "Mode: code"}},
-			want:     "",
-		},
-		{
-			name:     "mode token in user message ignored",
-			messages: []ChatMessage{{Role: "system", Content: "hello"}, {Role: "user", Content: "Mode: code"}},
-			want:     "",
-		},
-		{
-			name:     "mode at exact string end returns empty",
-			messages: []ChatMessage{{Role: "system", Content: "Mode:"}},
-			want:     "",
-		},
-		{
-			name:     "mode followed immediately by newline returns empty",
-			messages: []ChatMessage{{Role: "system", Content: "Mode:\ncode"}},
-			want:     "",
-		},
-		{
-			name:     "empty messages",
-			messages: nil,
-			want:     "",
-		},
+// TestChatRoutesByContextMode pins the doc/25 R1 fix: the Router reads
+// the mode from the context (WithMode), not by scanning prompt text.
+// The old inferMode was dead code — no system prompt ever embedded a
+// "Mode:" marker, so only wildcard rules could ever match.
+func TestChatRoutesByContextMode(t *testing.T) {
+	codeCalled, workCalled := 0, 0
+	codeSrv := chatServer(t, "code-provider", 10, &codeCalled)
+	defer codeSrv.Close()
+	workSrv := chatServer(t, "work-provider", 10, &workCalled)
+	defer workSrv.Close()
+
+	router := NewRouter("work", zap.NewNop()).
+		AddProvider(providerFor("code", codeSrv.URL)).
+		AddProvider(providerFor("work", workSrv.URL)).
+		SetRules([]RoutingRule{
+			{Mode: "Code", ProviderID: "code"},
+		})
+
+	// Mode "Code" on the context hits the rule → code provider.
+	ctx := WithMode(context.Background(), "Code")
+	resp, err := router.Chat(ctx, []ChatMessage{{Role: "user", Content: "hi"}}, nil, false)
+	if err != nil {
+		t.Fatalf("Chat with Code mode: %v", err)
+	}
+	if resp.Choices[0].Message.Content != "code-provider" {
+		t.Errorf("routed to %q, want code-provider", resp.Choices[0].Message.Content)
+	}
+	if codeCalled != 1 || workCalled != 0 {
+		t.Errorf("calls: code=%d work=%d, want 1/0", codeCalled, workCalled)
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := inferMode(tc.messages); got != tc.want {
-				t.Errorf("inferMode = %q, want %q", got, tc.want)
-			}
-		})
+	// No mode on the context → no rule match → default provider.
+	resp, err = router.Chat(context.Background(), []ChatMessage{{Role: "user", Content: "hi"}}, nil, false)
+	if err != nil {
+		t.Fatalf("Chat without mode: %v", err)
+	}
+	if resp.Choices[0].Message.Content != "work-provider" {
+		t.Errorf("routed to %q, want work-provider (default)", resp.Choices[0].Message.Content)
+	}
+	if workCalled != 1 {
+		t.Errorf("work calls = %d, want 1", workCalled)
+	}
+}
+
+func TestModeFromContext(t *testing.T) {
+	if got := ModeFromContext(context.Background()); got != "" {
+		t.Errorf("empty ctx mode = %q, want \"\"", got)
+	}
+	ctx := WithMode(context.Background(), "Paper")
+	if got := ModeFromContext(ctx); got != "Paper" {
+		t.Errorf("mode = %q, want Paper", got)
+	}
+	// Empty mode is not stored — ctx stays wildcard.
+	if got := ModeFromContext(WithMode(context.Background(), "")); got != "" {
+		t.Errorf("empty WithMode mode = %q, want \"\"", got)
+	}
+	if got := ModeFromContext(nil); got != "" {
+		t.Errorf("nil ctx mode = %q, want \"\"", got)
 	}
 }

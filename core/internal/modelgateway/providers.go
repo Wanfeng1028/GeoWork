@@ -71,6 +71,11 @@ func (r *ProviderRegistry) Add(p *ModelProvider) *ModelProvider {
 		existing.DefaultModel = p.DefaultModel
 		existing.Enabled = p.Enabled
 		existing.SpeedProfile = p.SpeedProfile
+		// doc/25 R1: pricing was dropped on update — a re-registered
+		// provider silently lost its PricePer1K* and cost accounting
+		// fell back to 0. Copy them like every other field.
+		existing.PricePer1KInput = p.PricePer1KInput
+		existing.PricePer1KOutput = p.PricePer1KOutput
 		existing.UpdatedAt = p.UpdatedAt
 		return existing
 	}

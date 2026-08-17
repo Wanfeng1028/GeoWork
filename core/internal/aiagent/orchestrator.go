@@ -856,8 +856,9 @@ func (o *Orchestrator) executePlan(ctx context.Context, run *Run, rc *RunContext
 				zap.String("runId", run.ID),
 				zap.Error(err),
 			)
-			// Fallback to non-streaming
-			content, toolCalls, usage, err = o.fallbackModelCall(ctx, messages, tools)
+			// Fallback to non-streaming (doc/25 R1: mode rides on ctx so
+			// a Router routes the fallback the same way as the stream).
+			content, toolCalls, usage, err = o.fallbackModelCall(modelgateway.WithMode(ctx, run.Mode), messages, tools)
 			if err != nil {
 				o.log.Error("fallback model call also failed", zap.Error(err))
 				rc.setState(StateFailed)
@@ -1297,6 +1298,10 @@ func (o *Orchestrator) streamModelCall(ctx context.Context, messages []modelgate
 	if o.gateway == nil {
 		return "", nil, nil, fmt.Errorf("no model gateway configured")
 	}
+
+	// doc/25 R1: carry the run mode on the context so a Router can pick
+	// a provider per mode (replaces the dead prompt-scanning inferMode).
+	ctx = modelgateway.WithMode(ctx, rc.Run.Mode)
 
 	ch, err := o.gateway.StreamChat(ctx, messages, tools)
 	if err != nil {

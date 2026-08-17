@@ -167,8 +167,10 @@ func main() {
 	// --- Model Gateway (optional; LLM calls degrade to no-op when unconfigured) ---
 	gateway, provider := initModelGateway(logger)
 
-	// doc/22 BP6 / S6: wrap the concrete client with the per-provider QPS
-	// limiter so every Chat/StreamChat the agent issues passes through it.
+	// doc/22 BP6 / S6 + doc/25 R1: assemble the gateway stack as
+	// Router → RateLimitedGateway. The Router holds the single configured
+	// provider today (no rules → default routing), which makes adding
+	// mode-based rules or a second provider a config-only change later.
 	// Default desktop budget: 5 QPS on the 1x profile — generous for a
 	// single-user agent, protective against a runaway ReAct loop hammering
 	// a metered provider. NOTE: keep agentGateway a true nil interface when
@@ -176,9 +178,10 @@ func main() {
 	// orchestrator's `gateway == nil` degrade check.
 	var agentGateway modelgateway.ModelGateway
 	if gateway != nil {
+		router := modelgateway.NewRouter(provider.ID, logger).AddProvider(provider)
 		limiter := modelgateway.NewRateLimiter()
 		limiter.ConfigureProvider(provider.ID, 5, modelgateway.SpeedProfile{ID: "1x", MaxParallel: 2, TokenBudgetMul: 1.0, RateLimitMul: 1.0})
-		agentGateway = modelgateway.NewRateLimitedGateway(gateway, limiter)
+		agentGateway = modelgateway.NewRateLimitedGateway(router, limiter)
 	}
 
 	// --- Agent Orchestrator ---
@@ -316,10 +319,12 @@ func main() {
 //
 // Env vars:
 //
-//	GEOWORK_LLM_BASE_URL     — e.g. http://127.0.0.1:11434 (OpenAI-compatible)
-//	GEOWORK_LLM_API_KEY      — bearer token (optional for local servers)
-//	GEOWORK_LLM_MODEL        — default model id
-//	GEOWORK_LLM_PROVIDER_ID  — provider id (defaults to "default")
+//	GEOWORK_LLM_BASE_URL      — e.g. http://127.0.0.1:11434 (OpenAI-compatible)
+//	GEOWORK_LLM_API_KEY       — bearer token (optional for local servers)
+//	GEOWORK_LLM_MODEL         — default model id
+//	GEOWORK_LLM_PROVIDER_ID   — provider id (defaults to "default")
+//	GEOWORK_LLM_PRICE_INPUT   — USD per 1K input tokens (doc/25 R1; 0/absent = unknown)
+//	GEOWORK_LLM_PRICE_OUTPUT  — USD per 1K output tokens (doc/25 R1; 0/absent = unknown)
 func initModelGateway(logger *zap.Logger) (*modelgateway.OpenAICompatibleClient, *modelgateway.ModelProvider) {
 	baseURL := os.Getenv("GEOWORK_LLM_BASE_URL")
 	apiKey := os.Getenv("GEOWORK_LLM_API_KEY")
@@ -329,14 +334,23 @@ func initModelGateway(logger *zap.Logger) (*modelgateway.OpenAICompatibleClient,
 		providerID = "default"
 	}
 
+	// doc/25 R1: pricing was never populated in production, so cost
+	// accounting (UsageMeter + Router CostController) always yielded 0.
+	// Parse defensively — a malformed value degrades to "unknown" (0),
+	// which is audited but never billed.
+	priceInput, _ := strconv.ParseFloat(os.Getenv("GEOWORK_LLM_PRICE_INPUT"), 64)
+	priceOutput, _ := strconv.ParseFloat(os.Getenv("GEOWORK_LLM_PRICE_OUTPUT"), 64)
+
 	provider := &modelgateway.ModelProvider{
-		ID:           providerID,
-		Name:         providerID,
-		Kind:         "openai_compatible",
-		BaseURL:      baseURL,
-		APIKeyRef:    apiKey,
-		DefaultModel: model,
-		Enabled:      baseURL != "",
+		ID:               providerID,
+		Name:             providerID,
+		Kind:             "openai_compatible",
+		BaseURL:          baseURL,
+		APIKeyRef:        apiKey,
+		DefaultModel:     model,
+		Enabled:          baseURL != "",
+		PricePer1KInput:  priceInput,
+		PricePer1KOutput: priceOutput,
 	}
 
 	if baseURL == "" {

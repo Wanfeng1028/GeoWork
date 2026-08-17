@@ -16,6 +16,7 @@
 | v1.9 | 2026-08-17 | A3 Thinking 面板：Session 消费 state_change/message SSE 事件生成 thinkingSteps（状态迁移 + 推理流），ThinkingPanel 折叠组件接入 ConversationMessage；顺带修复真实模式 assistant 气泡只有完成摘要的内容缺失；98/98 测试 + build + 边界检查全绿 |
 | v1.10 | 2026-08-17 | A4 Diff 查看器（跨 Go/前端）：core 写工具（write_file/create_artifact）经 DiffRecorder 上报前后内容，orchestrator 用 go-difflib 生成真实 LCS 多 hunk unified diff 并发 diff.created 事件（带 runID 路由进会话 SSE，payload 仅含自包含 unified）；前端 Session 消费 diff.created 按 path 去重 upsert fileDiffs，DiffViewer 组件（@git-diff-view/react 动态导入 ~320KB 不进主包）内联渲染；101/101 测试 + build + 边界检查 + Go 测试全绿 |
 | v1.11 | 2026-08-17 | A5 性能（doc/23 收官）：路由级代码分割（routes.tsx 全部页面改 react-router lazy，主入口 chunk 5.0MB → 首屏 3 个可缓存 chunk）+ vendor 拆分（react/antd 独立 chunk，依赖不升级哈希不变）+ 消息列表虚拟滚动（@tanstack/react-virtual，动态测量 + 贴底跟随，顺带消除 lastAssistantIdx O(n²) 计算）；103/103 测试 + build + 边界检查全绿 |
+| v1.12 | 2026-08-17 | AI 组件 Ant Design X 迁移一期（doc/26）：自研组件保留但入口关闭，aiComponentsV2 开关（默认开）分流；新建 antdx 渲染树（Bubble+ThoughtChain 消息 / Sender 输入 / Welcome+Prompts 欢迎区），数据层 Session 对象层零改动，MarkdownStream/DiffViewer/审批卡片等自研资产挂进 X 组件复用；110/110 测试 + build + 边界检查全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -32,7 +33,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；待 P7-2（视觉回归）、E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）；待 doc/26 二期、P7-2（视觉回归）、E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -59,7 +60,7 @@
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | **全局工程规范**      | `doc/10-Engineering-Git-Workflow.md` · `11-Engineering-CI-CD.md` · `12-Engineering-Security.md` · `13-Engineering-TypeScript.md` · `14-Engineering-ESLint-Prettier.md` · `15-Engineering-API-Contract.md` · `16-Engineering-Testing.md` · `17-Engineering-Release.md` · `18-Engineering-Monitoring.md` | 全部 v1.0 |
-| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md` | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0 |
+| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md`；改 AI 会话组件再读 `doc/26-AntDesignX-Migration.md`（antdx 渲染树 + aiComponentsV2 开关） | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0 |
 | `tests/e2e/`          | `doc/20-Engineering-E2E-Testing.md`（data-testid 约定 / Page Objects / fixtures / CI）+ `doc/24-Engineering-Testing-P7-Plan.md`（P7 联调 E2E + 变异试点计划） | v1.0 / 待开工 |
 | `core/`               | `doc/04-GeoWorkAgent.md` + `doc/09-GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/05-GeoWorkAgent-P0-Detailed-Design.md` + `06-GeoWorkAgent-P1-Detailed-Design.md` + `07-GeoWorkAgent-P2-Detailed-Design.md` + `08-GeoWorkAgent-P3-Detailed-Design.md` | 施工图           |
@@ -453,6 +454,18 @@ Level 3 — 记录（持续追加）
 ---
 
 ## 14. AI Agent 施工记录
+
+### 2026-08-17 · ZCode · AI 组件 Ant Design X 迁移一期（doc/26，一期完成）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| 开关 | （本次） | `GeoWorkSettings.aiComponentsV2`（默认 true）+ 设置页「实验特性」区 Switch；NewTaskPage 顶部快照读取，homeView/conversationView 各区块按开关分流；自研组件保留为回退路径（入口关闭 ≠ 删除） | ✅ |
+| antdx 渲染树 | （本次） | 新目录 `pages/NewTask/components/antdx/`：MessageBubbleX（Bubble + ThoughtChain，assistant contentRender 复用 MarkdownStream，thinkingSteps → ThoughtChain loading 态）/ ConversationX（Bubble.List 无内置虚拟化，自持 @tanstack/react-virtual 保住 A5 性能，审批卡片复用 ApprovalCard）/ SenderX（Sender + allowSpeech 内置语音 + prefix 附件菜单 + footer 模式/模型选择）/ WelcomeX（Welcome + Prompts 按 workMode 推荐）；useFilePickers 自 ChatComposer 抽出共享 | ✅ |
+| 数据层零改动 | （本次） | Session 对象层 / SSE 状态机 / conversationCache 不动——useSession 快照是唯一数据源，仅换渲染层；MarkdownStream/DiffViewer/ToolCallTimeline/WorkflowRunCard/ApprovalCard/SelectedContextBar/ModelPicker 全部复用 | ✅ |
+
+**决策**：@ant-design/x 2.x peerDeps antd ^6.1.1 与项目 6.5.2 兼容，共用 design token 无技术栈冲突；Bubble.List 无虚拟化故 ConversationX 自持虚拟器；@ant-design/x 匹配既有 manualChunks 的 @ant-design 模式进 vendor-antd（+284KB），仅 NewTaskPage 懒加载 chunk 引用，不进首屏。
+**验收**：tsc + vitest 110/110（新增 antdx 7 条）+ build 无 circular chunk 告警 + 边界检查 128 源文件全绿；test/setup.ts 补 ResizeObserver polyfill（jsdom 缺失）。
+**后续**：doc/26 二期（审批/工作流 X 化评估、Prompts 接真实数据、Suggestion 联想、暗色微调）。
 
 ### 2026-08-17 · ZCode · P7-1 三进程联调 E2E testbed（doc/24，P7-1 完成）
 

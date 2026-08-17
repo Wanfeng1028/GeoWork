@@ -81,3 +81,14 @@ if (typeof window !== 'undefined') {
 beforeEach(() => {
   vi.clearAllMocks()
 })
+
+// jsdom 无 ResizeObserver（antd / @ant-design/x 的 resize-observer 依赖它）
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  class ResizeObserverStub {
+    observe = vi.fn()
+    unobserve = vi.fn()
+    disconnect = vi.fn()
+  }
+  window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
+}

@@ -1,0 +1,91 @@
+/* antdx 渲染树（doc/26）：Ant Design X 版会话组件样式 */
+
+.conversationRoot {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.messageList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 24px;
+  max-width: 1060px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.messageList::-webkit-scrollbar {
+  display: none;
+}
+
+.bubbleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bubbleRowUser {
+  align-items: flex-end;
+}
+
+.bubbleRowAssistant {
+  align-items: stretch;
+}
+
+.extras {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 40px;
+}
+
+.thoughtChainWrap {
+  padding-left: 40px;
+  margin-bottom: 2px;
+}
+
+.senderWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.senderFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.senderFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.welcomeRoot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.welcomeCard {
+  max-width: 640px;
+  width: 100%;
+}
+
+.promptsWrap {
+  max-width: 720px;
+  width: 100%;
+}

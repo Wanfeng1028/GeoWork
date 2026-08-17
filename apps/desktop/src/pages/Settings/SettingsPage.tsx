@@ -137,18 +137,17 @@ export function SettingsPage() {
   }, [activeSection, navigate])
 
   /* ── 更新设置 ── */
-  const updateSetting = useCallback(<K extends keyof GeoWorkSettings>(
-    key: K,
-    value: GeoWorkSettings[K],
-    toast?: string,
-  ) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: value }
-      saveSettings(next)
-      return next
-    })
-    if (toast) message.success(toast)
-  }, [message])
+  const updateSetting = useCallback(
+    <K extends keyof GeoWorkSettings>(key: K, value: GeoWorkSettings[K], toast?: string) => {
+      setSettings((prev) => {
+        const next = { ...prev, [key]: value }
+        saveSettings(next)
+        return next
+      })
+      if (toast) message.success(toast)
+    },
+    [message],
+  )
 
   /* ── 首次进入引导分区时标记已访问，隐藏侧栏角标 ── */
   useEffect(() => {
@@ -206,7 +205,10 @@ export function SettingsPage() {
             <Select
               value={settings.language}
               onChange={(v) => updateSetting('language', v)}
-              options={[{ value: 'zh-CN', label: '中文' }, { value: 'en-US', label: 'English' }]}
+              options={[
+                { value: 'zh-CN', label: '中文' },
+                { value: 'en-US', label: 'English' },
+              ]}
               style={{ width: 120 }}
               size="small"
             />
@@ -219,7 +221,10 @@ export function SettingsPage() {
           extra={
             <Select
               value={appearance}
-              onChange={(v) => { setAppearance(v as Appearance); message.success('主题已切换') }}
+              onChange={(v) => {
+                setAppearance(v as Appearance)
+                message.success('主题已切换')
+              }}
               options={APPEARANCE_OPTIONS}
               style={{ width: 120 }}
               size="small"
@@ -401,8 +406,12 @@ export function SettingsPage() {
             {avatarEmoji}
           </Avatar>
           <div className={styles.profileInfo}>
-            <Text strong style={{ fontSize: 16 }}>GeoWork 用户</Text>
-            <Text type="secondary" style={{ fontSize: 13 }}>本地账号</Text>
+            <Text strong style={{ fontSize: 16 }}>
+              GeoWork 用户
+            </Text>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              本地账号
+            </Text>
             <Tag style={{ marginTop: 4 }}>Free</Tag>
           </div>
         </div>
@@ -434,7 +443,10 @@ export function SettingsPage() {
               className={styles.emojiItem}
               style={{
                 background: avatarEmoji === e ? token.colorPrimaryBg : 'transparent',
-                border: avatarEmoji === e ? `1px solid ${token.colorPrimaryBorder}` : '1px solid transparent',
+                border:
+                  avatarEmoji === e
+                    ? `1px solid ${token.colorPrimaryBorder}`
+                    : '1px solid transparent',
               }}
               onClick={() => setAvatarEmoji(e)}
             >
@@ -506,25 +518,51 @@ export function SettingsPage() {
         <SettingRow
           title="开机自动启动"
           description="登录电脑时自动启动 GeoWork"
-          extra={<Switch checked={settings.autoStart} onChange={(v) => updateSetting('autoStart', v, v ? '已开启开机启动' : '已关闭开机启动')} size="small" />}
+          extra={
+            <Switch
+              checked={settings.autoStart}
+              onChange={(v) =>
+                updateSetting('autoStart', v, v ? '已开启开机启动' : '已关闭开机启动')
+              }
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="保持系统唤醒"
           description="防止电脑在 Agent 工作时进入睡眠"
-          extra={<Switch checked={settings.keepAwake} onChange={(v) => updateSetting('keepAwake', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.keepAwake}
+              onChange={(v) => updateSetting('keepAwake', v)}
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="桌面通知"
           description="任务完成、失败或需要确认时提醒你"
-          extra={<Switch checked={settings.desktopNotification} onChange={(v) => updateSetting('desktopNotification', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.desktopNotification}
+              onChange={(v) => updateSetting('desktopNotification', v)}
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="声音通知"
           description="重要事件播放提示音"
-          extra={<Switch checked={settings.soundNotification} onChange={(v) => updateSetting('soundNotification', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.soundNotification}
+              onChange={(v) => updateSetting('soundNotification', v)}
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
@@ -568,7 +606,11 @@ export function SettingsPage() {
         <SettingRow
           title="网络诊断"
           description="检测 GeoWork 服务连接状态"
-          extra={<Button size="small" onClick={() => message.info('网络诊断功能后续接入')}>运行诊断</Button>}
+          extra={
+            <Button size="small" onClick={() => message.info('网络诊断功能后续接入')}>
+              运行诊断
+            </Button>
+          }
         />
       </SettingsCard>
 
@@ -599,13 +641,27 @@ export function SettingsPage() {
         <SettingRow
           title="启用语音输入"
           description="启用全局语音输入快捷键"
-          extra={<Switch checked={settings.voiceInput} onChange={(v) => updateSetting('voiceInput', v, v ? '语音输入已开启' : '语音输入已关闭')} size="small" />}
+          extra={
+            <Switch
+              checked={settings.voiceInput}
+              onChange={(v) =>
+                updateSetting('voiceInput', v, v ? '语音输入已开启' : '语音输入已关闭')
+              }
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="降噪识别"
           description="开启后会优先保留你的声音，降低周围噪声干扰"
-          extra={<Switch checked={settings.noiseReduction} onChange={(v) => updateSetting('noiseReduction', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.noiseReduction}
+              onChange={(v) => updateSetting('noiseReduction', v)}
+              size="small"
+            />
+          }
         />
         <Divider />
         <Alert
@@ -619,7 +675,8 @@ export function SettingsPage() {
 
   const renderShortcuts = () => {
     const groups = ['通用', '任务', '会话']
-    const currentShortcut = MOCK_SHORTCUTS.find((s) => s.id === selectedShortcut) ?? MOCK_SHORTCUTS[0]
+    const currentShortcut =
+      MOCK_SHORTCUTS.find((s) => s.id === selectedShortcut) ?? MOCK_SHORTCUTS[0]
 
     return (
       <SettingsSection title="快捷键" subtitle="自定义通用、任务与会话操作的快捷键。">
@@ -628,7 +685,11 @@ export function SettingsPage() {
             <div className={styles.shortcutsList}>
               {groups.map((group) => (
                 <div key={group} className={styles.shortcutGroup}>
-                  <Text type="secondary" strong style={{ fontSize: 12, padding: '4px 8px', display: 'block' }}>
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{ fontSize: 12, padding: '4px 8px', display: 'block' }}
+                  >
                     {group}
                   </Text>
                   {MOCK_SHORTCUTS.filter((s) => s.group === group).map((sc) => {
@@ -717,18 +778,35 @@ export function SettingsPage() {
   }
 
   const renderMemory = () => (
-    <SettingsSection title="记忆与上下文" subtitle="管理 GeoWork 如何保存项目上下文、任务习惯和工作偏好。">
+    <SettingsSection
+      title="记忆与上下文"
+      subtitle="管理 GeoWork 如何保存项目上下文、任务习惯和工作偏好。"
+    >
       <SettingsCard title="记忆模式">
         <SettingRow
           title="记忆模式"
           description="启用后，GeoWork 会保存常用工作区、工具偏好和任务习惯"
-          extra={<Switch checked={settings.memoryEnabled} onChange={(v) => updateSetting('memoryEnabled', v, v ? '记忆模式已开启' : '记忆模式已关闭')} size="small" />}
+          extra={
+            <Switch
+              checked={settings.memoryEnabled}
+              onChange={(v) =>
+                updateSetting('memoryEnabled', v, v ? '记忆模式已开启' : '记忆模式已关闭')
+              }
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="自动记录"
           description="自动记录项目上下文和常用流程，方便下次继续工作"
-          extra={<Switch checked={settings.autoMemory} onChange={(v) => updateSetting('autoMemory', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.autoMemory}
+              onChange={(v) => updateSetting('autoMemory', v)}
+              size="small"
+            />
+          }
         />
       </SettingsCard>
 
@@ -741,7 +819,9 @@ export function SettingsPage() {
           <Progress percent={70} showInfo={false} size="small" />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ fontSize: 13 }}>最近更新时间</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>今天</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              今天
+            </Text>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ fontSize: 13 }}>本地索引</Text>
@@ -754,28 +834,88 @@ export function SettingsPage() {
         <SettingRow
           title="存储位置"
           description="所有记忆文件的根目录：.geowork/memory"
-          extra={<Button size="small" icon={<FolderOpen />} onClick={() => message.info('打开文件夹功能后续接入')}>打开所在文件夹</Button>}
+          extra={
+            <Button
+              size="small"
+              icon={<FolderOpen />}
+              onClick={() => message.info('打开文件夹功能后续接入')}
+            >
+              打开所在文件夹
+            </Button>
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="协作风格" description="GeoWork 的沟通和执行方式，可通过个性化选择改变" extra={<Button size="small" type="text">查看</Button>} />
+        <SettingRow
+          title="协作风格"
+          description="GeoWork 的沟通和执行方式，可通过个性化选择改变"
+          extra={
+            <Button size="small" type="text">
+              查看
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="工作手册" description="GeoWork 的工作规范和行为准则" extra={<Button size="small" type="text">查看</Button>} />
+        <SettingRow
+          title="工作手册"
+          description="GeoWork 的工作规范和行为准则"
+          extra={
+            <Button size="small" type="text">
+              查看
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="用户画像" description="记录你的基本信息、偏好和习惯，由 GeoWork 自动维护" extra={<Button size="small" type="text">查看</Button>} />
+        <SettingRow
+          title="用户画像"
+          description="记录你的基本信息、偏好和习惯，由 GeoWork 自动维护"
+          extra={
+            <Button size="small" type="text">
+              查看
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="长期记忆" description="跨会话保存的重要项目和结论" extra={<Button size="small" type="text">查看</Button>} />
+        <SettingRow
+          title="长期记忆"
+          description="跨会话保存的重要项目和结论"
+          extra={
+            <Button size="small" type="text">
+              查看
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="短期记忆" description="本次对话中的上下文摘要" extra={<Button size="small" type="text">查看</Button>} />
+        <SettingRow
+          title="短期记忆"
+          description="本次对话中的上下文摘要"
+          extra={
+            <Button size="small" type="text">
+              查看
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="索引" description="为本地文档建立检索索引" extra={<Button size="small" icon={<Search />}>重建搜索索引</Button>} />
+        <SettingRow
+          title="索引"
+          description="为本地文档建立检索索引"
+          extra={
+            <Button size="small" icon={<Search />}>
+              重建搜索索引
+            </Button>
+          }
+        />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="备份与恢复"
           description="导出或导入记忆数据"
           extra={
             <Space size={4}>
-              <Button size="small" icon={<Upload />}>导出</Button>
-              <Button size="small" icon={<Download />}>导入</Button>
+              <Button size="small" icon={<Upload />}>
+                导出
+              </Button>
+              <Button size="small" icon={<Download />}>
+                导入
+              </Button>
             </Space>
           }
         />
@@ -789,11 +929,13 @@ export function SettingsPage() {
             <Button
               danger
               size="small"
-              onClick={() => modal.confirm({
-                title: '确认重置协作风格？',
-                content: '此操作不可撤销。',
-                onOk: () => message.success('协作风格已重置'),
-              })}
+              onClick={() =>
+                modal.confirm({
+                  title: '确认重置协作风格？',
+                  content: '此操作不可撤销。',
+                  onOk: () => message.success('协作风格已重置'),
+                })
+              }
             >
               重置协作风格
             </Button>
@@ -807,11 +949,13 @@ export function SettingsPage() {
             <Button
               danger
               size="small"
-              onClick={() => modal.confirm({
-                title: '确认重置工作手册？',
-                content: '此操作不可撤销。',
-                onOk: () => message.success('工作手册已重置'),
-              })}
+              onClick={() =>
+                modal.confirm({
+                  title: '确认重置工作手册？',
+                  content: '此操作不可撤销。',
+                  onOk: () => message.success('工作手册已重置'),
+                })
+              }
             >
               重置工作手册
             </Button>
@@ -825,12 +969,14 @@ export function SettingsPage() {
             <Button
               danger
               size="small"
-              onClick={() => modal.confirm({
-                title: '确认清空所有记忆？',
-                content: '此操作不可撤销，所有记忆数据将被永久删除。',
-                okButtonProps: { danger: true },
-                onOk: () => message.success('记忆已清空'),
-              })}
+              onClick={() =>
+                modal.confirm({
+                  title: '确认清空所有记忆？',
+                  content: '此操作不可撤销，所有记忆数据将被永久删除。',
+                  okButtonProps: { danger: true },
+                  onOk: () => message.success('记忆已清空'),
+                })
+              }
             >
               清空记忆
             </Button>
@@ -841,11 +987,16 @@ export function SettingsPage() {
   )
 
   const renderUpdate = () => (
-    <SettingsSection title="更新应用" subtitle="检查并获取 GeoWork 新版本，与菜单栏中的检查更新一致。">
+    <SettingsSection
+      title="更新应用"
+      subtitle="检查并获取 GeoWork 新版本，与菜单栏中的检查更新一致。"
+    >
       <SettingsCard title="当前版本">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <Text strong style={{ fontSize: 20 }}>0.6.6</Text>
+            <Text strong style={{ fontSize: 20 }}>
+              0.6.6
+            </Text>
             <br />
             <Text type="secondary" style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
               有新版本时会自动提示下载与安装；当前为前端模拟更新流程。
@@ -870,12 +1021,17 @@ export function SettingsPage() {
             danger
             size="small"
             disabled={archivedTasks.length === 0}
-            onClick={() => modal.confirm({
-              title: '确认全部删除？',
-              content: '删除后无法恢复。',
-              okButtonProps: { danger: true },
-              onOk: () => { setArchivedTasks([]); message.success('已清空归档') },
-            })}
+            onClick={() =>
+              modal.confirm({
+                title: '确认全部删除？',
+                content: '删除后无法恢复。',
+                okButtonProps: { danger: true },
+                onOk: () => {
+                  setArchivedTasks([])
+                  message.success('已清空归档')
+                },
+              })
+            }
           >
             全部删除
           </Button>
@@ -888,7 +1044,9 @@ export function SettingsPage() {
             <div key={task.id} className={styles.archivedItem}>
               <div className={styles.archivedItemInfo}>
                 <Text style={{ fontSize: 13 }}>{task.title}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>{task.archivedAt}</Text>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {task.archivedAt}
+                </Text>
               </div>
               <div className={styles.archivedItemActions}>
                 <Button
@@ -907,14 +1065,16 @@ export function SettingsPage() {
                   size="small"
                   danger
                   icon={<Trash2 />}
-                  onClick={() => modal.confirm({
-                    title: '确认删除此归档？',
-                    content: task.title,
-                    onOk: () => {
-                      setArchivedTasks((prev) => prev.filter((t) => t.id !== task.id))
-                      message.success('已删除')
-                    },
-                  })}
+                  onClick={() =>
+                    modal.confirm({
+                      title: '确认删除此归档？',
+                      content: task.title,
+                      onOk: () => {
+                        setArchivedTasks((prev) => prev.filter((t) => t.id !== task.id))
+                        message.success('已删除')
+                      },
+                    })
+                  }
                 >
                   删除
                 </Button>
@@ -929,13 +1089,29 @@ export function SettingsPage() {
   const renderWorkspace = () => (
     <SettingsSection title="工作台" subtitle="配置工作模式与 GeoWork 创作模板。">
       <SettingsCard title="工作模式">
-        <SettingRow title="通用" description="与 AI 助手对话" extra={<Switch defaultChecked size="small" />} />
+        <SettingRow
+          title="通用"
+          description="与 AI 助手对话"
+          extra={<Switch defaultChecked size="small" />}
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="空间分析" description="使用 GIS 工具进行空间分析" extra={<Switch defaultChecked={false} size="small" />} />
+        <SettingRow
+          title="空间分析"
+          description="使用 GIS 工具进行空间分析"
+          extra={<Switch defaultChecked={false} size="small" />}
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="遥感解译" description="使用遥感模型进行影像解译" extra={<Switch defaultChecked={false} size="small" />} />
+        <SettingRow
+          title="遥感解译"
+          description="使用遥感模型进行影像解译"
+          extra={<Switch defaultChecked={false} size="small" />}
+        />
         <Divider style={{ margin: '4px 0' }} />
-        <SettingRow title="专题制图" description="生成地图说明、图例和制图方案" extra={<Switch defaultChecked={false} size="small" />} />
+        <SettingRow
+          title="专题制图"
+          description="生成地图说明、图例和制图方案"
+          extra={<Switch defaultChecked={false} size="small" />}
+        />
       </SettingsCard>
 
       <SettingsCard title="工作台模板">
@@ -943,7 +1119,11 @@ export function SettingsPage() {
           <Text type="secondary" style={{ fontSize: 13 }}>
             共 {MOCK_WORKSPACE_TEMPLATES.length} 个模板
           </Text>
-          <Button size="small" icon={<Download />} onClick={() => message.info('导入工作台模板功能后续接入')}>
+          <Button
+            size="small"
+            icon={<Download />}
+            onClick={() => message.info('导入工作台模板功能后续接入')}
+          >
             导入
           </Button>
         </div>
@@ -962,7 +1142,15 @@ export function SettingsPage() {
         <SettingRow
           title="启用安全工作环境"
           description="任务会在隔离的工作环境中运行，不影响原始文件"
-          extra={<Switch checked={settings.safeWorkspace} onChange={(v) => updateSetting('safeWorkspace', v, v ? '安全工作环境已开启' : '安全工作环境已关闭')} size="small" />}
+          extra={
+            <Switch
+              checked={settings.safeWorkspace}
+              onChange={(v) =>
+                updateSetting('safeWorkspace', v, v ? '安全工作环境已开启' : '安全工作环境已关闭')
+              }
+              size="small"
+            />
+          }
         />
         <Divider />
         <SettingRow
@@ -972,11 +1160,13 @@ export function SettingsPage() {
             <Button
               danger
               size="small"
-              onClick={() => modal.confirm({
-                title: '确认清理工作环境文件？',
-                content: '将清理缓存、临时文件和过期的工作目录。',
-                onOk: () => message.success('已清理前端模拟工作环境文件'),
-              })}
+              onClick={() =>
+                modal.confirm({
+                  title: '确认清理工作环境文件？',
+                  content: '将清理缓存、临时文件和过期的工作目录。',
+                  onOk: () => message.success('已清理前端模拟工作环境文件'),
+                })
+              }
             >
               清理文件
             </Button>
@@ -990,27 +1180,73 @@ export function SettingsPage() {
     <SettingsSection title="实验特性" subtitle="抢先体验新功能，部分功能仍在打磨中。">
       <SettingsCard>
         <SettingRow
+          title="AI 组件 V2（Ant Design X）"
+          description="对话页使用 Ant Design X 组件渲染（气泡/输入框/思维链）；关闭则回退自研组件。切换后需重新进入对话页生效"
+          extra={
+            <Switch
+              checked={settings.aiComponentsV2}
+              onChange={(v) =>
+                updateSetting(
+                  'aiComponentsV2',
+                  v,
+                  v ? 'AI 组件 V2 已开启' : 'AI 组件 V2 已关闭，回退自研组件',
+                )
+              }
+              size="small"
+            />
+          }
+        />
+        <Divider style={{ margin: '4px 0' }} />
+        <SettingRow
           title="生成式 UI"
           description="允许 AI 在聊天中生成交互式 HTML 组件、图表、仪表盘或表单"
-          extra={<Switch checked={settings.generativeUi} onChange={(v) => updateSetting('generativeUi', v, v ? '生成式 UI 已开启' : '生成式 UI 已关闭')} size="small" />}
+          extra={
+            <Switch
+              checked={settings.generativeUi}
+              onChange={(v) =>
+                updateSetting('generativeUi', v, v ? '生成式 UI 已开启' : '生成式 UI 已关闭')
+              }
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="弹出式工作台"
           description="将任务弹出为独立窗口运行"
-          extra={<Switch checked={settings.floatingWorkspace} onChange={(v) => updateSetting('floatingWorkspace', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.floatingWorkspace}
+              onChange={(v) => updateSetting('floatingWorkspace', v)}
+              size="small"
+            />
+          }
         />
         <Divider style={{ margin: '4px 0' }} />
         <SettingRow
           title="浏览器上下文能力"
           description="在聊天输入框中选择已打开的浏览器标签页，让 AI 基于当前网页继续工作"
-          extra={<Switch checked={settings.browserContext} onChange={(v) => updateSetting('browserContext', v)} size="small" />}
+          extra={
+            <Switch
+              checked={settings.browserContext}
+              onChange={(v) => updateSetting('browserContext', v)}
+              size="small"
+            />
+          }
         />
         <Divider />
         <SettingRow
           title="修复历史消息显示"
           description="如果历史对话显示异常，可尝试修复显示问题"
-          extra={<Button size="small" icon={<RotateCw />} onClick={() => message.info('历史消息检测功能后续接入')}>重新检测</Button>}
+          extra={
+            <Button
+              size="small"
+              icon={<RotateCw />}
+              onClick={() => message.info('历史消息检测功能后续接入')}
+            >
+              重新检测
+            </Button>
+          }
         />
       </SettingsCard>
     </SettingsSection>
@@ -1026,7 +1262,9 @@ export function SettingsPage() {
         <div className={styles.guideBody}>
           <Space size={8}>
             <FlaskConical style={{ color: token.colorPrimary, fontSize: 18 }} />
-            <Text strong style={{ fontSize: 15 }}>空间分析工作流</Text>
+            <Text strong style={{ fontSize: 15 }}>
+              空间分析工作流
+            </Text>
           </Space>
 
           <Title level={5} style={{ margin: 0, color: token.colorText }}>
@@ -1093,9 +1331,7 @@ export function SettingsPage() {
       />
 
       <div className={styles.content}>
-        <div className={styles.contentInner}>
-          {sectionMap[activeSection]?.()}
-        </div>
+        <div className={styles.contentInner}>{sectionMap[activeSection]?.()}</div>
       </div>
 
       {/* ── 更新 Modal ── */}
@@ -1109,7 +1345,10 @@ export function SettingsPage() {
       {updateMinimized && updateActive && (
         <UpdateFloatWidget
           progress={updateProgress}
-          onViewProgress={() => { setUpdateModalOpen(true); setUpdateMinimized(false) }}
+          onViewProgress={() => {
+            setUpdateModalOpen(true)
+            setUpdateMinimized(false)
+          }}
         />
       )}
     </div>

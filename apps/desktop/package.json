@@ -19,6 +19,7 @@
     "dist:win": "electron-builder --win nsis --x64"
   },
   "dependencies": {
+    "@ant-design/x": "^2.9.0",
     "@git-diff-view/react": "^0.1.7",
     "@tanstack/react-virtual": "^3.14.9",
     "@xterm/addon-fit": "^0.10.0",
