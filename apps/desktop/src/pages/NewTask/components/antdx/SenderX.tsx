@@ -1,5 +1,5 @@
-import { forwardRef, useMemo, useState } from 'react'
-import { App, Button, Dropdown, Input, Space, Tag, Tooltip } from 'antd'
+import { useMemo, useState } from 'react'
+import { App, Button, Dropdown, Space, Tag, Tooltip } from 'antd'
 import { Sender, Suggestion } from '@ant-design/x'
 import type { SuggestionItem } from '@ant-design/x/es/suggestion'
 import {
