@@ -18,6 +18,10 @@
 
 ## [Unreleased]
 
+### Fixed — E2E smoke 适配 antdx 默认输入区：testid 漂移修复（doc/20，2026-08-17 · ZCode）
+- **根因**：doc/26 迁移后 `aiComponentsV2` 默认 true，`/new-task` 渲染 SenderX（testid `sender-x`），smoke 仍断言旧 `chat-composer` 锚点，e2e-smoke / e2e-smoke-windows 自 R1 起持续红
+- **修复**：新增 `tests/e2e/pages/sender-x.page.ts`（根锚点 `sender-x` + antd-x Sender 内部稳定 class 锚点 `textarea.ant-sender-input` / `.ant-sender-actions-list button.ant-btn-primary`），desktop-smoke 与 task-flow 两个 spec 切换；doc/20 §2.2 锚点表补 sender-x 条目、§2.3 补充第三方库 class 锚点例外规则
+
 ### Added — AI 组件 Ant Design X 迁移二期：Prompts 接真实数据 + Suggestion 输入联想（doc/26 收官，2026-08-17 · ZCode）
 - **Prompts 真实数据**：新增 `antdx/promptData.ts` 共享数据层（与 ContextPickerModal 同一 skillsStorage/expertStorage 数据源）；WelcomeX 推荐区从写死文案改为已安装+启用技能（点击填入「使用技能「X」：」引导语），无技能时回退 GIS 场景文案
 - **Suggestion 输入联想**：SenderX 用 antd-x `Suggestion` 包裹 `Sender`——输入 `/` 弹出已安装技能与专家快捷命令（`/缓冲区分析` 等），方向键导航、Enter 选中填入输入框（Sender onKeyDown 返回 false 阻断提交）

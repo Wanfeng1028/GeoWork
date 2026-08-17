@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AppShellPage } from './pages/app-shell.page'
-import { ChatComposerPage } from './pages/chat-composer.page'
+import { SenderXPage } from './pages/sender-x.page'
 
 /**
  * 桌面冒烟测试 — CI PR 门禁子集（@smoke）。
@@ -28,7 +28,7 @@ test.describe('Desktop Smoke Tests @smoke', () => {
   test('composer input is visible on new task page', async ({ page }) => {
     const shell = new AppShellPage(page)
     await shell.goto('/new-task')
-    const composer = new ChatComposerPage(page)
+    const composer = new SenderXPage(page)
     await composer.expectVisible()
     await expect(composer.input).toBeVisible()
   })
@@ -36,7 +36,7 @@ test.describe('Desktop Smoke Tests @smoke', () => {
   test('composer send button is disabled until text is entered', async ({ page }) => {
     const shell = new AppShellPage(page)
     await shell.goto('/new-task')
-    const composer = new ChatComposerPage(page)
+    const composer = new SenderXPage(page)
     await composer.expectVisible()
 
     await expect(composer.sendButton).toBeDisabled()

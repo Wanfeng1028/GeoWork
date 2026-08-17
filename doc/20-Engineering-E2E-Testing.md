@@ -33,18 +33,24 @@ E2E 套件位于仓库根 `tests/e2e/`（独立 npm 包 `@geowork/e2e`），**�
 | `main-workspace` | `shell/AppShell.tsx` main | 主工作区 |
 | `right-workspace-panel` | `shell/RightWorkspacePanel.tsx` | 右侧工作台（展开态） |
 | `right-workspace-expand` | `shell/RightWorkspacePanel.tsx` | 浏览器模式收起态的展开按钮 |
-| `chat-composer` | `pages/NewTask/components/ChatComposer.tsx` 根 | 输入区容器 |
+| `chat-composer` | `pages/NewTask/components/ChatComposer.tsx` 根 | 输入区容器（`aiComponentsV2=false` 时渲染） |
 | `chat-composer-input` | 同上 TextArea | 输入框 |
 | `chat-composer-mode` | 同上 | 模式切换按钮 |
 | `mode-option-<key>` | 同上下拉项 | key ∈ general/spatial/cartography/paper/query/remote-sensing |
 | `chat-composer-send` / `chat-composer-stop` | 同上 | 发送/停止按钮（流式时互斥） |
+| `sender-x` | `pages/NewTask/components/antdx/SenderX.tsx` 根 | antdx 输入区容器（doc/26，`aiComponentsV2` 默认 true 时渲染） |
+
+> SenderX 的输入框 / 发送按钮位于 antd-x `Sender` 组件内部，库不暴露 testid，
+> 测试侧用其稳定 class 锚点：`textarea.ant-sender-input`（输入框）、
+> `.ant-sender-actions-list button.ant-btn-primary`（发送按钮，操作区唯一的 primary 圆钮）。
+> 见 `tests/e2e/pages/sender-x.page.ts`。
 
 ### 2.3 选择器优先级
 
 1. `page.getByTestId('...')` —— 首选。
 2. `page.getByRole(...)` —— testid 不适用时（如语义化断言）。
 3. 文本选择器 `getByText` —— 仅限稳定文案。
-4. **禁止** `[class*="..."]` 模糊 class 选择器与硬编码 CSS module 类名（CSS module 类名带 hash，重构即碎）。
+4. **禁止** `[class*="..."]` 模糊 class 选择器与硬编码 CSS module 类名（CSS module 类名带 hash，重构即碎）。例外：第三方组件库（antd / antd-x）的稳定 class 前缀（如 `ant-sender-input`）在库不暴露 testid 时可用，须精确匹配、限定在自有 testid 根节点内。
 5. **禁止** `waitForTimeout` 做同步等待，用 `expect(...).toBeVisible()` / `waitFor` 的自动等待。
 
 ## 3. Page Objects

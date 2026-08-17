@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AppShellPage } from './pages/app-shell.page'
-import { ChatComposerPage } from './pages/chat-composer.page'
+import { SenderXPage } from './pages/sender-x.page'
 
 /**
  * 任务流程 E2E 测试
@@ -24,7 +24,7 @@ test.describe('Task Flow Tests', () => {
     await shell.goto('/new-task')
 
     // Composer 是新建任务的入口，必须存在且可见。
-    const composer = new ChatComposerPage(page)
+    const composer = new SenderXPage(page)
     await composer.expectVisible()
     await expect(composer.input).toBeVisible()
   })
