@@ -120,6 +120,39 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), string, error) 
 		}
 	}
 
+	// killAll releases the whole tree: group kill (Unix) and/or job close
+	// (Windows). Shared by Cancel and cleanup so both kill identically and
+	// stay idempotent (captureTreeID/killTree are nil/ESRCH-safe, job.Close
+	// guards its handle). It reads cmd.Process only at call time, so it is
+	// safe to define before Start.
+	killAll := func() {
+		killTree(captureTreeID(cmd))
+		if job != nil {
+			_ = job.Close()
+		}
+	}
+
+	// Kill the entire process tree when the context is canceled — not just
+	// the direct child, which is exec.CommandContext's default. Grandchildren
+	// inherit the stdout/stderr pipe write-ends and keep them open, so
+	// cmd.Wait() (which waits for pipe EOF) would block until they exit on
+	// their own — defeating the timeout and hanging the Service path's HTTP
+	// handler. Killing the group / closing the job releases the pipes at
+	// once. The trailing direct Kill is a backstop for the degraded Windows
+	// path (no job object) so Cancel is never weaker than exec's default.
+	//
+	// MUST be set before Start: exec launches its watchCtx goroutine inside
+	// Start and it reads cmd.Cancel as of that moment. The closure captures
+	// only `job` (written once, before Start) and reads cmd.Process at call
+	// time (set by Start before watchCtx launches), so there is no race.
+	cmd.Cancel = func() error {
+		killAll()
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		return nil
+	}
+
 	if err := cmd.Start(); err != nil {
 		if token != nil {
 			_ = token.Close()
@@ -137,11 +170,14 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), string, error) 
 
 	if job != nil {
 		if err := job.Assign(cmd.Process); err != nil {
+			// Degraded: the process is not in the job, so closing it won't
+			// kill the tree — Cancel's direct Kill backstop covers the direct
+			// child. Keep `job` non-nil (never reassigned after Start, so the
+			// Cancel closure sees a stable value) so cleanup still closes the
+			// handle and we don't leak it.
 			log.Warn("sandbox: failed to assign process to job object, tree-kill degraded",
 				zap.Int("pid", cmd.Process.Pid),
 				zap.Error(err))
-			_ = job.Close()
-			job = nil
 			if note != "" {
 				note += "; "
 			}
@@ -149,15 +185,8 @@ func Spawn(cfg SpawnConfig, log *zap.Logger) (*exec.Cmd, func(), string, error) 
 		}
 	}
 
-	// Unix: capture the process-group ID now (Setpgid makes the child a
-	// group leader, PGID == PID). Windows: no-op, the job owns the kill.
-	treeID := captureTreeID(cmd)
-
 	cleanup := func() {
-		killTree(treeID)
-		if job != nil {
-			_ = job.Close()
-		}
+		killAll()
 	}
 	return cmd, cleanup, note, nil
 }
