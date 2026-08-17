@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { App, Button, Dropdown, Space, Tag, Tooltip } from 'antd'
+import { forwardRef, useMemo, useState } from 'react'
+import { App, Button, Dropdown, Input, Space, Tag, Tooltip } from 'antd'
 import { Sender, Suggestion } from '@ant-design/x'
 import type { SuggestionItem } from '@ant-design/x/es/suggestion'
 import {
@@ -199,6 +199,7 @@ export function SenderX({
                 // 联想面板打开时拦截 Enter（选中项），阻断 Sender 提交
                 if (e.key === 'Enter') return false
               }
+              return undefined
             }}
             onSubmit={() => onSend()}
             onCancel={onStop}

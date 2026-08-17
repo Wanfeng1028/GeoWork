@@ -25,7 +25,7 @@ interface LazyRoute {
 }
 
 describe('routes 懒加载（A5，doc/23）', () => {
-  const children = (router as unknown as { children: LazyRoute[] })[0].children
+  const children = (router as unknown as { children: LazyRoute[] }[])[0].children
 
   it('所有页面路由均声明 lazy（无静态页面导入回潮）', () => {
     expect(children.length).toBeGreaterThan(0)

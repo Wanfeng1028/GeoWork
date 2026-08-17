@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { App } from 'antd'
-import type { ConversationMessage } from '../../../../shared/session/types'
+import type { ConversationMessage } from '../../../../../shared/session/types'
 import { MessageBubbleX } from '../MessageBubbleX'
 import { ConversationX } from '../ConversationX'
 import { SenderX } from '../SenderX'
