@@ -1,9 +1,6 @@
 # Dependencies
 node_modules/
 
-# Tool-local session state (ZCode plans 等会话级草稿，正式内容落档 doc/）
-.zcode/
-
 # Build output
 dist/
 out/
