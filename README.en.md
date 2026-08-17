@@ -1,5 +1,5 @@
 <!-- language: en -->
-<!-- license: PolyForm NC 1.0.0 -->
+<!-- license: MIT -->
 
 <p align="center">
   <img src="./assets/GeoWork_Logo_Kit_v1.0/01_Master_SVG/geowork-marketing-orbit-horizontal.svg" width="700" alt="GeoWork - Spatial Intelligence Core" />
@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/macOS-arm64-blue?style=flat-square&logo=apple&logoColor=white" alt="macOS arm64">
   <img src="https://img.shields.io/badge/Windows-x64-blue?style=flat-square&logo=windows&logoColor=white" alt="Windows x64">
-  <img src="https://img.shields.io/badge/license-PolyForm--NC--1.0.0-yellow?style=flat-square" alt="PolyForm Noncommercial License">
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License">
 </p>
 
 ---
@@ -125,9 +125,9 @@ Submission flow:
 
 ## License
 
-GeoWork is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE).
+GeoWork is currently released under the [MIT License](LICENSE).
 
-- ✅ **Allowed**: Non-commercial evaluation, learning, research, and personal use
-- ❌ **Requires Commercial License**: Commercial use, resale, hosted service operation, paid plugin distribution, enterprise deployment, or embedding into commercial products
+> [!NOTE]
+> MIT is a temporary license for the development preview stage. At official release, the project will switch back to the GeoWork Community License (PolyForm Noncommercial 1.0.0), which is preserved at [licenses/LICENSE-COMMUNITY](licenses/LICENSE-COMMUNITY). Commercial licensing details: [licenses/COMMERCIAL-LICENSE.md](licenses/COMMERCIAL-LICENSE.md).
 
-See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
+See [LICENSE](LICENSE) and [licenses/NOTICE](licenses/NOTICE) for details.

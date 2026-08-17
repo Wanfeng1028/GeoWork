@@ -35,7 +35,7 @@
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
 | 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）+ 二期收官（Prompts 接真实技能/专家数据 + Suggestion `/` 输入联想 + 虚拟滚动调优，审批卡/工作流卡/侧栏评估保留自研）；待 P7-2（视觉回归）、E2（可观测性） |
-| 许可     | PolyForm Noncommercial License 1.0.0                         |
+| 许可     | MIT（开发预览阶段临时许可；正式发布切回 GeoWork Community License / PolyForm Noncommercial 1.0.0，文本保留于 licenses/LICENSE-COMMUNITY） |
 
 ---
 

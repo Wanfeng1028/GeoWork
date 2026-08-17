@@ -18,6 +18,11 @@
 
 ## [Unreleased]
 
+### Changed — 许可临时切换为 MIT（2026-08-17 · ZCode）
+- **根 LICENSE 换为 MIT License**（Copyright (c) 2026 Wanfeng1028），开发预览阶段临时采用
+- **原 GeoWork Community License（PolyForm Noncommercial 1.0.0）未删除**：`LICENSE` 移入 `licenses/LICENSE-COMMUNITY` 保留，正式发布时切回
+- README.md / README.en.md 许可章节与徽章同步更新，并注明临时切换安排；AGENT.md 许可行同步
+
 ### Added — Windows 沙箱 W3：MaxMemoryMB 真实强制 + NetworkAccess 删除 + 诚实清单更新（doc/25 收官，2026-08-17 · ZCode）
 - **MaxMemoryMB 真实强制**：`SandboxPolicy.MaxMemoryMB` 从死字段变为 Job Object 每进程提交上限的真实来源（policy → Spawn → jobobject.New）；新增 Service 级钉桩测试（256MB 上限拦截 512MB 分配，Windows）。builtin tools 的硬编码 512MB 改为 `GEOWORK_SANDBOX_MEM_MB` 环境变量可覆盖（与 LOW_INTEGRITY 开关同模式）
 - **NetworkAccess 字段删除**：Job Object 不管网络，保留该字段是说谎的旋钮——删除而非假装。`network_policy.go` 的 NetworkValidator 保留（上层校验器，非子进程强制），SandboxPolicy 注释说明二者关系
