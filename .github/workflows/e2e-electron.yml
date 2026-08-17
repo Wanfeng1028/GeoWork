@@ -50,8 +50,18 @@ jobs:
           python-version: '3.11'
 
       # --- 构建 Electron app（main + preload + renderer 产物） ---
+      # --ignore-scripts：跳过根 prepare 的 husky（CI 从 apps/desktop 子目录安装时
+      #   husky 二进制尚未链接进 PATH，直接跑会 `husky: not found` exit 127；
+      #   与 pr-check frontend-check 同一规避方式）。linux 原生构建二进制
+      #   （esbuild/rollup/oxlint）已在 apps/desktop optionalDependencies 钉住，
+      #   跳过 scripts 不影响 electron-vite build。
+      # 随后显式跑 electron 的 install.js——这是唯一真正依赖 postinstall 下载
+      #   二进制的包，_electron.launch() 需要它。
       - name: Install desktop dependencies
-        run: cd apps/desktop && npm install
+        run: cd apps/desktop && npm install --ignore-scripts
+      - name: Download Electron binary
+        # workspace 把 electron 提升到根 node_modules，install.js 从仓库根跑
+        run: node node_modules/electron/install.js
       - name: Build Electron app (electron-vite)
         run: cd apps/desktop && npm run build
 
