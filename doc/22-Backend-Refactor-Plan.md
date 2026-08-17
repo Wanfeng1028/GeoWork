@@ -271,7 +271,7 @@ BP1(1.5d 装配止血) → BP2(1d 审批) → BP3(0.5d token) → BP4(1.5d 安�
 
 ## 6. 明确不做（本轮）
 
-- Windows 内存/网络级沙箱隔离（Job Object / 容器）——D-B3-B 独立立项 → **doc/25 W1-W3 落地中**（Job Object + 低完整性令牌路线，WFP/Docker 明确不做）
+- Windows 内存/网络级沙箱隔离（Job Object / 容器）——D-B3-B 独立立项 → **doc/25 W1-W3 已完成**（Job Object 进程树终止 + 内存上限真实强制 + 低完整性令牌 best-effort；WFP/Docker 明确不做，网络隔离诚实标注未强制）
 - Router 多模型智能路由产品化——D-B4 延后 v0.6 → **doc/25 R1-R3 已完成**（ctx 显式 mode、流式成本、预算、MaxRetries、CachedGateway 默认关）
 - server/ 云端模块（rbac/billing/sync 已有真实 SQLite 底子，无致命项，待桌面端稳定后专项审查）→ **doc/25 S1-S3 已完成**（安全/数据完整性/诚实化三阶段）
 - `Scheduler.Stop` 二次 panic（7bc7eae 已修 ratelimit 同款；scheduler 侧 BP5 顺带 `sync.Once` 化，若未涉及则列入遗留清单）

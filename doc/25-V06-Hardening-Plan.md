@@ -3,7 +3,7 @@
 > **文档路径**：`doc/25-V06-Hardening-Plan.md`
 > **关联文档**：`doc/22-Backend-Refactor-Plan.md`（§6 三项延后项的去向落地）/ `doc/09-GeoWork-Communication-Protocol.md` / `doc/12-Engineering-Security.md`
 > **适用对象**：core / server 贡献者（含 AI 编程助手）
-> **状态**：**已批准，执行中**（2026-08-17 用户确认：Job Object + 受限令牌路线；顺序 server → Router/Cache → 沙箱）
+> **状态**：**已完成**（2026-08-17 全部 9 阶段落地：S1-S3 server 审查、R1-R3 Router/Cache 产品化、W1-W3 Windows 沙箱隔离；执行记录见 §8）
 > **审查依据**：2026-08-17 三域全量探索（modelgateway router/cache、sandbox/toolregistry 子进程执行、server/ 全模块）
 
 ---
@@ -214,4 +214,4 @@ S1(0.5d 安全) → S2(0.5d 数据) → S3(0.5d 诚实化)
 | R3 CachedGateway+cache 修复 | cbed0f7 | 无；缓存参数取 TTL 15min/256 条（计划未定具体值，桌面摘要场景够用）；doc/22 D-B4 与 §6 同步更新为已完成 |
 | W1 Job Object+统一 spawn | fe0dc8f | 无；x/sys 从 indirect 升为 direct（v0.42.0 已含 Job Object API）。builtin tools 内存上限取 512MB 与 Service 默认策略一致；job assign 用 OpenProcess（os.Process.Handle 未导出）。Start→Assign 之间存在窄窗口（孙进程可能逃逸），与 Docker 同款方案，接受 |
 | W2 低完整性令牌 | dfb78ee | 偏差 1：计划"令牌创建失败→审计事件标注隔离未生效"落地为 `AuditEntry.IsolationNote` + `SandboxProcess.IsolationNote` 双通道（Service 走 API 字段，builtin tools 走保留 key 提取），比计划更完整。偏差 2：LowIntegrity 默认 OFF（计划未定默认值）——Low IL 子进程写不了 Medium IL workspace，默认开会破坏 agent 产出文件，故双开关默认关、文档注明启用条件。偏差 3：令牌失败降级路径无法可移植强制，未写专门测试（正向路径 whoami 断言覆盖），靠代码审查。事故：首版对 x/sys StringToSid 返回的 Go 堆副本误调 LocalFree → STATUS_HEAP_CORRUPTION 崩溃，已修并注释警示 |
-| W3 策略贯通+诚实清单 | （本次） | 偏差 1：计划"MaxMemoryMB 从死字段变为真实来源"——W1 时 Service 路径已接通（policy→Spawn→jobobject），本阶段补 Service 级钉桩测试（256MB 上限拦截 512MB 分配）证明链路，并把 builtin tools 的硬编码 512MB 改为 `GEOWORK_SANDBOX_MEM_MB` 环境变量可覆盖（与 LOW_INTEGRITY 开关同模式）。偏差 2：NetworkAccess 字段删除后，`network_policy.go` 的 NetworkValidator 保留（它是上层校验器，非子进程强制），在 SandboxPolicy 注释中说明二者关系，避免误删。诚实清单落点：SandboxPolicy 结构体注释 + spawn.go 头注释 + Python runner docstring 三处同步 |
+| W3 策略贯通+诚实清单 | 931b090 | 偏差 1：计划"MaxMemoryMB 从死字段变为真实来源"——W1 时 Service 路径已接通（policy→Spawn→jobobject），本阶段补 Service 级钉桩测试（256MB 上限拦截 512MB 分配）证明链路，并把 builtin tools 的硬编码 512MB 改为 `GEOWORK_SANDBOX_MEM_MB` 环境变量可覆盖（与 LOW_INTEGRITY 开关同模式）。偏差 2：NetworkAccess 字段删除后，`network_policy.go` 的 NetworkValidator 保留（它是上层校验器，非子进程强制），在 SandboxPolicy 注释中说明二者关系，避免误删。诚实清单落点：SandboxPolicy 结构体注释 + spawn.go 头注释 + Python runner docstring 三处同步 |
