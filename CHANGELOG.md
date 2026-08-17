@@ -18,6 +18,15 @@
 
 ## [Unreleased]
 
+### Added — P7-1 三进程联调 E2E testbed：Electron 壳 + core + worker + server 真实进程联调（doc/24，2026-08-17 · ZCode）
+- **testbed fixture**：`tests/e2e/fixtures/processes.fixture.ts`（worker 级）预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts` 用 `_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径
+- **11 个 `@integration` 用例**（`projects/electron/`）：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝）
+- **独立配置 + CI**：`playwright.electron.config.ts`（workers:1，无 webServer）；`.github/workflows/e2e-electron.yml` nightly + workflow_dispatch + paths 过滤（不进每次 push 门禁），build Electron → 预构建 Go 二进制 → worker 轻量子集 → xvfb-run 联调 E2E → 上传 report + testbed 日志
+
+### Fixed — P7-1 生产装配修复：tray 防御 + core worker 端口附着（2026-08-17 · ZCode）
+- **`electron/local/tray.ts` initTray 加防御**：图标缺失（打包路径差异）或无系统托盘（headless CI / 部分 Linux 桌面）时返回 null 不抛错——原实现 `new Tray()` 抛错会中断 `createWindow()`，导致其后 `runtime:status`/`runtime:token`/`runtime:health` 三个关键 IPC handler 全部跳过注册
+- **`core/cmd/geowork-runtime/main.go` worker 自启前检测 8766 端口占用**（镜像 runtime.ts 的 isPortInUse）：外部预启 worker（P7-1 testbed 或运维进程）则附着而非重复 spawn 一个 bind 失败的僵尸进程
+
 ### Changed — A5 性能：路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动（doc/23 收官，2026-08-17 · ZCode）
 - **路由级代码分割**：`routes.tsx` 14 个页面全部改 react-router `lazy` 路由（AppShell 壳保持静态导入）——此前所有页面静态打进单一 5.0MB 主 chunk；现在每个页面独立 chunk 按需加载
 - **vendor 拆分**：`electron.vite.config.ts` manualChunks 拆 vendor-react（759KB）/ vendor-antd（2.6MB）独立缓存 chunk，依赖不升级时哈希不变可长期缓存；不设兜底 vendor chunk，页面专属依赖（如 xterm）留在各自懒加载 chunk。首屏从 5.0MB 单 chunk 降为 3 个可缓存 chunk

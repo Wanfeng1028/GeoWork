@@ -1,14 +1,15 @@
 # GeoWork E2E 测试工程规范
 
-> 版本 v1.0 · 2026-08-16 · 适用范围：`tests/e2e/`（Playwright）与 `apps/desktop/src`（data-testid 锚点）
+> 版本 v1.1 · 2026-08-17 · 适用范围：`tests/e2e/`（Playwright）与 `apps/desktop/src`（data-testid 锚点）
+>
+> v1.1 变更：P7-1 落地三进程联调 E2E（§1 更新 + 新增 §7 Electron 联调拓扑）。
 
 ## 1. 测试拓扑
 
-E2E 套件位于仓库根 `tests/e2e/`（独立 npm 包 `@geowork/e2e`），**不在** `apps/desktop` 内。
+E2E 套件位于仓库根 `tests/e2e/`（独立 npm 包 `@geowork/e2e`），**不在** `apps/desktop` 内。分两层：
 
-- 渲染层：`playwright.config.ts` 的 `webServer` 启动 `apps/desktop` 的 `dev:e2e`（`vite.e2e.config.ts`，纯渲染进程 Vite dev server，端口 5173）。**不启动 Electron / Go core / Python worker**——渲染代码对 `window.geowork` 全部可选链，可在纯 Chromium 渲染。
-- API 级用例：直接对 `API_BASE_URL`（默认 `http://localhost:8767`，Go 云端）发请求，假定服务已在运行。
-- Electron 壳、Go core（8765）、worker（8766）目前不在 E2E 覆盖内（打包后 Electron E2E 属 P7）。
+- **渲染层**（`playwright.config.ts`）：`webServer` 启动 `apps/desktop` 的 `dev:e2e`（`vite.e2e.config.ts`，纯渲染进程 Vite dev server，端口 5173）。**不启动 Electron / Go core / Python worker**——渲染代码对 `window.geowork` 全部可选链，可在纯 Chromium 渲染。API 级用例直接对 `API_BASE_URL`（默认 `http://localhost:8767`，Go 云端）发请求，假定服务已在运行。
+- **三进程联调层**（`playwright.electron.config.ts`，P7-1）：启动真实 Electron 壳 + 真实 Go core（8765）+ 真实 Python worker（8766）+ cloud server（8767），验证 IPC 桥 / 审批流 / 沙箱真实执行。详见 §7。打包产物 E2E 属 P7-3（v1.0 前夕）。
 
 ## 2. data-testid 约定
 
@@ -67,4 +68,48 @@ E2E 套件位于仓库根 `tests/e2e/`（独立 npm 包 `@geowork/e2e`），**�
 ## 6. 标签
 
 - `@smoke`：最小冒烟（应用启动、布局可见、输入可用），CI PR 必跑。
+- `@integration`：三进程联调用例（P7-1），只在 `e2e-electron` workflow 跑，不进 PR 门禁。
 - 其余按域自由组织（`@auth`、`@task` 等），本地全量跑。
+
+## 7. Electron 三进程联调拓扑（P7-1）
+
+渲染层 E2E 对 `window.geowork` 全可选链，**IPC 桥 / 审批状态机 / 沙箱真实执行从未被测过**——这是 P7-1 补的最大盲区。联调层用独立配置 `playwright.electron.config.ts`（与渲染层分离，`workers: 1`）。
+
+### 7.1 进程编排（`fixtures/processes.fixture.ts`，worker 级）
+
+在 Electron 启动前预启三进程，全部 `GEOWORK_INSECURE_NO_AUTH=1`（token 铸造/注入路径由单测覆盖，联调层聚焦集成链本身）：
+
+| 进程 | 端口 | 启动方式 | 健康门 |
+|---|---|---|---|
+| cloud server | 8767 | `GEOWORK_SERVER_BIN` 预构建二进制（CI）或 `go run`（本地） | `GET /health` |
+| Go core | 8765 | `GEOWORK_CORE_BIN` 预构建二进制或 `go run ./cmd/geowork-runtime` | `GET /api/diagnostics/health` |
+| Python worker | 8766 | `python -m uvicorn app.main:app` | `GET /health` |
+
+- **端口冲突 fail fast**：预启前探测 8765/8766/8767，被 dev 进程占用即报错，避免打错目标。
+- **Electron 跳过自启**：主进程 `startRuntime()` 检测到 8765/8767 已占用走 `isPortInUse` 分支标记 running，直接连接预启进程（生产代码显式支持的"外部进程"模式）。core 的 worker 自启同理——`main.go` 检测 8766 已占用则附着而非重复 spawn（P7-1 新增，镜像 runtime.ts 的 isPortInUse）。
+- **teardown**：逆序 kill（Windows 用 `taskkill /T /F` 杀进程树），清理临时 workspace 与 SQLite。
+
+### 7.2 Electron 启动（`fixtures/electron.fixture.ts`）
+
+`_electron.launch()` 加载 `electron-vite build` 产物（`apps/desktop/out/main/main.js`），不设 `ELECTRON_RENDERER_URL` → 走 `loadFile(../renderer/index.html)` 测真实生产渲染路径。等待 `[data-testid="app-shell"]` 就绪。
+
+### 7.3 用例（`projects/electron/`，`@integration`）
+
+| spec | 覆盖 |
+|---|---|
+| `ipc-bridge.spec.ts` | `window.geowork` 由 preload 注入；`runtime.health()/getStatus()/checkHealth()` 经 IPC 到达 core 并返回正确状态 |
+| `approval-flow.spec.ts` | Electron 安全审批状态机：危险类目请求→待批→批准→缓存放行 / 拒绝移除 / 安全类目直接放行 |
+| `sandbox-real.spec.ts` | `runCommand` 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、被封锁命令（sudo）拒绝 |
+
+### 7.4 CI（`.github/workflows/e2e-electron.yml`）
+
+重且慢（~5min），**不进每次 push 的 PR 门禁**：nightly 兜底 + `workflow_dispatch` 手动 + `paths` 过滤（`core/**`、`apps/desktop/electron/**`、`workers/geo-python/app/**`、`tests/e2e/projects/electron/**` 等变更时随 push 跑）。步骤：build Electron app → 预构建 Go 二进制 → 装 worker 轻量子集 → `xvfb-run` 跑联调 E2E → 上传 Playwright report + testbed 进程日志。
+
+### 7.5 本地运行
+
+```bash
+cd apps/desktop && npm run build          # 先产出 out/
+cd tests/e2e && npx playwright test -c playwright.electron.config.ts
+```
+
+需 Go 1.26+ / Python 3.11+ 在 PATH。进程日志写 `tests/e2e/.testbed-*.log`（已 gitignore）。

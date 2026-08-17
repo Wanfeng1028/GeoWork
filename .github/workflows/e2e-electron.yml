@@ -1,0 +1,97 @@
+# Electron 三进程联调 E2E（P7-1）
+#
+# 与 pr-check.yml 的 e2e-smoke（纯 Chromium 渲染层）互补：本 workflow 启动
+# 真实 Electron 壳 + 真实 Go core(8765) + 真实 Python worker(8766) +
+# cloud server(8767)，验证 IPC 桥 / 审批流 / 沙箱真实执行的集成链。
+#
+# 触发策略（doc/24 §2.6）：重且慢（~5min），不上每次 push——
+#   - nightly：每天兜底
+#   - workflow_dispatch：手动触发
+#   - paths 过滤：只在集成链相关目录变更时随 push 跑
+#
+# 进程编排由 tests/e2e/fixtures/processes.fixture.ts 完成：
+# 预构建二进制（GEOWORK_SERVER_BIN / GEOWORK_CORE_BIN）+ python uvicorn，
+# 全部 GEOWORK_INSECURE_NO_AUTH=1；Electron 检测端口占用跳过自启。
+
+name: E2E Electron Integration
+
+on:
+  schedule:
+    # 每天 UTC 18:00（北京时间次日 02:00）兜底跑一次
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'core/**'
+      - 'apps/desktop/electron/**'
+      - 'apps/desktop/package.json'
+      - 'workers/geo-python/app/**'
+      - 'tests/e2e/projects/electron/**'
+      - 'tests/e2e/fixtures/**'
+      - '.github/workflows/e2e-electron.yml'
+
+jobs:
+  e2e-electron:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.6'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # --- 构建 Electron app（main + preload + renderer 产物） ---
+      - name: Install desktop dependencies
+        run: cd apps/desktop && npm install
+      - name: Build Electron app (electron-vite)
+        run: cd apps/desktop && npm run build
+
+      # --- E2E 依赖 ---
+      - name: Install E2E dependencies
+        run: cd tests/e2e && npm install
+
+      # --- 预构建 Go 二进制（fixture 用 GEOWORK_*_BIN 直接启动，省去 go run 编译） ---
+      - name: Prebuild Go binaries
+        run: |
+          cd server && go build -o /tmp/geowork-server ./cmd/geowork-api && cd ..
+          cd core && go build -o /tmp/geowork-core ./cmd/geowork-runtime
+
+      # --- Python worker 轻量子集（与 worker-check 一致） ---
+      - name: Install worker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi "uvicorn[standard]" pydantic httpx pypdf python-multipart
+
+      # --- 运行联调 E2E（xvfb 提供虚拟显示） ---
+      - name: Run Electron integration E2E
+        env:
+          GEOWORK_SERVER_BIN: /tmp/geowork-server
+          GEOWORK_CORE_BIN: /tmp/geowork-core
+        run: |
+          cd tests/e2e
+          xvfb-run --auto-servernum -- npx playwright test -c playwright.electron.config.ts --reporter=list
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-playwright-report
+          path: tests/e2e/playwright-report
+          if-no-files-found: warn
+
+      - name: Upload testbed process logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-testbed-logs
+          path: tests/e2e/.testbed-*.log
+          if-no-files-found: warn

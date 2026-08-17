@@ -32,7 +32,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；待 E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；待 P7-2（视觉回归）、E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -453,6 +453,19 @@ Level 3 — 记录（持续追加）
 ---
 
 ## 14. AI Agent 施工记录
+
+### 2026-08-17 · ZCode · P7-1 三进程联调 E2E testbed（doc/24，P7-1 完成）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| testbed fixture | （本次） | `tests/e2e/fixtures/processes.fixture.ts`（worker 级）：预启 server(8767)/core(8765)/worker(8766)，全部 `GEOWORK_INSECURE_NO_AUTH=1`；支持 `GEOWORK_SERVER_BIN`/`GEOWORK_CORE_BIN` 预构建二进制（CI 快启）或 `go run` 回退；端口冲突 fail fast；健康门轮询三端点；teardown 逆序 kill（Windows `taskkill /T /F` 杀进程树）+ 清理临时 workspace/SQLite。`electron.fixture.ts`：`_electron.launch()` 加载 electron-vite 构建产物，测真实生产渲染路径 | ✅ |
+| 联调 spec | （本次） | `projects/electron/` 3 个 `@integration` spec 共 11 用例：ipc-bridge（window.geowork 注入 + runtime.health/getStatus/checkHealth 经 IPC 到 core）、approval-flow（Electron 安全审批状态机：请求→待批→批准→缓存放行/拒绝移除/安全类目直放）、sandbox-real（runCommand 经 IPC 启动进程、捕获 stdout、真实 workspace 落盘、sudo 被封锁拒绝） | ✅ |
+| 配置与 CI | （本次） | `playwright.electron.config.ts`（独立配置，workers:1，无 webServer）；`.github/workflows/e2e-electron.yml`：nightly + workflow_dispatch + paths 过滤（不进每次 push 门禁），build Electron → 预构建 Go 二进制 → worker 轻量子集 → xvfb-run 联调 E2E → 上传 report + testbed 日志 | ✅ |
+| 生产装配修复 | （本次） | 两处"测试装配≠生产装配"盲区修复：① `electron/local/tray.ts` initTray 加防御（图标缺失/无系统托盘时返回 null 不抛错）——原实现在 headless CI/打包路径差异下 `new Tray()` 抛错会中断 createWindow，导致其后 runtime:status/token/health 三个关键 IPC handler 全部跳过注册；② `core/cmd/geowork-runtime/main.go` worker 自启前检测 8766 端口占用（镜像 runtime.ts isPortInUse），外部预启 worker 则附着而非重复 spawn bind 失败的僵尸进程 | ✅ |
+
+**决策**：testbed 用"外部预启三进程 + Electron 检测端口占用跳过自启"模式（生产代码显式支持），而非 Electron 全自启——token 铸造/注入路径已有单测覆盖，联调层聚焦集成链本身，insecure 模式避免 token 协调复杂度。
+**验收**：`npx playwright test --list -c playwright.electron.config.ts` 收集 11 用例无误；core `go build` 通过；完整运行由远端 CI 验证（本地不跑 Playwright，用户约束）。
+**后续**：P7-2 视觉回归落地、BP5 交错（P7-1 测出的 SSE/泄漏问题 test-first 修）、变异测试试点（doc/24 §5）。
 
 ### 2026-08-17 · ZCode · A5 性能（doc/23，A5 完成，doc/23 全部收官）
 

@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -34,11 +36,22 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	workerProcess, err := worker.StartProcess(ctx, gruntime.FindRepoRoot())
-	if err != nil {
-		logger.Warn("GeoWork Python Worker was not started automatically", zap.Error(err))
+	// Auto-start the Python worker unless one is already listening on 8766
+	// (mirrors the Electron shell's isPortInUse skip in runtime.ts): an
+	// externally started worker — e.g. the P7-1 E2E testbed or an operator
+	// process — is attached to instead of spawning a duplicate that would
+	// fail to bind.
+	var workerProcess *worker.Process
+	if workerPortInUse(8766) {
+		logger.Info("Python Worker already running on 8766, attaching instead of auto-starting")
 	} else {
-		defer workerProcess.Stop()
+		var err error
+		workerProcess, err = worker.StartProcess(ctx, gruntime.FindRepoRoot())
+		if err != nil {
+			logger.Warn("GeoWork Python Worker was not started automatically", zap.Error(err))
+		} else {
+			defer workerProcess.Stop()
+		}
 	}
 	app := gruntime.New("", "http://127.0.0.1:8766")
 	logger.Info("GeoWork workspace", zap.String("path", app.Workspace()))
@@ -338,4 +351,17 @@ func initModelGateway(logger *zap.Logger) (*modelgateway.OpenAICompatibleClient,
 		zap.String("providerId", providerID),
 	)
 	return client, provider
+}
+
+// workerPortInUse reports whether something is already listening on the
+// worker port. It mirrors the Electron shell's isPortInUse check
+// (runtime.ts) so an externally started worker is attached to rather than
+// duplicated. A dial error (connection refused) means the port is free.
+func workerPortInUse(port int) bool {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)), 500*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
 }
