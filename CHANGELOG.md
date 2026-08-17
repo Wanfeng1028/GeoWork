@@ -18,6 +18,13 @@
 
 ## [Unreleased]
 
+### Added — AI 组件 Ant Design X 迁移二期：Prompts 接真实数据 + Suggestion 输入联想（doc/26 收官，2026-08-17 · ZCode）
+- **Prompts 真实数据**：新增 `antdx/promptData.ts` 共享数据层（与 ContextPickerModal 同一 skillsStorage/expertStorage 数据源）；WelcomeX 推荐区从写死文案改为已安装+启用技能（点击填入「使用技能「X」：」引导语），无技能时回退 GIS 场景文案
+- **Suggestion 输入联想**：SenderX 用 antd-x `Suggestion` 包裹 `Sender`——输入 `/` 弹出已安装技能与专家快捷命令（`/缓冲区分析` 等），方向键导航、Enter 选中填入输入框（Sender onKeyDown 返回 false 阻断提交）
+- **虚拟滚动调优**：ConversationX estimateSize 固定 120 → 按角色分层（user 72 / assistant 220），measureElement 实测修正
+- **评估结论**：审批卡片/工作流卡片/侧栏 Conversations 保留自研（语义或数据模型不匹配，详见 doc/26 §3.2）；AssistantChatPanel 暂不迁移；暗色主题零改动（antdx 树零硬编码色值）
+- 测试：新增 4 条，前端 114/114 全绿；vendor-antd +62.7KB（Suggestion 组件，仍仅懒加载页面引用）
+
 ### Added — AI 组件 Ant Design X 迁移一期：自研组件入口关闭，antdx 渲染树接管主对话页（doc/26，2026-08-17 · ZCode）
 - **开关分流**：`GeoWorkSettings.aiComponentsV2`（默认开）+ 设置页「实验特性」区 Switch；关闭即回退自研组件（doc/23 资产保留不删，入口关闭 ≠ 删除）
 - **antdx 渲染树**（`pages/NewTask/components/antdx/`）：MessageBubbleX（Bubble + ThoughtChain，assistant 内容复用 MarkdownStream，thinkingSteps → ThoughtChain loading 态）/ ConversationX（Bubble.List 无内置虚拟化，自持 @tanstack/react-virtual 保住 A5 长会话性能，贴底跟随；审批卡片复用 ApprovalCard）/ SenderX（Sender + allowSpeech 内置语音替代手写 Web Speech + 附件菜单 + 模式/模型选择）/ WelcomeX（Welcome + Prompts 按工作模式推荐 GIS 任务）

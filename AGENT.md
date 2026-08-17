@@ -17,6 +17,7 @@
 | v1.10 | 2026-08-17 | A4 Diff 查看器（跨 Go/前端）：core 写工具（write_file/create_artifact）经 DiffRecorder 上报前后内容，orchestrator 用 go-difflib 生成真实 LCS 多 hunk unified diff 并发 diff.created 事件（带 runID 路由进会话 SSE，payload 仅含自包含 unified）；前端 Session 消费 diff.created 按 path 去重 upsert fileDiffs，DiffViewer 组件（@git-diff-view/react 动态导入 ~320KB 不进主包）内联渲染；101/101 测试 + build + 边界检查 + Go 测试全绿 |
 | v1.11 | 2026-08-17 | A5 性能（doc/23 收官）：路由级代码分割（routes.tsx 全部页面改 react-router lazy，主入口 chunk 5.0MB → 首屏 3 个可缓存 chunk）+ vendor 拆分（react/antd 独立 chunk，依赖不升级哈希不变）+ 消息列表虚拟滚动（@tanstack/react-virtual，动态测量 + 贴底跟随，顺带消除 lastAssistantIdx O(n²) 计算）；103/103 测试 + build + 边界检查全绿 |
 | v1.12 | 2026-08-17 | AI 组件 Ant Design X 迁移一期（doc/26）：自研组件保留但入口关闭，aiComponentsV2 开关（默认开）分流；新建 antdx 渲染树（Bubble+ThoughtChain 消息 / Sender 输入 / Welcome+Prompts 欢迎区），数据层 Session 对象层零改动，MarkdownStream/DiffViewer/审批卡片等自研资产挂进 X 组件复用；110/110 测试 + build + 边界检查全绿 |
+| v1.13 | 2026-08-17 | AI 组件 Ant Design X 迁移二期（doc/26 收官）：Prompts 接真实已安装技能/专家数据（promptData 共享数据层）+ SenderX Suggestion `/` 输入联想（技能/专家命令，Enter 选中阻断提交）+ 虚拟滚动按角色分层预估高度；评估结论：审批卡/工作流卡/侧栏 Conversations 保留自研，AssistantChatPanel 暂不迁移；114/114 测试 + build + 边界检查全绿 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -33,7 +34,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.5.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）；待 doc/26 二期、P7-2（视觉回归）、E2（可观测性） |
+| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）+ 二期收官（Prompts 接真实技能/专家数据 + Suggestion `/` 输入联想 + 虚拟滚动调优，审批卡/工作流卡/侧栏评估保留自研）；待 P7-2（视觉回归）、E2（可观测性） |
 | 许可     | PolyForm Noncommercial License 1.0.0                         |
 
 ---
@@ -454,6 +455,19 @@ Level 3 — 记录（持续追加）
 ---
 
 ## 14. AI Agent 施工记录
+
+### 2026-08-17 · ZCode · AI 组件 Ant Design X 迁移二期（doc/26，二期完成，doc/26 收官）
+
+| 阶段 | 提交 | 内容 | 状态 |
+|---|---|---|---|
+| Prompts 真实数据 | （本次） | 新增 `antdx/promptData.ts` 共享数据层：loadPromptSkills（已安装+启用技能，与 ContextPickerModal 同一 skillsStorage 数据源，去重取前 6）/ loadExpertCommands（已安装专家 quickCommands `/触发词`，取前 12）/ loadWelcomePrompts（无技能回退 GIS 场景文案）；WelcomeX Prompts 从写死文案改为真实技能，点击填入「使用技能「X」：」引导语 | ✅ |
+| Suggestion 输入联想 | （本次） | SenderX 用 antd-x Suggestion 包裹 Sender（官方 children 渲染模式）：输入 `/` 打开联想面板（技能+专家命令），方向键导航、Enter 选中——Sender onKeyDown 返回 false 阻断提交（SlotTextArea shouldSkipKeyHandling 契约），选中项填入输入框；block 模式弹层与输入区同宽 | ✅ |
+| 虚拟滚动调优 | （本次） | ConversationX estimateSize 固定 120 → 按角色分层（user 72 / assistant 220），首屏高度预估更准，measureElement 实测后自动修正 | ✅ |
+| 评估结论 | （本次） | 审批卡片保留 ApprovalCard（结构化表单交互非气泡语义）；工作流卡片保留 WorkflowRunCard（antd Steps 已是最佳呈现，ThoughtChain 语义不匹配）；侧栏 Conversations 保留自研（taskStore 工作空间分组/置顶模型与 antd-x Conversations 扁平列表不匹配）；AssistantChatPanel 暂不迁移（数据流独立，待主对话页稳定后再评估）；暗色主题零改动（antdx 树零硬编码色值，X 组件全走 antd token） | ✅ |
+
+**决策**：联想数据源复用 ContextPickerModal 的 skillsStorage/expertStorage 快照读取（与 settings 惯例一致），不新建数据层；Suggestion 采用官方 children 包裹 Sender 模式而非受控 open，键盘导航/选中由内置 useActive 托管。
+**验收**：tsc + vitest 114/114（新增 4 条：promptData 技能/专家命令、WelcomeX 真实技能点击、SenderX `/` 联想面板）+ build 无 circular 告警（vendor-antd +62.7KB = Suggestion，仍仅懒加载页面引用）+ 边界检查 129 源文件全绿。
+**后续**：doc/26 全部收官；待 P7-2（视觉回归）、E2（可观测性）。
 
 ### 2026-08-17 · ZCode · AI 组件 Ant Design X 迁移一期（doc/26，一期完成）
 

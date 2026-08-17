@@ -5,6 +5,8 @@ import type { ConversationMessage } from '../../../../shared/session/types'
 import { MessageBubbleX } from '../MessageBubbleX'
 import { ConversationX } from '../ConversationX'
 import { SenderX } from '../SenderX'
+import { WelcomeX } from '../WelcomeX'
+import { loadWelcomePrompts, loadExpertCommands } from '../promptData'
 
 /* jsdom 无滚动高度，虚拟器算不出可视项——mock 为全量渲染 */
 vi.mock('@tanstack/react-virtual', () => ({
@@ -154,5 +156,71 @@ describe('SenderX（doc/26）', () => {
       '[data-testid="sender-x"] button[class*="loading"], [data-testid="sender-x"] .ant-btn',
     )
     expect(stopBtn).toBeTruthy()
+  })
+})
+
+describe('promptData（doc/26 二期）', () => {
+  it('loadWelcomePrompts 返回已安装内置技能（installed+enabled）', () => {
+    const prompts = loadWelcomePrompts()
+    expect(prompts.length).toBeGreaterThan(0)
+    /* 内置技能默认 installed+enabled，应出现在推荐里 */
+    expect(prompts.some((p) => p.label === 'CSV 解析')).toBe(true)
+    /* 点击填入「使用技能」引导语 */
+    const csv = prompts.find((p) => p.label === 'CSV 解析')!
+    expect(csv.text).toContain('CSV 解析')
+  })
+
+  it('loadExpertCommands 返回已安装专家的 / 触发词', () => {
+    const commands = loadExpertCommands()
+    expect(commands.length).toBeGreaterThan(0)
+    /* 空间分析规划师默认 installed，其快捷命令以 / 开头 */
+    expect(commands.some((c) => c.label.startsWith('/'))).toBe(true)
+    expect(commands.some((c) => c.expertName === '空间分析规划师')).toBe(true)
+  })
+})
+
+describe('WelcomeX（doc/26 二期）', () => {
+  it('Prompts 渲染真实技能，点击填入输入框', () => {
+    const onPickPrompt = vi.fn()
+    render(
+      withApp(
+        <WelcomeX
+          workMode="work"
+          title="GeoWork"
+          subtitle="描述你的 GIS 任务"
+          onPickPrompt={onPickPrompt}
+        />,
+      ),
+    )
+    /* 真实内置技能名出现在推荐区 */
+    expect(screen.getByText('CSV 解析')).toBeTruthy()
+    fireEvent.click(screen.getByText('CSV 解析'))
+    expect(onPickPrompt).toHaveBeenCalled()
+    expect(onPickPrompt.mock.calls[0][0]).toContain('CSV 解析')
+  })
+})
+
+describe('SenderX 输入联想（doc/26 二期）', () => {
+  it('输入 / 打开联想面板，展示技能与专家命令', () => {
+    const { container } = render(
+      withApp(
+        <SenderX
+          prompt=""
+          onPromptChange={vi.fn()}
+          onSend={vi.fn()}
+          onStop={vi.fn()}
+          isStreaming={false}
+          model="Auto"
+          onModelChange={vi.fn()}
+        />,
+      ),
+    )
+    /* 作用域查询：同文件多个 SenderX 用例的残留 DOM 不影响本次断言 */
+    const textarea = container.querySelector('textarea')!
+    fireEvent.change(textarea, { target: { value: '/' } })
+    /* 联想面板（Cascader popup portal 到 body）渲染技能与专家命令 */
+    const popup = document.querySelector('.ant-cascader-dropdown')
+    expect(popup?.textContent).toContain('CSV 解析')
+    expect(popup?.textContent).toContain('/缓冲区分析')
   })
 })

@@ -2,7 +2,7 @@
 
 > **文档路径**：`doc/26-AntDesignX-Migration.md`
 > **关联文档**：`doc/23-Frontend-AI-Components-Plan.md`（自研 AI 组件 A1–A5，已收官）
-> **状态**：一期完成（2026-08-17）；二期待执行
+> **状态**：一期完成（2026-08-17）；二期完成（2026-08-17）
 
 ---
 
@@ -59,14 +59,30 @@ tsc + vitest 110/110（新增 antdx 7 条：气泡渲染/Markdown/ThoughtChain/�
 + build 无 circular chunk 告警 + 边界检查 128 源文件全绿。
 routes 懒加载冒烟测试因 NewTaskPage 引入大包解析变慢，单独放宽时限至 30s。
 
-## 3. 二期：补齐与打磨（待执行）
+## 3. 二期：补齐与打磨（已完成）
 
-- 审批卡片 X 化评估（Bubble 变体 or 保留 ApprovalCard）
-- 工作流卡片 X 化评估（Steps → ThoughtChain/自定义）
-- Prompts 推荐数据接真实技能/专家、Suggestion 输入联想
-- 虚拟滚动动态高度实测调优、暗色主题微调
-- 侧栏 Conversations 评估（taskStore 工作空间分组/置顶模型与 antd-x Conversations 不匹配，大概率保留自研）
-- 右侧 AssistantChatPanel 旁路面板是否迁移（本期明确不动）
+### 3.1 已落地
+
+| 项 | 内容 |
+|---|---|
+| Prompts 接真实数据 | 新增 `antdx/promptData.ts` 共享数据层：`loadPromptSkills()`（已安装+启用技能，与 ContextPickerModal 同一数据源 skillsStorage，去重取前 6）/ `loadExpertCommands()`（已安装专家 quickCommands，`/触发词`，取前 12）/ `loadWelcomePrompts()`（无技能时回退 GIS 场景文案）。WelcomeX 的 Prompts 从写死文案改为真实技能，点击填入「使用技能「X」：」引导语 |
+| Suggestion 输入联想 | SenderX 用 antd-x `Suggestion` 包裹 `Sender`（官方 children 渲染模式）：输入 `/` 打开联想面板（技能 + 专家命令），方向键导航、Enter 选中——Sender `onKeyDown` 返回 `false` 阻断提交（SlotTextArea 的 `shouldSkipKeyHandling` 契约），选中项填入输入框；`block` 模式弹层与输入区同宽 |
+| 虚拟滚动调优 | ConversationX `estimateSize` 从固定 120 改为按角色分层（user 72 / assistant 220），首屏高度预估更准，measureElement 实测后自动修正 |
+| 暗色主题 | 检查结论：antdx 树零硬编码色值（CSS 仅布局属性），X 组件全走 antd token；应用当前无暗色开关，无需改动，未来开启 darkAlgorithm 自动跟随 |
+
+### 3.2 评估结论（明确保留自研 / 不迁移）
+
+| 项 | 结论 | 理由 |
+|---|---|---|
+| 审批卡片 X 化 | **保留 ApprovalCard** | 审批是结构化表单交互（风险等级/参数展示/批准-拒绝+理由），非对话气泡语义；Bubble 变体无法承载，硬套反而增加复杂度。已作为复用资产挂进 ConversationX |
+| 工作流卡片 X 化 | **保留 WorkflowRunCard** | antd `Steps`（横向步骤条 + 状态 Tag + 确认/调整按钮 + 状态 Alert）已是该场景最佳呈现；ThoughtChain 是纵向思考链语义，不匹配「计划确认→执行」流程 |
+| 侧栏 Conversations | **保留自研** | taskStore 的工作空间分组/置顶模型与 antd-x Conversations 的扁平列表 + menu 模型不匹配，迁移需重写分组逻辑，收益为负 |
+| AssistantChatPanel | **本期不迁移** | 右侧旁路面板独立于主对话页，数据流不同（非 useSession 快照）；待主对话页 X 化稳定运行后再评估 |
+
+### 3.3 验收
+
+tsc + vitest 114/114（新增 4 条：promptData 技能/专家命令、WelcomeX 真实技能点击、SenderX `/` 联想面板）
++ build 无 circular 告警（vendor-antd +62.7KB = Suggestion 组件，仍仅懒加载页面引用）+ 边界检查 129 源文件全绿。
 
 ## 4. 明确不做
 

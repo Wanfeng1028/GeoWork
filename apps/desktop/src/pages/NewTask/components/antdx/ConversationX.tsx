@@ -36,7 +36,9 @@ export function ConversationX({
   const virtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => listRef.current,
-    estimateSize: () => 120,
+    // 二期调优：按角色分层预估首屏高度（measureElement 实测后自动修正）——
+    // user 单气泡约 72px；assistant 含思考链/工具日志/卡片，约 220px
+    estimateSize: (i) => (messages[i].role === 'user' ? 72 : 220),
     overscan: 6,
     getItemKey: (i) => messages[i].id,
   })

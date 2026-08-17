@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { App, Button, Dropdown, Space, Tag, Tooltip } from 'antd'
-import { Sender } from '@ant-design/x'
+import { Sender, Suggestion } from '@ant-design/x'
+import type { SuggestionItem } from '@ant-design/x/es/suggestion'
 import {
   Plus,
   Zap,
@@ -18,6 +19,7 @@ import {
 import { ModelPicker } from '../ModelPicker'
 import { SelectedContextBar } from '../SelectedContextBar'
 import { useFilePickers } from '../useFilePickers'
+import { loadPromptSkills, loadExpertCommands } from './promptData'
 import type { SelectedContextItem, SelectedContextKind } from '../../../../shared/session/types'
 import type { ContextPickerType } from '../ContextPickerModal'
 import styles from './antdx.module.css'
@@ -62,6 +64,8 @@ export interface SenderXProps {
  * antdx 输入区（doc/26）：antd-x Sender 替代自研 ChatComposer。
  * 数据契约一致（prompt/onSend/onStop/上下文选择），交互增强：
  * 内置语音输入（allowSpeech）、Enter 发送/Shift+Enter 换行由 Sender 托管。
+ * 二期：Suggestion 输入联想——输入 `/` 弹出已安装技能与专家快捷命令，
+ * 方向键导航、Enter 选中（Sender onKeyDown 返回 false 阻断提交），选中填入输入框。
  */
 export function SenderX({
   prompt,
@@ -81,9 +85,34 @@ export function SenderX({
   const { message } = App.useApp()
   const [mode, setMode] = useState('通用 GIS')
   const [attachments, setAttachments] = useState<string[]>([])
+  const [suggestionOpen, setSuggestionOpen] = useState(false)
   const { pickFile, pickAttachFolder, pickImage } = useFilePickers((names) =>
     setAttachments((prev) => [...prev, ...names]),
   )
+
+  /* 联想数据：已安装技能 + 已安装专家快捷命令（挂载时快照读取，与 settings 惯例一致） */
+  const suggestionItems = useMemo<SuggestionItem[]>(() => {
+    const skills = loadPromptSkills().map((s) => ({
+      value: s.key,
+      label: s.label,
+      icon: <Zap size={14} />,
+      extra: '技能',
+      text: s.text,
+    }))
+    const commands = loadExpertCommands().map((c) => ({
+      value: c.key,
+      label: c.label,
+      icon: <Bot size={14} />,
+      extra: c.expertName,
+      text: `${c.label} `,
+    }))
+    return [...skills, ...commands]
+  }, [])
+
+  const handleSuggestionSelect = (value: string) => {
+    const item = suggestionItems.find((i) => i.value === value)
+    if (item?.text) onPromptChange(String(item.text))
+  }
 
   /* 加号附件菜单：技能/专家/MCP 走上下文选择弹窗，文件/图片/文件夹走系统选择器 */
   const attachMenu = {
@@ -150,45 +179,65 @@ export function SenderX({
         />
       )}
 
-      <Sender
-        value={prompt}
-        onChange={(v) => onPromptChange(v)}
-        onSubmit={() => onSend()}
-        onCancel={onStop}
-        loading={isStreaming}
-        placeholder={placeholder ?? '描述你的 GIS 任务……'}
-        allowSpeech
-        autoSize={{ minRows: 1, maxRows: 8 }}
-        prefix={
-          <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
-            <Tooltip title="添加附件">
-              <Button
-                color="primary"
-                variant="solid"
-                icon={<Plus size={14} />}
-                size="small"
-                shape="round"
-              />
-            </Tooltip>
-          </Dropdown>
-        }
-        footer={(oriNode) => (
-          <div className={styles.senderFooterRow}>
-            <div className={styles.senderFooterLeft}>
-              <Dropdown menu={modeMenu} trigger={['click']} placement="topLeft">
-                <Button color="purple" variant="solid" size="small" shape="round">
-                  <Space size={4}>
-                    <Zap size={12} />
-                    {mode}
-                  </Space>
-                </Button>
+      <Suggestion
+        items={suggestionItems}
+        onSelect={handleSuggestionSelect}
+        onOpenChange={setSuggestionOpen}
+        block
+      >
+        {({ onTrigger, onKeyDown }) => (
+          <Sender
+            value={prompt}
+            onChange={(v) => {
+              onPromptChange(v)
+              // 输入 `/` 打开联想面板；内容被清空/改掉时关闭
+              onTrigger(v === '/' ? undefined : false)
+            }}
+            onKeyDown={(e) => {
+              if (suggestionOpen) {
+                onKeyDown(e)
+                // 联想面板打开时拦截 Enter（选中项），阻断 Sender 提交
+                if (e.key === 'Enter') return false
+              }
+            }}
+            onSubmit={() => onSend()}
+            onCancel={onStop}
+            loading={isStreaming}
+            placeholder={placeholder ?? '描述你的 GIS 任务，输入 / 唤起技能与专家命令……'}
+            allowSpeech
+            autoSize={{ minRows: 1, maxRows: 8 }}
+            prefix={
+              <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
+                <Tooltip title="添加附件">
+                  <Button
+                    color="primary"
+                    variant="solid"
+                    icon={<Plus size={14} />}
+                    size="small"
+                    shape="round"
+                  />
+                </Tooltip>
               </Dropdown>
-              <ModelPicker model={model} onModelChange={onModelChange} />
-            </div>
-            {oriNode}
-          </div>
+            }
+            footer={(oriNode) => (
+              <div className={styles.senderFooterRow}>
+                <div className={styles.senderFooterLeft}>
+                  <Dropdown menu={modeMenu} trigger={['click']} placement="topLeft">
+                    <Button color="purple" variant="solid" size="small" shape="round">
+                      <Space size={4}>
+                        <Zap size={12} />
+                        {mode}
+                      </Space>
+                    </Button>
+                  </Dropdown>
+                  <ModelPicker model={model} onModelChange={onModelChange} />
+                </div>
+                {oriNode}
+              </div>
+            )}
+          />
         )}
-      />
+      </Suggestion>
     </div>
   )
 }
