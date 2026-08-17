@@ -84,6 +84,8 @@ func TestSpawnKillsProcessTree(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
+	// cleanup 幂等（spawn.go 契约），defer 作兜底；但进程树 kill 必须在
+	// marker 轮询断言之前生效，所以 Wait 后还要显式调一次（见下）。
 	defer cleanup()
 
 	// Give the grandchild time to spawn, then kill the tree.
@@ -91,6 +93,10 @@ func TestSpawnKillsProcessTree(t *testing.T) {
 	cancel()
 
 	_ = cmd.Wait() // killed processes return an error; outcome is irrelevant
+	// 契约是 Wait→cleanup：进程树 kill（Unix kill(-PGID) / Windows job close）
+	// 在 cleanup 里，不在 cancel 里——cancel（exec.CommandContext）只杀直接子进程。
+	// 必须在 marker 轮询断言之前显式收树，否则孙子进程逃逸、测试必挂。
+	cleanup()
 
 	// If the grandchild survived, the marker appears ~2-3s after start.
 	deadline := time.Now().Add(5 * time.Second)
