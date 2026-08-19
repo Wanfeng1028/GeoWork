@@ -28,6 +28,10 @@
 - **doc/15**：新增 §2.6 契约测试即边界（渲染层只可调契约测试钉住的端点 + preload 幽灵桥禁令，教训：ReviewPanel 断链）
 - **README.md / README.en.md**：版本口径同步 v0.6.x-dev
 - **D-27-7 内联样式终版拍板（同日补充）**：债随工单消化——W2-2/W3-4 工单 DoD 附加"本工单改造到的代码区，内联色值迁入 token/module.css"；W4-6 残留闸门（四重灾区文件非 token 内联色值 >约 20 处再半天清扫，否则维持纪律）；~380 处在 ADR-003 待移除页面不动（负收益）；**新增 W3-4 settings/models 域接线工单**（SettingsPage→/api/settings、模型配置→/api/models+test，充当 D-27-7 载体并填补 settings 域无排期工单的缺口，施工先分诊 app.Models()/app.Settings() 数据源真伪）
+- **D-27-8 UI 组件选型优先级（用户拍板）**：AI 组件优先 Ant Design X（范围可拓展）> 自定义组件（Gemini 胶囊族）> antd 普通组件（必须走 token）；封存主题（bootstrap/illustration/glass）删除、入口移除（挂 W4-1）；同步写入 AGENT.md §11.6
+- **D-27-9 整体版本路线（用户拍板）**：v0.6–v0.7 现代化 Agent 应用前后端完成（可迭代 0.6.x–0.7.x）→ v0.8 GIS 与遥感能力介入 → v0.9 发布前测试版本
+- **W4-1 扩写**：FeedbackModal 降级为真动作（openExternal 跳 GitHub Issues，正文预填版本/系统/工作模式；不建后端反馈端点——cloud server in-memory 开发态，建反馈收集是制造新假承诺；工时不够退回纯撤入口，默认前者）
+- **§10 后端死代码分诊清单（第 0 周收尾交付物）**：13 个未挂载包 + 活路由无消费者端点全量落表（接/留/砍 + 载体工单 + 状态）；判决规则：有前端工单消费→接、P0-P3 能力白名单外→留、纯死代码→砍；接 2（diff→W2-2、mcp→W2-3）、砍 3（workspace/automation/artifacts 纯重复）、留 4、待拍板 7 项攒批一次性问用户
 - 影响代码文件：无（零代码改动）
 
 ### Changed — 许可临时切换为 MIT（2026-08-17 · ZCode）

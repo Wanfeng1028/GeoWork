@@ -319,6 +319,16 @@ GeoWork 是空间智能 / GIS / 遥感 / 数据工作流工具。页面文案应
 - Props 要明确，不要传一整个巨大对象，组件只接收自己需要的数据和回调
 - 展示组件不要直接操作 localStorage / 发请求 / 改全局状态 / 操作路由 / 写复杂状态机，这些放在页面层或 hook / adapter 里
 
+### 11.6 UI 组件选型优先级（2026-08-19 立，doc/27 D-27-8）
+
+GeoWork 是现代 Agent 应用，组件选型按三级优先级：
+
+1. **AI 组件优先用 Ant Design X**（`@ant-design/x`）——AI 组件范围可拓展（消息气泡、思考链、输入区、欢迎区、推荐、联想等，凡 Agent 交互语义都算）；能用的就都要用
+2. **自定义组件次之**——项目自有设计语言组件（如 Gemini 风格胶囊族 Capsule*）
+3. **Ant Design 普通组件兜底**——但必须走 editorial/editorial-dark 主题 token 体系，禁止游离于 token 的硬编码色值
+
+封存主题（bootstrap/illustration/glass）已决定删除（W4-1），入口一并移除；新组件禁止引用已删主题。
+
 ---
 
 ## 12. 代码质量要求

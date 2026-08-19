@@ -19,6 +19,8 @@
 | **D-27-5** | 导航白名单 | ✅ 见 ADR-003：新任务/定时任务/设置保留，扩展四页分诊后定去留，MobileControl/Workspace/DataCenter/AgentStudio 移出导航 |
 | **D-27-6** | 存量页面三态补齐 | ✅ **已定（2026-08-19 用户拍板）：第 4 周专项**——3 个保留页面 + shell 弹窗统一 EmptyState 并补齐三态（W4-5），DoD 对存量代码强制执行，否则白名单保留的 Settings 永远不达标 |
 | **D-27-7** | 546 处内联样式 | ✅ **已定（2026-08-19 用户拍板）：方案 1 纪律收敛 + 两条落地修正**——① 禁止新增游离 token 的内联色值；四个重灾区全在 v0.6 施工面上（Settings/ProviderEditor/ModelPicker → W3-4 模型路由域，RightWorkspacePanel → W1-W2 面板接线），**"本工单改造到的代码区，内联色值迁入 token/module.css"写进对应工单 DoD，债随真工单消化，不单开专项**；② **W4 末加闸**（W4-6）：grep 四文件非 token 内联色值，残留 >约 20 处再花半天清扫（降级版重灾区专项），否则维持纪律；③ 其余 ~380 处多在 ADR-003 待移除页面里，为将死代码做清洁是负收益，不动；方案 3（全量专项）否决 |
+| **D-27-8** | UI 组件选型优先级 | ✅ **已定（2026-08-19 用户拍板）**：① AI 组件优先用 **Ant Design X**（AI 组件范围可拓展——GeoWork 是现代 Agent 应用，凡 Agent 交互语义都算），能用的就都要用；② 自定义组件次之（Gemini 风格胶囊族等自有设计语言）；③ Ant Design 普通组件兜底，但必须走 editorial/editorial-dark token 体系。**封存主题（bootstrap/illustration/glass）删除，入口一并移除**（挂 W4-1）。已同步写入 AGENT.md §11.6 |
+| **D-27-9** | 整体版本路线 | ✅ **已定（2026-08-19 用户拍板）**：**v0.6–v0.7** 现代化 Agent 应用前端+后端完成（可迭代 0.6.x–0.7.x，本计划五周排期属 v0.6 段）→ **v0.8** GIS 与遥感能力介入 → **v0.9** 发布前测试版本 → v1.0 正式发布。GIS 地图工作区、datasets/map layers/papers/knowledge/ndvi 等端点归属 v0.8，v0.6 不装（与 ADR-003 一致） |
 
 ---
 
@@ -118,7 +120,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 
 | 工单 | 内容 |
 |---|---|
-| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向 |
+| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向。**FeedbackModal 降级为真动作（用户拍板，默认项）**：保留入口，提交改为 `openExternal` 跳 GitHub Issues，正文预填版本/系统/工作模式；**不建后端反馈端点**——cloud server 尚属 in-memory 开发态，在其上建反馈收集是制造新假承诺；工时不够则退回纯撤入口（二选一，默认前者）。**封存主题删除**（D-27-8）：bootstrap/illustration/glass 三主题文件 + antd-style 依赖引用 + 主题入口一并移除。**后端"砍"判决批次**（§10 分诊表）与撤假承诺同批减法 |
 | W4-2 AppShell 拆分 | 35KB→15KB 以内：拖拽抽 `usePanelResize`、侧栏抽 `SidebarTasks`、弹窗归拢 `ShellModals`、静态 `Modal.confirm`（AppShell.tsx:416/496）改上下文版 |
 | W4-3 样式修复 | ConfigProvider 开 `cssVar`（92 处悬空变量起死回生）；index.css `!important` 并入 Button token |
 | W4-4 契约 CI 门禁 | 契约测试（desktop_contract_test.go）扩到**前端实际消费的全部端点**；CI 脚本 grep 渲染层 API 调用与契约清单 diff——ReviewPanel 式断链从"靠人眼两周"变"CI 必红" |
@@ -158,7 +160,7 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 
 ## 8. 明确不做（v0.6）
 
-- GIS 地图工作区真做（v1.0）
+- GIS 地图工作区真做（v0.8，D-27-9）
 - Extensions 四页新增功能（先分诊定去留）
 - `/api/ws` 信令替换 HTTP 审批（第 5 周起评估）
 - 任何新页面（白名单冻结，只减不增）
@@ -169,4 +171,75 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 
 | 周 | 提交 | 与计划的偏差 |
 |---|---|---|
-| 第 0 周 | （本次） | 无 |
+| 第 0 周 | ca8b67b / fb09ecd / （本次） | 无 |
+
+---
+
+## 10. 后端死代码分诊清单（第 0 周收尾交付物，2026-08-19 落表）
+
+> **判决规则**（用户拍板）：有前端工单消费→**接**；P0-P3 能力但 v0.6 白名单外→**留**（标注理由与决策点）；纯死代码→**砍**。输入源附加：ADR-003 移除页面的后端对应域优先问"砍"。
+> **执行方式**（用户拍板）：清单现在出（本节），执行按判决并入——"接"挂各自载体工单，"砍"集中挂 W4-1 与撤假承诺同批减法，"留"标注理由与决策点。判不了的进"待拍板"列攒一批一次性问用户。
+
+### 10.1 十三个未挂载包（均有 routes.go，均无 NewRoutes 调用方）
+
+| 包 | 行数/测试 | 现状 | 判决 | 载体工单 | 状态 |
+|---|---|---|---|---|---|
+| diff | 1063/1 | 未挂载；Manager/Generator 真实现；ReviewPanel 调它的端点（404 断链） | **接** | W2-2（先删 diff_handler.go 三条旧路由防 panic） | 已定 |
+| mcp | 1020/0 | 未挂载；Manager 真实现（Connect/CallTool）；活路由 `GET /api/mcp` 疑为壳 | **接**（分诊后） | W2-3 | 已定 |
+| workspace | 496/0 | 未挂载；与活 workspace_handler（tree/read/write/import 已注册）**重复** | **砍** | W4-1 | 已定 |
+| automation | 263/0 | 未挂载；与活 `/api/automations` + aiagent schedule **重复** | **砍** | W4-1 | 已定 |
+| artifacts | 339/0 | 未挂载；与活 artifact_handler（`/api/artifacts`）**重复** | **砍** | W4-1 | 已定 |
+| plugins | 579/0 | 未挂载；活 `/api/plugins` 走 runtime.App，不经此包 | **砍**（若 W2-3 判 plugins 要接，走活端点） | W4-1（随 W2-3 结论） | 待拍板 |
+| toolregistry | 5829/6 | 未挂载（routes 层）；**包体是 orchestrator 内部依赖不能砍**；12 条路由与活端点重复（/api/tools 在 project_handler、checkpoints 在 aiagent） | **留**（包体）+ routes 层砍候选 | — | 待拍板 |
+| modelgateway | 3594/7 | 未挂载（routes 层）；**包体是 LLM 主通道（doc/25 刚加固）**；7 条路由与活 `/api/models` 重复 | **留**（包体）+ routes 层砍候选；前端接活端点 | W3-4（接活端点） | 待拍板（routes 层） |
+| sandbox | 2554/2 | 未挂载（routes 层）；Service 真实现；终端走 node-pty IPC 不经此；包体或被工具链内部引用 | **留**（P0-P3 能力，白名单外） | — | 留，v1.0 决策点 |
+| permissions | 2362/4 | 未挂载（routes 层）；Engine/Policy 真实现；main.go 已接 policy table；审批主通道是 aiagent approvals（已通） | **留**（P0-P3 安全能力） | — | 留，v1.0 决策点 |
+| safety | 648/1 | 未挂载（routes 层）；**包体是 guardrails 实现（doc/22 BP4 刚修过）**；2 条路由未挂载 | **留**（包体）+ routes 层砍候选 | — | 待拍板（routes 层） |
+| diagnostics | 1161/0 | 未挂载（routes 层）；**包体被活 diagnostics_handler 依赖**（health 已通）；5 条路由与活端点重复 | **留**（包体）+ routes 层砍候选 | — | 待拍板（routes 层） |
+| browserbridge | 817/0 | 未挂载；CDPAdapter 真实现；前端 BrowserPanel 走 webview 直连不经此 | **留**（P0-P3 能力，白纸/论文检索关联 v0.8） | — | 留，v1.0 决策点 |
+
+**小结**：接 2（diff/mcp）· 砍 3（workspace/automation/artifacts 纯重复）· 留 4（sandbox/permissions/browserbridge 整包 + 各包体）· 待拍板 4（plugins 及 toolregistry/modelgateway/safety/diagnostics 的 routes 层——共同模式：**包体是活依赖不能动，死的是 routes.go 那一层**）。
+
+### 10.2 活路由上无前端消费者的端点（按域归组）
+
+| 端点组 | 现状 | 判决 | 载体工单 | 状态 |
+|---|---|---|---|---|
+| aiagent runs 全套（list/pause/resume/stop/delete） | 挂载无消费者 | **接** | W1-1 | 已定 |
+| aiagent checkpoints 全套 | 挂载无消费者（404/409 语义齐备） | **接** | W1-2 | 已定 |
+| aiagent usage/{runId} + usage/summary | 挂载无消费者 | **接** | W1-3 / W1-4 | 已定 |
+| aiagent approvals/{runId} 列表 | 挂载无消费者（approve/reject 已接） | **接** | W1-1 顺带 | 已定 |
+| `/api/skills` + run | 挂载无消费者（数据源硬编码） | **接**（先接线 Loader） | W2-1 | 已定 |
+| `/api/models` 系列 | 挂载无消费者 | **接**（先分诊数据源） | W3-4 | 已定 |
+| `/api/settings` | 挂载无消费者 | **接**（先分诊数据源） | W3-4 | 已定 |
+| `/api/mcp`（活） | 挂载无消费者，疑为壳 | **接**（分诊后） | W2-3 | 已定 |
+| aiagent trajectory 系列 | 挂载无消费者 | **留** | 第 5 周起增值（回放视图） | 已定 |
+| aiagent schedule/triggers | 挂载无消费者 | **留** | v0.7 决策点 | 已定 |
+| aiagent events/stream（全局） | 挂载无消费者（会话级 SSE 已够用） | **留** | v0.7 决策点 | 已定 |
+| `/api/projects*` + `/api/deliveries`（5 条） | 挂载无消费者 | **留**（P0-P3 项目管理，白名单外） | v1.0 决策点 | 已定 |
+| `/api/datasets` + `/api/map/layers*`（4 条） | 挂载无消费者 | **留**（GIS/遥感 = v0.8，D-27-9） | v0.8 | 已定 |
+| `/api/papers` + `/api/knowledge` + v1 papers/knowledge/ndvi（~10 条） | 挂载无消费者 | **留**（v0.8 域） | v0.8 | 已定 |
+| `/api/environment/checks` + `/api/worker/geo/check` | 挂载无消费者 | **留**（v0.8 GIS 环境检查） | v0.8 | 已定 |
+| `/api/automations*` + automation-runs（3 条） | 挂载无消费者 | **留**（定时任务扩展能力） | v0.7 决策点 | 已定 |
+| `/api/artifacts*`（活，3 条） | 挂载无消费者 | **留**（成果物能力，白名单外） | v1.0 决策点 | 已定 |
+| `/api/tools` + `/api/eino/schema` | 挂载无消费者 | **留**（工具透明化或 v0.7 消费） | v0.7 决策点 | 已定 |
+| `/api/v1/workflows*` + runs（AgentStudio 域） | 挂载无消费者；ADR-003 已移除 AgentStudio 页 | **留**（优先问砍，随 AgentStudio 判决） | v1.0 决策点 | 待拍板 |
+| `/api/tasks*`（内存版，7 条） | 挂载无消费者；已被 `/api/db/tasks` 取代，preload 存幽灵桥 | **砍**（连同 preload 幽灵桥） | W4-1 | 待拍板 |
+| `/api/sandbox/*`（4 条） | 挂载无消费者（终端走 node-pty） | **留**（P0-P3 能力） | v1.0 决策点 | 待拍板 |
+| `/api/permissions/*`（3 条） | 挂载无消费者；preload 存幽灵桥（approve/deny 路径后端不存在） | **留**（幽灵桥随 W4-1 清） | v1.0 决策点 | 待拍板 |
+| `/api/security/decisions` + approvals POST + decisions/{id}（3 条） | 挂载无消费者；与 aiagent approvals 通道关系未明 | **待拍板**（疑与 aiagent 审批重复） | — | 待拍板 |
+| `/api/diffs*`（活，6 条） | 挂载无消费者；与 W2-2 将挂载的 diff 包 `/api/security/diff` 系列**两套并存** | **待拍板**（W2-2 接线后二选一，倾向砍此组保 security/diff 组） | W2-2 收尾 | 待拍板 |
+| `/api/usage/summary` + records（project_handler 版） | 挂载无消费者；与 aiagent usage（W1-4 消费）**重复** | **砍**候选 | W4-1 | 待拍板 |
+| `/api/experts` | 挂载无消费者 | **待拍板**（随 W2-3 扩展四页去留） | W2-3 | 待拍板 |
+| `/api/v1/cron/due` + `/api/v1/files/watch/scan` | 挂载；server/内部消费疑 | **留**（内部调度） | v0.7 核实 | 已定 |
+| `/api/ws` | 挂载无消费者 | **留**（ADR-001 规划，第 5 周起评估） | 第 5 周起 | 已定 |
+| preload 幽灵桥（`POST /api/workspaces`、`POST /api/permissions/requests/{id}/approve\|deny`） | 桥接后端不存在的路由 | **砍**（幽灵桥禁令，doc/15 §2.6） | W4-1 | 已定 |
+
+### 10.3 待拍板批次（攒批一次性问用户）
+
+1. **四个包的 routes 层**（toolregistry/modelgateway/safety/diagnostics）：包体都是活依赖，死的只是 routes.go——是否 W4-1 统一删 routes 层保包体？
+2. **plugins 包**：整包砍，还是等 W2-3 结论？
+3. **`/api/tasks*` 内存版 + `/api/usage`（project_handler 版）**：两组被取代的活端点，W4-1 砍？
+4. **`/api/diffs*` vs `/api/security/diff*` 两套并存**：W2-2 接线后砍哪套（倾向砍 /api/diffs 保 security/diff）？
+5. **`/api/security/decisions` 三条**：与 aiagent approvals 是否重复，砍还是留？
+6. **`/api/v1/workflows*`**：AgentStudio 页已移除，端点砍还是留 v1.0？
+7. **`/api/sandbox/*`、`/api/permissions/*`**：留 v1.0 还是砍（permissions 的幽灵桥无论如何都砍）？
