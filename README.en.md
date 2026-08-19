@@ -29,7 +29,7 @@
 
 ## Current Version Status
 
-> **v0.5.x-dev (Development Preview)** — **This project has not been officially released yet.** The current code is provided for developers to start locally, test, and continue development. v0.1–v0.4 were demo/exploration versions (now archived). v0.5 is the development preview, and v1.0.x will be the first official release.
+> **v0.6.x-dev (Development Preview)** — **This project has not been officially released yet.** The current code is provided for developers to start locally, test, and continue development. v0.1–v0.4 were demo/exploration versions (now archived). v0.5 is the development preview, and v1.0.x will be the first official release.
 >
 > Some capabilities remain in development state, including Cloud Server in-memory, partial GIS/GEE/QGIS/GDAL capabilities, local sandbox policy, plugin marketplace, team collaboration, and billing system. **Please do not treat the current version as production-ready.**
 >
@@ -55,7 +55,7 @@ Tackle complex geospatial and scientific workflows through conversation — empo
 
 ## How to Use
 
-> **Note: The following instructions apply to the unreleased development preview (v0.5.x-dev).** Project structure and startup procedures may change at any time before the official release.
+> **Note: The following instructions apply to the unreleased development preview (v0.6.x-dev).** Project structure and startup procedures may change at any time before the official release.
 
 ### 1. What environment do you need?
 

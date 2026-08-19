@@ -18,6 +18,7 @@
 | v1.11 | 2026-08-17 | A5 性能（doc/23 收官）：路由级代码分割（routes.tsx 全部页面改 react-router lazy，主入口 chunk 5.0MB → 首屏 3 个可缓存 chunk）+ vendor 拆分（react/antd 独立 chunk，依赖不升级哈希不变）+ 消息列表虚拟滚动（@tanstack/react-virtual，动态测量 + 贴底跟随，顺带消除 lastAssistantIdx O(n²) 计算）；103/103 测试 + build + 边界检查全绿 |
 | v1.12 | 2026-08-17 | AI 组件 Ant Design X 迁移一期（doc/26）：自研组件保留但入口关闭，aiComponentsV2 开关（默认开）分流；新建 antdx 渲染树（Bubble+ThoughtChain 消息 / Sender 输入 / Welcome+Prompts 欢迎区），数据层 Session 对象层零改动，MarkdownStream/DiffViewer/审批卡片等自研资产挂进 X 组件复用；110/110 测试 + build + 边界检查全绿 |
 | v1.13 | 2026-08-17 | AI 组件 Ant Design X 迁移二期（doc/26 收官）：Prompts 接真实已安装技能/专家数据（promptData 共享数据层）+ SenderX Suggestion `/` 输入联想（技能/专家命令，Enter 选中阻断提交）+ 虚拟滚动按角色分层预估高度；评估结论：审批卡/工作流卡/侧栏 Conversations 保留自研，AssistantChatPanel 暂不迁移；114/114 测试 + build + 边界检查全绿 |
+| v1.14 | 2026-08-19 | v0.6 前端现代化第 0 周定盘子（doc/27）：全量核查九域现状（观测/恢复域后端就绪前端零消费、diff 审批闸断链、skills 三源、41 处占位）；新建 doc/27 施工计划 + ADR-002 diff 双闸 + ADR-003 导航白名单；立 DoD 三条（§4.5）；§7 终端通道改实（node-pty IPC，非 WS）+ 端点边界纪律；DEV_VERSION_CHECKLIST 纠偏（联调状态按域改实、F2-2 模板分发废弃、CSS 收敛改纪律、已知限制补六项真实债）；纯文档周，零代码改动 |
 
 > 本文件是 GeoWork 仓库的全局开发约束。
 > 任何 AI 编程助手在修改代码前，必须先读本文件，再根据所改模块去读对应的专项文档。
@@ -32,8 +33,8 @@
 | 产品名   | GeoWork                                                      |
 | 定位     | 面向 GIS、遥感和地理空间工作流的本地优先桌面 AI Agent 工作台   |
 | 仓库结构 | Monorepo                                                     |
-| 当前版本 | v0.5.x-dev（开发预览版）                                    |
-| 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版，v1.0 正式发布 |
+| 当前版本 | v0.6.x-dev（开发预览版）                                    |
+| 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版（v0.6 现代化施工中，doc/27），v1.0 正式发布 |
 | 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）+ 二期收官（Prompts 接真实技能/专家数据 + Suggestion `/` 输入联想 + 虚拟滚动调优，审批卡/工作流卡/侧栏评估保留自研）；待 P7-2（视觉回归）、E2（可观测性） |
 | 许可     | MIT（开发预览阶段临时许可；正式发布切回 GeoWork Community License / PolyForm Noncommercial 1.0.0，文本保留于 licenses/LICENSE-COMMUNITY） |
 
@@ -124,6 +125,16 @@
 
 不要一次性改几十个文件，不要把一个页面写成几千行巨型组件。
 
+### 4.5 界面完成定义（DoD，2026-08-19 立，doc/27 §3）
+
+一个界面"完成"当且仅当三条全齐，否则不得进导航：
+
+1. **真 API**：数据来自契约测试钉住的端点，禁止 localStorage mock 顶替、禁止调未挂载端点
+2. **三态齐全**：loading（Skeleton/Spin）+ 空态（统一 `EmptyState` 组件）+ 错误态（可重试）
+3. **错误兜底**：网络失败/4xx/5xx 有明确 UI 反馈，不静默、不假成功
+
+导航白名单冻结（ADR-003）：只减不增，新页面/恢复被砍页面必须走 ADR 修订。
+
 ---
 
 ## 5. 工作流程
@@ -188,15 +199,22 @@
 ## 7. 跨模块通信
 
 ```text
-前端 ←→ Go 核心：HTTP API + SSE（只读事件流） + WebSocket（双向控制信令，/api/ws）
+前端 ←→ Go 核心：HTTP API + SSE（只读事件流） + WebSocket（双向控制信令，/api/ws，规划中未接线）
+前端 ←→ 终端：Electron 主进程 node-pty，经 IPC（window.geowork.terminal，electron/ipc/terminalIpc.ts）——不走 Go 核心
 Go 核心 ←→ Python Worker：HTTP
 Go 核心 ←→ Go 云端：HTTP
 前端 ←→ Go 云端：不直接通信，经过核心层
 
 双通道分工：
-- SSE：Agent → 前端的单向事件流（思考过程、工具日志、状态变更）
-- WebSocket：双向控制信令（审批请求/响应、run/abort、终端 I/O）
+- SSE：Agent → 前端的单向事件流（思考过程、工具日志、状态变更）——当前唯一在用的实时通道
+- WebSocket：双向控制信令（审批请求/响应、run/abort）——ADR-001 规划，前端尚未接线；审批当前走 HTTP POST
+- 终端 I/O：node-pty + IPC（见上），不在 SSE/WS 任何一条上
 - 协议格式：JSON-RPC 2.0，详见 doc/09-GeoWork-Communication-Protocol.md
+
+端点边界（2026-08-19 立，doc/27 W4-4）：
+- 渲染层只可调 core/internal/api/desktop_contract_test.go 钉住的端点
+- 新增前端 API 调用必须同步补契约测试，否则 CI 必红
+- preload.ts 禁止桥接后端不存在的路由（幽灵桥禁令）
 
 禁止：
 - 前端直接调用 Python Worker
@@ -430,6 +448,8 @@ Level 3 — 记录（持续追加）
 | 编号 | 标题 | 状态 |
 |---|---|---|
 | ADR-001 | 通信协议采用 SSE + WebSocket 混合架构 | 已接受 |
+| ADR-002 | Diff 采用双闸模型（事前动作审批 + 事后落盘审查），DiffViewer 与 ReviewPanel 分工 | 已接受 |
+| ADR-003 | v0.6 导航白名单（只减不增，恢复需走 ADR 修订） | 已接受 |
 
 **ADR 状态流转**：
 

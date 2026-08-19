@@ -18,6 +18,17 @@
 
 ## [Unreleased]
 
+### Added — v0.6 前端现代化第 0 周定盘子：doc/27 + ADR-002/003 + DoD + 文档纠偏（2026-08-19 · ZCode）
+- **doc/27-Frontend-Modernization-Plan.md 新建**：五支柱北极星 + 九域现状表（观测/恢复域后端就绪前端零消费、diff 审批闸断链、skills 三源、41 处占位）+ DoD 三条 + 导航白名单 + 五周排期（W1-1~W4-4 逐张工单带验收）；纯文档周，零代码改动
+- **ADR-002（diff 双闸）**：事前 ApprovalCard / 事后 ReviewPanel 双闸模型；用户拍板 DiffViewer 与 ReviewPanel 分工，三条边界钉死（单一渲染核 / 互链成环 / 写操作只属于面板）；接线五步前提含删旧路由防 ServeMux panic
+- **ADR-003（导航白名单）**：保留 3 页 / 分诊 4 页 / 移出 4 页 / 删除 4 份死代码，只减不增，恢复需走 ADR 修订
+- **AGENT.md**：§4.5 新增 DoD 三条（真 API + 三态齐全 + 错误兜底，不齐不得进导航）；§7 终端通道改实（node-pty IPC，WS 标注规划未接线）+ 端点边界纪律与 preload 幽灵桥禁令；ADR 索引登记 002/003；版本表补 v1.14；§1 版本口径归一 v0.6.x-dev
+- **DEV_VERSION_CHECKLIST 纠偏**："后端尚未就绪"过期作废，联调状态按域列表（已联调 4 域 / 待接 3 域）；F2-2 模板分发废弃（与 chat-first 背道而驰）；FP3-2 CSS 数值目标改纪律；已知限制补七项真实债（diff 断链 / 悬空变量 / 假快捷键 / 死条目 / 占位文案 / Extensions mock / 版本三口径悬案）；版本升 v0.6.0-dev
+- **doc/02**：F0-2 后补记 cssVar 决策（92 处悬空 var(--ant-color-*) 与 !important 并入 Button token）与样式纪律
+- **doc/15**：新增 §2.6 契约测试即边界（渲染层只可调契约测试钉住的端点 + preload 幽灵桥禁令，教训：ReviewPanel 断链）
+- **README.md / README.en.md**：版本口径同步 v0.6.x-dev
+- 影响代码文件：无（零代码改动）
+
 ### Changed — 许可临时切换为 MIT（2026-08-17 · ZCode）
 - **根 LICENSE 换为 MIT License**（Copyright (c) 2026 Wanfeng1028），开发预览阶段临时采用
 - **原 GeoWork Community License（PolyForm Noncommercial 1.0.0）未删除**：`LICENSE` 移入 `licenses/LICENSE-COMMUNITY` 保留，正式发布时切回

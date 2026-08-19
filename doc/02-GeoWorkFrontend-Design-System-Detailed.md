@@ -67,6 +67,8 @@ F0-4（stylelint）───┘                                         │
 | 落地动作 | ① `Appearance` 类型保留 7 个值不动；② `themeMenuItems` 只渲染 `editorial` / `editorial-dark` / `system`；③ `<AppShell>` 里加一条注释说明"关闭入口 ≠ 删除代码"；④ 不删 `appearanceStore.ts` 中 `VALID_APPEARANCES` 的运行时校验（防止 hot-reload 状态污染） |
 | 验收标准 | 下拉菜单只出现 3 项；URL 手动改 `localStorage` 存 `appearance=glass` 时，fallback 到 editorial 不白屏 |
 
+> **2026-08-19 补记决策（doc/27 W4-3）**：CSS Modules 中 92 处引用 `var(--ant-color-*)` 当前是悬空的——ConfigProvider 未开 `cssVar`，这些变量无定义来源（靠 fallback 或恰好不生效）。W4-3 工单将开启 ConfigProvider `cssVar` 使其生效；同时 `index.css` 用 `!important` 全局覆盖主按钮为渐变胶囊的做法与 editorialTheme 的 Button token 双重定义同一视觉，须并入 Button token 删除 `!important`。样式纪律（替代原 FP3-2 数值目标）：**禁止新增游离于 token 的样式，存量随改造收敛**。
+
 ### F0-3 胶囊组件四件套组装（Capsule*）
 
 | 组件 | antd 映射 | 现状 | 落地动作 |

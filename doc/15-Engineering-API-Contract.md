@@ -97,6 +97,14 @@ shared/api/
 
 历史说明：`src/utils/apiClient.ts`（指向 8080、臆想的 `{ok,data}` 信封、无人引用的死代码）已于 2026-08-16 删除。**不要**重新引入第二套客户端或响应信封——Go Core 的 REST 响应是裸 JSON（列表接口带 total 字段），无统一信封包装（见 §3.2）。
 
+### 2.6 契约测试即边界（2026-08-19 立，doc/27 W4-4）
+
+`core/internal/api/desktop_contract_test.go` 钉住的端点清单是**渲染层允许调用的全部端点**：
+
+1. 渲染层只可调契约测试钉住的端点；新增前端 API 调用必须同周期补契约测试，否则 CI 必红（W4-4 将加 CI 脚本 grep 渲染层调用与契约清单 diff）
+2. **preload 幽灵桥禁令**：`electron/preload.ts` 禁止桥接后端不存在的路由。教训：ReviewPanel 曾调只存在于未挂载包（`core/internal/diff/routes.go`）的 `/api/security/diff` GET/approve/reject 系列，运行时全部 404，靠人眼两周才发现（详见 ADR-002）
+3. 后端删除/改名端点前必须先改契约测试，测试红即暴露所有前端消费方
+
 ---
 
 ## 3. REST API 规范

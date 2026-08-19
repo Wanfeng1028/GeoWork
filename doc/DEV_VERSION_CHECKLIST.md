@@ -2,8 +2,8 @@
 
 > **状态：更新中**
 > 本清单用于在每次开发版发布前，系统性检查以下内容。
-> 当前版本：v0.5.0-dev（前端 F0~F2 + FP3 完成，2026-08-14 完成 Gemini 胶囊风格统一）
-> 更新时间：2026-08-15 · 更新者：ZCode
+> 当前版本：v0.6.0-dev（doc/21 六阶段重构 + doc/23/25/26 收官，2026-08-17；v0.6 现代化施工见 doc/27）
+> 更新时间：2026-08-19 · 更新者：ZCode（doc/27 第 0 周纠偏：联调状态改实、F2-2 模板分发废弃、CSS 收敛目标改纪律、已知限制补真实债）
 
 ## 总体进度
 
@@ -15,12 +15,12 @@
 | F1-2 反馈三件套 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | F1-3 全页面对齐 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | F2-1 布局骨架 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
-| F2-2 页面架构 | ⏳ 部分完成 | — | ErrorBoundary 包裹 + About 页已落地；AppShell 按路由分发 A/B/C/D 模板未实现 |
+| F2-2 页面架构 | ⏳ 部分完成 | — | ErrorBoundary 包裹 + About 页已落地；~~AppShell 按路由分发 A/B/C/D 模板~~ **已废弃**（doc/27/ADR-003：模板分发是页面思维，与 chat-first 背道而驰），替换为"AppShell 拆分至 <15KB"（doc/27 W4-2） |
 | F2-4 6 主题下线 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | FP3 品牌化 | ✅ 完成 | 2026-08-12 | TraeCode AI Agent |
 | Gemini 胶囊风格统一 | ✅ 完成 | 2026-08-14 | — |
 | 提交门禁（husky/commitlint/lint-staged） | ✅ 完成 | 2026-08-15 | ZCode |
-| F1-1 + FP3-2/CSS 收敛 | ⏳ 待执行 | — | — |
+| 样式纪律（原 FP3-2/CSS 收敛） | ⏳ 持续 | — | 目标改纪律：禁止新增游离于 token 的样式，存量随改造收敛（doc/27 W4-3：cssVar 开启 + !important 并入 Button token） |
 
 ---
 
@@ -42,7 +42,7 @@
 
 ### F2 验收
 
-- [ ] 5 个路由都走对应模板，且 padding/max-width 全部对齐 §7.3 — ⏳ 待实现（AppShell 尚未按路由分发模板）
+- [ ] ~~5 个路由都走对应模板，且 padding/max-width 全部对齐 §7.3~~ **已废弃**（doc/27/ADR-003：模板分发废弃，替换为 AppShell 拆分至 <15KB，见 doc/27 W4-2）
 - [ ] 右侧工作面板拖拽 320–960 有吸附，收起后宽度残影为 0 — ⏳ 待人工验证（规格已按代码现状修正，见 doc/02）
 - [ ] 设置页 640px 居中截图与 §7.3 模板 D 完全一致 — ⏳ 待截图
 - [x] 控制台 `localStorage.getItem('appearance')` 输入错值时页面塌到 editorial，无报错
@@ -87,11 +87,30 @@
 | 项目 | 原因 | 计划 |
 |---|---|---|
 | 视觉基线截图 | 需要桌面环境实际运行 | 人工在本地启动后截图存档 |
-| 与 Go Core API 联调 | 后端尚未就绪 | 待 P0/P1 后端完成后启动联调 |
-| CSS 文件数收敛（FP3-2） | 当前 64 个 module.css（2026-08-15 核实），目标 8 个 | 待逐步收敛 |
-| AppShell 按路由分发 A/B/C/D 模板（F2-2 剩余项） | 当前仅 Outlet 直出，模板分发未实现 | 待排期 |
+| ~~与 Go Core API 联调｜后端尚未就绪~~ **已过期作废**（2026-08-19 纠偏） | 后端早已就绪且部分域已联调并受契约测试保护 | 联调状态按域见下表 |
+| CSS 样式纪律（原 FP3-2 数值目标） | "64→8 个 module.css"数值目标不现实也无收益 | 改为纪律：禁止新增游离于 token 的样式，存量随改造收敛（doc/27 W4-3） |
+| ~~AppShell 按路由分发 A/B/C/D 模板（F2-2 剩余项）~~ **已废弃** | 模板分发是页面思维，与 chat-first 背道而驰（doc/27/ADR-003） | 替换为"AppShell 拆分至 <15KB"（doc/27 W4-2） |
 | 路径别名落地 | `@shared/@shell/@pages/@app` 已配置但代码 0 处使用，39 个文件仍用相对路径 | 后续重构时逐步替换 |
-| ErrorBoundary 双份 | `src/components/` 与 `src/shell/feedback/` 各一份 | 待收敛为一份 |
+| ErrorBoundary 双份 | `src/components/` 与 `src/shell/feedback/` 各一份 | doc/27 W4-1 删除死代码那份 |
+| diff 审批闸断链 | ReviewPanel 调的 `/api/security/diff` GET/approve/reject/apply-all 只存在于未挂载的 `core/internal/diff` 包，运行时 404 | doc/27 W2-2 + ADR-002 |
+| 悬空 CSS 变量 | CSS Modules 92 处引用 `var(--ant-color-*)`，ConfigProvider 未开 cssVar | doc/27 W4-3 |
+| 假快捷键 | 菜单印着 Ctrl+F/Ctrl+Shift+F 标签，全局 keydown 零实现 | doc/27 W3-1 |
+| 全局搜索死条目 | GlobalSearchModal 硬编码 19 条静态数据，含已下线的 theme-preview 路由 | doc/27 W3-2 |
+| 41 处占位文案 | "后续接入/敬请期待"类假承诺散布于 Extensions/MobileControl/NewTask | doc/27 W4-1 随白名单清场 |
+| Extensions 四页 mock | Skills/MCP/Connectors/Experts 全走 localStorage，后端端点未接 | doc/27 W2-1/W2-3 分诊 |
+| 版本三口径悬案 | 治理文档已归一 v0.6.x-dev（AGENT.md §1 / README / 本清单），但 `apps/desktop/package.json` 的 version 仍是 `2.0.0`（AboutPage 大概率读它，对外展示 2.0.0） | v1.0 发版前统一：package.json 改回与治理口径一致或明确拆分（产品版本 vs 包版本），W1 期间顺手核实 AboutPage 数据源 |
+
+### 与 Go Core API 联调状态（按域，2026-08-19 核实）
+
+| 域 | 状态 | 说明 |
+|---|---|---|
+| conversations（CRUD + SSE） | ✅ 已联调 | Session 对象层消费，契约测试钉住（desktop_contract_test.go） |
+| agent runs（GET 单条轮询）+ approvals | ✅ 已联调 | doc/21 D2 确认执行 + 审批卡闭环 |
+| /api/db/tasks CRUD | ✅ 已联调 | TasksPage + taskStore，契约测试钉住 |
+| workspaces tree/read | ✅ 已联调 | FileTreePanel 经 IPC |
+| agent runs 全套（list/pause/resume/stop/delete）+ checkpoints + usage + trajectory | ❌ 后端就绪、前端零消费 | doc/27 第 1 周（金矿域） |
+| diff 审批闸（/api/security/diff 系列） | ❌ 断链 | 前端调未挂载端点，doc/27 W2-2 |
+| skills/mcp/plugins/experts/settings/models | ❌ 后端就绪（skills 数据源为硬编码，需先接线 Loader）、前端走 localStorage | doc/27 第 2 周 |
 
 ---
 
@@ -99,11 +118,11 @@
 
 | 项 | 值 |
 |---|---|
-| 验收版本 | v0.5.0-dev |
+| 验收版本 | v0.6.0-dev |
 | 分支 | `master`（当前）；历史：`dev-frontend/TraeCodeCloud-SeedCode`（PR #1）、`feat/F1-visual-upgrade` |
 | 验收人 | ZCode（本次一致性核实） |
-| 验收日期 | 2026-08-15 |
+| 验收日期 | 2026-08-19 |
 
 ---
 
-*最后更新：2026-08-15 · ZCode · 文档与代码一致性核实（F2-2 状态修正、右面板规格 320–960、F0-3 命中数更新、已知限制刷新）*
+*最后更新：2026-08-19 · ZCode · doc/27 第 0 周纠偏（联调状态按域改实、F2-2 模板分发废弃、CSS 收敛改纪律、已知限制补入 diff 断链/悬空变量/假快捷键/死条目/占位文案/Extensions mock 六项真实债）*
