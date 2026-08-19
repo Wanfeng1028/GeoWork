@@ -18,7 +18,7 @@
 | **D-27-4** | diff 查看器与审查面板 | ✅ **已定（2026-08-19 用户拍板）：分工**——内联=对话流即时可见性（纯展示），面板=跨会话批量审查闸门；三条边界（单一渲染核/互链成环/写操作只属于面板）见 ADR-002 |
 | **D-27-5** | 导航白名单 | ✅ 见 ADR-003：新任务/定时任务/设置保留，扩展四页分诊后定去留，MobileControl/Workspace/DataCenter/AgentStudio 移出导航 |
 | **D-27-6** | 存量页面三态补齐 | ✅ **已定（2026-08-19 用户拍板）：第 4 周专项**——3 个保留页面 + shell 弹窗统一 EmptyState 并补齐三态（W4-5），DoD 对存量代码强制执行，否则白名单保留的 Settings 永远不达标 |
-| **D-27-7** | 546 处内联样式 | 📌 **默认采纳推荐项：纪律收敛不开专项**（禁止新增游离 token 的内联色值，存量随页面改造顺带收敛）——多数已引用 token、视觉可控；专项清理动 69 个文件风险高回报低。如改主意可升级为"第 4 周重灾区专项"（Settings 77/ProviderEditor 35/ModelPicker 24/RightWorkspacePanel 23 四文件） |
+| **D-27-7** | 546 处内联样式 | ✅ **已定（2026-08-19 用户拍板）：方案 1 纪律收敛 + 两条落地修正**——① 禁止新增游离 token 的内联色值；四个重灾区全在 v0.6 施工面上（Settings/ProviderEditor/ModelPicker → W3-4 模型路由域，RightWorkspacePanel → W1-W2 面板接线），**"本工单改造到的代码区，内联色值迁入 token/module.css"写进对应工单 DoD，债随真工单消化，不单开专项**；② **W4 末加闸**（W4-6）：grep 四文件非 token 内联色值，残留 >约 20 处再花半天清扫（降级版重灾区专项），否则维持纪律；③ 其余 ~380 处多在 ADR-003 待移除页面里，为将死代码做清洁是负收益，不动；方案 3（全量专项）否决 |
 
 ---
 
@@ -49,7 +49,7 @@
 | 5 | mcp/plugins/experts | ⚠️ 待分诊：`GET /api/mcp`（project_handler.go:126）疑为壳；真能力或在未挂载包 | ❌ 四页全 localStorage mock（mcpStorage/skillsStorage/connectorsStorage/expertStorage） | 产出"接/留/砍"清单，四页可能收敛成一页（产品决策） |
 | 6 | tasks/调度 | ✅ `/api/db/tasks` CRUD 全通；`/api/agent/schedule`+triggers 就绪未接 | ⚠️ TasksPage 接了 db/tasks；执行记录是假映射；schedule/triggers 零消费 | 见域 2 的 executions 问题 |
 | 7 | workspace/文件 | ✅ tree/read/write/import/list 齐全 | ⚠️ 仅 FileTreePanel 接 tree/read；WorkspacePage 是 21 行占位页 | write/import 闲置；preload.ts 有幽灵桥（`POST /api/workspaces` 后端不存在） |
-| 8 | settings/models | ✅ `/api/settings`、`/api/models`+test 就绪 | ❌ 全走 localStorage（settingsStorage/modelProviderStore） | 换机即丢配置 |
+| 8 | settings/models | ✅ `/api/settings`、`/api/models`+test 就绪 | ❌ 全走 localStorage（settingsStorage/modelProviderStore） | 换机即丢配置；接线工单 W3-4（施工时先分诊 `app.Models()`/`app.Settings()` 数据源真伪——skills 硬编码教训） |
 | 9 | 桌面手感 | —（纯前端） | ❌ 全局 keydown 零实现；GlobalSearchModal 硬编码 19 条静态数据且含死路由 theme-preview；ShortcutsModal 是"指引不存在功能的说明书" | AppMenu.tsx:81/93 印着 Ctrl+F/Ctrl+Shift+F 标签，按键无响应 |
 
 **横切债**（不属于任何单域）：DashboardPage 死代码未挂路由；ThemePreviewPage 下线但文件保留；`components/ErrorBoundary` 死代码（与 shell/feedback/ 重复）；4 个 @deprecated 主题；CSS Modules 92 处引用悬空 `var(--ant-color-*)`（ConfigProvider 未开 cssVar）；index.css `!important` 全局按钮覆盖与主题 token 打架；546 处内联样式；EmptyState 仅 2 页使用、其余裸 `<Empty>`；存量三态不齐；41 处"后续接入/敬请期待"文案。**处置归属**：死代码与废弃主题 → ADR-003 删除清单 + W4-1；cssVar 与 `!important` → W4-3；546 处内联样式 → D-27-7 纪律收敛；EmptyState 统一与存量三态 → W4-5（D-27-6）；占位文案 → W4-1。
@@ -99,7 +99,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | 工单 | 内容 | 验收 |
 |---|---|---|
 | W2-1 skills 单一真相源（最重） | **三步走，顺序不可颠倒**：① core 接线 `skills.Loader→Registry→orchestrator.WithSkills`（main.go 装配，此步完成前 `/api/skills` 供什么都是假的）② `/api/skills` 改供 Registry ③ 前端 SkillsPage + antdx promptData（`/` 联想，commit 335e00f）同步切换数据源——**联想必须同步切，否则造出第四个源** | 界面启用的技能 Agent 真能加载；`/` 联想名单 = 后端真相源 |
-| W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新 | ReviewPanel 列表/审批/apply-all 全通，不再 404 |
+| W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新。**DoD 附加：本工单改造到的 RightWorkspacePanel 代码区，内联色值迁入 token/module.css（D-27-7）** | ReviewPanel 列表/审批/apply-all 全通，不再 404 |
 | W2-2b 内联纯展示收口 | 按 ADR-002 边界三条落地：DiffViewer 确认零写操作调用 + 共用渲染核 + 加"在审查面板中打开"深链（runID/path 过滤）；面板条目回链对话轮次 | ADR-002 三条边界全部可验证 |
 | W2-3 mcp 分诊 | 分诊 `/api/mcp` 是壳还是真、未挂载包里有无真能力；产出扩展四页"接/留/砍"清单 | 清单落档，四页去留拍板 |
 
@@ -110,6 +110,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W3-1 真快捷键 | 全局 keydown 绑 Ctrl+F/Ctrl+N/Ctrl+,/Ctrl+B/Ctrl+Shift+F（注意输入框焦点冲突） | 菜单标签与实际能力一致 |
 | W3-2 Ctrl+K 命令面板 | 数据源 = 路由白名单 + taskStore 任务 + 技能 + 动作（切主题/开面板/切会话）；升级 GlobalSearchModal 并删 theme-preview 死条目 | 静态 19 条退役 |
 | W3-3 ShortcutsModal 改实 | 从说明书变真实映射，删"设置快捷键"假按钮 | 所列快捷键全部可用 |
+| W3-4 settings/models 域接线（D-27-7 载体） | SettingsPage 从 settingsStorage 切 `GET/POST /api/settings`；模型配置从 modelProviderStore 切 `/api/models` + `/api/models/test`（ProviderEditor 连接测试真调）；**施工第一步先分诊 `app.Models()`/`app.Settings()` 数据源真伪（skills 硬编码教训——端点真数据源假则先修后端）** | 设置与模型配置换机不丢；ProviderEditor 测试按钮真实测通。**DoD 附加：本工单改造到的代码区（SettingsPage/ProviderEditor/ModelPicker），内联色值迁入 token/module.css（D-27-7 债随工单消化）** |
 
 **整体验收**：键盘完成 新建→输入→发送→暂停→恢复 全程不碰鼠标。
 
@@ -122,6 +123,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W4-3 样式修复 | ConfigProvider 开 `cssVar`（92 处悬空变量起死回生）；index.css `!important` 并入 Button token |
 | W4-4 契约 CI 门禁 | 契约测试（desktop_contract_test.go）扩到**前端实际消费的全部端点**；CI 脚本 grep 渲染层 API 调用与契约清单 diff——ReviewPanel 式断链从"靠人眼两周"变"CI 必红" |
 | W4-5 存量三态补齐（D-27-6 用户拍板） | 3 个保留页面（NewTask/Tasks/Settings）+ shell 弹窗（GlobalSearch/Shortcuts/Usage 等）统一 EmptyState 替换裸 `<Empty>`；Settings 补 loading/错误态；Extensions 四页若分诊后保留则一并补——DoD 三条对存量代码强制执行 |
+| W4-6 内联样式残留闸（D-27-7 用户拍板） | grep 四个重灾区文件（SettingsPage/ProviderEditor/ModelPicker/RightWorkspacePanel）的非 token 内联色值：**残留 >约 20 处 → 花半天清扫（降级版重灾区专项）；≤20 处 → 维持纪律收工**。其余 ~380 处在 ADR-003 待移除页面，不动 | 闸门结果记入执行记录 |
 
 ### 第 5 周起：增值可选项
 

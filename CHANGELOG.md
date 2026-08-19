@@ -19,7 +19,7 @@
 ## [Unreleased]
 
 ### Added — v0.6 前端现代化第 0 周定盘子：doc/27 + ADR-002/003 + DoD + 文档纠偏（2026-08-19 · ZCode）
-- **doc/27-Frontend-Modernization-Plan.md 新建**：五支柱北极星 + 九域现状表（观测/恢复域后端就绪前端零消费、diff 审批闸断链、skills 三源、41 处占位）+ DoD 三条 + 导航白名单 + 五周排期（W1-1~W4-4 逐张工单带验收）；纯文档周，零代码改动
+- **doc/27-Frontend-Modernization-Plan.md 新建**：五支柱北极星 + 九域现状表（观测/恢复域后端就绪前端零消费、diff 审批闸断链、skills 三源、41 处占位）+ DoD 三条 + 导航白名单 + 五周排期（W1-1~W4-6 逐张工单带验收）；纯文档周，零代码改动
 - **ADR-002（diff 双闸）**：事前 ApprovalCard / 事后 ReviewPanel 双闸模型；用户拍板 DiffViewer 与 ReviewPanel 分工，三条边界钉死（单一渲染核 / 互链成环 / 写操作只属于面板）；接线五步前提含删旧路由防 ServeMux panic
 - **ADR-003（导航白名单）**：保留 3 页 / 分诊 4 页 / 移出 4 页 / 删除 4 份死代码，只减不增，恢复需走 ADR 修订
 - **AGENT.md**：§4.5 新增 DoD 三条（真 API + 三态齐全 + 错误兜底，不齐不得进导航）；§7 终端通道改实（node-pty IPC，WS 标注规划未接线）+ 端点边界纪律与 preload 幽灵桥禁令；ADR 索引登记 002/003；版本表补 v1.14；§1 版本口径归一 v0.6.x-dev
@@ -27,6 +27,7 @@
 - **doc/02**：F0-2 后补记 cssVar 决策（92 处悬空 var(--ant-color-*) 与 !important 并入 Button token）与样式纪律
 - **doc/15**：新增 §2.6 契约测试即边界（渲染层只可调契约测试钉住的端点 + preload 幽灵桥禁令，教训：ReviewPanel 断链）
 - **README.md / README.en.md**：版本口径同步 v0.6.x-dev
+- **D-27-7 内联样式终版拍板（同日补充）**：债随工单消化——W2-2/W3-4 工单 DoD 附加"本工单改造到的代码区，内联色值迁入 token/module.css"；W4-6 残留闸门（四重灾区文件非 token 内联色值 >约 20 处再半天清扫，否则维持纪律）；~380 处在 ADR-003 待移除页面不动（负收益）；**新增 W3-4 settings/models 域接线工单**（SettingsPage→/api/settings、模型配置→/api/models+test，充当 D-27-7 载体并填补 settings 域无排期工单的缺口，施工先分诊 app.Models()/app.Settings() 数据源真伪）
 - 影响代码文件：无（零代码改动）
 
 ### Changed — 许可临时切换为 MIT（2026-08-17 · ZCode）
