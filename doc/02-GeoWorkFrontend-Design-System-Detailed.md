@@ -144,7 +144,7 @@ F0-4（stylelint）───┘                                         │
 
 | 组件 | 尺寸锚点 | 落地动作 | 状态 |
 |---|---|---|---|
-| 左侧 icon rail | 56px 固定宽，全站常驻 | `IconRail.tsx` 已集成到 `AppShell.tsx`，侧栏折叠→0px 由 rail 承担导航 | ✅ 2026-08-14 |
+| 左侧 icon rail | 56px 固定宽，全站常驻 | `IconRail.tsx` 已集成到 `AppShell.tsx`，侧栏折叠→0px 由 rail 承担导航 | ⚠️ 勘误（2026-08-20）：文档记录"已集成"与代码现状不符——AppShell.tsx import 表无 IconRail，大概率被 8 月中旬 Gemini 侧栏改版顶替。处置待用户拍板（删文件或复活），见 doc/27 W4-1 第 ⑤ 条 |
 | 主内容区 | 4 模板对应 A/B/C/D 四种 max-width 和 padding | 在 `AppShell.tsx` 按路由分发 `<SkeletonPage template={A\|B\|C\|D} />` | ⏳ 待实现 |
 | 右侧常驻工作面板 | 默认 380，可拖 320–960（且不超过视口 65%），收起返回 null（无残影） | `RightWorkspacePanel.tsx` 独立 panel + 拖拽手柄；收起/展开按钮在顶栏图标组 | ✅ 2026-08-14（规格于 2026-08-15 按实现修正） |
 

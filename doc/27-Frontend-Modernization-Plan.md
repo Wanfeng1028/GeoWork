@@ -21,6 +21,7 @@
 | **D-27-7** | 546 处内联样式 | ✅ **已定（2026-08-19 用户拍板）：方案 1 纪律收敛 + 两条落地修正**——① 禁止新增游离 token 的内联色值；四个重灾区全在 v0.6 施工面上（Settings/ProviderEditor/ModelPicker → W3-4 模型路由域，RightWorkspacePanel → W1-W2 面板接线），**"本工单改造到的代码区，内联色值迁入 token/module.css"写进对应工单 DoD，债随真工单消化，不单开专项**；② **W4 末加闸**（W4-6）：grep 四文件非 token 内联色值，残留 >约 20 处再花半天清扫（降级版重灾区专项），否则维持纪律；③ 其余 ~380 处多在 ADR-003 待移除页面里，为将死代码做清洁是负收益，不动；方案 3（全量专项）否决 |
 | **D-27-8** | UI 组件选型优先级 | ✅ **已定（2026-08-19 用户拍板）**：① AI 组件优先用 **Ant Design X**（AI 组件范围可拓展——GeoWork 是现代 Agent 应用，凡 Agent 交互语义都算），能用的就都要用；② 自定义组件次之（Gemini 风格胶囊族等自有设计语言）；③ Ant Design 普通组件兜底，但必须走 editorial/editorial-dark token 体系。**封存主题（bootstrap/illustration/glass）删除，入口一并移除**（挂 W4-1）。已同步写入 AGENT.md §11.6 |
 | **D-27-9** | 整体版本路线 | ✅ **已定（2026-08-19 用户拍板）**：**v0.6–v0.7** 现代化 Agent 应用前端+后端完成（可迭代 0.6.x–0.7.x，本计划五周排期属 v0.6 段）→ **v0.8** GIS 与遥感能力介入 → **v0.9** 发布前测试版本 → v1.0 正式发布。GIS 地图工作区、datasets/map layers/papers/knowledge/ndvi 等端点归属 v0.8，v0.6 不装（与 ADR-003 一致） |
+| **D-27-10** | 侧栏现代化（2026-08-20 用户拍板） | ✅ **三条结论**：① **会话列表迁移 antdx Conversations**——对 doc/26 §3.2"侧栏 Conversations 保留自研（语义或数据模型不匹配）"的**正式翻案**。翻案依据：antdx Conversations API 已逐项核对（items/activeKey/onActiveChange；groupable 按 group 字段分组且支持折叠；menu 属性继承 antd MenuProps；creation 新会话配置 2.0.0+；shortcutKeys 2.0.0+），仓库 `@ant-design/x` 版本 ^2.9.0 满足全部要求。现有侧栏八成功能可被直接吞下，实际缝隙仅两处：组操作菜单（置顶组/在文件夹中打开/归档整组）需经 groupable.label 渲染器自行包 antd Dropdown；pinned 置顶排序组件不管、需在传 items 前自行排好——两处均为小活，撑不起"保留自研"结论。② **导航三项（新任务/定时任务/移动端控制）+ 扩展折叠区（专家/技能/MCP/连接器）换自研 NavRow 组件**——antdx 没有导航菜单等价物（其组件域是 AI 交互件：Bubble/Conversations/Sender 等，导航属应用外壳）。对标 Codex/ChatGPT/Claude/Cursor：此类产品侧栏导航无一家用现成菜单组件，全是自绘圆角行（button + 图标 + 文字，hover 整行圆角高亮，active 态浅色胶囊底）。NavRow 属 D-27-8 第二级"自定义胶囊族"的合法用例（第一级不存在时用第二级）。视觉规格：active 态 = Gemini 蓝 10~12% 透明底胶囊（CapsuleTag 同款语言），行高 36~40px，radius 9999；hover 态透明度浅一档；样式走 module.css；AppShell 现有 BorderBeam 亮色流光包装器保留适用。③ **顶部 CapsuleTabs 双胶囊切换器保留**（用户指定保留 Gemini 蓝胶囊形状）。已知问题：第二档 channels 由路由 /mobile-control 派生，而 MobileControl 在 ADR-003 裁撤名单——页面删除后切换器只剩单档失去意义。第二档归宿作为附注决策项与 ADR-003 的 MobileControl 处置联判，候选方案：改为"会话 / 已归档"视图切换（把现有 archived 过滤逻辑升级为显式视图）。**禁止让 ADR-003 落地时它变成指向 404 的开关** |
 
 ---
 
@@ -54,7 +55,7 @@
 | 8 | settings/models | ✅ `/api/settings`、`/api/models`+test 就绪 | ❌ 全走 localStorage（settingsStorage/modelProviderStore） | 换机即丢配置；接线工单 W3-4（施工时先分诊 `app.Models()`/`app.Settings()` 数据源真伪——skills 硬编码教训） |
 | 9 | 桌面手感 | —（纯前端） | ❌ 全局 keydown 零实现；GlobalSearchModal 硬编码 19 条静态数据且含死路由 theme-preview；ShortcutsModal 是"指引不存在功能的说明书" | AppMenu.tsx:81/93 印着 Ctrl+F/Ctrl+Shift+F 标签，按键无响应 |
 
-**横切债**（不属于任何单域）：DashboardPage 死代码未挂路由；ThemePreviewPage 下线但文件保留；`components/ErrorBoundary` 死代码（与 shell/feedback/ 重复）；4 个 @deprecated 主题；CSS Modules 92 处引用悬空 `var(--ant-color-*)`（ConfigProvider 未开 cssVar）；index.css `!important` 全局按钮覆盖与主题 token 打架；546 处内联样式；EmptyState 仅 2 页使用、其余裸 `<Empty>`；存量三态不齐；41 处"后续接入/敬请期待"文案。**处置归属**：死代码与废弃主题 → ADR-003 删除清单 + W4-1；cssVar 与 `!important` → W4-3；546 处内联样式 → D-27-7 纪律收敛；EmptyState 统一与存量三态 → W4-5（D-27-6）；占位文案 → W4-1。
+**横切债**（不属于任何单域）：DashboardPage 死代码未挂路由；ThemePreviewPage 下线但文件保留；`components/ErrorBoundary` 死代码（与 shell/feedback/ 重复）；4 个 @deprecated 主题；CSS Modules 92 处引用悬空 `var(--ant-color-*)`（ConfigProvider 未开 cssVar）；index.css `!important` 全局按钮覆盖与主题 token 打架；546 处内联样式；EmptyState 仅 2 页使用、其余裸 `<Empty>`；存量三态不齐；41 处"后续接入/敬请期待"文案。**处置归属**：死代码与废弃主题 → ADR-003 删除清单 + W4-1；cssVar 与 `!important` → W4-3；546 处内联样式 → D-27-7 纪律收敛；EmptyState 统一与存量三态 → W4-5（D-27-6）；占位文案 → W4-1。**41 处占位文案的点名实例（2026-08-20 补，W4-1 执行时按点名优先）**：AppMenu 任务菜单四条待裁路由入口、帮助菜单"帮助文档后续接入"、AppShell handleExportChat"导出对话后续接入"、AppShell handleOpenFolder"打开文件夹后续接入"（处置详见 W4-1 假承诺兑现批次 ①~④）。
 
 ---
 
@@ -87,12 +88,14 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 
 ### 第 1 周：接金矿（观测与恢复域，纯前端，零后端改动）
 
+> **第 0 项（工程前置，2026-08-20 补）：CI 触发方式确认**——仓库 CI 为 pr-check.yml，名称暗示仅 PR 触发；近期提交均 bypass 直推 master。若确认仅 PR 触发，则 W1 起的代码提交将不跑任何门禁（lint/typecheck/build/test/Go core/Python worker 全部旁路），与第 0 周建立的纪律不对称。开工前二选一：**W1 起改走 PR 流**（让分支保护从障碍变护栏），或**给 workflow 补 push 触发**。两分钟的确认动作，先于 W1-1 执行。
+
 | 工单 | 内容 | 验收 |
 |---|---|---|
-| W1-1 运行历史视图 | `GET /api/agent/runs` 列表 + pause/resume/stop/delete 按钮，替换 TasksPage 假映射"执行记录"，删 `MOCK_EXECUTIONS` | 列表真实、四个动作可用 |
-| W1-2 检查点恢复 | checkpoints 全套端点消费；404（无存档）/409（仍在跑）分流渲染（语义见 routes.go:322-333） | 渲染"运行在第 N 轮因 X 暂停"，恢复可点 |
-| W1-3 成本徽章 | `GET /api/agent/usage/{runId}` 挂到每条 run | 每条 run 显示真实 token/成本 |
-| W1-4 UsageModal 真数据 | 换 `GET /api/agent/usage/summary`，五个 mock 常量退役。**前置（§10.3 拍板）：开工前先砍 project_handler 版 `/api/usage` 两条——诱饵不是哑弹，接错照样 200 返回 project 维度数据，先拆才接不错** | 数字来自后端 |
+| W1-1 运行历史视图 | `GET /api/agent/runs` 列表 + pause/resume/stop/delete 按钮，替换 TasksPage 假映射"执行记录"，删 `MOCK_EXECUTIONS`。**追加（2026-08-20）：侧栏会话列表数据源分诊**——现状 taskStore/conversationStorage 走 localStorage 仅存 20 条会话壳，后端 run store 有全量真实历史，与 skills 三源同款病的前端版；W1-1 完成后侧栏应从 run store 投影，localStorage 版降级为缓存或退役，别让侧栏和 Tasks 页各记各的账 | 列表真实、四个动作可用 |
+| W1-2 检查点恢复 | checkpoints 全套端点消费；404（无存档）/409（仍在跑）分流渲染（语义见 routes.go:322-333）。**追加（2026-08-20）：409（仍在跑）的文案必须给用户出口（一键跳回进行中的会话），不是只报错** | 渲染"运行在第 N 轮因 X 暂停"，恢复可点 |
+| W1-3 成本徽章 | `GET /api/agent/usage/{runId}` 挂到每条 run。**追加（2026-08-20）：区分"未配置价格"与"零成本"**——GEOWORK_LLM_PRICE_INPUT/OUTPUT 未配置时显示"未配置价格"或"—"，禁止渲染 $0.00（流式成本记录是真实能力，但价格靠环境变量喂；不区分会让真实数据被用户当成 mock） | 每条 run 显示真实 token/成本 |
+| W1-4 UsageModal 真数据 | 换 `GET /api/agent/usage/summary`，五个 mock 常量退役。**前置（§10.3 拍板）：开工前先砍 project_handler 版 `/api/usage` 两条——诱饵不是哑弹，接错照样 200 返回 project 维度数据，先拆才接不错**。**追加（2026-08-20）：plan limits 是信息性而非硬约束**（usage 计量为 honor-system，server S3 已注释注明），UI 禁止把配额渲染成强制限制 | 数字来自后端 |
 
 **整体验收**：跑一个任务→暂停→面板出现暂停态→恢复→成本数字滚动。这五秒钟就是"聊天壳"变"工作台"的时刻。
 
@@ -104,13 +107,14 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新。**同 PR 砍 `/api/diffs` 六条（§10.3 拍板：挂载即取代不留双轨期；grep 零消费前置，有消费者回来重议）**。**DoD 附加：本工单改造到的 RightWorkspacePanel 代码区，内联色值迁入 token/module.css（D-27-7）** | ReviewPanel 列表/审批/apply-all 全通，不再 404；全仓库只剩一套 diff 端点 |
 | W2-2b 内联纯展示收口 | 按 ADR-002 边界三条落地：DiffViewer 确认零写操作调用 + 共用渲染核 + 加"在审查面板中打开"深链（runID/path 过滤）；面板条目回链对话轮次 | ADR-002 三条边界全部可验证 |
 | W2-3 mcp 分诊 | 分诊 `/api/mcp` 是壳还是真、未挂载包里有无真能力；产出扩展四页"接/留/砍"清单 | 清单落档，四页去留拍板 |
+| W2-4 侧栏现代化（D-27-10 载体） | **前置 = W1-1 已完成**（数据源定型后再换渲染层；顺序颠倒 = 对着即将变形的数据层做迁移，白干）。a) **antdx Conversations 接管会话列表**：items/activeKey/onActiveChange/groupable（工作空间分组+折叠）/menu（重命名/置顶/导出/归档菜单原样搬）/creation；**数据层零改动**——taskStore、useSession 同步逻辑、conversationCache 全不动，仅换渲染层（延续 doc/26 迁移打法）。b) 组操作菜单经 groupable.label 渲染器包 antd Dropdown。c) 导航三项 + 扩展折叠区换自研 NavRow（规格见 D-27-10 ②），扩展区折叠沿用现有 extOpen state。d) **⌘K 冲突处置**：antdx shortcutKeys 的 creation 默认绑定 Win/⌘+K，与 W3-2 命令面板计划冲突——迁移时必须禁用或改绑 creation 快捷键，⌘K 留给命令面板独占；Alt+数字切换会话可保留（白赚能力）。e) CapsuleTabs 第二档归宿附注决策项（与 ADR-003 联判，见 D-27-10 ③）。**备注：与 W3 扩展区转正是复用关系不是冲突——届时扩展四页入口直接用同一 NavRow** | ① antdx 接管列表/分组/操作菜单/creation 全部生效；② doc/26 §3.2 翻案补记完成（原文"保留自研"结论作废并注明理由与新结论）；③ ⌘K 冲突处置落地；④ doc/02 胶囊家族补 NavRow 一件；⑤ 侧栏从上到下统一胶囊语言，antd 退至弹窗/下拉等无形状暴露处（第三级合法用法） |
 
 ### 第 3 周：手感层
 
 | 工单 | 内容 | 验收 |
 |---|---|---|
 | W3-1 真快捷键 | 全局 keydown 绑 Ctrl+F/Ctrl+N/Ctrl+,/Ctrl+B/Ctrl+Shift+F（注意输入框焦点冲突） | 菜单标签与实际能力一致 |
-| W3-2 Ctrl+K 命令面板 | 数据源 = 路由白名单 + taskStore 任务 + 技能 + 动作（切主题/开面板/切会话）；升级 GlobalSearchModal 并删 theme-preview 死条目 | 静态 19 条退役 |
+| W3-2 Ctrl+K 命令面板 | 数据源 = 路由白名单 + taskStore 任务 + 技能 + 动作（切主题/开面板/切会话）；升级 GlobalSearchModal 并删 theme-preview 死条目。**注记（2026-08-20）：⌘K 归命令面板独占；antdx Conversations 的 creation 快捷键已在 W2-4 禁用/改绑，此处无需再处理，仅登记防回退** | 静态 19 条退役 |
 | W3-3 ShortcutsModal 改实 | 从说明书变真实映射，删"设置快捷键"假按钮 | 所列快捷键全部可用 |
 | W3-4 settings/models 域接线（D-27-7 载体） | SettingsPage 从 settingsStorage 切 `GET/POST /api/settings`；模型配置从 modelProviderStore 切 `/api/models` + `/api/models/test`（ProviderEditor 连接测试真调）；**施工第一步先分诊 `app.Models()`/`app.Settings()` 数据源真伪（skills 硬编码教训——端点真数据源假则先修后端）** | 设置与模型配置换机不丢；ProviderEditor 测试按钮真实测通。**DoD 附加：本工单改造到的代码区（SettingsPage/ProviderEditor/ModelPicker），内联色值迁入 token/module.css（D-27-7 债随工单消化）** |
 
@@ -120,7 +124,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 
 | 工单 | 内容 |
 |---|---|
-| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向。**FeedbackModal 降级为真动作（用户拍板，默认项）**：保留入口，提交改为 `openExternal` 跳 GitHub Issues，正文预填版本/系统/工作模式；**不建后端反馈端点**——cloud server 尚属 in-memory 开发态，在其上建反馈收集是制造新假承诺；工时不够则退回纯撤入口（二选一，默认前者）。**封存主题删除**（D-27-8）：bootstrap/illustration/glass 三主题文件 + antd-style 依赖引用 + 主题入口一并移除。**后端减法批次**（§10.3 拍板，每项纯删除不夹重构、go build + go test 验收）：① 四包 routes 层（toolregistry/modelgateway/safety/diagnostics，包体保留）② `/api/tasks*` 内存版 7 条 + plugins 包（砍前 grep 全前端 + tests/e2e 确认零消费）③ preload 幽灵桥全清（跟随其桥接端点同批）④ `/api/security/decisions` 3 条按条件判决执行（grep 零消费且 W2 审批工单不消费则砍，否则留并标注） |
+| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向。**FeedbackModal 降级为真动作（用户拍板，默认项）**：保留入口，提交改为 `openExternal` 跳 GitHub Issues，正文预填版本/系统/工作模式；**不建后端反馈端点**——cloud server 尚属 in-memory 开发态，在其上建反馈收集是制造新假承诺；工时不够则退回纯撤入口（二选一，默认前者）。**封存主题删除**（D-27-8）：bootstrap/illustration/glass 三主题文件 + antd-style 依赖引用 + 主题入口一并移除。**后端减法批次**（§10.3 拍板，每项纯删除不夹重构、go build + go test 验收）：① 四包 routes 层（toolregistry/modelgateway/safety/diagnostics，包体保留）② `/api/tasks*` 内存版 7 条 + plugins 包（砍前 grep 全前端 + tests/e2e 确认零消费）③ preload 幽灵桥全清（跟随其桥接端点同批）④ `/api/security/decisions` 3 条按条件判决执行（grep 零消费且 W2 审批工单不消费则砍，否则留并标注）。**假承诺兑现批次（2026-08-20 扩充六项，均属"41 处后续接入文案"点名实例，执行时按点名优先）**：① **AppMenu 菜单栏同步清理**——任务菜单当前挂着 /workspace（地图工作区）、/data-center（数据资产）、/agent-studio（Agent 编排）、/mobile-control 四条待裁路由；ADR-003 裁导航时盯的是 IconRail 与路由表，菜单栏这处易漏；不同步清理的后果是页面删了菜单还在，点进去 404。② **帮助菜单"帮助文档后续接入"**（AppMenu.tsx，message.info 假承诺）降级为真动作——openExternal 跳 GitHub 仓库 README（url-guard 白名单已放行 https，与 FeedbackModal 降级同模式同 PR）。③ **导出对话"后续接入"**（AppShell.tsx handleExportChat，message.info 假承诺）二选一——真实现（数据在 conversationCache/taskStore，导出 JSON 或 Markdown）或隐藏入口；默认真实现，工时不够退隐藏。④ **"在文件夹中打开"**（AppShell.tsx handleOpenFolder，message.info 假承诺）接上而非砍——桌面端能力半存在（AppMenu 已在调 window.geowork.desktop.chooseFolder IPC 桥），主进程补一个 shell.showItemInFolder handler 即可，十几分钟小活，与第 ② 条同批。⑤ **IconRail 孤儿处置**——shell/IconRail.tsx（约 2KB）不在当前 AppShell.tsx 的 import 表中，大概率被 8 月中旬 Gemini 侧栏改版顶替；二选一：删文件，或复活（若 ADR-003 裁完导航只剩 3+1 项，56px 窄图标栏 + NavRow hover 态是适配组合）；**留待用户拍板，先登记**。⑥ 以上 ①~④ 条在横切债处置行下有点名引用（见 §2） |
 | W4-2 AppShell 拆分 | 35KB→15KB 以内：拖拽抽 `usePanelResize`、侧栏抽 `SidebarTasks`、弹窗归拢 `ShellModals`、静态 `Modal.confirm`（AppShell.tsx:416/496）改上下文版 |
 | W4-3 样式修复 | ConfigProvider 开 `cssVar`（92 处悬空变量起死回生）；index.css `!important` 并入 Button token |
 | W4-4 契约 CI 门禁 | 契约测试（desktop_contract_test.go）扩到**前端实际消费的全部端点**；CI 脚本 grep 渲染层 API 调用与契约清单 diff——ReviewPanel 式断链从"靠人眼两周"变"CI 必红" |
@@ -171,7 +175,8 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 
 | 周 | 提交 | 与计划的偏差 |
 |---|---|---|
-| 第 0 周 | ca8b67b / fb09ecd / （本次） | 无 |
+| 第 0 周 | ca8b67b / fb09ecd / 65bf8da / ee8e06d | 无 |
+| 第 0 周补档（2026-08-20） | （本次） | 侧栏现代化讨论拍板落档：D-27-10 + W2-4 + W1 四工单设计细节 + W3-2 注记 + W4-1 扩充六项 + CI 触发前置第 0 项；纯文档，零代码改动 |
 
 ---
 

@@ -18,6 +18,16 @@
 
 ## [Unreleased]
 
+### Added — doc/27 补档：D-27-10 侧栏现代化拍板落档 + W1/W3/W4 工单细化 + CI 触发前置（2026-08-20 · ZCode）
+- **D-27-10 侧栏现代化（用户拍板）**：① 会话列表迁移 antdx Conversations——对 doc/26 §3.2"保留自研"结论的正式翻案（API 逐项核对，^2.9.0 满足全部要求；缝隙仅组操作菜单与 pinned 排序两处小活）；② 导航三项 + 扩展折叠区换自研 NavRow（D-27-8 第二级合法用例，active 态 Gemini 蓝 10~12% 透明底胶囊，行高 36~40px，radius 9999）；③ 顶部 CapsuleTabs 双胶囊切换器保留，第二档归宿与 ADR-003 MobileControl 处置联判（候选"会话/已归档"视图切换），禁止变成指向 404 的开关
+- **W2-4 侧栏现代化工单新增**（D-27-10 载体）：前置 W1-1；antdx Conversations 接管渲染层、数据层零改动；⌘K 冲突处置（creation 快捷键禁用/改绑，⌘K 留给命令面板独占）；五项 DoD 含 doc/26 §3.2 翻案补记与 doc/02 胶囊家族补 NavRow
+- **W1 四工单设计细节追加**：W1-1 侧栏数据源分诊（localStorage 20 条壳 vs run store 全量，skills 三源同款病前端版）；W1-2 409 文案给用户出口（一键跳回进行中会话）；W1-3 区分"未配置价格"与"零成本"（禁止渲染 $0.00）；W1-4 plan limits 信息性非硬约束（honor-system）
+- **W1 表头新增第 0 项**：CI 触发方式确认（pr-check.yml 疑仅 PR 触发，近期 bypass 直推 master 旁路全部门禁；开工前二选一：改走 PR 流或补 push 触发）
+- **W3-2 注记**：⌘K 归命令面板独占，W2-4 已处置 creation 快捷键，此处仅登记防回退
+- **W4-1 扩充假承诺兑现批次六项**：AppMenu 四条待裁路由同步清理、帮助文档降级 openExternal 跳 GitHub README、导出对话真实现（默认）或隐藏、"在文件夹中打开"接 shell.showItemInFolder、IconRail 孤儿登记待拍板、四条点名引用挂横切债处置行
+- **doc/02 F2-1 勘误**：IconRail"已集成"记录与代码现状不符（AppShell import 表无 IconRail），处置跟随 W4-1 第 ⑤ 条拍板
+- 影响代码文件：无（零代码改动）
+
 ### Added — v0.6 前端现代化第 0 周定盘子：doc/27 + ADR-002/003 + DoD + 文档纠偏（2026-08-19 · ZCode）
 - **doc/27-Frontend-Modernization-Plan.md 新建**：五支柱北极星 + 九域现状表（观测/恢复域后端就绪前端零消费、diff 审批闸断链、skills 三源、41 处占位）+ DoD 三条 + 导航白名单 + 五周排期（W1-1~W4-6 逐张工单带验收）；纯文档周，零代码改动
 - **ADR-002（diff 双闸）**：事前 ApprovalCard / 事后 ReviewPanel 双闸模型；用户拍板 DiffViewer 与 ReviewPanel 分工，三条边界钉死（单一渲染核 / 互链成环 / 写操作只属于面板）；接线五步前提含删旧路由防 ServeMux panic
