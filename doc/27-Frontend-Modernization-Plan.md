@@ -92,7 +92,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W1-1 运行历史视图 | `GET /api/agent/runs` 列表 + pause/resume/stop/delete 按钮，替换 TasksPage 假映射"执行记录"，删 `MOCK_EXECUTIONS` | 列表真实、四个动作可用 |
 | W1-2 检查点恢复 | checkpoints 全套端点消费；404（无存档）/409（仍在跑）分流渲染（语义见 routes.go:322-333） | 渲染"运行在第 N 轮因 X 暂停"，恢复可点 |
 | W1-3 成本徽章 | `GET /api/agent/usage/{runId}` 挂到每条 run | 每条 run 显示真实 token/成本 |
-| W1-4 UsageModal 真数据 | 换 `GET /api/agent/usage/summary`，五个 mock 常量退役 | 数字来自后端 |
+| W1-4 UsageModal 真数据 | 换 `GET /api/agent/usage/summary`，五个 mock 常量退役。**前置（§10.3 拍板）：开工前先砍 project_handler 版 `/api/usage` 两条——诱饵不是哑弹，接错照样 200 返回 project 维度数据，先拆才接不错** | 数字来自后端 |
 
 **整体验收**：跑一个任务→暂停→面板出现暂停态→恢复→成本数字滚动。这五秒钟就是"聊天壳"变"工作台"的时刻。
 
@@ -101,7 +101,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | 工单 | 内容 | 验收 |
 |---|---|---|
 | W2-1 skills 单一真相源（最重） | **三步走，顺序不可颠倒**：① core 接线 `skills.Loader→Registry→orchestrator.WithSkills`（main.go 装配，此步完成前 `/api/skills` 供什么都是假的）② `/api/skills` 改供 Registry ③ 前端 SkillsPage + antdx promptData（`/` 联想，commit 335e00f）同步切换数据源——**联想必须同步切，否则造出第四个源** | 界面启用的技能 Agent 真能加载；`/` 联想名单 = 后端真相源 |
-| W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新。**DoD 附加：本工单改造到的 RightWorkspacePanel 代码区，内联色值迁入 token/module.css（D-27-7）** | ReviewPanel 列表/审批/apply-all 全通，不再 404 |
+| W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新。**同 PR 砍 `/api/diffs` 六条（§10.3 拍板：挂载即取代不留双轨期；grep 零消费前置，有消费者回来重议）**。**DoD 附加：本工单改造到的 RightWorkspacePanel 代码区，内联色值迁入 token/module.css（D-27-7）** | ReviewPanel 列表/审批/apply-all 全通，不再 404；全仓库只剩一套 diff 端点 |
 | W2-2b 内联纯展示收口 | 按 ADR-002 边界三条落地：DiffViewer 确认零写操作调用 + 共用渲染核 + 加"在审查面板中打开"深链（runID/path 过滤）；面板条目回链对话轮次 | ADR-002 三条边界全部可验证 |
 | W2-3 mcp 分诊 | 分诊 `/api/mcp` 是壳还是真、未挂载包里有无真能力；产出扩展四页"接/留/砍"清单 | 清单落档，四页去留拍板 |
 
@@ -120,7 +120,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 
 | 工单 | 内容 |
 |---|---|
-| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向。**FeedbackModal 降级为真动作（用户拍板，默认项）**：保留入口，提交改为 `openExternal` 跳 GitHub Issues，正文预填版本/系统/工作模式；**不建后端反馈端点**——cloud server 尚属 in-memory 开发态，在其上建反馈收集是制造新假承诺；工时不够则退回纯撤入口（二选一，默认前者）。**封存主题删除**（D-27-8）：bootstrap/illustration/glass 三主题文件 + antd-style 依赖引用 + 主题入口一并移除。**后端"砍"判决批次**（§10 分诊表）与撤假承诺同批减法 |
+| W4-1 清场 | 删 §4 白名单中 🗑 项 + 白名单外占位入口；WorkspacePage 重定向。**FeedbackModal 降级为真动作（用户拍板，默认项）**：保留入口，提交改为 `openExternal` 跳 GitHub Issues，正文预填版本/系统/工作模式；**不建后端反馈端点**——cloud server 尚属 in-memory 开发态，在其上建反馈收集是制造新假承诺；工时不够则退回纯撤入口（二选一，默认前者）。**封存主题删除**（D-27-8）：bootstrap/illustration/glass 三主题文件 + antd-style 依赖引用 + 主题入口一并移除。**后端减法批次**（§10.3 拍板，每项纯删除不夹重构、go build + go test 验收）：① 四包 routes 层（toolregistry/modelgateway/safety/diagnostics，包体保留）② `/api/tasks*` 内存版 7 条 + plugins 包（砍前 grep 全前端 + tests/e2e 确认零消费）③ preload 幽灵桥全清（跟随其桥接端点同批）④ `/api/security/decisions` 3 条按条件判决执行（grep 零消费且 W2 审批工单不消费则砍，否则留并标注） |
 | W4-2 AppShell 拆分 | 35KB→15KB 以内：拖拽抽 `usePanelResize`、侧栏抽 `SidebarTasks`、弹窗归拢 `ShellModals`、静态 `Modal.confirm`（AppShell.tsx:416/496）改上下文版 |
 | W4-3 样式修复 | ConfigProvider 开 `cssVar`（92 处悬空变量起死回生）；index.css `!important` 并入 Button token |
 | W4-4 契约 CI 门禁 | 契约测试（desktop_contract_test.go）扩到**前端实际消费的全部端点**；CI 脚本 grep 渲染层 API 调用与契约清单 diff——ReviewPanel 式断链从"靠人眼两周"变"CI 必红" |
@@ -189,16 +189,16 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 | workspace | 496/0 | 未挂载；与活 workspace_handler（tree/read/write/import 已注册）**重复** | **砍** | W4-1 | 已定 |
 | automation | 263/0 | 未挂载；与活 `/api/automations` + aiagent schedule **重复** | **砍** | W4-1 | 已定 |
 | artifacts | 339/0 | 未挂载；与活 artifact_handler（`/api/artifacts`）**重复** | **砍** | W4-1 | 已定 |
-| plugins | 579/0 | 未挂载；活 `/api/plugins` 走 runtime.App，不经此包 | **砍**（若 W2-3 判 plugins 要接，走活端点） | W4-1（随 W2-3 结论） | 待拍板 |
-| toolregistry | 5829/6 | 未挂载（routes 层）；**包体是 orchestrator 内部依赖不能砍**；12 条路由与活端点重复（/api/tools 在 project_handler、checkpoints 在 aiagent） | **留**（包体）+ routes 层砍候选 | — | 待拍板 |
-| modelgateway | 3594/7 | 未挂载（routes 层）；**包体是 LLM 主通道（doc/25 刚加固）**；7 条路由与活 `/api/models` 重复 | **留**（包体）+ routes 层砍候选；前端接活端点 | W3-4（接活端点） | 待拍板（routes 层） |
-| sandbox | 2554/2 | 未挂载（routes 层）；Service 真实现；终端走 node-pty IPC 不经此；包体或被工具链内部引用 | **留**（P0-P3 能力，白名单外） | — | 留，v1.0 决策点 |
-| permissions | 2362/4 | 未挂载（routes 层）；Engine/Policy 真实现；main.go 已接 policy table；审批主通道是 aiagent approvals（已通） | **留**（P0-P3 安全能力） | — | 留，v1.0 决策点 |
-| safety | 648/1 | 未挂载（routes 层）；**包体是 guardrails 实现（doc/22 BP4 刚修过）**；2 条路由未挂载 | **留**（包体）+ routes 层砍候选 | — | 待拍板（routes 层） |
-| diagnostics | 1161/0 | 未挂载（routes 层）；**包体被活 diagnostics_handler 依赖**（health 已通）；5 条路由与活端点重复 | **留**（包体）+ routes 层砍候选 | — | 待拍板（routes 层） |
+| plugins | 579/0 | 未挂载；活 `/api/plugins` 走 runtime.App，不经此包 | **砍**（若 W2-3 判 plugins 要接，走活端点） | W4-1（砍前 grep 全前端 + tests/e2e 确认零消费） | 已定 |
+| toolregistry | 5829/6 | 未挂载（routes 层）；**包体是 orchestrator 内部依赖不能砍**；12 条路由与活端点重复（/api/tools 在 project_handler、checkpoints 在 aiagent） | **砍 routes 层、保包体**（纯删除不夹重构） | W4-1（go build + go test 验收） | 已定 |
+| modelgateway | 3594/7 | 未挂载（routes 层）；**包体是 LLM 主通道（doc/25 刚加固）**；7 条路由与活 `/api/models` 重复 | **砍 routes 层、保包体**；前端接活端点 | W4-1（routes 层）/ W3-4（接活端点） | 已定 |
+| sandbox | 2554/2 | 未挂载（routes 层）；Service 真实现；终端走 node-pty IPC 不经此；包体或被工具链内部引用 | **留**（P0-P3 真实现，砍了 v1.0 要重写） | 标 W4 沙箱设置消费点 | 已定 |
+| permissions | 2362/4 | 未挂载（routes 层）；Engine/Policy 真实现（BP1 权限引擎）；main.go 已接 policy table；白名单外无取代者 | **留**（P0-P3 安全能力） | v1.0 决策点；preload 幽灵桥无论端点去留都砍（W4-1） | 已定 |
+| safety | 648/1 | 未挂载（routes 层）；**包体是 guardrails 实现（doc/22 BP4 刚修过）**；2 条路由未挂载 | **砍 routes 层、保包体** | W4-1 | 已定 |
+| diagnostics | 1161/0 | 未挂载（routes 层）；**包体被活 diagnostics_handler 依赖**（health 已通）；5 条路由与活端点重复 | **砍 routes 层、保包体** | W4-1 | 已定 |
 | browserbridge | 817/0 | 未挂载；CDPAdapter 真实现；前端 BrowserPanel 走 webview 直连不经此 | **留**（P0-P3 能力，白纸/论文检索关联 v0.8） | — | 留，v1.0 决策点 |
 
-**小结**：接 2（diff/mcp）· 砍 3（workspace/automation/artifacts 纯重复）· 留 4（sandbox/permissions/browserbridge 整包 + 各包体）· 待拍板 4（plugins 及 toolregistry/modelgateway/safety/diagnostics 的 routes 层——共同模式：**包体是活依赖不能动，死的是 routes.go 那一层**）。
+**小结**（2026-08-19 全部拍板）：接 2（diff/mcp）· 砍 4 整包（workspace/automation/artifacts 纯重复 + plugins）+ 4 个 routes 层（toolregistry/modelgateway/safety/diagnostics，包体保留）· 留 3 整包（sandbox/permissions/browserbridge）+ 4 包体。routes 层删除为纯删除提交、不夹重构，go build + go test 验证编译即验收。
 
 ### 10.2 活路由上无前端消费者的端点（按域归组）
 
@@ -222,24 +222,34 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 | `/api/automations*` + automation-runs（3 条） | 挂载无消费者 | **留**（定时任务扩展能力） | v0.7 决策点 | 已定 |
 | `/api/artifacts*`（活，3 条） | 挂载无消费者 | **留**（成果物能力，白名单外） | v1.0 决策点 | 已定 |
 | `/api/tools` + `/api/eino/schema` | 挂载无消费者 | **留**（工具透明化或 v0.7 消费） | v0.7 决策点 | 已定 |
-| `/api/v1/workflows*` + runs（AgentStudio 域） | 挂载无消费者；ADR-003 已移除 AgentStudio 页 | **留**（优先问砍，随 AgentStudio 判决） | v1.0 决策点 | 待拍板 |
-| `/api/tasks*`（内存版，7 条） | 挂载无消费者；已被 `/api/db/tasks` 取代，preload 存幽灵桥 | **砍**（连同 preload 幽灵桥） | W4-1 | 待拍板 |
-| `/api/sandbox/*`（4 条） | 挂载无消费者（终端走 node-pty） | **留**（P0-P3 能力） | v1.0 决策点 | 待拍板 |
-| `/api/permissions/*`（3 条） | 挂载无消费者；preload 存幽灵桥（approve/deny 路径后端不存在） | **留**（幽灵桥随 W4-1 清） | v1.0 决策点 | 待拍板 |
-| `/api/security/decisions` + approvals POST + decisions/{id}（3 条） | 挂载无消费者；与 aiagent approvals 通道关系未明 | **待拍板**（疑与 aiagent 审批重复） | — | 待拍板 |
-| `/api/diffs*`（活，6 条） | 挂载无消费者；与 W2-2 将挂载的 diff 包 `/api/security/diff` 系列**两套并存** | **待拍板**（W2-2 接线后二选一，倾向砍此组保 security/diff 组） | W2-2 收尾 | 待拍板 |
-| `/api/usage/summary` + records（project_handler 版） | 挂载无消费者；与 aiagent usage（W1-4 消费）**重复** | **砍**候选 | W4-1 | 待拍板 |
+| `/api/v1/workflows*` + runs（AgentStudio 域） | 挂载无消费者；ADR-003 已移除 AgentStudio 页 | **留**（W4 自动化域载体候选） | W4 工单第一步分诊数据源真伪 | 已定 |
+| `/api/tasks*`（内存版，7 条） | 挂载无消费者；已被 `/api/db/tasks` 取代，preload 存幽灵桥 | **砍**（连同 preload 幽灵桥） | W4-1（砍前 grep 全前端 + tests/e2e 确认零消费） | 已定 |
+| `/api/sandbox/*`（4 条） | 挂载无消费者（终端走 node-pty） | **留**（P0-P3 真实现，砍了 v1.0 要重写） | 标 W4 沙箱设置消费点 | 已定 |
+| `/api/permissions/*`（3 条） | 挂载无消费者；preload 存幽灵桥（approve/deny 路径后端不存在） | **留**（BP1 权限引擎真实现，白名单外无取代者） | v1.0 决策点；幽灵桥无论端点去留都砍（W4-1） | 已定 |
+| `/api/security/decisions` + approvals POST + decisions/{id}（3 条） | 挂载无消费者；决策记录真源是 AuditEntry，API 版疑似重复 | **条件拍板**：grep 零消费且 W2 审批工单不消费→**砍**挂 W4-1；有消费→留并标注 | 判决随 grep 直接落表 | 已定（条件） |
+| `/api/diffs*`（活，6 条） | 挂载无消费者；与 W2-2 将挂载的 diff 包 `/api/security/diff` 系列两套并存 | **砍**（保 security/diff 组——正统性来自消费方与能力匹配，apply/rollback 只在新包） | **与 W2-2 挂载同一个 PR**——挂载即取代，不留双轨期（活路由双轨期就是 ReviewPanel 接错线的窗口）；grep 零消费前置，有消费者回来重议 | 已定 |
+| `/api/usage/summary` + records（project_handler 版） | 挂载无消费者；与 aiagent usage（W1-4 消费）**重复** | **砍**（诱饵不是哑弹：接错照样 200，返回 project 维度数据，界面照常渲染只是数字错） | **提前到 W1-4 开工前砍**——先拆，W1-4 就接不错 | 已定 |
 | `/api/experts` | 挂载无消费者 | **待拍板**（随 W2-3 扩展四页去留） | W2-3 | 待拍板 |
 | `/api/v1/cron/due` + `/api/v1/files/watch/scan` | 挂载；server/内部消费疑 | **留**（内部调度） | v0.7 核实 | 已定 |
 | `/api/ws` | 挂载无消费者 | **留**（ADR-001 规划，第 5 周起评估） | 第 5 周起 | 已定 |
 | preload 幽灵桥（`POST /api/workspaces`、`POST /api/permissions/requests/{id}/approve\|deny`） | 桥接后端不存在的路由 | **砍**（幽灵桥禁令，doc/15 §2.6） | W4-1 | 已定 |
 
-### 10.3 待拍板批次（攒批一次性问用户）
+### 10.3 拍板记录（2026-08-19 用户攒批拍板，7 项全部落定）
 
-1. **四个包的 routes 层**（toolregistry/modelgateway/safety/diagnostics）：包体都是活依赖，死的只是 routes.go——是否 W4-1 统一删 routes 层保包体？
-2. **plugins 包**：整包砍，还是等 W2-3 结论？
-3. **`/api/tasks*` 内存版 + `/api/usage`（project_handler 版）**：两组被取代的活端点，W4-1 砍？
-4. **`/api/diffs*` vs `/api/security/diff*` 两套并存**：W2-2 接线后砍哪套（倾向砍 /api/diffs 保 security/diff）？
-5. **`/api/security/decisions` 三条**：与 aiagent approvals 是否重复，砍还是留？
-6. **`/api/v1/workflows*`**：AgentStudio 页已移除，端点砍还是留 v1.0？
-7. **`/api/sandbox/*`、`/api/permissions/*`**：留 v1.0 还是砍（permissions 的幽灵桥无论如何都砍）？
+| # | 事项 | 判决 |
+|---|---|---|
+| 1 | 四包 routes 层（toolregistry/modelgateway/safety/diagnostics，26 条重复路由） | W4-1 统一删 routes 层、保包体；纯删除不夹重构，go build + go test 验收；"无害保留"不成立——apiClient.ts 318 行同款理由：未挂载死路由是给 AI 辅助开发埋的地雷 |
+| 2 | /api/tasks* 内存版 + plugins 包 | 全砍挂 W4-1（取代者已上线、无近期消费工单），砍前 grep 全前端 + tests/e2e 确认零消费；preload 幽灵桥跟随其桥接的端点同批清 |
+| 3 | /api/usage project_handler 版 | **提前到 W1-4 开工前砍**——诱饵不是哑弹：接错照样 200，返回 project 维度数据，界面照常渲染只是数字错。先拆，W1-4 就接不错 |
+| 4 | diff 两套并存 | 砍 /api/diffs 六条、保 /api/security/diff（core/internal/diff）；**与 W2-2 挂载同一个 PR，挂载即取代不留双轨期**；"先注册即正统"不成立——正统性来自消费方与能力匹配，apply/rollback 只在新包，保旧族要重写 ADR-002 + preload，零收益 |
+| 5 | /api/sandbox/* | 留——P0-P3 真实现，砍了 v1.0 要重写；标 W4 沙箱设置消费点 |
+| 6 | /api/v1/workflows* | 留——W4 自动化域载体候选，W4 工单第一步分诊数据源真伪 |
+| 7 | /api/permissions/* + /api/security/decisions | permissions 留（BP1 权限引擎真实现，白名单外无取代者，v1.0 决策点）；security/decisions 条件拍板——grep 零消费且 W2 审批工单不消费则砍挂 W4-1（决策记录真源是 AuditEntry，API 版疑似重复），有消费则留并标注。**幽灵桥无论端点去留都砍** |
+
+**减法五原则**（本轮拍板提炼，后续所有砍/留判决沿用）：
+
+1. **诱饵先拆，哑弹可等**——接错照样 200 的重复端点（如 project 维度 usage）必须在消费工单开工前砍；未挂载死路由可以排到 W4-1
+2. **减法在前，门禁在后**——契约测试该锁定唯一真端点，重复端点活着只会污染契约面；否决"等契约门禁后再砍"
+3. **挂载即取代，不留双轨期**——新路由挂载与旧路由删除同一个 PR；活路由双轨期就是前端接错线的窗口
+4. **正统性来自消费方与能力匹配，不来自先注册**
+5. **删除提交必须纯删除、不夹重构**，编译 + 测试绿即验收

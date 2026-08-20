@@ -32,6 +32,7 @@
 - **D-27-9 整体版本路线（用户拍板）**：v0.6–v0.7 现代化 Agent 应用前后端完成（可迭代 0.6.x–0.7.x）→ v0.8 GIS 与遥感能力介入 → v0.9 发布前测试版本
 - **W4-1 扩写**：FeedbackModal 降级为真动作（openExternal 跳 GitHub Issues，正文预填版本/系统/工作模式；不建后端反馈端点——cloud server in-memory 开发态，建反馈收集是制造新假承诺；工时不够退回纯撤入口，默认前者）
 - **§10 后端死代码分诊清单（第 0 周收尾交付物）**：13 个未挂载包 + 活路由无消费者端点全量落表（接/留/砍 + 载体工单 + 状态）；判决规则：有前端工单消费→接、P0-P3 能力白名单外→留、纯死代码→砍；接 2（diff→W2-2、mcp→W2-3）、砍 3（workspace/automation/artifacts 纯重复）、留 4、待拍板 7 项攒批一次性问用户
+- **§10.3 七项待拍板全部落定（用户攒批拍板）**：四包 routes 层 W4-1 统一删保包体；/api/tasks* 内存版 + plugins 包砍挂 W4-1；/api/usage project 版提前到 W1-4 开工前砍（诱饵先拆）；diff 两套砍 /api/diffs 保 security/diff 与 W2-2 同 PR 挂载即取代；sandbox/workflows/permissions 留；security/decisions 条件拍板随 grep 落表。提炼减法五原则（诱饵先拆哑弹可等 / 减法在前门禁在后 / 挂载即取代不留双轨期 / 正统性来自消费方与能力匹配 / 删除提交纯删除不夹重构）
 - 影响代码文件：无（零代码改动）
 
 ### Changed — 许可临时切换为 MIT（2026-08-17 · ZCode）
