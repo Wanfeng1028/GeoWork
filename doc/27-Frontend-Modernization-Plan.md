@@ -86,9 +86,9 @@
 
 doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 
-### 第 1 周：接金矿（观测与恢复域，纯前端，零后端改动）
+### 第 1 周：接金矿（观测与恢复域，纯前端，零后端改动）（唯一例外 = /api/usage project_handler 版诱饵端点纯删除，§10.3-3 拍板提前至 W1-4 开工前）
 
-> **第 0 项（工程前置）：CI 触发方式确认——✅ 已确认（2026-08-20 核实 pr-check.yml）**：`push: branches: [master]` 存在，直推即跑七 job 全套门禁，无需动作。可选注记：push 触发属事后验证，若未来要 pre-merge 拦截再评估 PR 流，当前直推协作模式已受远端门禁保护。
+> **第 0 项（工程前置）：CI 触发方式确认——已确认（2026-08-20 核实 .github/workflows/pr-check.yml）**：`push: branches: [master]` 存在，直推 master 即跑七 job 全套（doc-check / frontend-check / core-check / server-check / e2e-smoke 双平台 / worker-check），无需动作。注记：push 触发属事后验证，单人直推节奏下够用；需要 pre-merge 拦截时再评估 PR 流。
 
 | 工单 | 内容 | 验收 |
 |---|---|---|
@@ -129,7 +129,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W4-3 样式修复 | ConfigProvider 开 `cssVar`（92 处悬空变量起死回生）；index.css `!important` 并入 Button token |
 | W4-4 契约 CI 门禁 | 契约测试（desktop_contract_test.go）扩到**前端实际消费的全部端点**；CI 脚本 grep 渲染层 API 调用与契约清单 diff——ReviewPanel 式断链从"靠人眼两周"变"CI 必红" |
 | W4-5 存量三态补齐（D-27-6 用户拍板） | 3 个保留页面（NewTask/Tasks/Settings）+ shell 弹窗（GlobalSearch/Shortcuts/Usage 等）统一 EmptyState 替换裸 `<Empty>`；Settings 补 loading/错误态；Extensions 四页若分诊后保留则一并补——DoD 三条对存量代码强制执行 |
-| W4-6 内联样式残留闸（D-27-7 用户拍板） | grep 四个重灾区文件（SettingsPage/ProviderEditor/ModelPicker/RightWorkspacePanel）的非 token 内联色值：**残留 >约 20 处 → 花半天清扫（降级版重灾区专项）；≤20 处 → 维持纪律收工**。其余 ~380 处在 ADR-003 待移除页面，不动 | 闸门结果记入执行记录 |
+| W4-6 内联样式残留闸（D-27-7 用户拍板） | grep 四个重灾区文件（SettingsPage/ProviderEditor/ModelPicker/RightWorkspacePanel）的非 token 内联色值：**残留 >约 20 处 → 花半天清扫（降级版重灾区专项）；≤20 处 → 维持纪律收工**。其余 ~380 处在 ADR-003 待移除页面，不动；闸门结果记入执行记录 |
 
 ### 第 5 周起：增值可选项
 
@@ -176,7 +176,8 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 | 周 | 提交 | 与计划的偏差 |
 |---|---|---|
 | 第 0 周 | ca8b67b / fb09ecd / 65bf8da / ee8e06d | 无 |
-| 第 0 周补档（2026-08-20） | （本次） | 侧栏现代化讨论拍板落档：D-27-10 + W2-4 + W1 四工单设计细节 + W3-2 注记 + W4-1 扩充六项 + CI 触发前置第 0 项；纯文档，零代码改动 |
+| 第 0 周补档（2026-08-20） | 1ab8b94 / 240a88e | 侧栏现代化讨论拍板落档：D-27-10 + W2-4 + W1 四工单设计细节 + W3-2 注记 + W4-1 扩充六项 + CI 触发前置第 0 项；纯文档，零代码改动 |
+| 第 0 周排版整顿（2026-08-20） | （本次） | 文档排版与结构整顿：AGENT.md 章节顺序/版本表去重/§1 瘦身/§3 路由表补 doc/27/§14 补第 0 周记录；checklist 过期项改实；W1 第 0 项 CI 文案收口；ADR-002 补记 + Related；纯文档，零代码改动 |
 
 ---
 

@@ -1,16 +1,16 @@
 # AGENT.md
 
+## 版本历史
+
 | 版本 | 日期       | 变更摘要                                                 |
 | ---- | ---------- | -------------------------------------------------------- |
 | v1.0 | 2026-08-11 | 初稿：模块地图、文档路由、通用纪律                       |
 | v1.1 | 2026-08-12 | 合并去重双版本；修正路由表 404、skills 结构、依赖文件名；补 marketplace 模块、P0-P3 文档入口、版本表 |
-| v1.2 | 2026-08-12 | TraeCodeCloud 后端/Agent P0-P3 全阶段实现完成：§1 当前阶段更新为「P0-P3 后端施工全部完成，待验收」；P0/P1/P2/P3 施工图各追加「实现记录」版本（05-v0.6 / 06-v0.5 / 07-v0.5 / 08-v0.3）。 |
-| v1.2 | 2026-08-12 | TraeCode AI Agent 前端施工记录：E0/F0/F1-2/F1-3/F2-1/F2-2/F2-4/FP3 全部完成，更新项目阶段、文档路由、验收记录 |
+| v1.2 | 2026-08-12 | TraeCodeCloud 后端/Agent P0-P3 全阶段实现完成：§1 当前阶段更新为「P0-P3 后端施工全部完成，待验收」；P0/P1/P2/P3 施工图各追加「实现记录」版本（05-v0.6 / 06-v0.5 / 07-v0.5 / 08-v0.3）；TraeCode AI Agent 前端施工记录：E0/F0/F1-2/F1-3/F2-1/F2-2/F2-4/FP3 全部完成，更新项目阶段、文档路由、验收记录 |
 | v1.3 | 2026-08-13 | TraeCode AI Agent F1-1 图标库替换：`@ant-design/icons` → `lucide-react`，55+ 文件全量替换，typecheck 全绿 |
 | v1.4 | 2026-08-15 | ZCode 新增「代码改完必须同步文档」规则（§5 修改后、§15.3）；补记 2026-08-14 Gemini 胶囊化施工记录（§14）；同步当前阶段 |
 | v1.5 | 2026-08-15 | ZCode orchestrator 施工：合并 executePlan/executePlanFromTurn（-350 行）、修复 resume double-close 崩溃与 hook 分叉、OutputSchema 执行期校验（零新依赖）、CI Go 版本 1.21→1.25、新增 orchestrator/output_schema 测试 12 个 |
-| v1.6 | 2026-08-16 | ZCode 提交 P0-4 runtime token 前端全链路 + 安全加固 + 17 个测试文件（08-15 夜批次）；前端 API 客户端统一：删除 utils/apiClient.ts 死代码、client.ts 增加超时/ApiError 三分类/取消支持、doc/15 v1.1 契约同步 |
-| v1.6 | 2026-08-16 | ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
+| v1.6 | 2026-08-16 | ZCode 提交 P0-4 runtime token 前端全链路 + 安全加固 + 17 个测试文件（08-15 夜批次）；前端 API 客户端统一：删除 utils/apiClient.ts 死代码、client.ts 增加超时/ApiError 三分类/取消支持、doc/15 v1.1 契约同步；ZCode Electron 安全加固：P1-8a openExternal 协议白名单（url-guard）、P1-8b apiKey 迁 safeStorage（secret-store + 明文自动迁移）、P0-4 对接 Go 侧 token 鉴权（runtime-token 铸造注入 + coreFetch/coreEventSource 全链路带 token）；顺带修复 typecheck/lint 既有错误恢复全绿 |
 | v1.7 | 2026-08-17 | ZCode 前端六阶段重构（doc/21）全部完成：协议类型镜像、React-free 会话对象层（D1 演示模式开关）、useSession/useInvoke 绑定、NewTaskPage 接线（D2 真实 run 轮询）、zustand taskStore、shared/storage 统一入口 + CI 边界检查；删除静默 mock 降级/假执行/每 token 全量写 localStorage 三大病灶 |
 | v1.8 | 2026-08-17 | A1 审批卡片闭环（CoreApprovalRequest 镜像 + Session approval SSE 监听 + resolveApproval 方法 + ApprovalCard 组件）+ A2 Markdown 升级（react-markdown + remark-gfm + Shiki 细粒度懒加载 + 删除 MarkdownLite）；94/94 测试 + build + 边界检查全绿 |
 | v1.9 | 2026-08-17 | A3 Thinking 面板：Session 消费 state_change/message SSE 事件生成 thinkingSteps（状态迁移 + 推理流），ThinkingPanel 折叠组件接入 ConversationMessage；顺带修复真实模式 assistant 气泡只有完成摘要的内容缺失；98/98 测试 + build + 边界检查全绿 |
@@ -35,7 +35,7 @@
 | 仓库结构 | Monorepo                                                     |
 | 当前版本 | v0.6.x-dev（开发预览版）                                    |
 | 版本历史 | v0.1–v0.4 为 demo 探索版（已封存），v0.5 起为开发预览版（v0.6 现代化施工中，doc/27），v1.0 正式发布 |
-| 当前阶段 | P0-P3 后端施工全部完成并已合并入 master（原分支 `dev/TraeCodeCloud`）；前端 F0~F2+FP3 完成（2026-08-12），F1-1 图标库替换完成（2026-08-13），Gemini 胶囊风格统一完成（2026-08-14），提交门禁接入完成（2026-08-15）；E1 测试基础设施部分完成（vitest 骨架 + 98 个前端测试全绿，Go 侧测试全绿）；2026-08-15 orchestrator 去重 + resume 崩溃修复 + OutputSchema 校验 + CI Go 版本修复完成；2026-08-16 Electron 安全加固（openExternal 白名单 + apiKey safeStorage + runtime token 全链路对接）完成；2026-08-17 前端六阶段重构（doc/21）完成 + A1 审批卡片闭环 + A2 Markdown 升级（Shiki 高亮 + GFM）+ A3 Thinking 面板（state_change/message 事件消费）+ A4 Diff 查看器（core unified diff 生成 + diff.created 事件路由 + @git-diff-view 内联渲染）+ A5 性能（路由级代码分割 + vendor 拆分 + 消息列表虚拟滚动），doc/23 全部收官；2026-08-17 P7-1 三进程联调 E2E testbed（doc/24：Electron 壳 + core + worker + server 真实进程联调，11 个 @integration 用例）；2026-08-17 AI 组件 Ant Design X 迁移一期（doc/26：aiComponentsV2 开关默认开，antdx 渲染树替换主对话页，自研组件保留为回退）+ 二期收官（Prompts 接真实技能/专家数据 + Suggestion `/` 输入联想 + 虚拟滚动调优，审批卡/工作流卡/侧栏评估保留自研）；待 P7-2（视觉回归）、E2（可观测性） |
+| 当前阶段 | v0.6 前端现代化施工中（doc/27 五周排期；第 0 周定盘子 2026-08-20 完成，W1 待开工）；后端 P0-P3 已合并 master，前端对话主链路（doc/21~26）收官。完整时间线见 §14 施工记录与 CHANGELOG。 |
 | 许可     | MIT（开发预览阶段临时许可；正式发布切回 GeoWork Community License / PolyForm Noncommercial 1.0.0，文本保留于 licenses/LICENSE-COMMUNITY） |
 
 ---
@@ -62,7 +62,8 @@
 | 你要改的模块          | 必须先读的文档                                                                     | 状态             |
 | --------------------- | ---------------------------------------------------------------------------------- | ---------------- |
 | **全局工程规范**      | `doc/10-Engineering-Git-Workflow.md` · `11-Engineering-CI-CD.md` · `12-Engineering-Security.md` · `13-Engineering-TypeScript.md` · `14-Engineering-ESLint-Prettier.md` · `15-Engineering-API-Contract.md` · `16-Engineering-Testing.md` · `17-Engineering-Release.md` · `18-Engineering-Monitoring.md` | 全部 v1.0 |
-| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md`；改 AI 会话组件再读 `doc/26-AntDesignX-Migration.md`（antdx 渲染树 + aiComponentsV2 开关） | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0 |
+| `apps/desktop/`       | `doc/01-GeoWorkFrontend-Design-System.md` + `doc/02-GeoWorkFrontend-Design-System-Detailed.md` + `doc/03-GeoWorkFrontend-Engineering-Standards.md`；改 AI 会话组件再读 `doc/26-AntDesignX-Migration.md`（antdx 渲染树 + aiComponentsV2 开关） | 设计系统 v1.5.1 / 施工图 v0.2（F0~F2+FP3 完成）/ 工程规范 v1.0；当前施工以 doc/27 排期为准 |
+| v0.6 前端现代化施工（当前进行） | `doc/27-Frontend-Modernization-Plan.md` + `doc/ADR/ADR-002-Diff-Dual-Gate.md` + `doc/ADR/ADR-003-V06-Navigation-Whitelist.md` | 已批准，W1 待开工 |
 | `tests/e2e/`          | `doc/20-Engineering-E2E-Testing.md`（data-testid 约定 / Page Objects / fixtures / CI）+ `doc/24-Engineering-Testing-P7-Plan.md`（P7 联调 E2E + 变异试点计划） | v1.0 / 待开工 |
 | `core/`               | `doc/04-GeoWorkAgent.md` + `doc/09-GeoWork-Communication-Protocol.md`                       | 主宪法 v1.6 / 通信协议 v1.0 |
 | `core/` 施工          | `doc/05-GeoWorkAgent-P0-Detailed-Design.md` + `06-GeoWorkAgent-P1-Detailed-Design.md` + `07-GeoWorkAgent-P2-Detailed-Design.md` + `08-GeoWorkAgent-P3-Detailed-Design.md` | 施工图           |
@@ -387,104 +388,11 @@ doc/ 下相关文档是否需要同步更新：□ 是（哪份哪节） □ 否
 
 ---
 
-## 15. 文档治理
-
-### 15.1 文档层级
-
-```
-Level 0 — 宪法（极少改动）
-├── AGENT.md                              ← 全局约束 + 路由表
-└── doc/01-GeoWorkFrontend-Design-System.md  ← 视觉宪法
-
-Level 1 — 规范（按阶段更新）
-├── doc/10~19-Engineering-*.md              ← 各领域工程规范
-├── doc/03-GeoWorkFrontend-Engineering-Standards.md  ← 前端代码规范
-└── doc/09-GeoWork-Communication-Protocol.md ← 通信协议
-
-Level 2 — 施工图（每个 P 阶段更新）
-├── doc/02-GeoWorkFrontend-Design-System-Detailed.md     ← 视觉施工
-├── doc/05~08-GeoWorkAgent-P0~P3-Detailed-Design.md    ← 后端施工
-└── doc/19-Engineering-Implementation-Plan.md             ← 工程化施工
-
-Level 3 — 记录（持续追加）
-├── CHANGELOG.md
-└── doc/ADR/                              ← 架构决策记录
-```
-
-### 15.2 文档 Owner
-
-| 文档 | Owner | Review 频率 |
-|---|---|---|
-| AGENT.md | 项目负责人 | 每个 P 阶段结束 |
-| 设计系统 | 前端 | 每个 P 阶段结束 |
-| Engineering-*.md | 前端 | 每个 P 阶段结束 |
-| 04-GeoWorkAgent.md + P0-P3 | 后端 | 每个 P 阶段结束 |
-| Communication-Protocol | 全栈 | 协议变更时 |
-| ADR/* | 决策发起者 | 不变（只追加） |
-
-### 15.3 文档变更规则
-
-- **代码与文档必须同周期同步**：每次开发或修改代码完成后，必须在同一次开发流程内更新对应文档，否则不算一次完整的开发流程。最小同步集：
-  - `CHANGELOG.md` — 记录本次变更（Unreleased 段落）
-  - 对应施工图（`doc/02` 或 `doc/05~08`）— 更新进度状态；实现与规格不一致时，同周期修正规格或回滚实现
-  - `doc/DEV_VERSION_CHECKLIST.md` — 更新验收项状态，禁止把未达验收标准的项标 ✅
-  - `AGENT.md §14` — 追加施工记录
-- 代码 PR 涉及接口/行为变更时，**必须同步更新对应文档**（汇报模板已有"doc 同步检查"项）
-- 纯文档 PR 的门槛：至少一人 review（可以是 AI 辅助 review）
-- 文档 PR 必须附"影响的代码文件列表"（如果有的话）
-- 每个 P 阶段结束时，Owner 检查所负责文档与代码的一致性，过期内容标记 `[已过时 — 待更新]`
-
-### 15.4 ADR（Architecture Decision Records）
-
-重大架构决策记录在 `doc/ADR/` 目录下，格式：
-
-```markdown
-# ADR-NNN: 标题
-
-## 状态：已接受 / 已废弃 / 已取代 (日期)
-
-## 背景
-为什么需要做这个决策？
-
-## 决策
-做了什么选择？
-
-## 后果
-这个选择带来什么影响？
-```
-
-已记录的 ADR：
-
-| 编号 | 标题 | 状态 |
-|---|---|---|
-| ADR-001 | 通信协议采用 SSE + WebSocket 混合架构 | 已接受 |
-| ADR-002 | Diff 采用双闸模型（事前动作审批 + 事后落盘审查），DiffViewer 与 ReviewPanel 分工 | 已接受 |
-| ADR-003 | v0.6 导航白名单（只减不增，恢复需走 ADR 修订） | 已接受 |
-
-**ADR 状态流转**：
-
-| 状态 | 含义 | 操作 |
-|---|---|---|
-| 已接受 (Accepted) | 当前有效决策 | — |
-| 已废弃 (Deprecated) | 决策仍有效但不推荐用于新功能 | 标注原因 |
-| 已取代 (Superseded) | 被新 ADR 取代 | 新 ADR 的"背景"中说明取代哪个旧 ADR |
-
-- 旧 ADR **不删除**，只改状态 + 标注取代它的 ADR 编号
-- 每个 ADR 可选添加 `Related: ADR-XXX` 字段链接相关决策
-
-### 15.5 文档新鲜度检查
-
-每个 P 阶段结束时，执行以下检查：
-
-1. `git log --since="上次 P 阶段开始" --name-only | grep -E "\.(ts\|tsx\|go)$" | sort -u` → 得到本阶段改动的代码文件列表
-2. 对照文档中的"文件对应"表（设计系统 §19、工程规范 §2.1 等），检查被改动的文件是否在文档中有描述
-3. 如果代码文件被大幅重构（rename/split/merge），对应文档必须同 PR 更新
-
-违规处理：文档与代码不一致的 PR，review 时打回。
-
----
-
 ## 14. AI Agent 施工记录
+
+### 2026-08-19~20 · ZCode · v0.6 第 0 周定盘子 + 补档（纯文档，零代码）
+
+新建 doc/27 前端现代化施工计划（五支柱 / 九域现状 / DoD 三条 / 导航白名单 / 五周排期）+ ADR-002 diff 双闸 + ADR-003 导航白名单；DEV_VERSION_CHECKLIST 纠偏；D-27-7~10 拍板落档（内联样式纪律收敛 / UI 组件选型优先级 / 版本路线 / 侧栏现代化）；§10 后端死代码分诊表（十三包 + 活端点，七项判决 + 减法五原则）；W1-W4 工单细化。提交 ca8b67b / fb09ecd / 65bf8da / ee8e06d / 1ab8b94，细节见 doc/27 §9 执行记录。
 
 ### 2026-08-17 · ZCode · AI 组件 Ant Design X 迁移二期（doc/26，二期完成，doc/26 收官）
 
@@ -658,6 +566,106 @@ Level 3 — 记录（持续追加）
 | 文档 | doc/15 v1.1：新增 §2.5 前端统一客户端约定 + §3.3 补 X-GeoWork-Token | ✅ |
 
 **背景**：源于「前端偶发小 bug」诊断——双客户端 + 7 套 localStorage 封装 + Extensions 页 mock 数据是三大结构性根源，本次消除第一个。后续待办：storage 统一（Extensions 相关等接真数据时一并做）、会话真相源收敛。
+
+---
+
+## 15. 文档治理
+
+### 15.1 文档层级
+
+```
+Level 0 — 宪法（极少改动）
+├── AGENT.md                              ← 全局约束 + 路由表
+└── doc/01-GeoWorkFrontend-Design-System.md  ← 视觉宪法
+
+Level 1 — 规范（按阶段更新）
+├── doc/10~19-Engineering-*.md              ← 各领域工程规范
+├── doc/03-GeoWorkFrontend-Engineering-Standards.md  ← 前端代码规范
+└── doc/09-GeoWork-Communication-Protocol.md ← 通信协议
+
+Level 2 — 施工图（每个 P 阶段更新）
+├── doc/02-GeoWorkFrontend-Design-System-Detailed.md     ← 视觉施工
+├── doc/05~08-GeoWorkAgent-P0~P3-Detailed-Design.md    ← 后端施工
+├── doc/19-Engineering-Implementation-Plan.md             ← 工程化施工
+└── doc/27-Frontend-Modernization-Plan.md                 ← v0.6 现代化施工（进行中）
+   （doc/21/23/24/25/26 系列施工图已收官 2026-08-17，保留为历史参考）
+
+Level 3 — 记录（持续追加）
+├── CHANGELOG.md
+└── doc/ADR/                              ← 架构决策记录
+```
+
+### 15.2 文档 Owner
+
+| 文档 | Owner | Review 频率 |
+|---|---|---|
+| AGENT.md | 项目负责人 | 每个 P 阶段结束 |
+| doc/27 | 项目负责人 | 每周施工结束 |
+| 设计系统 | 前端 | 每个 P 阶段结束 |
+| Engineering-*.md | 前端 | 每个 P 阶段结束 |
+| 04-GeoWorkAgent.md + P0-P3 | 后端 | 每个 P 阶段结束 |
+| Communication-Protocol | 全栈 | 协议变更时 |
+| ADR/* | 决策发起者 | 不变（只追加） |
+
+### 15.3 文档变更规则
+
+- **代码与文档必须同周期同步**：每次开发或修改代码完成后，必须在同一次开发流程内更新对应文档，否则不算一次完整的开发流程。最小同步集：
+  - `CHANGELOG.md` — 记录本次变更（Unreleased 段落）
+  - 对应施工图（`doc/02` 或 `doc/05~08`）— 更新进度状态；实现与规格不一致时，同周期修正规格或回滚实现
+  - `doc/DEV_VERSION_CHECKLIST.md` — 更新验收项状态，禁止把未达验收标准的项标 ✅
+  - `AGENT.md §14` — 追加施工记录
+- 代码 PR 涉及接口/行为变更时，**必须同步更新对应文档**（汇报模板已有"doc 同步检查"项）
+- 纯文档 PR 的门槛：至少一人 review（可以是 AI 辅助 review）
+- 文档 PR 必须附"影响的代码文件列表"（如果有的话）
+- 每个 P 阶段结束时，Owner 检查所负责文档与代码的一致性，过期内容标记 `[已过时 — 待更新]`
+
+### 15.4 ADR（Architecture Decision Records）
+
+重大架构决策记录在 `doc/ADR/` 目录下，格式：
+
+```markdown
+# ADR-NNN: 标题
+
+## 状态：已接受 / 已废弃 / 已取代 (日期)
+
+## 背景
+为什么需要做这个决策？
+
+## 决策
+做了什么选择？
+
+## 后果
+这个选择带来什么影响？
+```
+
+已记录的 ADR：
+
+| 编号 | 标题 | 状态 |
+|---|---|---|
+| ADR-001 | 通信协议采用 SSE + WebSocket 混合架构 | 已接受 |
+| ADR-002 | Diff 采用双闸模型（事前动作审批 + 事后落盘审查），DiffViewer 与 ReviewPanel 分工 | 已接受 |
+| ADR-003 | v0.6 导航白名单（只减不增，恢复需走 ADR 修订） | 已接受 |
+
+**ADR 状态流转**：
+
+| 状态 | 含义 | 操作 |
+|---|---|---|
+| 已接受 (Accepted) | 当前有效决策 | — |
+| 已废弃 (Deprecated) | 决策仍有效但不推荐用于新功能 | 标注原因 |
+| 已取代 (Superseded) | 被新 ADR 取代 | 新 ADR 的"背景"中说明取代哪个旧 ADR |
+
+- 旧 ADR **不删除**，只改状态 + 标注取代它的 ADR 编号
+- 每个 ADR 可选添加 `Related: ADR-XXX` 字段链接相关决策
+
+### 15.5 文档新鲜度检查
+
+每个 P 阶段结束时，执行以下检查：
+
+1. `git log --since="上次 P 阶段开始" --name-only | grep -E "\.(ts\|tsx\|go)$" | sort -u` → 得到本阶段改动的代码文件列表
+2. 对照文档中的"文件对应"表（设计系统 §19、工程规范 §2.1 等），检查被改动的文件是否在文档中有描述
+3. 如果代码文件被大幅重构（rename/split/merge），对应文档必须同 PR 更新
+
+违规处理：文档与代码不一致的 PR，review 时打回。
 
 ---
 

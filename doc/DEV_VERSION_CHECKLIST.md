@@ -3,7 +3,7 @@
 > **状态：更新中**
 > 本清单用于在每次开发版发布前，系统性检查以下内容。
 > 当前版本：v0.6.0-dev（doc/21 六阶段重构 + doc/23/25/26 收官，2026-08-17；v0.6 现代化施工见 doc/27）
-> 更新时间：2026-08-19 · 更新者：ZCode（doc/27 第 0 周纠偏：联调状态改实、F2-2 模板分发废弃、CSS 收敛目标改纪律、已知限制补真实债）
+> 更新时间：2026-08-20 · 更新者：ZCode（排版整顿 + 过期项改实：Playwright / 依赖扫描 / MSW 口径改实，F0-1 复选框矛盾修正）
 
 ## 总体进度
 
@@ -28,7 +28,7 @@
 
 ### F0 验收（已完成）
 
-- [x] F0-1 任务对话页贴完成态截图（明暗各一张），能复现 §7.2 刻度 — ⏳ 待人工截图
+- [ ] F0-1 任务对话页贴完成态截图（明暗各一张），能复现 §7.2 刻度 — ⏳ 待人工截图
 - [x] F0-2 主题下拉里不出现 illustration/glass/bootstrap
 - [x] F0-3 全站搜 `9999px` 仅命中胶囊风格组件（CapsuleTabs/CapsuleTag + ChatComposer/UsageModal/GlobalSearchModal 胶囊样式 + index.css 全局胶囊样式，共 6 处，2026-08-15 核实）
 - [x] F0-4 stylelint 规则生效，PR 里有 lint pass 记录
@@ -68,16 +68,16 @@
 
 ## 三、测试覆盖率
 
-- [ ] 前端单元测试覆盖率达标 — ⏳ 待补充（当前 vitest 配置已有，需编写测试）
-- [ ] 集成测试（MSW）就位 — ⏳ 待 E1 阶段执行
-- [ ] E2E 测试（Playwright）就位 — ⏳ 待 E1 阶段执行
+- [ ] 前端单元测试覆盖率达标 — 覆盖率阈值待定；现有测试 114 条全绿（2026-08-17 antdx 二期后）
+- [x] 集成测试就位 — ✅ 口径变更（2026-08-20）：MSW 方案未采用；集成覆盖由 core 契约测试（desktop_contract_test.go）+ E2E api-integration / auth-flow spec 承担
+- [x] E2E 测试（Playwright）就位 — ✅ 已就位（2026-08-17：doc/20 锚点体系 + doc/24 P7-1 三进程联调 testbed 11 个 @integration 用例 + CI e2e-smoke / e2e-smoke-windows nightly）
 
 ---
 
 ## 四、安全审计
 
 - [x] `.oxlintrc.json` 安全规则已补充（no-eval / no-implied-eval / no-debugger 等）
-- [ ] 依赖安全扫描 — ⏳ 待 CI 中集成
+- [x] 依赖安全扫描 — ✅ 已集成（2026-08-17 P6 安全门禁：pr-check.yml 含 npm audit --omit=dev --audit-level=high 前端、govulncheck core 与 server、pip-audit worker）
 - [ ] 前端敏感信息检查 — ⏳ 待执行
 
 ---
@@ -125,4 +125,4 @@
 
 ---
 
-*最后更新：2026-08-19 · ZCode · doc/27 第 0 周纠偏（联调状态按域改实、F2-2 模板分发废弃、CSS 收敛改纪律、已知限制补入 diff 断链/悬空变量/假快捷键/死条目/占位文案/Extensions mock 六项真实债）*
+*最后更新：2026-08-20 · ZCode · 排版整顿 + 过期项改实（测试与安全审计条目改实、F0-1 复选框矛盾修正；上一轮 2026-08-19 为 doc/27 第 0 周纠偏）*

@@ -51,6 +51,7 @@ GeoWork 的 Agent 会修改用户工作区文件，用户需要两道安全闸�
 3. 挂载 `diff.Routes.Register(mux)`
 4. 契约测试（desktop_contract_test.go）补钉这组端点
 5. ReviewPanel 订阅 `diff.created` 事件刷新列表
+6. **补记（2026-08-20）**：同 PR 还须砍 `/api/diffs` 六条活路由（doc/27 §10.3-4 拍板：挂载即取代，不留双轨期；砍前 grep 全前端 + tests/e2e 确认零消费）
 
 ## 后果
 
@@ -66,3 +67,5 @@ GeoWork 的 Agent 会修改用户工作区文件，用户需要两道安全闸�
 - diff_handler.go 旧三条路由删除后，若有未知调用方会 404——接线前需 grep 确认无其他消费方（preload.ts 的 rollback 桥接需同步改指向）
 
 **回滚**：W2-2 为独立提交，回滚即恢复旧三条路由注册。
+
+Related: ADR-003
