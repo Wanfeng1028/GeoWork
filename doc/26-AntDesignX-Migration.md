@@ -1,8 +1,8 @@
 # GeoWork AI 组件 Ant Design X 迁移计划
 
 > **文档路径**：`doc/26-AntDesignX-Migration.md`
-> **关联文档**：`doc/23-Frontend-AI-Components-Plan.md`（自研 AI 组件 A1–A5，已收官）
-> **状态**：一期完成（2026-08-17）；二期完成（2026-08-17）
+> **关联文档**：`doc/23-Frontend-AI-Components-Plan.md`（自研 AI 组件 A1–A5，已收官）；`doc/27-Frontend-Modernization-Plan.md`（D-27-10 翻案本文 §3.2 侧栏结论，载体 W2-4）
+> **状态**：一期完成（2026-08-17）；二期完成（2026-08-17）；§3.2 侧栏结论已被 doc/27 D-27-10 翻案（2026-08-20，载体 W2-4）
 
 ---
 
@@ -76,8 +76,10 @@ routes 懒加载冒烟测试因 NewTaskPage 引入大包解析变慢，单独放
 |---|---|---|
 | 审批卡片 X 化 | **保留 ApprovalCard** | 审批是结构化表单交互（风险等级/参数展示/批准-拒绝+理由），非对话气泡语义；Bubble 变体无法承载，硬套反而增加复杂度。已作为复用资产挂进 ConversationX |
 | 工作流卡片 X 化 | **保留 WorkflowRunCard** | antd `Steps`（横向步骤条 + 状态 Tag + 确认/调整按钮 + 状态 Alert）已是该场景最佳呈现；ThoughtChain 是纵向思考链语义，不匹配「计划确认→执行」流程 |
-| 侧栏 Conversations | **保留自研** | taskStore 的工作空间分组/置顶模型与 antd-x Conversations 的扁平列表 + menu 模型不匹配，迁移需重写分组逻辑，收益为负 |
+| 侧栏 Conversations | ~~保留自研~~ **已翻案（2026-08-20，doc/27 D-27-10 ①）→ W2-4 迁移 antdx Conversations** | 翻案依据：antdx Conversations 的 groupable 按 group 字段分组且支持折叠、menu 直接继承 antd MenuProps，原判前提（扁平列表 + menu 模型不匹配）被 API 逐项核对推翻，仓库 @ant-design/x ^2.9.0 满足全部要求；真实缝隙仅两处小活——组操作菜单（置顶组/在文件夹中打开/归档整组）经 groupable.label 渲染器包 antd Dropdown、pinned 置顶排序在传 items 前自行排好。原理由存档：「taskStore 的工作空间分组/置顶模型与 antd-x Conversations 的扁平列表 + menu 模型不匹配，迁移需重写分组逻辑，收益为负」 |
 | AssistantChatPanel | **本期不迁移** | 右侧旁路面板独立于主对话页，数据流不同（非 useSession 快照）；待主对话页 X 化稳定运行后再评估 |
+
+> **范围注（2026-08-20）**：上表仅「侧栏 Conversations」一行被 doc/27 D-27-10 ① 翻案；审批卡片、工作流卡片、AssistantChatPanel 三行结论仍然有效。
 
 ### 3.3 验收
 

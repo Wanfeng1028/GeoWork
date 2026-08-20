@@ -107,7 +107,7 @@ doc/27（本文档）+ ADR-002 + ADR-003 + 文档修订清单执行（§6）。
 | W2-2 diff 审批闸 | 前提两条：删 diff_handler.go 三条旧 security 路由（防 ServeMux 重复注册 panic）→ main 构造 Generator/Manager → 挂载 `core/internal/diff` 路由 → 契约测试补钉 → ReviewPanel 订阅 `diff.created` 刷新。**同 PR 砍 `/api/diffs` 六条（§10.3 拍板：挂载即取代不留双轨期；grep 零消费前置，有消费者回来重议）**。**DoD 附加：本工单改造到的 RightWorkspacePanel 代码区，内联色值迁入 token/module.css（D-27-7）** | ReviewPanel 列表/审批/apply-all 全通，不再 404；全仓库只剩一套 diff 端点 |
 | W2-2b 内联纯展示收口 | 按 ADR-002 边界三条落地：DiffViewer 确认零写操作调用 + 共用渲染核 + 加"在审查面板中打开"深链（runID/path 过滤）；面板条目回链对话轮次 | ADR-002 三条边界全部可验证 |
 | W2-3 mcp 分诊 | 分诊 `/api/mcp` 是壳还是真、未挂载包里有无真能力；产出扩展四页"接/留/砍"清单 | 清单落档，四页去留拍板 |
-| W2-4 侧栏现代化（D-27-10 载体） | **前置 = W1-1 已完成**（数据源定型后再换渲染层；顺序颠倒 = 对着即将变形的数据层做迁移，白干）。a) **antdx Conversations 接管会话列表**：items/activeKey/onActiveChange/groupable（工作空间分组+折叠）/menu（重命名/置顶/导出/归档菜单原样搬）/creation；**数据层零改动**——taskStore、useSession 同步逻辑、conversationCache 全不动，仅换渲染层（延续 doc/26 迁移打法）。b) 组操作菜单经 groupable.label 渲染器包 antd Dropdown。c) 导航三项 + 扩展折叠区换自研 NavRow（规格见 D-27-10 ②），扩展区折叠沿用现有 extOpen state。d) **⌘K 冲突处置**：antdx shortcutKeys 的 creation 默认绑定 Win/⌘+K，与 W3-2 命令面板计划冲突——迁移时必须禁用或改绑 creation 快捷键，⌘K 留给命令面板独占；Alt+数字切换会话可保留（白赚能力）。e) CapsuleTabs 第二档归宿附注决策项（与 ADR-003 联判，见 D-27-10 ③）。**备注：与 W3 扩展区转正是复用关系不是冲突——届时扩展四页入口直接用同一 NavRow** | ① antdx 接管列表/分组/操作菜单/creation 全部生效；② doc/26 §3.2 翻案补记完成（原文"保留自研"结论作废并注明理由与新结论）；③ ⌘K 冲突处置落地；④ doc/02 胶囊家族补 NavRow 一件；⑤ 侧栏从上到下统一胶囊语言，antd 退至弹窗/下拉等无形状暴露处（第三级合法用法） |
+| W2-4 侧栏现代化（D-27-10 载体） | **前置 = W1-1 已完成**（数据源定型后再换渲染层；顺序颠倒 = 对着即将变形的数据层做迁移，白干）。a) **antdx Conversations 接管会话列表**：items/activeKey/onActiveChange/groupable（工作空间分组+折叠）/menu（重命名/置顶/导出/归档菜单原样搬）/creation；**数据层零改动**——taskStore、useSession 同步逻辑、conversationCache 全不动，仅换渲染层（延续 doc/26 迁移打法）。b) 组操作菜单经 groupable.label 渲染器包 antd Dropdown。c) 导航三项 + 扩展折叠区换自研 NavRow（规格见 D-27-10 ②），扩展区折叠沿用现有 extOpen state。d) **⌘K 冲突处置**：antdx shortcutKeys 的 creation 默认绑定 Win/⌘+K，与 W3-2 命令面板计划冲突——迁移时必须禁用或改绑 creation 快捷键，⌘K 留给命令面板独占；Alt+数字切换会话可保留（白赚能力）。e) CapsuleTabs 第二档归宿附注决策项（与 ADR-003 联判，见 D-27-10 ③）。**备注：与 W3 扩展区转正是复用关系不是冲突——届时扩展四页入口直接用同一 NavRow** | ① antdx 接管列表/分组/操作菜单/creation 全部生效；② doc/26 §3.2 翻案补记完成（原文"保留自研"结论作废并注明理由与新结论）——✅ 2026-08-20 已提前落档（见 doc/26 §3.2），W2-4 开工核对即可，勿重复执行；③ ⌘K 冲突处置落地；④ doc/02 胶囊家族补 NavRow 一件；⑤ 侧栏从上到下统一胶囊语言，antd 退至弹窗/下拉等无形状暴露处（第三级合法用法） |
 
 ### 第 3 周：手感层
 
@@ -178,6 +178,7 @@ trajectory 回放视图、`/api/ws` 审批信令（HTTP 够用则缓）、文件
 | 第 0 周 | ca8b67b / fb09ecd / 65bf8da / ee8e06d | 无 |
 | 第 0 周补档（2026-08-20） | 1ab8b94 / 240a88e | 侧栏现代化讨论拍板落档：D-27-10 + W2-4 + W1 四工单设计细节 + W3-2 注记 + W4-1 扩充六项 + CI 触发前置第 0 项；纯文档，零代码改动 |
 | 第 0 周排版整顿（2026-08-20） | （本次） | 文档排版与结构整顿：AGENT.md 章节顺序/版本表去重/§1 瘦身/§3 路由表补 doc/27/§14 补第 0 周记录；checklist 过期项改实；W1 第 0 项 CI 文案收口；ADR-002 补记 + Related；纯文档，零代码改动 |
+| 第 0 周翻案补记（2026-08-20） | （本次） | doc/26 §3.2 侧栏结论翻案标记提前落档——原挂 W2-4 验收项 ②，提前原因：防 W1-1 侧栏数据源分诊被旧结论带偏；纯文档，零代码改动 |
 
 ---
 
